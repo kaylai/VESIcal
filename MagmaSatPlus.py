@@ -26,7 +26,6 @@ CationMass = {'SiO2': 28.085, 'MgO': 24.305, 'FeO': 55.845, 'CaO': 40.078, 'Al2O
 
 #----------DEFINE SOME EXCEPTIONS--------------#
 
-
 class Error(Exception):
     """Base class for exceptions in this module."""
     pass
@@ -43,8 +42,24 @@ class InputError(Error):
     def __init__(self, message):
         self.message = message
 
-#----------DEFINE SOME BASIC METHODS-----------#
+class SaturationError(Error):
+	"""Exception raised for errors thrown when a sample does not reach saturation.
 
+	Attributes:
+		expression -- input expression in which the error occurred
+		message -- explanation of the error
+	"""
+
+	def __init__(self, message):
+		self.message = message
+
+#----------DEFINE CUSTOM PLOTTING FORMATTING------------#
+msp_fontdict = {'family': 'serif',
+				 'color': 'darkblue',
+				 'weight': 'normal',
+				 'size': 18,}
+
+#----------DEFINE SOME BASIC METHODS-----------#
 
 def mol_to_wtpercent(dataframe):
 	"""
@@ -184,6 +199,54 @@ class Modeller(object):
 		except:
 			raise InputError("Model name passed is not a recognized model.")
 
+	def calculate_equilibrium_fluid_comp(self, sample, temp, press):
+		"""
+		Returns H2O and CO2 concentrations in wt% in a fluid in equilibrium with the given sample at the given P/T condition.
+
+		Parameters
+		----------
+		sample: dict
+			Dictionary with values for sample composition as oxides in wt%.
+
+		temp: float
+			Temperature in degrees C.
+
+		press: float
+			Pressure in MPa.
+
+		Returns
+		-------
+		dict 
+			Dictionary of fluid composition in wt% with keys 'H2O' and 'CO2'.
+		"""
+		#--------------Preamble required for every MagmaSat method within Modeller---------------#
+		# instantiate thermoengine equilibrate MELTS instance
+		melts = equilibrate.MELTSmodel(self.model_version)
+
+		# Suppress phases not required in the melts simulation
+		self.oxides = melts.get_oxide_names()
+		self.phases = melts.get_phase_names()
+
+		for phase in self.phases:
+		    melts.set_phase_inclusion_status({phase: False})
+		melts.set_phase_inclusion_status({'Fluid': True, 'Liquid': True})
+		#---------------------------------------------------------------------------------------#
+		bulk_comp_orig = sample #for reset
+		feasible = melts.set_bulk_composition(sample)
+		output = melts.equilibrate_tp(temp, press, initialize=True)
+		(status, temp, i, xmlout) = output[0]
+		fluid_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
+
+		feasible = melts.set_bulk_composition(bulk_comp_orig) #reset
+
+		if fluid_mass > 0.0:
+		    fluid_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid')
+		    fluid_comp = {'H2O': fluid_comp['H2O'], 'CO2': fluid_comp['CO2']}
+		    return fluid_comp
+		else:
+			feasible = melts.set_bulk_composition(bulk_comp_orig) #reset
+			print("Melt is not saturated at this P/T condition.")
+
 	def calculate_isobars_and_isopleths(self, sample, temp, print_status=False, pressure_min='', pressure_max='', pressure_int='', pressure_list=''):
 		"""
 		Plots isobars and isopleths at a constant temperature for a given sample. Isobars can be calculated
@@ -227,6 +290,7 @@ class Modeller(object):
 		#--------------Preamble required for every MagmaSat method within Modeller---------------#
 		# instantiate thermoengine equilibrate MELTS instance
 		melts = equilibrate.MELTSmodel(self.model_version)
+		bulk_comp_orig = sample #for reset
 
 		# Suppress phases not required in the melts simulation
 		self.oxides = melts.get_oxide_names()
@@ -315,6 +379,8 @@ class Modeller(object):
 
 		isobars_df = pd.DataFrame(volatiles_at_saturation, columns=[
 		                          'Pressure', 'H2Omelt', 'CO2melt', 'H2Ofl', 'CO2fl'])
+
+		feasible = melts.set_bulk_composition(bulk_comp_orig) #reset
 
 		return isobars_df
 
@@ -433,8 +499,6 @@ class Modeller(object):
 		melts.set_phase_inclusion_status({'Fluid': True, 'Liquid': True})
 		#---------------------------------------------------------------------------------------#
 
-		self.sample = sample
-		self.temp = temp
 		oxides = self.oxides
 
 		if isinstance(sample, dict):
@@ -462,26 +526,31 @@ class Modeller(object):
 		flH2O = []
 		flCO2 = []
 		flsystem_wtper = []
+		iterno = 0
 		for index, row in data.iterrows():
-		    bulk_comp = {oxide:  row[oxide] for oxide in oxides}
-		    feasible = melts.set_bulk_composition(bulk_comp)
+			if iterno == 0:
+				bulk_comp_orig = {oxide:  row[oxide] for oxide in oxides}
+			
+			bulk_comp = {oxide:  row[oxide] for oxide in oxides}
+			feasible = melts.set_bulk_composition(bulk_comp)
 
-		    if file_has_temp == True:
-		        temp = row[temp]
+			if file_has_temp == True:
+				temp = row[temp]
 
-		    fluid_mass = 0.0
-		    press = 2000.0
-		    while fluid_mass <= 0.0:
-		        press -= 100.0
+			fluid_mass = 0.0
+			press = 2000.0
+			while fluid_mass <= 0.0:
+				press -= 100.0
 
-		        output = melts.equilibrate_tp(temp, press, initialize=True)
-		        (status, temp, i, xmlout) = output[0]
-		        fluid_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
+				output = melts.equilibrate_tp(temp, press, initialize=True)
+				(status, temp, i, xmlout) = output[0]
+				fluid_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
 
-		        if press <= 0:
-		            break
+				if press <= 0:
+					break
 
-		    startingP.append(press+100.0)
+			startingP.append(press+100.0)
+			iterno += 1
 
 		data["StartingP"] = startingP
 
@@ -549,6 +618,8 @@ class Modeller(object):
 		data["FluidSystem_wtper"] = flsystem_wtper
 		del data["StartingP"]
 		del data["StartingP_ref"]
+
+		feasible = melts.set_bulk_composition(bulk_comp_orig) #this needs to be reset always!
 
 		if isinstance(sample, dict):
 			data = data.transpose()
