@@ -201,18 +201,25 @@ class Modeller(object):
 
 	def calculate_equilibrium_fluid_comp(self, sample, temp, press):
 		"""
-		Returns H2O and CO2 concentrations in wt% in a fluid in equilibrium with the given sample at the given P/T condition.
+		Returns H2O and CO2 concentrations in wt% in a fluid in equilibrium with the given sample(s) at the given P/T condition.
 
 		Parameters
 		----------
-		sample: dict
-			Dictionary with values for sample composition as oxides in wt%.
+		sample: dict or ExcelFile object
+			Compositional information on one or more samples. A single sample can be passed as a dict or ExcelFile object.
+			Multiple samples must be passed as an ExcelFile object.
 
-		temp: float
-			Temperature in degrees C.
+		temp: float or str
+			Temperature, in degrees C. Can be passed as float, in which case the
+			passed value is used as the temperature for all samples. Alternatively, temperature information for each individual
+			sample may already be present in the passed ExcelFile object. If so, pass the str value corresponding to the column
+			title in the passed ExcelFile object.
 
-		press: float
-			Pressure in MPa.
+		press: float or str
+			Pressure, in degrees C. Can be passed as float, in which case the
+			passed value is used as the pressure for all samples. Alternatively, pressure information for each individual
+			sample may already be present in the passed ExcelFile object. If so, pass the str value corresponding to the column
+			title in the passed ExcelFile object.
 
 		Returns
 		-------
@@ -231,21 +238,67 @@ class Modeller(object):
 		    melts.set_phase_inclusion_status({phase: False})
 		melts.set_phase_inclusion_status({'Fluid': True, 'Liquid': True})
 		#---------------------------------------------------------------------------------------#
-		bulk_comp_orig = sample #for reset
-		feasible = melts.set_bulk_composition(sample)
-		output = melts.equilibrate_tp(temp, press, initialize=True)
-		(status, temp, i, xmlout) = output[0]
-		fluid_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
 
-		feasible = melts.set_bulk_composition(bulk_comp_orig) #reset
-
-		if fluid_mass > 0.0:
-		    fluid_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid')
-		    fluid_comp = {'H2O': fluid_comp['H2O'], 'CO2': fluid_comp['CO2']}
-		    return fluid_comp
+		if isinstance(sample, dict):
+			bulk_comp_orig = sample #for reset
+			data = pd.DataFrame([v for v in sample.values()],
+                    index=[k for k in sample.keys()])
+			data = data.transpose()
+		elif isinstance(sample, ExcelFile):
+			data = sample.data
 		else:
+			raise InputError("sample must be type ExcelFile object or dict")
+
+		if isinstance(temp, str):
+			file_has_temp = True
+		elif isinstance(temp, float):
+			file_has_temp = False
+		else:
+			raise InputError("temp must be type str or float")
+
+		if isinstance(press, str):
+			file_has_press = True
+		elif isinstance(temp, float):
+			file_has_press = False
+		else:
+			raise InputError("press must be type str or float")
+
+
+		fluid_comp_H2O = []
+		fluid_comp_CO2 = []
+		for index, row in data.iterrows():
+		    bulk_comp = {oxide:  row[oxide] for oxide in oxides}
+		    feasible = melts.set_bulk_composition(bulk_comp)
+
+		    if file_has_temp == True:
+		        temp = row[temp]
+		    if file_has_press == True:
+		    	press = row[press]
+
+		    output = melts.equilibrate_tp(temp, press, initialize=True)
+		    (status, temp, i, xmlout) = output[0]
+		    fluid_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
+
+		    if fluid_mass > 0.0:
+		    	fluid_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid')
+		    	fluid_comp_H2O.append(fluid_comp['H2O'])
+		    	fluid_comp_CO2.append(fluid_comp['CO2'])
+		    else:
+		    	fluid_comp_H2O.append(0)
+		    	fluid_comp_CO2.append(0)
+
+		data["H2Ofluid_wtper"] = fluid_comp_H2O
+		data["CO2fluid_wtper"] = fluid_comp_CO2
+
+		if isinstance(sample, dict):
 			feasible = melts.set_bulk_composition(bulk_comp_orig) #reset
-			print("Melt is not saturated at this P/T condition.")
+			data = pd.DataFrame({"H2O": data["H2Ofluid_wtper"],
+								"CO2": data["CO2fluid_wtper"]})
+			data = data.transpose()
+			data = data.to_dict()
+			return data[0]
+		elif isinstance(sample, ExcelFile):
+			return data
 
 	def calculate_isobars_and_isopleths(self, sample, temp, print_status=False, pressure_min='', pressure_max='', pressure_int='', pressure_list=''):
 		"""
