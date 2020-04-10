@@ -6,6 +6,11 @@ import pandas as pd
 import numpy as np
 from thermoengine import equilibrate
 import matplotlib.pyplot as plt
+from abc import ABC, abstractmethod
+from scipy.optimize import root_scalar
+from scipy.optimize import root
+from scipy.optimize import minimize
+
 
 #----------DEFINE SOME CONSTANTS-------------#
 oxides = ['SiO2', 'TiO2', 'Al2O3', 'Fe2O3', 'Cr2O3', 'FeO', 'MnO', 'MgO', 'NiO', 'CoO', 'CaO', 'Na2O', 'K2O', 'P2O5',
@@ -17,12 +22,20 @@ oxideMass = {'SiO2': 28.085+32, 'MgO': 24.305+16, 'FeO': 55.845+16, 'CaO': 40.07
 CationNum = {'SiO2': 1, 'MgO': 1, 'FeO': 1, 'CaO': 1, 'Al2O3': 2, 'Na2O': 2,
              'K2O': 2, 'MnO': 1, 'TiO2': 1, 'P2O5': 2, 'Cr2O3': 2,
              'NiO': 1, 'CoO': 1, 'Fe2O3': 2, 'H2O': 2, 'CO2': 1}
+OxygenNum = {'SiO2': 2, 'MgO': 1, 'FeO': 1, 'CaO': 1, 'Al2O3': 3, 'Na2O': 1,
+             'K2O': 1, 'MnO': 1, 'TiO2': 2, 'P2O5': 5, 'Cr2O3': 3,
+             'NiO': 1, 'CoO': 1, 'Fe2O3': 3, 'H2O': 1, 'CO2': 2}
 CationCharge = {'SiO2': 4, 'MgO': 2, 'FeO': 2, 'CaO': 2, 'Al2O3': 3, 'Na2O': 1,
              'K2O': 1, 'MnO': 2, 'TiO2': 4, 'P2O5': 5, 'Cr2O3': 3,
              'NiO': 2, 'CoO': 2, 'Fe2O3': 3, 'H2O': 1, 'CO2': 4}
 CationMass = {'SiO2': 28.085, 'MgO': 24.305, 'FeO': 55.845, 'CaO': 40.078, 'Al2O3': 26.982, 'Na2O': 22.990,
              'K2O': 39.098, 'MnO': 54.938, 'TiO2': 47.867, 'P2O5': 30.974, 'Cr2O3': 51.996,
              'NiO': 58.693, 'CoO': 28.01, 'Fe2O3': 55.845, 'H2O': 2, 'CO2': 12.01}
+oxides_to_cations = {'SiO2': 'Si', 'MgO': 'Mg', 'FeO': 'Fe', 'CaO': 'Ca', 'Al2O3': 'Al', 'Na2O': 'Na',
+             'K2O': 'K', 'MnO': 'Mn', 'TiO2': 'Ti', 'P2O5': 'P', 'Cr2O3': 'Cr',
+             'NiO': 'Ni', 'CoO': 'Co', 'Fe2O3': 'Fe3', 'H2O': 'H', 'CO2': 'C'}
+
+
 
 #----------DEFINE SOME EXCEPTIONS--------------#
 
@@ -85,6 +98,39 @@ def mol_to_wtpercent(dataframe):
 
 	return data
 
+def wtpercentOxides_to_molCations(oxides):
+	""" WRITE SOMETHING HERE!!!
+	"""
+	molCations = {}
+	if type(oxides) == dict:
+		oxides = pd.Series(oxides)
+	elif type(oxides) != pd.core.series.Series:
+		print("NEED TO WRITE CODE TO RAISE AN ERROR! wtptoxides")
+	for ox in oxides.index:
+		cation = oxides_to_cations[ox]
+		molCations[cation] = CationNum[ox]*oxides[ox]/oxideMass[ox]
+	molCations = pd.Series(molCations)
+
+	molCations = molCations/molCations.sum()
+
+	return molCations
+
+def wtpercentOxides_to_molSingleO(oxides):
+	""" WRITE SOMETHING HERE!!!
+	"""
+	molCations = {}
+	if type(oxides) == dict:
+		oxides = pd.Series(oxides)
+	elif type(oxides) != pd.core.series.Series:
+		print("NEED TO WRITE CODE TO RAISE AN ERROR! wtptoxides")
+	for ox in oxides.index:
+		cation = oxides_to_cations[ox]
+		molCations[cation] = CationNum[ox]/OxygenNum[ox]*oxides[ox]/oxideMass[ox]
+	molCations = pd.Series(molCations)
+
+	molCations = molCations/molCations.sum()
+
+	return molCations
 
 def normalize(composition):
 	"""Normalizes an input composition to 100%
@@ -174,6 +220,322 @@ class ExcelFile(object):
 		if norm == False:
 			return sample_oxides
 
+class Model(object):
+	"""
+	"""
+
+	def __init__(self):
+		self.set_volatile_species(None)
+		self.set_fugacity_model(fugacity_idealgas())
+		self.set_activity_model(activity_idealsolution())
+
+	def set_volatile_species(self,volatile_species):
+		self.volatile_species = volatile_species
+
+	def set_fugacity_model(self,fugacity_model):
+		self.fugacity_model = fugacity_model
+
+	def set_activity_model(self,activity_model):
+		self.activity_model = activity_model
+
+	@abstractmethod
+	def calculate_dissolved_volatiles(self,**kwargs):
+		"""
+		WRITE STUFF
+		"""
+
+	@abstractmethod
+	def molfrac_molecular(self,**kwargs):
+		"""
+		WRITE stuff
+		"""
+
+	@abstractmethod
+	def calculate_equilibrium_fluid_comp(self,**kwargs):
+		"""
+		WRITE STUFF
+		"""
+
+	@abstractmethod
+	def calculate_saturation_pressure(self,**kwargs):
+		"""
+		WRITE STUFF
+		"""
+
+class FugacityModel(object):
+	"""
+	"""
+
+	@abstractmethod
+	def fugacity(self,pressure,**kwargs):
+		"""
+		"""
+
+class fugacity_idealgas(FugacityModel):
+	"""
+	"""
+
+	def fugacity(self,pressure,X_fluid=1.0):
+		return pressure*X_fluid
+
+class activity_model(object):
+	"""
+	"""
+
+	@abstractmethod
+	def activity(self,X,**kwargs):
+		"""
+		"""
+
+class activity_idealsolution(activity_model):
+	"""
+	"""
+
+	def activity(self,X):
+		return X
+
+
+class Calculate(object):
+	"""
+	"""
+	@abstractmethod
+	def calculate(self):
+		""" """
+
+	@abstractmethod
+	def check_calibration_range(self):
+		""" """
+
+class ShishkinaCarbon(Model):
+	""" Model class for pure CO2 fluids.
+	"""
+	def __init__(self):
+		self.set_volatile_species(['CO2'])
+		self.set_fugacity_model(fugacity_idealgas())
+		self.set_activity_model(activity_idealsolution())
+
+	def PiStar(self,sample):
+		"""Shishkina et al. (2014) Eq (11)
+
+	    Calculates the Pi* parameter for use in calculating CO2 solubility.
+
+	    Parameters
+	    ----------
+	    MajorElements:  Series
+	        Series containing major element oxides in wt%. All oxides passed will be
+	        included in calculating molar proportions.
+		"""
+		_mols = wtpercentOxides_to_molCations(sample)
+		_pi = (_mols['Ca'] + 0.8*_mols['K'] + 0.7*_mols['Na'] + 0.4*_mols['Mg'] + 0.4*_mols['Fe'])/\
+				(_mols['Si']+_mols['Al'])
+		return _pi
+
+	def calculate_dissolved_volatiles(self,pressure,sample,X_fluid=1,**kwargs):
+		PiStar = self.PiStar(sample)
+
+		fugacity = self.fugacity_model.fugacity(pressure=pressure,X_fluid=X_fluid,**kwargs)
+
+		A = 1.150
+		B = 6.71
+		C= -1.345
+
+		if fugacity == 0:
+			return 0
+		else:
+			return np.exp(A*np.log(fugacity/10)+B*PiStar+C)/1e4
+
+	def molfrac_molecular(self,pressure,sample,X_fluid=1.0,**kwargs):
+		CO2_wtpt = self.calculate_dissolved_volatiles(pressure=pressure,X_fluid=X_fluid,sample=sample,
+													  **kwargs)
+
+		meltcomp = sample.copy()
+		meltcomp['CO2'] = CO2_wtpt
+		molfracs = wtpercentOxides_to_molSingleO(meltcomp)
+
+		return molfracs['C']
+
+	def calculate_equilibrium_fluid_comp(self,**kwargs):
+		return 1.0
+
+	def calculate_saturation_pressure(self,sample,**kwargs):
+		satP = root_scalar(self.root_saturation_pressure,x0=1000.0,x1=2000.0,args=(sample)).root
+		return satP
+
+	def root_saturation_pressure(self,pressure,sample):
+		return self.calculate_dissolved_volatiles(pressure,sample)-sample['CO2']
+
+class ShishkinaWater(Model):
+	""" Model class for pure H2O fluids
+	"""
+	def __init__(self):
+		self.set_volatile_species(['H2O'])
+		self.set_fugacity_model(fugacity_idealgas())
+		self.set_activity_model(activity_idealsolution())
+
+	def calculate_dissolved_volatiles(self,pressure,sample,X_fluid=1.0,**kwargs):
+		_mols = wtpercentOxides_to_molCations(sample)
+		total_alkalis = _mols['Na'] + _mols['K']
+
+		fugacity = self.fugacity_model.fugacity(pressure,X_fluid=X_fluid,**kwargs)
+
+		a = 3.36e-7 * (fugacity/10)**3 - 2.33e-4*(fugacity/10)**2 + 0.0711*(fugacity/10) - 1.1309
+		b = -1.2e-5*(fugacity/10)**2 + 0.0196*(fugacity/10)+1.1297
+
+		return a*total_alkalis + b
+
+	def molfrac_molecular(self,pressure,sample,X_fluid=1.0,**kwargs):
+
+		H2O_wtpt = self.calculate_dissolved_volatiles(pressure=pressure,X_fluid=X_fluid,sample=sample,
+													  **kwargs)
+
+		meltcomp = sample.copy()
+		meltcomp['H2O'] = H2O_wtpt
+		molfracs = wtpercentOxides_to_molSingleO(meltcomp)
+
+		return molfracs['H']/2
+
+	def calculate_equilibrium_fluid_comp(self,**kwargs):
+		return 1.0
+
+	def calculate_saturation_pressure(self,sample,**kwargs):
+		satP = root_scalar(self.root_saturation_pressure,x0=1000.0,x1=2000.0,args=(sample)).root
+		return satP
+
+	def root_saturation_pressure(self,pressure,sample):
+		return self.calculate_dissolved_volatiles(pressure,sample)-sample['H2O']
+
+
+
+
+
+
+
+class MixedFluids(Model):
+	""" HELLO!
+	"""
+	def __init__(self,models):
+		print('Write code to check models input makes sense.')
+		self.models = tuple(model for model in models.values())
+		self.set_volatile_species(list(models.keys()))
+
+	def calculate_dissolved_volatiles(self,pressure,X_fluid,**kwargs):
+		if len(X_fluid) != len(self.volatile_species):
+			print('YOU NEED TO WRITE THE CODE TO RAISE AN ERROR! 0')
+
+		if type(X_fluid) == dict or type(X_fluid) == pd.core.series.Series:
+			X_fluid = tuple(X_fluid[species] for species in self.volatile_species)
+		elif type(X_fluid) != tuple and type(X_fluid) != list:
+			print('YOU NEED TO WRITE THE CODE TO RAISE AN ERROR! 1')
+
+		return tuple(model.calculate_dissolved_volatiles(pressure=pressure,X_fluid=Xi,**kwargs) for model, Xi in zip(self.models,X_fluid))
+
+	def molfrac_molecular(self,pressure,X_fluid,**kwargs):
+		if len(X_fluid) != len(self.volatile_species):
+			print('YOU NEED TO WRITE THE CODE TO RAISE AN ERROR! 0')
+
+		if type(X_fluid) == dict or type(X_fluid) == pd.core.series.Series:
+			X_fluid = tuple(X_fluid[species] for species in self.volatile_species)
+		elif type(X_fluid) != tuple and type(X_fluid) != list:
+			print('YOU NEED TO WRITE THE CODE TO RAISE AN ERROR! 1')
+
+		return tuple(model.molfrac_molecular(pressure=pressure,X_fluid=Xi,**kwargs) for model, Xi in zip(self.models,X_fluid))
+
+	def calculate_equilibrium_fluid_comp(self,pressure,sample,**kwargs):
+		if len(self.volatile_species) != 2:
+			print('WRITE CODE TO RAISE AN ERROR- CAN ONLY HANDLE TWO VOLATILE SPECIES')
+
+		satP = self.calculate_saturation_pressure(sample,**kwargs)
+
+		if satP < pressure:
+			return (0,0)
+
+		molfracs = wtpercentOxides_to_molSingleO(sample)
+		(Xt0, Xt1) = (molfracs[oxides_to_cations[self.volatile_species[0]]],molfracs[oxides_to_cations[self.volatile_species[1]]])
+
+		# ADD A ROUTINE FOR CHECKING IF THE FLUID IS ACTUALLY VOLATILE SATURATED!
+
+		x = np.linspace(0,1,50)
+		misfit = np.zeros(np.shape(x))
+		for i in range(len(x)):
+			misfit[i] = self.root_for_fluid_comp(x[i],pressure,Xt0,Xt1,sample,kwargs)
+
+		Xv0 = root_scalar(self.root_for_fluid_comp,args=(pressure,Xt0,Xt1,sample,kwargs),bracket=(0,1)).root
+		Xv1 = 1-Xv0
+
+		return (Xv0,Xv1)
+
+	def calculate_saturation_pressure(self,sample,**kwargs):
+		volatile_concs = np.array(tuple(sample[species] for species in self.volatile_species))
+
+		x0 = 0
+		for model in self.models:
+			x0 = x0 + model.calculate_saturation_pressure(sample,**kwargs)
+
+		satP = root(self.root_saturation_pressure,x0=[x0,0.5],args=(volatile_concs,sample,kwargs)).x[0]
+
+		return satP
+
+	def calculate_isobars(self,pressure_list,points=100,**kwargs):
+		isobars = []
+		for pressure in pressure_list:
+			dissolved = np.zeros([2,points])
+			Xv0 = np.linspace(0,1,points)
+			for i in range(points):
+				dissolved[:,i] = self.calculate_dissolved_volatiles(pressure,X_fluid=(Xv0[i],1-Xv0[i]),**kwargs)
+			isobars.append(dissolved)
+		return(isobars)
+
+
+	def root_saturation_pressure(self,x,volatile_concs,sample,kwargs):
+		misfit = np.array(self.calculate_dissolved_volatiles(x[0],(x[1],1-x[1]),sample=sample,**kwargs)) - volatile_concs
+		return misfit
+
+
+	def root_for_fluid_comp(self,Xv0,pressure,Xt0,Xt1,sample,kwargs):
+		Xm0, Xm1 = self.molfrac_molecular(pressure=pressure,X_fluid=(Xv0,1-Xv0),sample=sample,**kwargs)
+		if Xv0 == 0:
+			return Xt0 - Xm0*(Xt1-1)/(Xm1-1)
+		elif Xv0 == 1:
+			return -(Xt1 - Xm1*(Xt0-1)/(Xm0-1))
+		return (Xt0-Xm0)/(Xv0-Xm0) - (Xt1-Xm1)/(1-Xv0-Xm1)
+
+
+
+
+class calculate_dissolved_volatiles(Calculate):
+	""" This will be used as the user interface to doing the calculation. This provides a generic
+	way of accessing the relevant functions, and here will be when calibration checking can be done.
+	"""
+	def __init__(self):
+		self.check_calibration_range()
+		self.calculate()
+
+		return 0
+
+	def calculate(self):
+		return 0
+
+	def check_calibration_range(self):
+		return 0
+
+class calculate_equilibrium_fluid_comp(Calculate):
+	""" This will be used as the user interface to doing the calculation. This provides a generic
+	way of accessing the relevant functions, and here will be when calibration checking can be done.
+	"""
+	def __init__(self):
+		self.check_calibration_range()
+		self.calculate()
+
+		return 0
+
+	def calculate(self):
+		return 0
+
+	def check_calibration_range(self):
+		return 0
+
+
+
 
 class Modeller(object):
 	"""An object with arguments describing the necessary parameters to instantiate a thermoengine equilibrate class:
@@ -223,7 +585,7 @@ class Modeller(object):
 
 		Returns
 		-------
-		dict 
+		dict
 			Dictionary of fluid composition in wt% with keys 'H2O' and 'CO2'.
 		"""
 		#--------------Preamble required for every MagmaSat method within Modeller---------------#
@@ -583,7 +945,7 @@ class Modeller(object):
 		for index, row in data.iterrows():
 			if iterno == 0:
 				bulk_comp_orig = {oxide:  row[oxide] for oxide in oxides}
-			
+
 			bulk_comp = {oxide:  row[oxide] for oxide in oxides}
 			feasible = melts.set_bulk_composition(bulk_comp)
 
@@ -781,7 +1143,7 @@ class Modeller(object):
 
 				sample = bulk_comp_orig
 				feasible = melts.set_bulk_composition(sample)
-				closed_degassing_df = pd.DataFrame(list(zip(pressure, H2Oliq, CO2liq, H2Ofl, CO2fl, fluid_wtper)), 
+				closed_degassing_df = pd.DataFrame(list(zip(pressure, H2Oliq, CO2liq, H2Ofl, CO2fl, fluid_wtper)),
 				                            columns =['pressure', 'H2Oliq', 'CO2liq', 'H2Ofl', 'CO2fl', 'fluid_wtper'])
 
 				return closed_degassing_df
@@ -818,7 +1180,7 @@ class Modeller(object):
 				    liq_mass = melts.get_mass_of_phase(xmlout, phase_name='Liquid')
 				    fl_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
 				    fl_wtper = 100 * fl_mass / (fl_mass+liq_mass)
-				    
+
 				    pressure.append(p)
 				    try:
 				    	H2Oliq.append(liq_comp["H2O"])
@@ -851,7 +1213,7 @@ class Modeller(object):
 				sample = bulk_comp_orig
 				feasible = melts.set_bulk_composition(sample)
 				fl_wtper = data["FluidSystem_wtper"]
-				exsolved_degassing_df = pd.DataFrame(list(zip(pressure, H2Oliq, CO2liq, H2Ofl, CO2fl, fluid_wtper)), 
+				exsolved_degassing_df = pd.DataFrame(list(zip(pressure, H2Oliq, CO2liq, H2Ofl, CO2fl, fluid_wtper)),
 				                            columns =['pressure', 'H2Oliq', 'CO2liq', 'H2Ofl', 'CO2fl', 'fluid_wtper'])
 
 				return exsolved_degassing_df
@@ -875,7 +1237,7 @@ class Modeller(object):
 			    liq_mass = melts.get_mass_of_phase(xmlout, phase_name='Liquid')
 			    fl_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
 			    fl_wtper = 100 * fl_mass / (fl_mass+liq_mass)
-			    
+
 			    if fl_mass > 0:
 			        pressure.append(p)
 			        try:
@@ -910,26 +1272,7 @@ class Modeller(object):
 
 			sample = bulk_comp_orig
 			feasible = melts.set_bulk_composition(sample) #this needs to be reset always!
-			open_degassing_df = pd.DataFrame(list(zip(pressure, H2Oliq, CO2liq, H2Ofl, CO2fl, fluid_wtper)), 
+			open_degassing_df = pd.DataFrame(list(zip(pressure, H2Oliq, CO2liq, H2Ofl, CO2fl, fluid_wtper)),
 			                            columns =['pressure', 'H2Oliq', 'CO2liq', 'H2Ofl', 'CO2fl', 'fluid_wtper'])
 
 			return open_degassing_df
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
