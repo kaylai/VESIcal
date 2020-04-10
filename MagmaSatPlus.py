@@ -216,7 +216,7 @@ class Modeller(object):
 			title in the passed ExcelFile object.
 
 		press: float or str
-			Pressure, in degrees C. Can be passed as float, in which case the
+			Pressure, in MPa. Can be passed as float, in which case the
 			passed value is used as the pressure for all samples. Alternatively, pressure information for each individual
 			sample may already be present in the passed ExcelFile object. If so, pass the str value corresponding to the column
 			title in the passed ExcelFile object.
@@ -224,7 +224,8 @@ class Modeller(object):
 		Returns
 		-------
 		dict 
-			Dictionary of fluid composition in wt% with keys 'H2O' and 'CO2'.
+			If dict is passed to sample, a dictionary of fluid composition in wt% with keys 'H2O' and 'CO2' is returned.
+			If ExcelFile is passed to sample, a pandas DataFrame object is returned.
 		"""
 		#--------------Preamble required for every MagmaSat method within Modeller---------------#
 		# instantiate thermoengine equilibrate MELTS instance
@@ -302,7 +303,7 @@ class Modeller(object):
 
 	def calculate_isobars_and_isopleths(self, sample, temp, print_status=False, pressure_min='', pressure_max='', pressure_int='', pressure_list=''):
 		"""
-		Plots isobars and isopleths at a constant temperature for a given sample. Isobars can be calculated
+		Calculates isobars and isopleths at a constant temperature for a given sample. Isobars can be calculated
 		for any number of pressures. Pressures can be passed as min, max, interval (100.0, 500.0, 100.0 would result
 		in pressures of 100.0, 200.0, 300.0, 400.0, and 500.0 MPa). Alternatively pressures can be passed as a list of all
 		desired pressures ([100.0, 200.0, 250.0, 300.0] would calculate isobars for each of those pressures in MPa).
