@@ -59,6 +59,24 @@ msp_fontdict = {'family': 'serif',
 				 'weight': 'normal',
 				 'size': 18,}
 
+def printTable(myDict):
+   """ Pretty print a dictionary (as pandas DataFrame)
+
+   Parameters
+   ----------
+   myDict: dict
+   		A dictionary
+
+   Returns
+   -------
+   pandas DataFrame
+   		The input dictionary converted to a pandas DataFrame
+   """
+   table = pd.DataFrame([v for v in myDict.values()], columns = ['value'],
+   						 index = [k for k in myDict.keys()])
+
+   return table
+
 #----------DEFINE SOME BASIC METHODS-----------#
 
 def mol_to_wtpercent(dataframe):
@@ -91,15 +109,39 @@ def normalize(composition):
 
 	Parameters
 	----------
-	composition: dict
-		Dictionary of a composition with possible keys
+	composition: dict, pandas DataFrame, or ExcelFile object
+		A single composition can be passed as a dictionary. Multiple compositions can be passed either as
+		a pandas DataFrame or an ExcelFile object. Compositional information as oxides must be present.
 
 	Returns
 	-------
-	dict
-		Dictionary of a composition, normalized to 100%, with possible keys
+	dict or pandas DataFrame
+		If a single composition is passed, a dictionary of the composition normalized to 100% is returned.
+		If an ExcelFile object or a pandas DataFrame object are passed, a pandas DataFrame with compositions
+		normalized to 100% is returned.
 	"""
-	return {k: 100.0 * v / sum(composition.values()) for k, v in composition.items()}
+	if isinstance(composition, dict):
+		return {k: 100.0 * v / sum(composition.values()) for k, v in composition.items()}
+
+	if isinstance(composition, ExcelFile):
+		data = composition.data
+		data["Sum"] = sum([data[oxide] for oxide in oxides])
+		for column in data:
+			if column in oxides:
+				data[column] = 100*data[column]/data["Sum"]
+
+		del data["Sum"]
+		return data
+
+	if isinstance(composition, pd.DataFrame)
+		composition["Sum"] = sum([composition[oxide] for oxide in oxides])
+			for column in composition:
+				if column in oxides:
+					composition[column] = 100*composition[column]/composition["Sum"]
+
+			del composition["Sum"]
+			return composition
+
 
 
 #------------DEFINE MAJOR CLASSES-------------------#
