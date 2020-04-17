@@ -11,6 +11,9 @@ from scipy.optimize import root_scalar
 from scipy.optimize import root
 from scipy.optimize import minimize
 
+print('Write code to deal with volatile undersaturation, i.e. low pressures have an upper bound on volatile solubility, so will cause errors when calculating satP')
+print("Build in a function for re-normalising wtpt after reporting H2O")
+print("Build in some knowledge of how the parameterisations want to treat Fe, H2O and CO2 in bulk comp.")
 
 #----------DEFINE SOME CONSTANTS-------------#
 oxides = ['SiO2', 'TiO2', 'Al2O3', 'Fe2O3', 'Cr2O3', 'FeO', 'MnO', 'MgO', 'NiO', 'CoO', 'CaO', 'Na2O', 'K2O', 'P2O5',
@@ -34,6 +37,9 @@ CationMass = {'SiO2': 28.085, 'MgO': 24.305, 'FeO': 55.845, 'CaO': 40.078, 'Al2O
 oxides_to_cations = {'SiO2': 'Si', 'MgO': 'Mg', 'FeO': 'Fe', 'CaO': 'Ca', 'Al2O3': 'Al', 'Na2O': 'Na',
              'K2O': 'K', 'MnO': 'Mn', 'TiO2': 'Ti', 'P2O5': 'P', 'Cr2O3': 'Cr',
              'NiO': 'Ni', 'CoO': 'Co', 'Fe2O3': 'Fe3', 'H2O': 'H', 'CO2': 'C'}
+cations_to_oxides = {'Si': 'SiO2', 'Mg': 'MgO', 'Fe': 'FeO', 'Ca': 'CaO', 'Al': 'Al2O3', 'Na': 'Na2O',
+             'K': 'K2O', 'Mn': 'MnO', 'Ti': 'TiO2', 'P': 'P2O5', 'Cr': 'Cr2O3',
+             'Ni': 'NiO', 'Co': 'CoO', 'Fe3': 'Fe2O3', 'H': 'H2O', 'C': 'CO2'}
 
 
 
@@ -115,6 +121,22 @@ def wtpercentOxides_to_molCations(oxides):
 
 	return molCations
 
+def wtpercentOxides_to_molOxides(oxides):
+	""" WRITE SOMETHING HERE!!!
+	"""
+	molOxides = {}
+	if type(oxides) == dict:
+		oxides = pd.Series(oxides)
+	elif type(oxides) != pd.core.series.Series:
+		print("NEED TO WRITE CODE TO RAISE AN ERROR! wtptoxides")
+	for ox in oxides.index:
+		molOxides[ox] = oxides[ox]/oxideMass[ox]
+	molOxides = pd.Series(molOxides)
+
+	molOxides = molOxides/molOxides.sum()
+
+	return molOxides
+
 def wtpercentOxides_to_molSingleO(oxides):
 	""" WRITE SOMETHING HERE!!!
 	"""
@@ -146,6 +168,34 @@ def normalize(composition):
 		Dictionary of a composition, normalized to 100%, with possible keys
 	"""
 	return {k: 100.0 * v / sum(composition.values()) for k, v in composition.items()}
+
+def wtpercentOxides_to_formulaWeight(sample):
+	cations = wtpercentOxides_to_molSingleO(sample)
+	FW = 15.999
+	for cation in list(cations.keys()):
+		FW += cations[cation]*CationMass[cations_to_oxides[cation]]
+	return FW
+
+def normalize_FixedVolatiles(sample):
+	normalized = pd.Series({})
+	volatiles = 0
+	if 'CO2' in list(sample.index):
+		volatiles += sample['CO2']
+	if 'H2O' in list(sample.index):
+		volatiles += sample['H2O']
+
+	for ox in list(sample.index):
+		if ox != 'H2O' and ox != 'CO2':
+			normalized[ox] = sample[ox]
+
+	normalized = normalized/np.sum(normalized)*(100-volatiles)
+
+	if 'CO2' in list(sample.index):
+		normalized['CO2'] = sample['CO2']
+	if 'H2O' in list(sample.index):
+		normalized['H2O'] = sample['H2O']
+
+	return normalized
 
 
 #------------DEFINE MAJOR CLASSES-------------------#
@@ -245,12 +295,6 @@ class Model(object):
 		"""
 
 	@abstractmethod
-	def molfrac_molecular(self,**kwargs):
-		"""
-		WRITE stuff
-		"""
-
-	@abstractmethod
 	def calculate_equilibrium_fluid_comp(self,**kwargs):
 		"""
 		WRITE STUFF
@@ -262,6 +306,19 @@ class Model(object):
 		WRITE STUFF
 		"""
 
+	@abstractmethod
+	def preprocess_sample(self,**kwargs):
+		"""
+		WRITE stuff
+		"""
+
+	@abstractmethod
+	def check_calibration_range(self,**kwargs):
+		"""
+		WRITE stuff
+		"""
+
+
 class FugacityModel(object):
 	"""
 	"""
@@ -271,12 +328,12 @@ class FugacityModel(object):
 		"""
 		"""
 
-class fugacity_idealgas(FugacityModel):
-	"""
-	"""
+	@abstractmethod
+	def check_calibration_range(self,parameters):
+		"""
+		"""
 
-	def fugacity(self,pressure,X_fluid=1.0):
-		return pressure*X_fluid
+
 
 class activity_model(object):
 	"""
@@ -287,6 +344,11 @@ class activity_model(object):
 		"""
 		"""
 
+	@abstractmethod
+	def check_calibration_range(self,parameters):
+		"""
+		"""
+
 class activity_idealsolution(activity_model):
 	"""
 	"""
@@ -294,10 +356,29 @@ class activity_idealsolution(activity_model):
 	def activity(self,X):
 		return X
 
+	def check_calibration_range(self,parameters):
+		results = {}
+		for param in list(parameters.keys()):
+			results[param] = True
+		return results
+
 
 class Calculate(object):
 	"""
 	"""
+	def __init__(self,sample,model='MagmaSat',**kwargs):
+		if type(model) == str:
+			self.model = default_models[model]
+		else:
+			self.model = model
+
+		self.sample = sample.copy()
+		self.sample = self.model.preprocess_sample(self.sample)
+
+		self.result = self.calculate(sample=self.sample,**kwargs)
+		self.calib_check = self.check_calibration_range(sample=self.sample,**kwargs)
+
+
 	@abstractmethod
 	def calculate(self):
 		""" """
@@ -306,13 +387,362 @@ class Calculate(object):
 	def check_calibration_range(self):
 		""" """
 
+#-------------FUGACITY MODELS--------------------------------#
+
+class fugacity_idealgas(FugacityModel):
+	"""
+	"""
+
+	def fugacity(self,pressure,X_fluid=1.0,**kwargs):
+		return pressure*X_fluid
+
+	def check_calibration_range(self,parameters):
+		results = {}
+		for param in list(parameters.keys()):
+			results[param] = True
+		return results
+
+class fugacity_KJ81_co2(FugacityModel):
+	"""
+	"""
+
+	def fugacity(self,pressure,temperature,X_fluid,**kwargs):
+		if X_fluid == 0:
+			return 0
+		elif temperature >= 1050.0 + 273.15:
+			return pressure*np.exp(self.lnPhi_mix(pressure,temperature,1.0))*X_fluid
+		else:
+			return pressure*np.exp(self.lnPhi_mix(pressure,temperature,X_fluid))*X_fluid
+
+
+	def volume(self,P,T,X_fluid):
+		if X_fluid != 1.0:
+			# x0 = self.volume(P,T,1.0)*X_fluid + self.volume_h(P,T)*(1-X_fluid)
+			# print(x0)
+			if P >= 20000 and T<800:
+				x0 = (X_fluid*25+(1-X_fluid)*15)
+			else:
+				x0 = (X_fluid*35+(1-X_fluid)*15)
+
+		else:
+			if P >= 20000 and T<800:
+				x0 = 25
+			else:
+				x0=35
+		return root_scalar(self.root_volume,x0=x0,x1=x0*0.9,args=(P,T,X_fluid)).root
+
+
+	def root_volume(self,v,P,T,X_fluid):
+		c = {}
+		h = {}
+
+		c['b'] = 58.0
+		c['c'] = (28.31 + 0.10721*T - 8.81e-6*T**2)*1e6
+		c['d'] = (9380.0 - 8.53*T + 1.189e-3*T**2)*1e6
+		c['e'] = (-368654.0 + 715.9*T + 0.1534*T**2)*1e6
+		h['b'] = 29.0
+		h['c'] = (290.78 - 0.30276*T + 1.4774e-4*T**2)*1e6#3
+		h['d'] = (-8374.0 + 19.437*T - 8.148e-3*T**2)*1e6
+		h['e'] = (76600.0 - 133.9*T + 0.1071*T**2)*1e6
+
+		if X_fluid == 1:
+			bm = c['b']
+			cm = c['c']
+			c12= c['c']
+			dm = c['d']
+			d12= c['d']
+			em = c['e']
+			e12 =c['e']
+		else:
+			bm = X_fluid*c['b'] + (1-X_fluid)*h['b']
+			c12 = (c['c']*h['c'])**0.5
+			cm = c['c']*X_fluid**2 + h['c']*(1-X_fluid)**2 + 2*X_fluid*(1-X_fluid)*c12
+			d12 = (c['d']*h['d'])**0.5
+			dm = c['d']*X_fluid**2 + h['d']*(1-X_fluid)**2 + 2*X_fluid*(1-X_fluid)*d12
+			e12 = (c['e']*h['e'])**0.5
+			em = c['e']*X_fluid**2 + h['e']*(1-X_fluid)**2 + 2*X_fluid*(1-X_fluid)*e12
+
+		am = cm + dm/v + em/v**2
+
+		y = bm/(4*v)
+
+		pt1 = (83.14 * T * (1 + y + y**2 - y**3)) / (v*(1-y)**3)
+		pt2 = - am / (T**0.5 * v * (v+bm))
+
+		return -(P - pt1 - pt2)
+
+	def volume_h(self,P,T):
+		return root_scalar(self.root_volume_h,x0=15,x1=35,args=(P,T)).root
+
+
+	def root_volume_h(self,v,P,T):
+		h = {}
+		h['b'] = 29.0
+		h['c'] = (290.78 - 0.30276*T + 1.4774e-4*T**2)*1e6#3
+		h['d'] = (-8374.0 + 19.437*T - 8.148e-3*T**2)*1e6
+		h['e'] = (76600.0 - 133.9*T + 0.1071*T**2)*1e6
+		h['a'] = h['c'] + h['d']/v + h['e']/v**2
+
+		y = h['b']/(4*v)
+
+		pt1 = (83.14 * T * (1 + y + y**2 - y**3)) / (v*(1-y)**3)
+		pt2 = - h['a'] / (T**0.5 * v * (v+h['b']))
+
+		return -(P - pt1 - pt2)
+
+
+	def lnPhi_mix(self,P,T,X_fluid):
+		v = self.volume(P,T,X_fluid)
+
+		c = {}
+		h = {}
+
+		c['b'] = 58.0
+		c['c'] = (28.31 + 0.10721*T - 8.81e-6*T**2)*1e6
+		c['d'] = (9380.0 - 8.53*T + 1.189e-3*T**2)*1e6
+		c['e'] = (-368654.0 + 715.9*T + 0.1534*T**2)*1e6
+		h['b'] = 29.0
+		h['c'] = (290.78 - 0.30276*T + 1.4774e-4*T**2)*1e6#3
+		h['d'] = (-8374.0 + 19.437*T - 8.148e-3*T**2)*1e6
+		h['e'] = (76600.0 - 133.9*T + 0.1071*T**2)*1e6
+
+		if X_fluid == 1:
+			bm = c['b']
+			cm = c['c']
+			c12= c['c']
+			dm = c['d']
+			d12= c['d']
+			em = c['e']
+			e12 =c['e']
+		else:
+			bm = X_fluid*c['b'] + (1-X_fluid)*h['b']
+			c12 = (c['c']*h['c'])**0.5
+			cm = c['c']*X_fluid**2 + h['c']*(1-X_fluid)**2 + 2*X_fluid*(1-X_fluid)*c12
+			d12 = (c['d']*h['d'])**0.5
+			dm = c['d']*X_fluid**2 + h['d']*(1-X_fluid)**2 + 2*X_fluid*(1-X_fluid)*d12
+			e12 = (c['e']*h['e'])**0.5
+			em = c['e']*X_fluid**2 + h['e']*(1-X_fluid)**2 + 2*X_fluid*(1-X_fluid)*e12
+
+		am = cm + dm/v + em/v**2
+
+		y = bm/(4*v)
+
+		# Z = (1+y+y**2-y**3)/(1-y)**2 - am/(83.14*T**1.5*(v+bm))
+		Z = v*P/(83.14*T)
+
+		lnPhi = 0
+
+		lnPhi += (4*y-3*y**2)/(1-y)**2 + (c['b']/bm * (4*y-2*y**2)/(1-y)**3)
+		lnPhi += - (2*c['c']*X_fluid+2*(1-X_fluid)*c12)/(83.14*T**1.5*bm)*np.log((v+bm)/v)
+		lnPhi += - cm*c['b']/(83.14*T**1.5*bm*(v+bm))
+		lnPhi += cm*c['b']/(83.14*T**1.5*bm**2)*np.log((v+bm)/v)
+		lnPhi += - (2*c['d']*X_fluid+2*d12*(1-X_fluid)+dm)/(83.14*T**1.5*bm*v)
+		lnPhi += (2*c['d']*X_fluid+2*(1-X_fluid)*d12+dm)/(83.14*T**1.5*bm**2)*np.log((v+bm)/v)
+		lnPhi += c['b']*dm/(83.14*T**1.5*v*bm*(v+bm)) + 2*c['b']*dm/(83.14*T**1.5*bm**2*(v+bm))
+		lnPhi += - 2*c['b']*dm/(83.14*T**1.5*bm**3)*np.log((v+bm)/v)
+		lnPhi += - (2*c['e']*X_fluid + 2*(1-X_fluid)*e12+2*em)/(83.14*T**1.5*2*bm*v**2)
+		lnPhi += (2*c['e']*X_fluid+2*e12*(1-X_fluid)+2*em)/(83.14*T**1.5*bm**2*v)
+		lnPhi += - (2*c['e']*X_fluid+2*e12*(1-X_fluid)+2*em)/(83.14*T**1.5*bm**3)*np.log((v+bm)/v)
+		lnPhi += em*c['b']/(83.14*T**1.5*2*bm*v**2*(v+bm)) - 3*em*c['b']/(83.14*T**1.5*2*bm**2*v*(v+bm))
+		lnPhi += 3*em*c['b']/(83.14*T**1.5*bm**4)*np.log((v+bm)/v) - 3*em*c['b']/(83.14*T**1.5*bm**3*(v+bm))
+		lnPhi += - np.log(Z)
+
+		return lnPhi
+
+	def check_calibration_range(self,parameters,**kwargs):
+		results = {}
+		if 'pressure' in parameters.keys():
+			results['pressure'] = (parameters['pressure']<20000)
+		if 'temperature' in parameters.keys():
+			results['temperature'] = (parameters['temperature']<1323)
+		return results
+
+
+class fugacity_KJ81_h2o(FugacityModel):
+	"""
+	"""
+
+	def fugacity(self,pressure,temperature,X_fluid,**kwargs):
+		if X_fluid == 0:
+			return 0
+		elif temperature >= 1050+273.15:
+			return pressure*np.exp(self.lnPhi_mix(pressure,temperature,1.0))*X_fluid
+		else:
+			return pressure*np.exp(self.lnPhi_mix(pressure,temperature,X_fluid))*X_fluid
+
+
+	def volume(self,P,T,X_fluid):
+		if X_fluid != 1.0:
+			# x0 = self.volume(P,T,1.0)*X_fluid + self.volume_h(P,T)*(1-X_fluid)
+			# print(x0)
+			if P >= 20000 and T<800:
+				x0 = ((1-X_fluid)*25+X_fluid*15)
+			else:
+				x0 = ((1-X_fluid)*35+X_fluid*15)
+
+		else:
+			if P >= 20000 and T<800:
+				x0 = 10
+			else:
+				x0=15
+		return root_scalar(self.root_volume,x0=x0,x1=x0*0.9,args=(P,T,X_fluid)).root
+
+
+	def root_volume(self,v,P,T,X_fluid):
+		c = {}
+		h = {}
+
+		c['b'] = 58.0
+		c['c'] = (28.31 + 0.10721*T - 8.81e-6*T**2)*1e6
+		c['d'] = (9380.0 - 8.53*T + 1.189e-3*T**2)*1e6
+		c['e'] = (-368654.0 + 715.9*T + 0.1534*T**2)*1e6
+		h['b'] = 29.0
+		h['c'] = (290.78 - 0.30276*T + 1.4774e-4*T**2)*1e6#3
+		h['d'] = (-8374.0 + 19.437*T - 8.148e-3*T**2)*1e6
+		h['e'] = (76600.0 - 133.9*T + 0.1071*T**2)*1e6
+
+		if X_fluid == 1:
+			bm = h['b']
+			cm = h['c']
+			dm = h['d']
+			em = h['e']
+			c12= h['c']
+			d12= h['d']
+			e12= h['e']
+		else:
+			bm = X_fluid*h['b'] + (1-X_fluid)*c['b']
+			c12 = (c['c']*h['c'])**0.5
+			cm = h['c']*X_fluid**2 + c['c']*(1-X_fluid)**2 + 2*X_fluid*(1-X_fluid)*c12
+			d12 = (c['d']*h['d'])**0.5
+			dm = h['d']*X_fluid**2 + c['d']*(1-X_fluid)**2 + 2*X_fluid*(1-X_fluid)*d12
+			e12 = (c['e']*h['e'])**0.5
+			em = h['e']*X_fluid**2 + c['e']*(1-X_fluid)**2 + 2*X_fluid*(1-X_fluid)*e12
+
+		am = cm + dm/v + em/v**2
+
+		y = bm/(4*v)
+
+		pt1 = (83.14 * T * (1 + y + y**2 - y**3)) / (v*(1-y)**3)
+		pt2 = - am / (T**0.5 * v * (v+bm))
+
+		return -(P - pt1 - pt2)
+
+	def volume_c(self,P,T):
+		return root_scalar(self.root_volume_c,x0=15,x1=35,args=(P,T)).root
+
+
+	def root_volume_c(self,v,P,T):
+		c = {}
+		c['b'] = 58.0
+		c['c'] = (28.31 + 0.10721*T - 8.81e-6*T**2)*1e6
+		c['d'] = (9380.0 - 8.53*T + 1.189e-3*T**2)*1e6
+		c['e'] = (-368654.0 + 715.9*T + 0.1534*T**2)*1e6
+		c['a'] = c['c'] + c['d']/v + c['e']/v**2
+
+		y = c['b']/(4*v)
+
+		pt1 = (83.14 * T * (1 + y + y**2 - y**3)) / (v*(1-y)**3)
+		pt2 = - c['a'] / (T**0.5 * v * (v+c['b']))
+
+		return -(P - pt1 - pt2)
+
+
+	def lnPhi_mix(self,P,T,X_fluid):
+		v = self.volume(P,T,X_fluid)
+
+		c = {}
+		h = {}
+
+		c['b'] = 58.0
+		c['c'] = (28.31 + 0.10721*T - 8.81e-6*T**2)*1e6
+		c['d'] = (9380.0 - 8.53*T + 1.189e-3*T**2)*1e6
+		c['e'] = (-368654.0 + 715.9*T + 0.1534*T**2)*1e6
+		h['b'] = 29.0
+		h['c'] = (290.78 - 0.30276*T + 1.4774e-4*T**2)*1e6#3
+		h['d'] = (-8374.0 + 19.437*T - 8.148e-3*T**2)*1e6
+		h['e'] = (76600.0 - 133.9*T + 0.1071*T**2)*1e6
+
+		if X_fluid == 1:
+			bm = h['b']
+			cm = h['c']
+			dm = h['d']
+			em = h['e']
+			c12= h['c']
+			d12= h['d']
+			e12= h['e']
+		else:
+			bm = X_fluid*h['b'] + (1-X_fluid)*c['b']
+			c12 = (c['c']*h['c'])**0.5
+			cm = h['c']*X_fluid**2 + c['c']*(1-X_fluid)**2 + 2*X_fluid*(1-X_fluid)*c12
+			d12 = (c['d']*h['d'])**0.5
+			dm = h['d']*X_fluid**2 + c['d']*(1-X_fluid)**2 + 2*X_fluid*(1-X_fluid)*d12
+			e12 = (c['e']*h['e'])**0.5
+			em = h['e']*X_fluid**2 + c['e']*(1-X_fluid)**2 + 2*X_fluid*(1-X_fluid)*e12
+
+		am = cm + dm/v + em/v**2
+
+		y = bm/(4*v)
+
+		# Z = (1+y+y**2-y**3)/(1-y)**2 - am/(83.14*T**1.5*(v+bm))
+		Z = v*P/(83.14*T)
+
+		lnPhi = 0
+
+		lnPhi += (4*y-3*y**2)/(1-y)**2 + (h['b']/bm * (4*y-2*y**2)/(1-y)**3)
+		lnPhi += - (2*h['c']*X_fluid+2*(1-X_fluid)*c12)/(83.14*T**1.5*bm)*np.log((v+bm)/v)
+		lnPhi += - cm*h['b']/(83.14*T**1.5*bm*(v+bm))
+		lnPhi += cm*h['b']/(83.14*T**1.5*bm**2)*np.log((v+bm)/v)
+		lnPhi += - (2*h['d']*X_fluid+2*d12*(1-X_fluid)+dm)/(83.14*T**1.5*bm*v)
+		lnPhi += (2*h['d']*X_fluid+2*(1-X_fluid)*d12+dm)/(83.14*T**1.5*bm**2)*np.log((v+bm)/v)
+		lnPhi += h['b']*dm/(83.14*T**1.5*v*bm*(v+bm)) + 2*h['b']*dm/(83.14*T**1.5*bm**2*(v+bm))
+		lnPhi += - 2*h['b']*dm/(83.14*T**1.5*bm**3)*np.log((v+bm)/v)
+		lnPhi += - (2*h['e']*X_fluid + 2*(1-X_fluid)*e12+2*em)/(83.14*T**1.5*2*bm*v**2)
+		lnPhi += (2*h['e']*X_fluid+2*e12*(1-X_fluid)+2*em)/(83.14*T**1.5*bm**2*v)
+		lnPhi += - (2*h['e']*X_fluid+2*e12*(1-X_fluid)+2*em)/(83.14*T**1.5*bm**3)*np.log((v+bm)/v)
+		lnPhi += em*h['b']/(83.14*T**1.5*2*bm*v**2*(v+bm)) - 3*em*h['b']/(83.14*T**1.5*2*bm**2*v*(v+bm))
+		lnPhi += 3*em*h['b']/(83.14*T**1.5*bm**4)*np.log((v+bm)/v) - 3*em*h['b']/(83.14*T**1.5*bm**3*(v+bm))
+		lnPhi += - np.log(Z)
+
+		return lnPhi
+
+	def check_calibration_range(self,parameters,**kwargs):
+		results = {}
+		if 'pressure' in parameters.keys():
+			results['pressure'] = (parameters['pressure']<20000)
+		if 'temperature' in parameters.keys():
+			results['temperature'] = (parameters['temperature']<1323)
+		return results
+
+
+
+#------------PURE FLUID MODELS-------------------------------#
+
 class ShishkinaCarbon(Model):
-	""" Model class for pure CO2 fluids.
+	""" Implementation of the Shishkina et al. (2014) carbon solubility model, as a Model class.
 	"""
 	def __init__(self):
 		self.set_volatile_species(['CO2'])
 		self.set_fugacity_model(fugacity_idealgas())
 		self.set_activity_model(activity_idealsolution())
+
+	def preprocess_sample(self,sample):
+		""" Returns sample, unmodified. The Pi* compositional parameter is a ratio of cations,
+		therefore the value is not affected by the normalization of the sample. Shishkina et al.
+		imply the accuracy of the calculations are little affected whether Fe(tot) or Fe2+ is
+		used.
+
+		Parameters
+		----------
+		sample:		 pandas Series
+			The major element oxides in wt%.
+
+		Returns
+		-------
+		pandas Series
+			The major element oxides in wt%.
+
+		"""
+		return sample
 
 	def PiStar(self,sample):
 		"""Shishkina et al. (2014) Eq (11)
@@ -321,9 +751,13 @@ class ShishkinaCarbon(Model):
 
 	    Parameters
 	    ----------
-	    MajorElements:  Series
-	        Series containing major element oxides in wt%. All oxides passed will be
-	        included in calculating molar proportions.
+	    sample:		pandas Series
+	        Major element oxides in wt%.
+
+		Returns
+		-------
+		float
+			The value of the Pi* compositional parameter.
 		"""
 		_mols = wtpercentOxides_to_molCations(sample)
 		_pi = (_mols['Ca'] + 0.8*_mols['K'] + 0.7*_mols['Na'] + 0.4*_mols['Mg'] + 0.4*_mols['Fe'])/\
@@ -331,8 +765,24 @@ class ShishkinaCarbon(Model):
 		return _pi
 
 	def calculate_dissolved_volatiles(self,pressure,sample,X_fluid=1,**kwargs):
-		PiStar = self.PiStar(sample)
+		""" Calculates the dissolved CO2 concentration in wt%, using equation (13) of Shishkina et al. (2014).
 
+		Parameters
+		----------
+		pressure:	float
+			(Total) pressure in bars.
+		sample:		pandas Series
+			Major element concentrations in wt%. Normalization does not matter.
+		X_fluid:	float
+			The mol-fraction of the fluid that is CO2. Default is 1, i.e. a pure CO2 fluid.
+
+		Returns
+		-------
+		float
+			The dissolved CO2 concentration in wt%.
+		"""
+
+		PiStar = self.PiStar(sample)
 		fugacity = self.fugacity_model.fugacity(pressure=pressure,X_fluid=X_fluid,**kwargs)
 
 		A = 1.150
@@ -344,25 +794,50 @@ class ShishkinaCarbon(Model):
 		else:
 			return np.exp(A*np.log(fugacity/10)+B*PiStar+C)/1e4
 
-	def molfrac_molecular(self,pressure,sample,X_fluid=1.0,**kwargs):
-		CO2_wtpt = self.calculate_dissolved_volatiles(pressure=pressure,X_fluid=X_fluid,sample=sample,
-													  **kwargs)
 
-		meltcomp = sample.copy()
-		meltcomp['CO2'] = CO2_wtpt
-		molfracs = wtpercentOxides_to_molSingleO(meltcomp)
+	def calculate_equilibrium_fluid_comp(self,pressure,sample,**kwargs):
+		""" Returns 1.0 if a pure CO2 fluid is saturated.
+		Returns 0.0 if a pure CO2 fluid is undersaturated.
 
-		return molfracs['C']
+		Parameters
+		----------
+		pressure 	float
+			The total pressure of the system in bars.
+		sample 		pandas Series
+			Major element oxides in wt%
 
-	def calculate_equilibrium_fluid_comp(self,**kwargs):
-		return 1.0
+		Returns
+		-------
+		float
+			1.0 if CO2-fluid saturated, 0.0 otherwise.
+		"""
+		if self.calculate_saturation_pressure(self,sample=sample,**kwargs) > pressure:
+			return 0.0
+		else:
+			return 1.0
 
 	def calculate_saturation_pressure(self,sample,**kwargs):
-		satP = root_scalar(self.root_saturation_pressure,x0=1000.0,x1=2000.0,args=(sample)).root
+		satP = root_scalar(self.root_saturation_pressure,x0=1000.0,x1=2000.0,args=(sample,kwargs)).root
 		return satP
 
-	def root_saturation_pressure(self,pressure,sample):
-		return self.calculate_dissolved_volatiles(pressure,sample)-sample['CO2']
+	def root_saturation_pressure(self,pressure,sample,kwargs):
+		return self.calculate_dissolved_volatiles(pressure=pressure,sample=sample,**kwargs)-sample['CO2']
+
+	def check_calibration_range(self,parameters,**kwargs):
+		results = {}
+		if 'pressure' in parameters.keys():
+			pressure_results = {'Shishkina Model': (parameters['pressure']>500.0) and (parameters['pressure']<5000.0),
+								'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['pressure'],
+								'Activity Model': self.activity_model.check_calibration_range(parameters)['pressure']}
+			results['pressure'] = pressure_results
+
+		if 'temperature' in parameters.keys():
+			temperature_results = {'Shishkina Model': (parameters['temperature']>1200+273.15) and (parameters['temperature']<1250+273.15),
+									'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['temperature'],
+									'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
+			results['temperature'] = temperature_results
+
+		return results
 
 class ShishkinaWater(Model):
 	""" Model class for pure H2O fluids
@@ -371,6 +846,9 @@ class ShishkinaWater(Model):
 		self.set_volatile_species(['H2O'])
 		self.set_fugacity_model(fugacity_idealgas())
 		self.set_activity_model(activity_idealsolution())
+
+	def preprocess_sample(self,sample):
+		return sample
 
 	def calculate_dissolved_volatiles(self,pressure,sample,X_fluid=1.0,**kwargs):
 		_mols = wtpercentOxides_to_molCations(sample)
@@ -383,30 +861,704 @@ class ShishkinaWater(Model):
 
 		return a*total_alkalis + b
 
-	def molfrac_molecular(self,pressure,sample,X_fluid=1.0,**kwargs):
 
-		H2O_wtpt = self.calculate_dissolved_volatiles(pressure=pressure,X_fluid=X_fluid,sample=sample,
-													  **kwargs)
 
-		meltcomp = sample.copy()
-		meltcomp['H2O'] = H2O_wtpt
-		molfracs = wtpercentOxides_to_molSingleO(meltcomp)
-
-		return molfracs['H']/2
-
-	def calculate_equilibrium_fluid_comp(self,**kwargs):
-		return 1.0
+	def calculate_equilibrium_fluid_comp(self,pressure,sample,**kwargs):
+		if self.calculate_saturation_pressure(self,sample=sample,**kwargs) > pressure:
+			return 0.0
+		else:
+			return 1.0
 
 	def calculate_saturation_pressure(self,sample,**kwargs):
-		satP = root_scalar(self.root_saturation_pressure,x0=1000.0,x1=2000.0,args=(sample)).root
+		satP = root_scalar(self.root_saturation_pressure,x0=1000.0,x1=2000.0,args=(sample,kwargs)).root
 		return satP
 
-	def root_saturation_pressure(self,pressure,sample):
-		return self.calculate_dissolved_volatiles(pressure,sample)-sample['H2O']
+	def root_saturation_pressure(self,pressure,sample,kwargs):
+		return self.calculate_dissolved_volatiles(pressure=pressure,sample=sample,**kwargs)-sample['H2O']
+
+	def check_calibration_range(self,parameters,**kwargs):
+		results = {}
+		if 'pressure' in parameters.keys():
+			pressure_results = {'Shishkina Model': (parameters['pressure']>500.0) and (parameters['pressure']<5000.0),
+								'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['pressure'],
+								'Activity Model': self.activity_model.check_calibration_range(parameters)['pressure']}
+			results['pressure'] = pressure_results
+
+		if 'temperature' in parameters.keys():
+			temperature_results = {'Shishkina Model': (parameters['temperature']>1200+273.15) and (parameters['temperature']<1250+273.15),
+									'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['temperature'],
+									'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
+			results['temperature'] = temperature_results
+
+		return results
+
+
+class DixonCarbon(Model):
+	"""
+	"""
+
+	def __init__(self):
+		self.set_volatile_species('CO2')
+		self.set_fugacity_model(fugacity_KJ81_co2())
+		self.set_activity_model(activity_idealsolution())
+
+	def preprocess_sample(self,sample):
+		return sample
+
+	def calculate_dissolved_volatiles(self,pressure,sample,X_fluid=1.0,**kwargs):
+		"""Dixon (1997) Eqn (3).
+
+	    Calculates the concentration (in ppm) of CO2 in the melt given the mole
+	    fraction of carbonate ion.
+
+	    Parameters
+	    ----------
+	    XCO3: float
+	        Mole fraction of carbonate ion in the melt."""
+
+
+		XCO3 = self.molfrac_molecular(pressure=pressure,sample=sample,X_fluid=X_fluid,**kwargs)
+		return (4400 * XCO3) / (36.6 - 44*XCO3)
+
+
+	def calculate_equilibrium_fluid_comp(self,pressure,sample,**kwargs):
+		"""
+		WRITE STUFF
+		"""
+		if self.calculate_saturation_pressure(sample=sample,**kwargs) > pressure:
+			return 0.0
+		else:
+			return 1.0
+
+	def calculate_saturation_pressure(self,sample,X_fluid=1.0,**kwargs):
+		"""
+		WRITE STUFF
+		"""
+		satP = root_scalar(self.root_saturation_pressure,x0=1000.0,x1=2000.0,args=(sample,kwargs)).root
+		return np.real(satP)
+
+	def molfrac_molecular(self,pressure,sample,X_fluid=1.0,**kwargs):
+		"""Dixon (1997) Eqn (1).
+
+	    Calculates the mole fraction of carbonate ion dissolved in a tholeiitic basalt in
+	    equilibrium with pure CO2 fluid at 1200C, at a chosen pressure.
+
+	    Parameters
+	    ----------
+	    P:  float
+	        Pressure in bar
+	    XCO3Std:    float
+	        Mole fraction of carbonate dissolved in tholeiitic basalt in equilibrium with
+	        pure CO2 fluid at 1200C and 1 bar. Default value is 3.8e-7, as suggested in paper.
+	        If MajorElements variable not set to string, this will be replaced.
+	    fCO2:   float
+	        Fugacity of CO2 at the pressure of interest. If value set to 0.0, fCO2 will be
+	        set to that calculated using the Pitzer & Sterner equations by the CHO software.
+	        This is the default option.
+	    MajorElements:  series
+	        If set to string XH2OStd variable passed will be used (or default value).
+	        Series of major element oxide concentrations in wt%, requiring SiO2 as minimum.
+	        Used to calculated XCO3std from compositional parametrisation."""
+
+		DeltaVr = 23 #cm3 mole-1
+		P0 = 1
+		R = 83.15
+		T0 = 1473.15
+
+		fugacity = self.fugacity_model.fugacity(pressure=pressure,X_fluid=X_fluid,**kwargs)
+
+		XCO3Std = self.XCO3_Std(sample)
+
+		return XCO3Std * fugacity * np.exp(-DeltaVr * (pressure-P0)/(R*T0))
+
+	def XCO3_Std(self,sample):
+		"""Dixon (1997) Eq (8).
+
+	    The compositional parameterisation for the mole fraction of carbonate ions
+	    dissolved in a melt in equilibrium with CO2 vapour at 1200C and 1 bar.
+
+	    Parameters
+	    ----------
+	    MajorElements:    dict or series (or str)
+	        A dictionary or series containing 'SiO2' as a label for the SiO2 content
+	        of the melt. If the variable is a str, it will return the default XCO3_std
+	        value."""
+		return 8.7e-6 - 1.7e-7*sample['SiO2']
+
+	def root_saturation_pressure(self,pressure,sample,kwargs):
+		return self.calculate_dissolved_volatiles(pressure=pressure,sample=sample,**kwargs) - sample['CO2']
+
+	def check_calibration_range(self,parameters,**kwargs):
+		return 0
 
 
 
+class DixonWater(Model):
+	"""
+	"""
 
+	def __init__(self):
+		self.set_volatile_species('H2O')
+		self.set_fugacity_model(fugacity_KJ81_h2o())
+		self.set_activity_model(activity_idealsolution())
+
+	def preprocess_sample(self,sample):
+		return sample
+
+	def calculate_dissolved_volatiles(self,pressure,sample,X_fluid=1.0,**kwargs):
+		"""Dixon (1997) Eq (5) and Eq (6).
+
+	    Calculates total H2O (wt%) dissolved in the melt, given the molar fractions
+	    of molecular water and hydroxyl groups dissolved.
+
+	    Parameters
+	    ----------
+	    XH2O: float
+	        Mole fraction of molecular water dissolved in the melt.
+	    XOH: float
+	        Mole fraction of hydroxyl groups dissolved in the melt."""
+		XH2O = self.molfrac_molecular(pressure=pressure,sample=sample,X_fluid=X_fluid,**kwargs)
+		XOH = self.XOH(pressure=pressure,sample=sample,X_fluid=X_fluid,**kwargs)
+
+		XB = XH2O + 0.5*XOH
+		return 1801.5*XB/(36.6-18.6*XB)
+
+
+	def calculate_equilibrium_fluid_comp(self,pressure,sample,**kwargs):
+		"""
+		WRITE STUFF
+		"""
+		if self.calculate_saturation_pressure(sample=sample,**kwargs) > pressure:
+			return 0.0
+		else:
+			return 1.0
+
+	def calculate_saturation_pressure(self,sample,X_fluid=1.0,**kwargs):
+		"""
+		WRITE STUFF
+		"""
+		satP = root_scalar(self.root_saturation_pressure,x0=1000.0,x1=2000.0,args=(sample,kwargs)).root
+
+		return np.real(satP)
+
+	def molfrac_molecular(self,pressure,sample,X_fluid=1.0,**kwargs):
+		"""Dixon (1997) Eqn (2).
+
+	    Calculates the mole fraction of molecular H2O dissolved in a tholeiitic basalt in
+	    equilibrium with pure H2O fluid at 1200C, at a chosen pressure.
+
+	    Parameters
+	    ----------
+	    P: float
+	        Pressure in bar
+	    XH2OStd: float
+	        Mole fraction of cmolecular H2O in tholeiitic basalt in equilibrium with
+	        pure H2O fluid at 1200C and 1 bar. Default value is 3.28e-5, as suggested in paper.
+	        If MajorElements variable not set to string, this will be replaced.
+	    fH2O: float
+	        Fugacity of H2O at the pressure of interest. If value set to 0.0, fH2O will be
+	        set to that calculated using the Pitzer & Sterner equations by the CHO software.
+	        This is the default option.
+	    MajorElements:  series
+	        If set to string XH2OStd variable passed will be used (or default value).
+	        Series of major element oxide concentrations in wt%, requiring SiO2 as minimum.
+	        Used to calculated XH2Ostd from compositional parametrisation."""
+		VH2O = 12 #cm3 mole-1
+		P0 = 1
+		R = 83.15
+		T0 = 1473.15
+
+		XH2OStd = self.XH2O_Std(sample)
+
+		fugacity = self.fugacity_model.fugacity(pressure=pressure,X_fluid=X_fluid,**kwargs)
+
+		return XH2OStd * fugacity * np.exp(-VH2O * (pressure-P0)/(R*T0))
+
+	def XH2O_Std(self,sample):
+		"""Dixon (1997) Eq (9).
+
+	    The compositional parameterisation for the mole fraction of molecular water
+	    dissolved in a melt in equilibrium with H2O vapour at 1200C and 1 bar.
+
+	    Parameters
+	    ----------
+	    MajorElements:    dict or series (or str)
+	        A dictionary or series containing 'SiO2' as a label for the SiO2 content
+	        of the melt. If the variable is a str, it will return the default XH2O_std
+	        value."""
+		return -3.04e-5 + 1.29e-6*sample['SiO2']
+
+	def XOH(self,pressure,sample,X_fluid=1.0,**kwargs):
+		"""Solves Dixon (1997) Eq (4).
+
+	    Finds the mole fraction of hydroxyl groups dissolved in the melt, given the
+	    mole fraction of molecular water. Uses the Newton method to find the root of
+	    Eq (4).
+
+	    Often struggles to find root when XH2O -> 0.
+
+	    Parameters
+	    ----------
+	    XH2O: float
+	        Mole fraction of molecular water dissolved in melt."""
+
+		XH2O = self.molfrac_molecular(pressure=pressure,sample=sample,X_fluid=X_fluid,**kwargs)
+		if XH2O < 1e-14:
+			return 0
+		else:
+			return root_scalar(self.XOH_root,bracket=(1e-14,1),args=(XH2O)).root
+
+	def XOH_root(self,XOH,XH2O):
+		"""Dixon (1997) Eq (4).
+
+	    Returns the difference between the two sides of equation (4) which relates
+	    the mole fraction of hydroxyl groups to the mole fraction of molecular water.
+	    For use in finding the root of the equation.
+
+	    It is a regular solution model (Silver and Stolper, 1989).
+
+	    Parameters
+	    ----------
+	    XOH: float
+	        Mole fraction of hydroxyl groups dissolved in melt.
+	    XH2O: float
+	        Mole fraction of molecular water dissolved in melt."""
+		A = 0.403
+		B = 15.333
+		C = 10.894
+
+		lhs = - np.log(XOH**2.0/(XH2O*(1.0-XH2O)))
+		rhs = A + B*XOH + C*XH2O
+
+		return rhs - lhs
+
+	def root_saturation_pressure(self,pressure,sample,kwargs):
+		return self.calculate_dissolved_volatiles(pressure=pressure,sample=sample,**kwargs) - sample['H2O']
+
+	def check_calibration_range(self,**kwargs):
+		return 0
+
+class IaconoMarzianoWater(Model):
+	"""
+	"""
+
+	def __init__(self):
+		self.set_volatile_species('H2O')
+		self.set_fugacity_model(fugacity_idealgas())
+		self.set_activity_model(activity_idealsolution())
+
+	def preprocess_sample(self,sample):
+		return sample
+
+	def calculate_dissolved_volatiles(self,pressure,temperature,sample,X_fluid=1,hydrous=True,**kwargs):
+		"""
+	    Iacono-Marziano (2012) Eq (8). Calculates the concentration of CO2 in
+	    ppm dissolved in the melt at vapour saturation, for specified pressure,
+	    temperature and partial pressure of CO2. Modifies the output of the equation
+	    to give CO2 rather than CO3.
+
+	    Parameters
+	    ----------
+	    P: float
+	        Pressure in bar
+	    T: float
+	        Temperature in K
+	    MajorElements: series
+	        Series labelled with major element oxides in wt%. All oxides passed will be
+	        included in calculating molar proportions.
+	    P_CO2: float
+	        Partial pressure of CO2 in bar
+	    hydrous: bool
+	        Use the hydrous or anhydrous calibration
+	    """
+
+		if hydrous == True:
+			if X_fluid==0:
+				return 0
+			H2O = root_scalar(self.root_dissolved_volatiles,args=(pressure,temperature,sample,X_fluid,kwargs),
+								x0=1.0,x1=2.0).root
+			return H2O/(100+H2O)*100
+		else:
+			a = 0.54
+			b = 1.24
+			B = -2.95
+			C = 0.02
+
+			fugacity = self.fugacity_model.fugacity(pressure=pressure,X_fluid=X_fluid,temperature=temperature,**kwargs)
+			if fugacity == 0:
+				return 0
+			NBO_O = self.NBO_O(sample=sample,hydrous=False)
+
+			H2O = np.exp(a*np.log(fugacity) + b*NBO_O + B + C*pressure/temperature)
+
+			return H2O
+
+
+	def calculate_equilibrium_fluid_comp(self,pressure,temperature,sample,hydrous=True,**kwargs):
+		"""
+		WRITE STUFF
+		"""
+		if pressure > self.calculate_saturation_pressure(temperature=temperature,sample=sample,hydrous=hydrous,**kwargs):
+			return 0.0
+		else:
+			return 1.0
+
+	def calculate_saturation_pressure(self,temperature,sample,hydrous=True,**kwargs):
+		"""
+		WRITE STUFF
+		"""
+		return root_scalar(self.root_saturation_pressure,args=(temperature,sample,hydrous,kwargs),
+							x0=1000.0,x1=2000.0).root
+
+	def root_saturation_pressure(self,pressure,temperature,sample,hydrous,kwargs):
+		return sample['H2O'] - self.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,sample=sample,hydrous=hydrous,**kwargs)
+
+
+	def root_dissolved_volatiles(self,h2o,pressure,temperature,sample,X_fluid,kwargs):
+		a = 0.53
+		b = 2.35
+		B = -3.37
+		C = -0.02
+
+		sample_h2o = sample.copy()
+		sample_h2o['H2O'] = h2o
+		NBO_O = self.NBO_O(sample=sample_h2o,hydrous=True)
+		fugacity = self.fugacity_model.fugacity(pressure=pressure,X_fluid=X_fluid,temperature=temperature,**kwargs)
+
+		return h2o - np.exp(a*np.log(fugacity) + b*NBO_O + B + C*pressure/temperature)
+
+	def NBO_O(self,sample,hydrous):
+		X = wtpercentOxides_to_molOxides(sample)
+
+		NBO = 2*(X['K2O']+X['Na2O']+X['CaO']+X['MgO']+X['FeO']-X['Al2O3'])
+		O = 2*X['SiO2']+2*X['TiO2']+3*X['Al2O3']+X['MgO']+X['FeO']+X['CaO']+X['Na2O']+X['K2O']
+
+		if hydrous == True:
+			NBO = NBO + 2*X['H2O']
+			O = O + X['H2O']
+
+		return NBO/O
+
+	def check_calibration_range(self,**kwargs):
+		return 0
+
+class IaconoMarzianoCarbon(Model):
+	"""
+	"""
+
+	def __init__(self):
+		self.set_volatile_species('CO2')
+		self.set_fugacity_model(fugacity_idealgas())
+		self.set_activity_model(activity_idealsolution())
+
+	def preprocess_sample(self,sample):
+		return sample
+
+	def calculate_dissolved_volatiles(self,pressure,temperature,sample,X_fluid=1,hydrous=True,**kwargs):
+		"""
+	    Iacono-Marziano (2012) Eq (8). Calculates the concentration of CO2 in
+	    ppm dissolved in the melt at vapour saturation, for specified pressure,
+	    temperature and partial pressure of CO2. Modifies the output of the equation
+	    to give CO2 rather than CO3.
+
+	    Parameters
+	    ----------
+	    P: float
+	        Pressure in bar
+	    T: float
+	        Temperature in K
+	    MajorElements: series
+	        Series labelled with major element oxides in wt%. All oxides passed will be
+	        included in calculating molar proportions.
+	    P_CO2: float
+	        Partial pressure of CO2 in bar
+	    hydrous: bool
+	        Use the hydrous or anhydrous calibration
+	    """
+
+		if hydrous == True:
+			im_h2o_model = IaconoMarzianoWater()
+			h2o = im_h2o_model.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,
+														sample=sample,X_fluid=1-X_fluid,hydrous=True,**kwargs)
+			sample_h2o = sample.copy()
+			sample_h2o['H2O'] = h2o
+
+			d = np.array([-16.4,4.4,-17.1,22.8])
+			a = 1.0
+			b = 17.3
+			B = -6.0
+			C = 0.12
+
+			NBO_O = self.NBO_O(sample=sample_h2o,hydrous=True)
+
+			molarProps = wtpercentOxides_to_molOxides(sample_h2o)
+
+		else:
+			d = np.array([2.3,3.8,-16.3,20.1])
+			a = 1.0
+			b = 15.8
+			B = -5.3
+			C = 0.14
+
+			NBO_O = self.NBO_O(sample=sample,hydrous=False)
+
+			molarProps = wtpercentOxides_to_molOxides(sample)
+
+		fugacity = self.fugacity_model.fugacity(pressure=pressure,X_fluid=X_fluid,temperature=temperature,**kwargs)
+
+		if fugacity == 0:
+			return 0
+
+
+		x = list()
+		x.append(molarProps['H2O'])
+		x.append(molarProps['Al2O3']/(molarProps['CaO']+molarProps['K2O']+molarProps['Na2O']))
+		x.append((molarProps['FeO']+molarProps['MgO']))
+		x.append((molarProps['Na2O']+molarProps['K2O']))
+		x = np.array(x)
+
+		CO3 = np.exp(np.sum(x*d) + a*np.log(fugacity) + b*NBO_O + B + C*pressure/temperature)
+
+		CO2 = CO3/1e4#/(12+16*3)*(12+16*2)/1e4
+
+		return CO2
+
+
+	def calculate_equilibrium_fluid_comp(self,pressure,temperature,sample,hydrous=True,**kwargs):
+		"""
+		WRITE STUFF
+		"""
+		if pressure > self.calculate_saturation_pressure(temperature=temperature,sample=sample,hydrous=hydrous,**kwargs):
+			return 0.0
+		else:
+			return 1.0
+
+	def calculate_saturation_pressure(self,temperature,sample,hydrous=True,**kwargs):
+		"""
+		WRITE STUFF
+		"""
+		return root_scalar(self.root_saturation_pressure,args=(temperature,sample,hydrous,kwargs),
+							x0=1000.0,x1=2000.0).root
+
+	def root_saturation_pressure(self,pressure,temperature,sample,hydrous,kwargs):
+		return sample['CO2'] - self.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,sample=sample,hydrous=hydrous,**kwargs)
+
+
+	def NBO_O(self,sample,hydrous):
+		X = wtpercentOxides_to_molOxides(sample)
+
+		NBO = 2*(X['K2O']+X['Na2O']+X['CaO']+X['MgO']+X['FeO']-X['Al2O3'])
+		O = 2*X['SiO2']+2*X['TiO2']+3*X['Al2O3']+X['MgO']+X['FeO']+X['CaO']+X['Na2O']+X['K2O']
+
+		if hydrous == True:
+			NBO = NBO + 2*X['H2O']
+			O = O + X['H2O']
+
+		return NBO/O
+
+	def check_calibration_range(self,**kwargs):
+		return 0
+
+class EguchiCarbon(Model):
+	"""
+	"""
+
+	def __init__(self):
+		self.set_volatile_species('CO2')
+		self.set_fugacity_model(fugacity_KJ81_co2())
+		print("Warning: Eguchi and Dasgupta model should use the Zhang and Duan EOS.")
+		self.set_activity_model(activity_idealsolution())
+
+	def preprocess_sample(self,sample):
+		return sample
+
+	def calculate_dissolved_volatiles(self,pressure,temperature,sample,X_fluid=1.0,**kwargs):
+		"""
+		WRITE STUFF
+		"""
+		XCO3 = self.Xi_melt(pressure=pressure,temperature=temperature,sample=sample,X_fluid=X_fluid,species='CO3')
+		XCO2 = self.Xi_melt(pressure=pressure,temperature=temperature,sample=sample,X_fluid=X_fluid,species='CO2')
+
+		FW_one = wtpercentOxides_to_formulaWeight(sample)
+
+		CO2_CO2 = ((44.01*XCO2)/(44.01*XCO2+(1-(XCO2+XCO3))*FW_one))*100
+		CO2_CO3 = ((44.01*XCO3)/(44.01*XCO3+(1-(XCO2+XCO3))*FW_one))*100
+
+		return CO2_CO2 + CO2_CO3
+
+
+	def calculate_equilibrium_fluid_comp(self,pressure,temperature,sample,**kwargs):
+		"""
+		WRITE STUFF
+		"""
+		satP = self.calculate_saturation_pressure(temperature=temperature,sample=sample,X_fluid=1.0,**kwargs)
+		if pressure > satP:
+			return 1.0
+		else:
+			return 0.0
+
+	def calculate_saturation_pressure(self,temperature,sample,X_fluid=1.0,**kwargs):
+		"""
+		WRITE STUFF
+		"""
+		return root_scalar(self.root_saturation_pressure,x0=1000.0,x1=2000.0,args=(temperature,sample,X_fluid,kwargs)).root
+
+	def root_saturation_pressure(self,pressure,temperature,sample,X_fluid,kwargs):
+		return sample['CO2'] - self.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,sample=sample,X_fluid=X_fluid,**kwargs)
+
+	def Xi_melt(self,pressure,temperature,sample,species,X_fluid=1.0,**kwargs):
+		"""
+	    Equation (9) in Eguchi and Dasgupta (2018). Calculates the mole fraction
+	    of dissolved molecular CO2 or carbonate CO3(2-).
+
+	    Parameters
+	    ----------
+	    P (float):  Pressure (bar)
+	    T (float):  Temperature (K)
+	    MajorElements (pandas Series):  Major Element Oxides.
+	    species (str):  Which species to calculate, molecular CO2 or carbonate ion.
+
+	    Returns
+	    -------
+	    Xi (float):     Mole fraction of selected species in the melt
+
+	    """
+
+		if species == 'CO3':
+			DH = -1.65e5
+			DV = 2.38e-5
+			DS = -43.64
+			B = 1.47e3
+			yNBO = 3.29
+			A_CaO = 1.68e5
+			A_Na2O = 1.76e5
+			A_K2O = 2.11e5
+		elif species == 'CO2':
+			DH = -9.02e4
+			DV = 1.92e-5
+			DS = -43.08
+			B = 1.12e3
+			yNBO = -7.09
+			A_CaO = 0
+			A_Na2O = 0
+			A_K2O = 0
+		else:
+			print("WRITE CODE TO RAISE AN ERROR!")
+		R = 8.314
+
+
+	    # Calculate NBO term
+		cations = wtpercentOxides_to_molSingleO(sample)
+		oxides = wtpercentOxides_to_molOxides(sample)
+
+		for cation in ['Mg','Ca','Fe','Na','K','Mn','Fe3']:
+			if cation not in list(cations.keys()):
+				cations[cation] = 0
+
+		NM = (cations['Mg'] + cations['Ca'] + cations['Fe'] + cations['Na'] +
+			cations['K'] + cations['Mn'])
+		Al = cations['Al'] - NM
+		if Al > 0:
+			Al = NM
+		else:
+			Al = cations['Al']
+		Fe = cations['Fe3'] + Al
+		if Al > 0:
+			Fe = 0
+		if Al < 0 and Fe > 0:
+			Fe = - Al
+		if Al < 0 and Fe < 0:
+			Fe = cations['Fe3']
+		Tet = cations['Si'] + cations['Ti'] + cations['P'] + Al + Fe
+		NBO = 2 - 4*Tet
+
+		lnfCO2 = np.log(self.fugacity_model.fugacity(pressure=pressure,temperature=temperature,X_fluid=X_fluid))
+
+		lnXi = ((DH/(R*temperature)-(pressure*1e5*DV)/(R*temperature)+DS/R) +
+				(A_CaO*oxides['CaO']+A_Na2O*oxides['Na2O']+A_K2O*oxides['K2O'])/(R*temperature) +
+				(B*lnfCO2/temperature) + yNBO*NBO
+				)
+
+		return np.exp(lnXi)
+
+	def check_calibration_range(self,**kwargs):
+		return 0
+
+class AllisonCarbon(Model):
+	"""
+	"""
+
+	def __init__(self,model_fit='power',model_loc='sunset'):
+		self.set_volatile_species('CO2')
+		self.set_fugacity_model(fugacity_KJ81_co2())
+		self.set_activity_model(activity_idealsolution())
+		self.model_fit = model_fit
+		self.model_loc = model_loc
+
+	def preprocess_sample(self,sample):
+		return sample
+
+	def calculate_dissolved_volatiles(self,pressure,temperature,sample=None,X_fluid=1.0,**kwargs):
+		"""
+		WRITE STUFF
+		"""
+		if self.model_fit == 'thermodynamic':
+			if type(sample) == type(None):
+				print("Generate an error...")
+			P0 = 1000 # bar
+			params = dict({'sunset':[16.4,-14.67],
+							'sfvf':[15.02,-14.87],
+							'erebus':[15.83,-14.65],
+							'vesuvius':[24.42,-14.04],
+							'etna':[21.59,-14.28],
+							'stromboli':[14.93,-14.68]})
+			DV = params[self.model_loc][0]
+			lnK0 = params[self.model_loc][1]
+
+			lnK = lnK0 - (pressure-P0)*DV/(8.3141*temperature)
+			fCO2 = self.fugacity_model.fugacity(pressure=pressure,temperature=temperature,X_fluid=X_fluid,**kwargs)
+			print(fCO2)
+			Kf = np.exp(lnK)*fCO2
+			XCO3 = Kf/(1-Kf)
+			FWone = wtpercentOxides_to_formulaWeight(sample)
+			wtCO2 = (44.01*XCO3)/((44.01*XCO3)+(1-XCO3)*FWone)*100
+
+			return wtCO2
+		if self.model_fit == 'power':
+			params = dict({'stromboli':[1.05,0.883],
+							'etna':[2.831,0.797],
+							'vesuvius':[4.796,0.754],
+							'sfvf':[3.273,0.74],
+							'sunset':[4.32,0.728],
+							'erebus':[5.145,0.713]})
+
+			fCO2 = self.fugacity_model.fugacity(pressure=pressure,temperature=temperature,X_fluid=X_fluid,**kwargs)
+
+			return params[self.model_loc][0]*fCO2**params[self.model_loc][1]/1e4
+
+
+
+	def calculate_equilibrium_fluid_comp(self,pressure,temperature,sample,**kwargs):
+		"""
+		WRITE STUFF
+		"""
+		satP = self.calculate_saturation_pressure(temperature=temperature,sample=sample,X_fluid=1.0,**kwargs)
+		if pressure > satP:
+			return 1.0
+		else:
+			return 0.0
+
+	def calculate_saturation_pressure(self,temperature,sample,X_fluid=1.0,**kwargs):
+		"""
+		WRITE STUFF
+		"""
+		return root_scalar(self.root_saturation_pressure,args=(temperature,sample,X_fluid,kwargs),x0=1000.0,x1=2000.0).root
+
+	def root_saturation_pressure(self,pressure,temperature,sample,X_fluid,kwargs):
+		return sample['CO2'] - self.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,sample=sample,X_fluid=X_fluid,**kwargs)
+
+	def check_calibration_range(self,**kwargs):
+		return 0
 
 
 
@@ -417,6 +1569,9 @@ class MixedFluids(Model):
 		print('Write code to check models input makes sense.')
 		self.models = tuple(model for model in models.values())
 		self.set_volatile_species(list(models.keys()))
+
+	def preprocess_sample(self,sample):
+		return sample
 
 	def calculate_dissolved_volatiles(self,pressure,X_fluid,**kwargs):
 		if len(X_fluid) != len(self.volatile_species):
@@ -429,17 +1584,6 @@ class MixedFluids(Model):
 
 		return tuple(model.calculate_dissolved_volatiles(pressure=pressure,X_fluid=Xi,**kwargs) for model, Xi in zip(self.models,X_fluid))
 
-	def molfrac_molecular(self,pressure,X_fluid,**kwargs):
-		if len(X_fluid) != len(self.volatile_species):
-			print('YOU NEED TO WRITE THE CODE TO RAISE AN ERROR! 0')
-
-		if type(X_fluid) == dict or type(X_fluid) == pd.core.series.Series:
-			X_fluid = tuple(X_fluid[species] for species in self.volatile_species)
-		elif type(X_fluid) != tuple and type(X_fluid) != list:
-			print('YOU NEED TO WRITE THE CODE TO RAISE AN ERROR! 1')
-
-		return tuple(model.molfrac_molecular(pressure=pressure,X_fluid=Xi,**kwargs) for model, Xi in zip(self.models,X_fluid))
-
 	def calculate_equilibrium_fluid_comp(self,pressure,sample,**kwargs):
 		if len(self.volatile_species) != 2:
 			print('WRITE CODE TO RAISE AN ERROR- CAN ONLY HANDLE TWO VOLATILE SPECIES')
@@ -449,15 +1593,12 @@ class MixedFluids(Model):
 		if satP < pressure:
 			return (0,0)
 
-		molfracs = wtpercentOxides_to_molSingleO(sample)
-		(Xt0, Xt1) = (molfracs[oxides_to_cations[self.volatile_species[0]]],molfracs[oxides_to_cations[self.volatile_species[1]]])
+		sample_mod = sample.copy()
+		sample_mod = normalize_FixedVolatiles(sample_mod)
 
-		# ADD A ROUTINE FOR CHECKING IF THE FLUID IS ACTUALLY VOLATILE SATURATED!
+		molfracs = wtpercentOxides_to_molOxides(sample_mod)
+		(Xt0, Xt1) = (molfracs[self.volatile_species[0]],molfracs[self.volatile_species[1]])
 
-		x = np.linspace(0,1,50)
-		misfit = np.zeros(np.shape(x))
-		for i in range(len(x)):
-			misfit[i] = self.root_for_fluid_comp(x[i],pressure,Xt0,Xt1,sample,kwargs)
 
 		Xv0 = root_scalar(self.root_for_fluid_comp,args=(pressure,Xt0,Xt1,sample,kwargs),bracket=(0,1)).root
 		Xv1 = 1-Xv0
@@ -465,75 +1606,176 @@ class MixedFluids(Model):
 		return (Xv0,Xv1)
 
 	def calculate_saturation_pressure(self,sample,**kwargs):
-		volatile_concs = np.array(tuple(sample[species] for species in self.volatile_species))
+		sample_mod = normalize_FixedVolatiles(sample)
+		volatile_concs = np.array(tuple(sample_mod[species] for species in self.volatile_species))
 
 		x0 = 0
 		for model in self.models:
-			x0 = x0 + model.calculate_saturation_pressure(sample,**kwargs)
+			x0 = x0 + model.calculate_saturation_pressure(sample=sample_mod,**kwargs)
 
-		satP = root(self.root_saturation_pressure,x0=[x0,0.5],args=(volatile_concs,sample,kwargs)).x[0]
+		satP = root(self.root_saturation_pressure,x0=[x0,0.5],args=(volatile_concs,sample_mod,kwargs)).x[0]
 
 		return satP
 
-	def calculate_isobars(self,pressure_list,points=100,**kwargs):
+	def calculate_isobars_and_isopleths(self,pressure_list,isopleth_list=[0,1],points=101,**kwargs):
 		isobars = []
 		for pressure in pressure_list:
 			dissolved = np.zeros([2,points])
-			Xv0 = np.linspace(0,1,points)
+			Xv0 = np.linspace(0.0,1.0,points)
 			for i in range(points):
-				dissolved[:,i] = self.calculate_dissolved_volatiles(pressure,X_fluid=(Xv0[i],1-Xv0[i]),**kwargs)
+				dissolved[:,i] = self.calculate_dissolved_volatiles(pressure=pressure,X_fluid=(Xv0[i],1-Xv0[i]),**kwargs)
 			isobars.append(dissolved)
-		return(isobars)
+
+		isopleths = []
+		for isopleth in isopleth_list:
+			dissolved = np.zeros([2,points])
+			pressure = np.linspace(np.nanmin(pressure_list),np.nanmax(pressure_list),points)
+			for i in range(points):
+				dissolved[:,i] = self.calculate_dissolved_volatiles(pressure=pressure[i],X_fluid=(isopleth,1-isopleth),**kwargs)
+			isopleths.append(dissolved)
+
+		return (isobars,isopleths)
+
+	def calculate_degassing_paths(self,pressures,sample,fractionate_vapor=1.0,**kwargs):
+
+		Xv = np.zeros([2,len(pressures)])
+		wtm = np.zeros([2,len(pressures)])
+
+		wtptoxides = sample.copy()
+		wtptoxides = normalize_FixedVolatiles(wtptoxides)
+		wtm0s, wtm1s = (wtptoxides[self.volatile_species[0]],wtptoxides[self.volatile_species[1]])
+
+		for i in range(len(pressures)):
+			X_fluid = self.calculate_equilibrium_fluid_comp(pressure=pressures[i],sample=wtptoxides,**kwargs)
+			Xv[:,i] = X_fluid
+			if X_fluid == (0,0):
+				wtm[:,i] = (wtptoxides[self.volatile_species[0]],wtptoxides[self.volatile_species[1]])
+			else:
+				if X_fluid[0] == 0:
+					wtm[0,i] = wtptoxides[self.volatile_species[0]]
+					wtm[1,i] = self.calculate_dissolved_volatiles(pressure=pressures[i],sample=wtptoxides,X_fluid=X_fluid,**kwargs)[1]
+				elif X_fluid[1] == 0:
+					wtm[1,i] = wtptoxides[self.volatile_species[1]]
+					wtm[0,i] = self.calculate_dissolved_volatiles(pressure=pressures[i],sample=wtptoxides,X_fluid=X_fluid,**kwargs)[0]
+				else:
+					wtm[:,i] = self.calculate_dissolved_volatiles(pressure=pressures[i],sample=wtptoxides,X_fluid=X_fluid,**kwargs)
+				wtptoxides[self.volatile_species[0]] = wtm[0,i] + (1-fractionate_vapor)*(wtm0s-wtm[0,i])
+				wtptoxides[self.volatile_species[1]] = wtm[1,i] + (1-fractionate_vapor)*(wtm1s-wtm[1,i])
+				wtptoxides = normalize_FixedVolatiles(wtptoxides)
+
+		return wtm, Xv
 
 
 	def root_saturation_pressure(self,x,volatile_concs,sample,kwargs):
-		misfit = np.array(self.calculate_dissolved_volatiles(x[0],(x[1],1-x[1]),sample=sample,**kwargs)) - volatile_concs
+		misfit = np.array(self.calculate_dissolved_volatiles(pressure=x[0],X_fluid=(x[1],1-x[1]),sample=sample,**kwargs)) - volatile_concs
 		return misfit
 
 
 	def root_for_fluid_comp(self,Xv0,pressure,Xt0,Xt1,sample,kwargs):
-		Xm0, Xm1 = self.molfrac_molecular(pressure=pressure,X_fluid=(Xv0,1-Xv0),sample=sample,**kwargs)
+		# print("Need to fix volatile normalization issue.")
+		wtm0, wtm1 = self.calculate_dissolved_volatiles(pressure=pressure,X_fluid=(Xv0,1-Xv0),sample=sample,**kwargs)
+		sample_mod = sample.copy()
+		sample_mod[self.volatile_species[0]] = wtm0
+		sample_mod[self.volatile_species[1]] = wtm1
+		sample_mod = normalize_FixedVolatiles(sample_mod)
+		cations = wtpercentOxides_to_molOxides(sample_mod)
+		Xm0 = cations[self.volatile_species[0]]
+		Xm1 = cations[self.volatile_species[1]]
 		if Xv0 == 0:
 			return Xt0 - Xm0*(Xt1-1)/(Xm1-1)
 		elif Xv0 == 1:
 			return -(Xt1 - Xm1*(Xt0-1)/(Xm0-1))
 		return (Xt0-Xm0)/(Xv0-Xm0) - (Xt1-Xm1)/(1-Xv0-Xm1)
 
+	def check_calibration_range(self,parameters,**kwargs):
+		results = {}
+		for species, model in zip(self.volatile_species,self.models):
+			results[species] = model.check_calibration_range(parameters=parameters)
+		return results
 
 
+
+#====== Define some standard model options =======================================================#
+
+default_models = {'Shishkina':				MixedFluids({'CO2':ShishkinaCarbon(),'H2O':ShishkinaWater()}),
+				  'Dixon':					MixedFluids({'CO2':DixonCarbon(),'H2O':DixonWater()}),
+				  'IaconoMarziano': 		MixedFluids({'CO2':IaconoMarzianoCarbon(),'H2O':IaconoMarzianoWater()}),
+				  'ShishkinaCarbon':		ShishkinaCarbon(),
+				  'ShishkinaWater': 		ShishkinaWater(),
+				  'DixonCarbon':			DixonCarbon(),
+				  'DixonWater':				DixonWater(),
+				  'IaconoMarzianoCarbon':	IaconoMarzianoCarbon(),
+				  'IaconoMarzianoWater':	IaconoMarzianoWater(),
+				  'EguchiCarbon':			EguchiCarbon(),
+				  'AllisonCarbon':			AllisonCarbon(),
+				  # 'MagmaSat':				Modeller()
+}
 
 class calculate_dissolved_volatiles(Calculate):
 	""" This will be used as the user interface to doing the calculation. This provides a generic
 	way of accessing the relevant functions, and here will be when calibration checking can be done.
 	"""
-	def __init__(self):
-		self.check_calibration_range()
-		self.calculate()
+	def calculate(self,sample,pressure,**kwargs):
+		dissolved = self.model.calculate_dissolved_volatiles(pressure=pressure,sample=sample,**kwargs)
+		return dissolved
 
-		return 0
+	def check_calibration_range(self,sample,pressure,**kwargs):
+		calib_check = self.model.check_calibration_range({'pressure':pressure,
+														'dissolved_volatiles':self.result,
+														'sample':sample})
+		return calib_check
 
-	def calculate(self):
-		return 0
-
-	def check_calibration_range(self):
-		return 0
 
 class calculate_equilibrium_fluid_comp(Calculate):
 	""" This will be used as the user interface to doing the calculation. This provides a generic
 	way of accessing the relevant functions, and here will be when calibration checking can be done.
 	"""
-	def __init__(self):
-		self.check_calibration_range()
-		self.calculate()
-
+	def calculate(self,sample,pressure,**kwargs):
+		fluid_comp = model.calculate_equilibrium_fluid_comp(pressure=pressure,sample=sample,**kwargs)
+		return fluid_comp
+	def check_calibration_range(self,pressure,**kwargs):
 		return 0
 
-	def calculate(self):
+
+class calculate_isobars_and_isopleths(Calculate):
+	"""
+	"""
+	def calculate(self,sample,pressure_list,isopleth_list=[0,1],points=101,**kwargs):
+		check = getattr(self.model, "calculate_isobars_and_isopleths", None)
+		if callable(check):
+			isobars, isopleths = self.model.calculate_isobars_and_isopleths(sample=sample,pressure_list=pressure_list,isopleth_list=isopleth_list,points=points,**kwargs)
+			return isobars, isopleths
+		else:
+			print("Write code to report error!!!!!")
+
+	def check_calibration_range(self,**kwargs):
 		return 0
 
-	def check_calibration_range(self):
+
+class calculate_saturation_pressure(Calculate):
+	"""
+	"""
+	def calculate(self,sample,**kwargs):
+		satP = self.model.calculate_saturation_pressure(sample=sample,**kwargs)
+		return satP
+
+	def check_calibration_range(self,**kwargs):
 		return 0
 
+class calculate_degassing_paths(Calculate):
+	"""
+	"""
+	def calculate(self,pressures,sample,fractionate_vapor=1.0,**kwargs):
+		check = getattr(self.model, "calculate_degassing_paths", None)
+		if callable(check):
+			melt, fluid = self.model.calculate_degassing_paths(sample=sample,pressures=pressures,
+															fractionate_vapor=fractionate_vapor,**kwargs)
+			return [melt,fluid]
+		else:
+			print("Write code to report error!!!!!")
+
+	def check_calibration_range(self,**kwargs):
+		return 0
 
 
 
@@ -1276,3 +2518,236 @@ class Modeller(object):
 			                            columns =['pressure', 'H2Oliq', 'CO2liq', 'H2Ofl', 'CO2fl', 'fluid_wtper'])
 
 			return open_degassing_df
+
+	def check_calibration_range(self,pressure,sample,**kwargs):
+		return 0
+
+
+
+# class fugacity_ZD09_co2(FugacityModel):
+# 	def __init__(self):
+# 		self.a = np.array([0.0,
+# 	                  	   2.95177298930e-2,
+# 	         			   -6.33756452413e3,
+# 						   -2.75265428882e5,
+# 						   1.29128089283e-3,
+# 						   -1.45797416153e2,
+# 						   7.65938947237e4,
+# 						   2.58661493537e-6,
+# 						   0.52126532146,
+# 						   -1.39839523753e2,
+# 						   -2.36335007175e-8,
+# 						   5.35026383543e-3,
+# 						   -0.27110649951,
+# 						   2.50387836486e4,
+# 						   0.73226726041,
+# 						   1.5483335997e-2])
+# 		self.e = {'H2O':510.0,'CO2':235.0}
+# 		self.s = {'H2O':2.88,'CO2':3.79}
+# 		self.k1 = 0.85
+# 		self.k2 = 1.02
+#
+# 	def fugacity(self,pressure,temperature,X_fluid,**kwargs):
+# 		phi = np.exp(self.logPhi(P=pressure,T=temperature,x=X_fluid))
+# 		return pressure*X_fluid*phi
+#
+# 	def volume(self,P,T,x):
+# 		""" write stuff"""
+# 		return root_scalar(self.root_volumez,args=(P,T,x),x0=20,method='newton',
+# 							fprime=self.root_dpdvm).root
+#
+# 	def root_volume(self,v,P,T,x):
+# 		e = x**2*self.e['CO2'] + (1-x)**2*self.e['H2O'] + 2*self.k1*x*(1-x)*(self.e['H2O']*self.e['CO2'])**0.5
+# 		s = x**2*self.s['CO2'] + (1-x)**2*self.s['H2O'] + self.k2*x*(1-x)*(self.s['CO2']+self.s['H2O'])
+# 		a = self.a
+#
+# 		vm = v/1000*(3.691/s)**3
+#
+# 		Pm = 3.0636*P*s**3/e
+# 		Tm = 154*T/e
+#
+# 		Z = 1 + (a[1]+a[2]/Tm**2 + a[3]/Tm**3)/vm + (a[4]+a[5]/Tm**2+a[6]/Tm**3)/vm**2 \
+# 			+ (a[7]+a[8]/Tm**2+a[9]/Tm**3)/vm**4 + (a[10]+a[11]/Tm**2+a[12]/Tm**3)/vm**5 \
+# 			+ a[13]/(Tm**3*vm**2)*(a[14]+a[15]/vm**2)*np.exp(-a[15]/vm**2)
+#
+# 		p = Z*0.08314*Tm/vm
+#
+# 		return p - P
+#
+# 	def root_volumez(self,v,P,T,x):
+# 		e = x**2*self.e['CO2'] + (1-x)**2*self.e['H2O'] + 2*self.k1*x*(1-x)*(self.e['H2O']*self.e['CO2'])**0.5
+# 		s = x**2*self.s['CO2'] + (1-x)**2*self.s['H2O'] + self.k2*x*(1-x)*(self.s['CO2']+self.s['H2O'])
+# 		a = self.a
+#
+# 		vm = v/1000*(3.691/s)**3
+#
+# 		Pm = 3.0636*P*s**3/e
+# 		Tm = 154*T/e
+#
+# 		Z = 1 + (a[1]+a[2]/Tm**2 + a[3]/Tm**3)/vm + (a[4]+a[5]/Tm**2+a[6]/Tm**3)/vm**2 \
+# 			+ (a[7]+a[8]/Tm**2+a[9]/Tm**3)/vm**4 + (a[10]+a[11]/Tm**2+a[12]/Tm**3)/vm**5 \
+# 			+ a[13]/(Tm**3*vm**2)*(a[14]+a[15]/vm**2)*np.exp(-a[15]/vm**2)
+#
+#
+#
+# 		return Z - Pm*vm/0.08314/Tm
+#
+# 	def volume_est(self,P,T,x):
+#
+# 		delv = 1.0
+# 		vPrevious = 1.0
+# 		delvPrevious = 1.0
+# 		vLowest = 0.017
+#
+# 		e = x**2*self.e['CO2'] + (1-x)**2*self.e['H2O'] + 2*self.k1*x*(1-x)*(self.e['H2O']*self.e['CO2'])**0.5
+# 		s = x**2*self.s['CO2'] + (1-x)**2*self.s['H2O'] + self.k2*x*(1-x)*(self.s['CO2']+self.s['H2O'])
+# 		a = self.a
+#
+# 		v = 0.08314467*T/P
+# 		Pm = 3.063*s**3*P/e
+# 		Tm = 154*T/e
+# 		vm = v*(3.691/s)**3
+#
+# 		z = self.root_z(vm,T,x)
+#
+# 		iter = 0
+# 		while (z < 0.0) and (iter < 200):
+# 			dzdvm = self.root_dzdm(vm,T,x)
+# 			vm += (0.1-z)/dzdvm
+# 			z = self.root_z(vm,T,x)
+# 			iter += 1
+#
+# 		iter = 0
+# 		while iter < 200:
+# 			delv = z*0.08314467*Tm/Pm - vm
+# 			if ((iter > 1) and (delv*delvprevious < 0.0)) or (np.abs(delv)<vm*1000*e):
+# 				break
+# 			vPrevious = vm
+# 			delvPrevious = delv
+# 			vm = (z*0.08314467*Tm/Pm + vm)/2.0
+# 			increment = vm - vPrevious
+#
+# 			while self.root_z(vm,T,x) < 0.0:
+# 				increment = increment/2
+# 				if np.abs(increment) < 100*e:
+# 					return False
+# 				vm = vPrevious + increment
+# 			if vm < vLowest:
+# 				vm = vLowest
+# 			iter += 1
+# 			if iter == 200:
+# 				if np.abs(vm-vLowest) <= 100*e:
+# 					vLowest = 0.9*vLowest
+# 					iter = 0
+#
+# 		if np.abs(delv) > vm*100*e:
+# 			if delv < 0.0:
+# 				dx = vPrevious - vm
+# 				rtb = vm
+# 			else:
+# 				dx = vm-vPrevious
+# 				rtb = vPrevious
+# 			iter = 0
+# 			while iter<200:
+# 				dx = dx*0.5
+# 				vm = rtb + dx
+# 				z = self.root_z(vm,T,x)
+# 				delv = z*0.08314467*Tm/Pm - vm
+# 				if delv <= 0.0:
+# 					rtb = vm
+# 				if (np.abs(delv)<100*e) or delv == 0.0:
+# 					break
+# 				iter += 1
+# 			if (iter == 200) or (np.abs(dx) > 100.0*e):
+# 				return False
+# 		elif iter == 200:
+# 			return False
+#
+# 		return 1000.0*vm*(s/3.691)**3
+#
+#
+#
+# 	def root_z(self,vm,T,x):
+# 		a = self.a
+# 		e = x**2*self.e['CO2'] + (1-x)**2*self.e['H2O'] + 2*self.k1*x*(1-x)*(self.e['H2O']*self.e['CO2'])**0.5
+# 		Tm = 154*T/e
+#
+# 		z = 1 + (a[1]+a[2]/Tm**2 + a[3]/Tm**3)/vm + (a[4]+a[5]/Tm**2+a[6]/Tm**3)/vm**2 \
+# 			+ (a[7]+a[8]/Tm**2+a[9]/Tm**3)/vm**4 + (a[10]+a[11]/Tm**2+a[12]/Tm**3)/vm**5 \
+# 			+ a[13]/(Tm**3*vm**2)*(a[14]+a[15]/vm**2)*np.exp(-a[15]/vm**2)
+# 		return z
+#
+# 	def root_dzdm(self,vm,T,x):
+# 		a = self.a
+# 		e = x**2*self.e['CO2'] + (1-x)**2*self.e['H2O'] + 2*self.k1*x*(1-x)*(self.e['H2O']*self.e['CO2'])**0.5
+# 		Tm = 154*T/e
+#
+# 		bv = (a[1]+a[2]/Tm**2 + a[3]/Tm**3)
+# 		cv = (a[4]+a[5]/Tm**2+a[6]/Tm**3)
+# 		dv = (a[7]+a[8]/Tm**2+a[9]/Tm**3)
+# 		ev = (a[10]+a[11]/Tm**2+a[12]/Tm**3)
+# 		fv = a[13]*a[14]/Tm**3
+# 		gv = a[13]*a[15]/Tm**3
+# 		gammav = a[15]
+#
+# 		dzdvm = - bv/vm**2 - 2.0*cv/vm**3+ - 4.0*dv/vm**5 - 5.0*ev/vm**6 \
+# 				- 2.0*(fv/vm**3) * np.exp(-gammav/vm**2) + 2.0*(fv/vm**2) * (gammav/vm**3) * np.exp(-gammav/vm**2) \
+# 				- 4.0*(gv/vm**5) * np.exp(-gammav/vm**2) + 2.0*(gv/vm**4) * (gammav/vm**3) * np.exp(-gammav/vm**2)
+#
+# 		return dzdvm
+#
+# 	def root_dpdvm(self,vm,P,T,x):
+# 		a = self.a
+# 		e = x**2*self.e['CO2'] + (1-x)**2*self.e['H2O'] + 2*self.k1*x*(1-x)*(self.e['H2O']*self.e['CO2'])**0.5
+# 		s = x**2*self.s['CO2'] + (1-x)**2*self.s['H2O'] + self.k2*x*(1-x)*(self.s['CO2']+self.s['H2O'])
+# 		Tm = 154*T/e
+# 		Pm = 3.063*s**3*P/e
+#
+# 		bv = (a[1]+a[2]/Tm**2 + a[3]/Tm**3)
+# 		cv = (a[4]+a[5]/Tm**2+a[6]/Tm**3)
+# 		dv = (a[7]+a[8]/Tm**2+a[9]/Tm**3)
+# 		ev = (a[10]+a[11]/Tm**2+a[12]/Tm**3)
+# 		fv = a[13]*a[14]/Tm**3
+# 		gv = a[13]*a[15]/Tm**3
+# 		gammav = a[15]
+#
+# 		dzdvm = - bv/vm**2 - 2.0*cv/vm**3+ - 4.0*dv/vm**5 - 5.0*ev/vm**6 \
+# 				- 2.0*(fv/vm**3) * np.exp(-gammav/vm**2) + 2.0*(fv/vm**2) * (gammav/vm**3) * np.exp(-gammav/vm**2) \
+# 				- 4.0*(gv/vm**5) * np.exp(-gammav/vm**2) + 2.0*(gv/vm**4) * (gammav/vm**3) * np.exp(-gammav/vm**2) \
+# 				- Pm/0.08314/Tm
+#
+# 		return dzdvm
+#
+#
+#
+# 	def logPhi(self,P,T,x):
+# 		e = x**2*self.e['CO2'] + (1-x)**2*self.e['H2O'] + 2*self.k1*x*(1-x)*(self.e['H2O']*self.e['CO2'])**0.5
+# 		s = x**2*self.s['CO2'] + (1-x)**2*self.s['H2O'] + self.k2*x*(1-x)*(self.s['CO2']+self.s['H2O'])
+# 		a = self.a
+#
+# 		v = self.volume(P,T,x)
+#
+# 		# vm = v/1000*(3.691/s)**3
+# 		vm = v*(3.691/s)**3
+#
+#
+# 		Pm = 3.0636*P*s**3/e
+# 		Tm = 154*T/e
+#
+# 		Z = 1 + (a[1]+a[2]/Tm**2 + a[3]/Tm**3)/vm + (a[4]+a[5]/Tm**2+a[6]/Tm**3)/vm**2 \
+# 			+ (a[7]+a[8]/Tm**2+a[9]/Tm**3)/vm**4 + (a[10]+a[11]/Tm**2+a[12]/Tm**3)/vm**5 \
+# 			+ a[13]/(Tm**3*vm**2)*(a[14]+a[15]/vm**2)*np.exp(-a[15]/vm**2)
+#
+# 		S1 = (a[1] + a[2]/Tm**2 + a[3]/Tm**3)/vm + (a[4] + a[5]/Tm**2 + a[6]/Tm**3)/(2*vm**2) \
+# 			+ (a[7] + a[8]/Tm**2 + a[9]/Tm**3)/(4*vm**4) + (a[10] + a[11]/Tm**2 + a[12]/Tm**3)/(5*vm**5) \
+# 			+ a[13]/(2*a[15]*Tm**3)*(a[14]+1-(a[14]+1+a[15]/vm**2)*np.exp(-a[15]/vm**2))
+#
+# 		S2 = (2*a[2]/Tm**2 + 3*a[3]/Tm**3)/vm + (2*a[5]/Tm**2 + 3*a[6]/Tm**3)/(2*vm**2) \
+# 			+ (2*a[8]/Tm**2 + 3*a[9]/Tm**3)/(4*vm**4) + (2*a[11]/Tm**2 + 3*a[12]/Tm**3)/(5*vm**5) \
+# 			+ 3*a[13]/(2*a[15]*Tm**3)*(a[14]+1-(a[14]+1+a[15]/vm**2)*np.exp(-a[15]/vm**2))
+#
+# 		logPhi = Z - 1 - np.log(Z) + S1 + 2*S2* \
+# 			(1-(self.k1*self.e['CO2'] + self.k1*(1-x)*(self.e['CO2']*self.e['H2O'])**0.5)) \
+# 			+ 6*(1-Z)*(1-(self.k2*x*self.s['CO2'] + self.k2*(1-x)*(self.s['CO2']+self.s['H2O'])*0.5))
+#
+# 		return logPhi
