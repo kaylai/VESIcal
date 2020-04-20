@@ -178,22 +178,38 @@ def wtpercentOxides_to_formulaWeight(sample):
 
 def normalize_FixedVolatiles(sample):
 	normalized = pd.Series({})
+	_sample = sample.copy()
 	volatiles = 0
-	if 'CO2' in list(sample.index):
-		volatiles += sample['CO2']
-	if 'H2O' in list(sample.index):
-		volatiles += sample['H2O']
+	if 'CO2' in list(_sample.index):
+		volatiles += _sample['CO2']
+	if 'H2O' in list(_sample.index):
+		volatiles += _sample['H2O']
 
-	for ox in list(sample.index):
+	for ox in list(_sample.index):
 		if ox != 'H2O' and ox != 'CO2':
-			normalized[ox] = sample[ox]
+			normalized[ox] = _sample[ox]
 
 	normalized = normalized/np.sum(normalized)*(100-volatiles)
 
-	if 'CO2' in list(sample.index):
-		normalized['CO2'] = sample['CO2']
-	if 'H2O' in list(sample.index):
-		normalized['H2O'] = sample['H2O']
+	if 'CO2' in list(_sample.index):
+		normalized['CO2'] = _sample['CO2']
+	if 'H2O' in list(_sample.index):
+		normalized['H2O'] = _sample['H2O']
+
+	return normalized
+
+def normalize_AdditionalVolatiles(sample):
+	normalized = pd.Series({})
+	_sample = sample.copy()
+	for ox in list(sample.index):
+		if ox != 'H2O' and ox != 'CO2':
+			normalized[ox] = _sample[ox]
+
+	normalized = normalized/np.sum(normalized)*100
+	if 'H2O' in _sample.index:
+		normalized['H2O'] = _sample['H2O']
+	if 'CO2' in _sample.index:
+		normalized['CO2'] = _sample['CO2']
 
 	return normalized
 
@@ -817,13 +833,64 @@ class ShishkinaCarbon(Model):
 			return 1.0
 
 	def calculate_saturation_pressure(self,sample,**kwargs):
+		""" Calculates the pressure at which a pure CO2 fluid is saturated, for the given
+		sample composition and CO2 concentration. Calls the scipy.root_scalar routine, which makes
+		repeated calls to the calculate_dissolved_volatiles method.
+
+		Parameters
+		----------
+		sample 		pandas Series
+			Major elements in wt%, including CO2 (also in wt%).
+
+		Returns
+		-------
+		float
+			Saturation pressure in bar
+		"""
 		satP = root_scalar(self.root_saturation_pressure,x0=1000.0,x1=2000.0,args=(sample,kwargs)).root
 		return satP
 
 	def root_saturation_pressure(self,pressure,sample,kwargs):
+		""" Function called by scipy.root_scalar when finding the saturation pressure using
+		calculate_saturation_pressure.
+
+		Parameters
+		----------
+		pressure 	float
+			Pressure guess in bars
+		sample 		pandas Series
+			Major element oxides in wt%, including CO2 (also in wt%).
+		kwargs 		dictionary
+			Additional keyword arguments supplied to calculate_saturation_pressure. Might be required for
+			the fugacity or activity models.
+
+		Returns
+		-------
+		float
+			The differece between the dissolved CO2 at the pressure guessed, and the CO2 concentration
+			passed in the sample variable.
+		"""
 		return self.calculate_dissolved_volatiles(pressure=pressure,sample=sample,**kwargs)-sample['CO2']
 
 	def check_calibration_range(self,parameters,**kwargs):
+		""" Checks whether supplied parameters and calculated results are within the calibration range
+		of the model. Designed for use with the Calculate methods. Calls the check_calibration_range
+		functions for the fugacity and activity models.
+
+		Parameters supported currently are pressure and temperature.
+
+		Parameters
+		----------
+		parameters 		dictionary
+			Parameters to check calibration range for, the parameter name should be given as the key, and
+			its value as the value.
+
+		Returns
+		-------
+		dictionary
+			Dictionary with parameter names as keys. The values are dictionarys, which have the model component
+			as the keys, and bool values, indicating whether the parameter is within the calibration range.
+		"""
 		results = {}
 		if 'pressure' in parameters.keys():
 			pressure_results = {'Shishkina Model': (parameters['pressure']>500.0) and (parameters['pressure']<5000.0),
@@ -840,7 +907,7 @@ class ShishkinaCarbon(Model):
 		return results
 
 class ShishkinaWater(Model):
-	""" Model class for pure H2O fluids
+	""" Implementation of the Shishkina et al. (2014) H2O solubility model as a Model class.
 	"""
 	def __init__(self):
 		self.set_volatile_species(['H2O'])
@@ -848,9 +915,42 @@ class ShishkinaWater(Model):
 		self.set_activity_model(activity_idealsolution())
 
 	def preprocess_sample(self,sample):
-		return sample
+		""" Returns sample, renormlized so that the major element oxides (excluding volatiles) sum to 100%.
+		Normalization must be done this way as the compositional dependence of the solubility takes the
+		mole fractions of Na2O and K2O as inputs, presumably assuming no volatiles in the bulk composition.
+		Volatile concentrations are left unchanged.
+
+		Parameters
+		----------
+		sample:		 pandas Series
+			The major element oxides in wt%.
+
+		Returns
+		-------
+		pandas Series
+			The major element oxides in wt%.
+
+		"""
+		return normalize_AdditionalVolatiles(sample)
 
 	def calculate_dissolved_volatiles(self,pressure,sample,X_fluid=1.0,**kwargs):
+		"""Calculates the dissolved H2O concentration using Eqn (9) of Shishkina et al. (2014).
+
+		Parameters
+		----------
+		pressure 	float
+			Total pressure in bars
+		sample 		pandas Series
+			Major element oxides in wt%. Normalized to zero-volatiles so that the total-alkalis
+			mol fraction can be determined accurately.
+		X_fluid 	float
+			The mol fraction of H2O in the fluid
+
+		Returns
+		-------
+		float
+			The H2O concentration in wt%
+		"""
 		_mols = wtpercentOxides_to_molCations(sample)
 		total_alkalis = _mols['Na'] + _mols['K']
 
@@ -862,21 +962,89 @@ class ShishkinaWater(Model):
 		return a*total_alkalis + b
 
 
-
 	def calculate_equilibrium_fluid_comp(self,pressure,sample,**kwargs):
+		""" Returns 1.0 if a pure H2O fluid is saturated.
+		Returns 0.0 if a pure H2O fluid is undersaturated.
+
+		Parameters
+		----------
+		pressure 	float
+			The total pressure of the system in bars.
+		sample 		pandas Series
+			Major element oxides in wt%, normalized on the basis of
+			no volatiles.
+
+		Returns
+		-------
+		float
+			1.0 if H2O-fluid saturated, 0.0 otherwise.
+		"""
 		if self.calculate_saturation_pressure(self,sample=sample,**kwargs) > pressure:
 			return 0.0
 		else:
 			return 1.0
 
 	def calculate_saturation_pressure(self,sample,**kwargs):
+		""" Calculates the pressure at which a pure H2O fluid is saturated, for the given
+		sample composition and H2O concentration. Calls the scipy.root_scalar routine, which makes
+		repeated calls to the calculate_dissolved_volatiles method.
+
+		Parameters
+		----------
+		sample 		pandas Series
+			Major elements in wt% (normalized to 100%), including H2O (also in wt%, not included
+			in normalization).
+
+		Returns
+		-------
+		float
+			Saturation pressure in bar
+		"""
 		satP = root_scalar(self.root_saturation_pressure,x0=1000.0,x1=2000.0,args=(sample,kwargs)).root
 		return satP
 
 	def root_saturation_pressure(self,pressure,sample,kwargs):
+		""" Function called by scipy.root_scalar when finding the saturation pressure using
+		calculate_saturation_pressure.
+
+		Parameters
+		----------
+		pressure 	float
+			Pressure guess in bars
+		sample 		pandas Series
+			Major elements in wt% (normalized to 100%), including H2O (also in wt%, not included
+			in normalization).
+		kwargs 		dictionary
+			Additional keyword arguments supplied to calculate_saturation_pressure. Might be required for
+			the fugacity or activity models.
+
+		Returns
+		-------
+		float
+			The differece between the dissolved H2O at the pressure guessed, and the H2O concentration
+			passed in the sample variable.
+		"""
 		return self.calculate_dissolved_volatiles(pressure=pressure,sample=sample,**kwargs)-sample['H2O']
 
 	def check_calibration_range(self,parameters,**kwargs):
+		""" Checks whether supplied parameters and calculated results are within the calibration range
+		of the model. Designed for use with the Calculate methods. Calls the check_calibration_range
+		functions for the fugacity and activity models.
+
+		Parameters supported currently are pressure and temperature.
+
+		Parameters
+		----------
+		parameters 		dictionary
+			Parameters to check calibration range for, the parameter name should be given as the key, and
+			its value as the value.
+
+		Returns
+		-------
+		dictionary
+			Dictionary with parameter names as keys. The values are dictionarys, which have the model component
+			as the keys, and bool values, indicating whether the parameter is within the calibration range.
+		"""
 		results = {}
 		if 'pressure' in parameters.keys():
 			pressure_results = {'Shishkina Model': (parameters['pressure']>500.0) and (parameters['pressure']<5000.0),
