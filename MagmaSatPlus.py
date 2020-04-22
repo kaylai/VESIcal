@@ -105,16 +105,29 @@ def mol_to_wtpercent(dataframe):
 	return data
 
 def wtpercentOxides_to_molCations(oxides):
-	""" WRITE SOMETHING HERE!!!
+	"""Takes in a pandas Series containing major element oxides in wt%, and converts it
+	to molar proportions of cations (normalised to 1).
+
+	Parameters
+	----------
+	oxides 		pandas Series or dictionary
+		Major element oxides in wt%.
+
+	Returns
+	-------
+	pandas Series
+		Molar proportions of cations, normalised to 1.
 	"""
 	molCations = {}
 	if type(oxides) == dict:
-		oxides = pd.Series(oxides)
+		_oxides = pd.Series(oxides.copy())
 	elif type(oxides) != pd.core.series.Series:
-		print("NEED TO WRITE CODE TO RAISE AN ERROR! wtptoxides")
-	for ox in oxides.index:
+		return InputError("The composition input must be a pandas Series or dictionary.")
+	else:
+		_oxides = oxides.copy()
+	for ox in _oxides.index:
 		cation = oxides_to_cations[ox]
-		molCations[cation] = CationNum[ox]*oxides[ox]/oxideMass[ox]
+		molCations[cation] = CationNum[ox]*_oxides[ox]/oxideMass[ox]
 	molCations = pd.Series(molCations)
 
 	molCations = molCations/molCations.sum()
@@ -122,15 +135,28 @@ def wtpercentOxides_to_molCations(oxides):
 	return molCations
 
 def wtpercentOxides_to_molOxides(oxides):
-	""" WRITE SOMETHING HERE!!!
+	""" Takes in a pandas Series containing major element oxides in wt%, and converts it
+	to molar proportions (normalised to 1).
+
+	Parameters
+	----------
+	oxides 		pandas Series or dictionary
+		Major element oxides in wt%
+
+	Returns
+	-------
+	pandas Series
+		Molar proportions of major element oxides, normalised to 1.
 	"""
 	molOxides = {}
 	if type(oxides) == dict:
-		oxides = pd.Series(oxides)
+		_oxides = pd.Series(oxides.copy())
 	elif type(oxides) != pd.core.series.Series:
-		print("NEED TO WRITE CODE TO RAISE AN ERROR! wtptoxides")
-	for ox in oxides.index:
-		molOxides[ox] = oxides[ox]/oxideMass[ox]
+		return InputError("The composition input must be a pandas Series or dictionary.")
+	else:
+		_oxides = oxides.copy()
+	for ox in _oxides.index:
+		molOxides[ox] = _oxides[ox]/oxideMass[ox]
 	molOxides = pd.Series(molOxides)
 
 	molOxides = molOxides/molOxides.sum()
@@ -138,14 +164,28 @@ def wtpercentOxides_to_molOxides(oxides):
 	return molOxides
 
 def wtpercentOxides_to_molSingleO(oxides):
-	""" WRITE SOMETHING HERE!!!
+	""" Takes in a pandas Series containing major element oxides in wt%, and constructs
+	the chemical formula, on a single oxygen basis.
+
+	Parameters
+	----------
+	oxides 		pandas Series or dictionary
+		Major element oxides in wt%
+
+	Returns
+	-------
+	pandas Series
+		The chemical formula of the composition, on a single oxygen basis. Each element is
+		a separate entry in the Series.
 	"""
 	molCations = {}
 	if type(oxides) == dict:
-		oxides = pd.Series(oxides)
+		_oxides = pd.Series(oxides.copy())
 	elif type(oxides) != pd.core.series.Series:
-		print("NEED TO WRITE CODE TO RAISE AN ERROR! wtptoxides")
-	for ox in oxides.index:
+		return InputError("The composition input must be a pandas Series or dictionary.")
+	else:
+		_oxides = oxides
+	for ox in _oxides.index:
 		cation = oxides_to_cations[ox]
 		molCations[cation] = CationNum[ox]/OxygenNum[ox]*oxides[ox]/oxideMass[ox]
 	molCations = pd.Series(molCations)
@@ -170,15 +210,53 @@ def normalize(composition):
 	return {k: 100.0 * v / sum(composition.values()) for k, v in composition.items()}
 
 def wtpercentOxides_to_formulaWeight(sample):
-	cations = wtpercentOxides_to_molSingleO(sample)
+	""" Converts major element oxides in wt% to the formula weight (on a 1 oxygen basis).
+
+	Parameters
+	----------
+	sample 	pandas Series
+		Major element oxides in wt%.
+
+	Returns
+	-------
+	float
+		The formula weight of the composition, on a one oxygen basis.
+	"""
+	if type(sample) == dict:
+		_sample = pd.Series(sample.copy())
+	elif type(sample) != pd.core.series.Series:
+		return InputError("The composition input must be a pandas Series or dictionary.")
+	else:
+		_sample = sample.copy()
+	cations = wtpercentOxides_to_molSingleO(_sample)
 	FW = 15.999
 	for cation in list(cations.keys()):
 		FW += cations[cation]*CationMass[cations_to_oxides[cation]]
 	return FW
 
 def normalize_FixedVolatiles(sample):
+	""" Normalizes major element oxides to 100 wt%, including volatiles. The volatile
+	wt% will remain fixed, whilst the other major element oxides are reduced proportionally
+	so that the total is 100 wt%.
+
+	Parameters
+	----------
+	sample 	pandas Series or dictionary
+		Major element oxides in wt%
+
+	Returns
+	-------
+	pandas Series
+		Normalized major elements in wt%.
+	"""
+	if type(sample) == dict:
+		_sample = pd.Series(sample.copy())
+	elif type(sample) != pd.core.series.Series:
+		return InputError("The composition input must be a pandas Series or dictionary.")
+	else:
+		_sample = sample.copy()
+
 	normalized = pd.Series({})
-	_sample = sample.copy()
 	volatiles = 0
 	if 'CO2' in list(_sample.index):
 		volatiles += _sample['CO2']
@@ -199,6 +277,20 @@ def normalize_FixedVolatiles(sample):
 	return normalized
 
 def normalize_AdditionalVolatiles(sample):
+	"""Normalises major element oxide wt% to 100%, assuming it is volatile-free. If
+	H2O or CO2 are passed to the function, their un-normalized values will be retained
+	in addition to the normalized non-volatile oxides, summing to >100%.
+
+	Parameters
+	----------
+	sample 	pandas Series or dictionary
+		Major element oxides in wt%
+
+	Returns
+	-------
+	pandas Series
+		Normalized major element oxides (wt%).
+	"""
 	normalized = pd.Series({})
 	_sample = sample.copy()
 	for ox in list(sample.index):
@@ -287,7 +379,11 @@ class ExcelFile(object):
 			return sample_oxides
 
 class Model(object):
-	"""
+	"""The model object implements a volatile solubility model. It is composed
+	of the methods needed to evaluate calculate_dissolved_volatiles,
+	calculate_equilibrium_fluid_comp, and calculate_saturation_pressure. The
+	fugacity and activity models for the volatiles species must be specified,
+	defaulting to ideal.
 	"""
 
 	def __init__(self):
@@ -336,7 +432,10 @@ class Model(object):
 
 
 class FugacityModel(object):
-	"""
+	""" The fugacity model object is for implementations of fugacity models
+	for individual volatile species, though it may depend on the mole
+	fraction of other volatile species. It contains all the methods required
+	to calculate the fugacity at a given pressure and mole fraction.
 	"""
 
 	@abstractmethod
@@ -352,7 +451,9 @@ class FugacityModel(object):
 
 
 class activity_model(object):
-	"""
+	""" The activity model object is for implementing activity models
+	for volatile species in melts. It contains all the methods required to
+	evaluate the activity.
 	"""
 
 	@abstractmethod
@@ -365,22 +466,13 @@ class activity_model(object):
 		"""
 		"""
 
-class activity_idealsolution(activity_model):
-	"""
-	"""
-
-	def activity(self,X):
-		return X
-
-	def check_calibration_range(self,parameters):
-		results = {}
-		for param in list(parameters.keys()):
-			results[param] = True
-		return results
 
 
 class Calculate(object):
-	"""
+	""" The Calculate object is a template for implementing user-friendly methods for
+	running calculations using the volatile solubility models. All Calculate methods
+	have a common workflow- sample is read in, preprocessed, the calculation is performed,
+	the calibration range is checked, and the results stored.
 	"""
 	def __init__(self,sample,model='MagmaSat',**kwargs):
 		if type(model) == str:
@@ -406,23 +498,73 @@ class Calculate(object):
 #-------------FUGACITY MODELS--------------------------------#
 
 class fugacity_idealgas(FugacityModel):
-	"""
+	""" An instance of FugacityModel for an ideal gas.
 	"""
 
 	def fugacity(self,pressure,X_fluid=1.0,**kwargs):
+		""" Returns the fugacity of an ideal gas, i.e., the partial pressure.
+
+		Parameters
+		----------
+		pressure 	float
+			Total pressure of the system, in bars.
+		X_fluid 	float
+			The mole fraction of the species in the vapour phase.
+
+		Returns
+		-------
+		float
+			Fugacity (partial pressure) in bars
+		"""
 		return pressure*X_fluid
 
 	def check_calibration_range(self,parameters):
+		""" Checks that the parameters are within the calbrated range of
+		the model, for use with the Calculate methods. Since this is a
+		statement of ideality, everything is within its calibrated range.
+
+		Parameters
+		----------
+		parameters 	dictionary
+			Parameter names (keys) and their values, for checking.
+
+		Returns
+		-------
+		dictionary
+			Dictionary with parameter names as keys. The values are booleans
+			representing whether the parameter is in the calibrated range, or not.
+			Always True for this instance.
+
+		"""
 		results = {}
 		for param in list(parameters.keys()):
 			results[param] = True
 		return results
 
 class fugacity_KJ81_co2(FugacityModel):
-	"""
+	""" Implementation of the Kerrick and Jacobs (1981) EOS for mixed fluids. This class
+	will return the properties of the CO2 component of the mixed fluid.
 	"""
 
 	def fugacity(self,pressure,temperature,X_fluid,**kwargs):
+		""" Calculates the fugacity of CO2 in a mixed CO2-H2O fluid. Above 1050C,
+		it assumes H2O and CO2 do not interact, as the equations are not defined
+		beyond this point.
+
+		Parameters
+		----------
+		pressure 	float
+			Total pressure of the system in bars.
+		temperature 	float
+			Temperature in K
+		X_fluid 	float
+			Mole fraction of CO2 in the fluid.
+
+		Returns
+		-------
+		float
+			fugacity of CO2 in bars
+		"""
 		if X_fluid == 0:
 			return 0
 		elif temperature >= 1050.0 + 273.15:
@@ -432,6 +574,23 @@ class fugacity_KJ81_co2(FugacityModel):
 
 
 	def volume(self,P,T,X_fluid):
+		""" Calculates the volume of the mixed fluid, by solving Eq (28) of Kerrick and
+		Jacobs (1981) using scipy.root_scalar.
+
+		Parameters
+		----------
+		P 	float
+			Total pressure of the system, in bars.
+		T 	float
+			Temperature in K
+		X_fluid 	float
+			Mole fraction of CO2 in the fluid
+
+		Returns
+		-------
+		float
+			Volume of the mixed fluid.
+		"""
 		if X_fluid != 1.0:
 			# x0 = self.volume(P,T,1.0)*X_fluid + self.volume_h(P,T)*(1-X_fluid)
 			# print(x0)
@@ -449,6 +608,25 @@ class fugacity_KJ81_co2(FugacityModel):
 
 
 	def root_volume(self,v,P,T,X_fluid):
+		""" Returns the difference between the lhs and rhs of Eq (28) of Kerrick and Jacobs (1981).
+		For use with a root finder to obtain the volume of the mixed fluid.
+
+		Parameters
+		----------
+		v 	float
+			Guess for the volume
+		P 	float
+			Total system pressure in bars.
+		T 	float
+			Temperature in K
+		X_fluid 	float
+			Mole fraction of CO2 in the fluid.
+
+		Returns
+		-------
+		float
+			Difference between lhs and rhs of Eq (28) of Kerrick and Jacobs (1981), in bars.
+		"""
 		c = {}
 		h = {}
 
@@ -488,10 +666,43 @@ class fugacity_KJ81_co2(FugacityModel):
 		return -(P - pt1 - pt2)
 
 	def volume_h(self,P,T):
+		""" Calculates the volume of a pure H2O fluid, by solving Eq (14) of
+		Kerrick and Jacobs (1981).
+
+		Parameters
+		----------
+		P 	float
+			Total pressure in bars.
+		T 	float
+			Temperature in K.
+
+		Returns
+		-------
+		Difference between lhs and rhs of Eq (14) of Kerrick and Jacobs (1981), in bars.
+		"""
 		return root_scalar(self.root_volume_h,x0=15,x1=35,args=(P,T)).root
 
 
 	def root_volume_h(self,v,P,T):
+		""" Returns the difference between the lhs and rhs of Eq (14) of
+		Kerrick and Jacobs (1981). For use with a root solver to identify the
+		volume of a pure H2O fluid.
+
+		Parameters
+		----------
+		v 	float
+			Guess for the volume
+		P 	float
+			Total pressure in bars.
+		T 	float
+			Temperature in K.
+
+		Returns
+		-------
+		float
+			The difference between the lhs and rhs of Eq (14) of Kerrick and Jacobs (1981),
+			in bars.
+		"""
 		h = {}
 		h['b'] = 29.0
 		h['c'] = (290.78 - 0.30276*T + 1.4774e-4*T**2)*1e6#3
@@ -508,6 +719,23 @@ class fugacity_KJ81_co2(FugacityModel):
 
 
 	def lnPhi_mix(self,P,T,X_fluid):
+		""" Calculates the natural log of the fugacity coefficient for CO2 in a
+		mixed CO2-H2O fluid. Uses Eq (27) of Kerrick and Jacobs (1981).
+
+		Parameters
+		----------
+		P 	float
+			Total pressure in bars.
+		T 	float
+			Temperature in K
+		X_fluid 	float
+			The mole fraction of CO2 in the fluid.
+
+		Returns
+		-------
+		float
+			The natural log of the fugacity coefficient for CO2 in a mixed fluid.
+		"""
 		v = self.volume(P,T,X_fluid)
 
 		c = {}
@@ -566,6 +794,23 @@ class fugacity_KJ81_co2(FugacityModel):
 		return lnPhi
 
 	def check_calibration_range(self,parameters,**kwargs):
+		"""Checks whether supplied parameters and calculated results are within the calibration range
+		of the model. Designed for use with the Calculate methods.
+
+		Parameters supported currently are pressure and temperature.
+
+		Parameters
+		----------
+		parameters 		dictionary
+			Parameters to check calibration range for, the parameter name should be given as the key, and
+			its value as the value.
+
+		Returns
+		-------
+		dictionary
+			Dictionary with parameter names as keys. The values are booleans
+			representing whether the parameter is in the calibrated range, or not.
+		"""
 		results = {}
 		if 'pressure' in parameters.keys():
 			results['pressure'] = (parameters['pressure']<20000)
@@ -575,10 +820,29 @@ class fugacity_KJ81_co2(FugacityModel):
 
 
 class fugacity_KJ81_h2o(FugacityModel):
-	"""
+	"""Implementation of the Kerrick and Jacobs (1981) EOS for mixed fluids. This class
+	will return the properties of the H2O component of the mixed fluid.
 	"""
 
 	def fugacity(self,pressure,temperature,X_fluid,**kwargs):
+		""" Calculates the fugacity of H2O in a mixed CO2-H2O fluid. Above 1050C,
+		it assumes H2O and CO2 do not interact, as the equations are not defined
+		beyond this point.
+
+		Parameters
+		----------
+		pressure 	float
+			Total pressure of the system in bars.
+		temperature 	float
+			Temperature in K
+		X_fluid 	float
+			Mole fraction of H2O in the fluid.
+
+		Returns
+		-------
+		float
+			fugacity of H2O in bars
+		"""
 		if X_fluid == 0:
 			return 0
 		elif temperature >= 1050+273.15:
@@ -588,6 +852,23 @@ class fugacity_KJ81_h2o(FugacityModel):
 
 
 	def volume(self,P,T,X_fluid):
+		""" Calculates the volume of the mixed fluid, by solving Eq (28) of Kerrick and
+		Jacobs (1981) using scipy.root_scalar.
+
+		Parameters
+		----------
+		P 	float
+			Total pressure of the system, in bars.
+		T 	float
+			Temperature in K
+		X_fluid 	float
+			Mole fraction of H2O in the fluid
+
+		Returns
+		-------
+		float
+			Volume of the mixed fluid.
+		"""
 		if X_fluid != 1.0:
 			# x0 = self.volume(P,T,1.0)*X_fluid + self.volume_h(P,T)*(1-X_fluid)
 			# print(x0)
@@ -605,6 +886,25 @@ class fugacity_KJ81_h2o(FugacityModel):
 
 
 	def root_volume(self,v,P,T,X_fluid):
+		""" Returns the difference between the lhs and rhs of Eq (28) of Kerrick and Jacobs (1981).
+		For use with a root finder to obtain the volume of the mixed fluid.
+
+		Parameters
+		----------
+		v 	float
+			Guess for the volume
+		P 	float
+			Total system pressure in bars.
+		T 	float
+			Temperature in K
+		X_fluid 	float
+			Mole fraction of H2O in the fluid.
+
+		Returns
+		-------
+		float
+			Difference between lhs and rhs of Eq (28) of Kerrick and Jacobs (1981), in bars.
+		"""
 		c = {}
 		h = {}
 
@@ -644,10 +944,43 @@ class fugacity_KJ81_h2o(FugacityModel):
 		return -(P - pt1 - pt2)
 
 	def volume_c(self,P,T):
+		""" Calculates the volume of a pure CO2 fluid, by solving Eq (14) of
+		Kerrick and Jacobs (1981).
+
+		Parameters
+		----------
+		P 	float
+			Total pressure in bars.
+		T 	float
+			Temperature in K.
+
+		Returns
+		-------
+		Difference between lhs and rhs of Eq (14) of Kerrick and Jacobs (1981), in bars.
+		"""
 		return root_scalar(self.root_volume_c,x0=15,x1=35,args=(P,T)).root
 
 
 	def root_volume_c(self,v,P,T):
+		""" Returns the difference between the lhs and rhs of Eq (14) of
+		Kerrick and Jacobs (1981). For use with a root solver to identify the
+		volume of a pure H2O fluid.
+
+		Parameters
+		----------
+		v 	float
+			Guess for the volume
+		P 	float
+			Total pressure in bars.
+		T 	float
+			Temperature in K.
+
+		Returns
+		-------
+		float
+			The difference between the lhs and rhs of Eq (14) of Kerrick and Jacobs (1981),
+			in bars.
+		"""
 		c = {}
 		c['b'] = 58.0
 		c['c'] = (28.31 + 0.10721*T - 8.81e-6*T**2)*1e6
@@ -664,6 +997,23 @@ class fugacity_KJ81_h2o(FugacityModel):
 
 
 	def lnPhi_mix(self,P,T,X_fluid):
+		""" Calculates the natural log of the fugacity coefficient for H2O in a
+		mixed CO2-H2O fluid. Uses Eq (27) of Kerrick and Jacobs (1981).
+
+		Parameters
+		----------
+		P 	float
+			Total pressure in bars.
+		T 	float
+			Temperature in K
+		X_fluid 	float
+			The mole fraction of H2O in the fluid.
+
+		Returns
+		-------
+		float
+			The natural log of the fugacity coefficient for H2O in a mixed fluid.
+		"""
 		v = self.volume(P,T,X_fluid)
 
 		c = {}
@@ -722,11 +1072,75 @@ class fugacity_KJ81_h2o(FugacityModel):
 		return lnPhi
 
 	def check_calibration_range(self,parameters,**kwargs):
+		"""Checks whether supplied parameters and calculated results are within the calibration range
+		of the model. Designed for use with the Calculate methods.
+
+		Parameters supported currently are pressure and temperature.
+
+		Parameters
+		----------
+		parameters 		dictionary
+			Parameters to check calibration range for, the parameter name should be given as the key, and
+			its value as the value.
+
+		Returns
+		-------
+		dictionary
+			Dictionary with parameter names as keys. The values are booleans
+			representing whether the parameter is in the calibrated range, or not.
+		"""
 		results = {}
 		if 'pressure' in parameters.keys():
 			results['pressure'] = (parameters['pressure']<20000)
 		if 'temperature' in parameters.keys():
 			results['temperature'] = (parameters['temperature']<1323)
+		return results
+
+#---------------ACTVITY MODELS-------------------------------#
+
+
+class activity_idealsolution(activity_model):
+	""" Implements an ideal solution activity model, i.e. it
+	will always return the mole fraction.
+	"""
+
+	def activity(self,X):
+		""" The activity of the component in an ideal solution, i.e., it
+		will return the mole fraction.
+
+		Parameters
+		----------
+		X 	float
+			The mole fraction of the species in the solution.
+
+		Returns
+		-------
+		float
+			The activity of the species in the solution, i.e., the mole fraction.
+		"""
+		return X
+
+	def check_calibration_range(self,parameters):
+		""" Checks that the parameters are within the calbrated range of
+		the model, for use with the Calculate methods. Since this is a
+		statement of ideality, everything is within its calibrated range.
+
+		Parameters
+		----------
+		parameters 	dictionary
+			Parameter names (keys) and their values, for checking.
+
+		Returns
+		-------
+		dictionary
+			Dictionary with parameter names as keys. The values are booleans
+			representing whether the parameter is in the calibrated range, or not.
+			Always True for this instance.
+
+		"""
+		results = {}
+		for param in list(parameters.keys()):
+			results[param] = True
 		return results
 
 
