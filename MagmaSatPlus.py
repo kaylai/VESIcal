@@ -78,6 +78,24 @@ msp_fontdict = {'family': 'serif',
 				 'weight': 'normal',
 				 'size': 18,}
 
+def printTable(myDict):
+   """ Pretty print a dictionary (as pandas DataFrame)
+
+   Parameters
+   ----------
+   myDict: dict
+   		A dictionary
+
+   Returns
+   -------
+   pandas DataFrame
+   		The input dictionary converted to a pandas DataFrame
+   """
+   table = pd.DataFrame([v for v in myDict.values()], columns = ['value'],
+   						 index = [k for k in myDict.keys()])
+
+   return table
+
 #----------DEFINE SOME BASIC METHODS-----------#
 
 def mol_to_wtpercent(dataframe):
@@ -199,19 +217,45 @@ def normalize(composition):
 
 	Parameters
 	----------
-	composition: dict
-		Dictionary of a composition with possible keys
+	composition: dict, pandas DataFrame, or ExcelFile object
+		A single composition can be passed as a dictionary. Multiple compositions can be passed either as
+		a pandas DataFrame or an ExcelFile object. Compositional information as oxides must be present.
 
 	Returns
 	-------
-	dict
-		Dictionary of a composition, normalized to 100%, with possible keys
+	dict or pandas DataFrame
+		If a single composition is passed, a dictionary of the composition normalized to 100% is returned.
+		If an ExcelFile object or a pandas DataFrame object are passed, a pandas DataFrame with compositions
+		normalized to 100% is returned.
 	"""
-	return {k: 100.0 * v / sum(composition.values()) for k, v in composition.items()}
+	if isinstance(composition, dict):
+		return {k: 100.0 * v / sum(composition.values()) for k, v in composition.items()}
+
+	if isinstance(composition, ExcelFile):
+		data = composition.data
+		data["Sum"] = sum([data[oxide] for oxide in oxides])
+		for column in data:
+			if column in oxides:
+				data[column] = 100*data[column]/data["Sum"]
+
+		del data["Sum"]
+		return data
+
+	if isinstance(composition, pd.DataFrame)
+		composition["Sum"] = sum([composition[oxide] for oxide in oxides])
+			for column in composition:
+				if column in oxides:
+					composition[column] = 100*composition[column]/composition["Sum"]
+
+			del composition["Sum"]
+			return composition
+
+
+
+
 
 def wtpercentOxides_to_formulaWeight(sample):
 	""" Converts major element oxides in wt% to the formula weight (on a 1 oxygen basis).
-
 	Parameters
 	----------
 	sample 	pandas Series
@@ -2402,15 +2446,16 @@ class Modeller(object):
 			title in the passed ExcelFile object.
 
 		press: float or str
-			Pressure, in degrees C. Can be passed as float, in which case the
+			Pressure, in MPa. Can be passed as float, in which case the
 			passed value is used as the pressure for all samples. Alternatively, pressure information for each individual
 			sample may already be present in the passed ExcelFile object. If so, pass the str value corresponding to the column
 			title in the passed ExcelFile object.
 
 		Returns
 		-------
-		dict
-			Dictionary of fluid composition in wt% with keys 'H2O' and 'CO2'.
+		dict 
+			If dict is passed to sample, a dictionary of fluid composition in wt% with keys 'H2O' and 'CO2' is returned.
+			If ExcelFile is passed to sample, a pandas DataFrame object is returned.
 		"""
 		#--------------Preamble required for every MagmaSat method within Modeller---------------#
 		# instantiate thermoengine equilibrate MELTS instance
@@ -2488,7 +2533,7 @@ class Modeller(object):
 
 	def calculate_isobars_and_isopleths(self, sample, temp, print_status=False, pressure_min='', pressure_max='', pressure_int='', pressure_list=''):
 		"""
-		Plots isobars and isopleths at a constant temperature for a given sample. Isobars can be calculated
+		Calculates isobars and isopleths at a constant temperature for a given sample. Isobars can be calculated
 		for any number of pressures. Pressures can be passed as min, max, interval (100.0, 500.0, 100.0 would result
 		in pressures of 100.0, 200.0, 300.0, 400.0, and 500.0 MPa). Alternatively pressures can be passed as a list of all
 		desired pressures ([100.0, 200.0, 250.0, 300.0] would calculate isobars for each of those pressures in MPa).
