@@ -212,12 +212,12 @@ def wtpercentOxides_to_molSingleO(oxides):
 
 	return molCations
 
-def normalize(sample):
+def normalize(composition):
 	"""Normalizes an input composition to 100%. This is the 'standard' normalization routine.
 
 	Parameters
 	----------
-	sample: dict, pandas DataFrame, or ExcelFile object
+	composition: dict, pandas DataFrame, or ExcelFile object
 		A single composition can be passed as a dictionary. Multiple compositions can be passed either as
 		a pandas DataFrame or an ExcelFile object. Compositional information as oxides must be present.
 
@@ -228,11 +228,11 @@ def normalize(sample):
 		If an ExcelFile object or a pandas DataFrame object are passed, a pandas DataFrame with compositions
 		normalized to 100% is returned.
 	"""
-	if isinstance(sample, dict):
-		return {k: 100.0 * v / sum(sample.values()) for k, v in sample.items()}
+	if isinstance(composition, dict):
+		return {k: 100.0 * v / sum(composition.values()) for k, v in composition.items()}
 
-	if isinstance(sample, ExcelFile):
-		data = sample.data
+	if isinstance(composition, ExcelFile):
+		data = composition.data
 		data["Sum"] = sum([data[oxide] for oxide in oxides])
 		for column in data:
 			if column in oxides:
@@ -241,14 +241,14 @@ def normalize(sample):
 		del data["Sum"]
 		return data
 
-	if isinstance(sample, pd.DataFrame):
-		sample["Sum"] = sum([sample[oxide] for oxide in oxides])
-		for column in sample:
+	if isinstance(composition, pd.DataFrame):
+		composition["Sum"] = sum([composition[oxide] for oxide in oxides])
+		for column in composition:
 			if column in oxides:
-				sample[column] = 100*sample[column]/sample["Sum"]
+				composition[column] = 100*composition[column]/composition["Sum"]
 
-		del sample["Sum"]
-		return sample
+		del composition["Sum"]
+		return composition
 
 
 def wtpercentOxides_to_formulaWeight(sample):
