@@ -18,6 +18,8 @@ print("Build in some knowledge of how the parameterisations want to treat Fe, H2
 #----------DEFINE SOME CONSTANTS-------------#
 oxides = ['SiO2', 'TiO2', 'Al2O3', 'Fe2O3', 'Cr2O3', 'FeO', 'MnO', 'MgO', 'NiO', 'CoO', 'CaO', 'Na2O', 'K2O', 'P2O5',
 		  'H2O', 'CO2']
+anhydrous_oxides = ['SiO2', 'TiO2', 'Al2O3', 'Fe2O3', 'Cr2O3', 'FeO', 'MnO', 'MgO', 'NiO', 'CoO', 'CaO', 'Na2O', 'K2O', 'P2O5']
+volatiles = ['H2O', 'CO2']
 oxideMass = {'SiO2': 28.085+32, 'MgO': 24.305+16, 'FeO': 55.845+16, 'CaO': 40.078+16, 'Al2O3': 2*26.982+16*3, 'Na2O': 22.99*2+16,
 			 'K2O': 39.098*2+16, 'MnO': 54.938+16, 'TiO2': 47.867+32, 'P2O5': 2*30.974+5*16, 'Cr2O3': 51.996*2+3*16,
 			 'NiO': 58.693+16, 'CoO': 28.01+16, 'Fe2O3': 55.845*2+16*3,
@@ -212,45 +214,6 @@ def wtpercentOxides_to_molSingleO(oxides):
 
 	return molCations
 
-def normalize(sample):
-	"""Normalizes an input composition to 100%. This is the 'standard' normalization routine.
-
-	Parameters
-	----------
-	sample: dict, pandas DataFrame, or ExcelFile object
-		A single composition can be passed as a dictionary. Multiple compositions can be passed either as
-		a pandas DataFrame or an ExcelFile object. Compositional information as oxides must be present.
-
-	Returns
-	-------
-	dict or pandas DataFrame
-		If a single composition is passed, a dictionary of the composition normalized to 100% is returned.
-		If an ExcelFile object or a pandas DataFrame object are passed, a pandas DataFrame with compositions
-		normalized to 100% is returned.
-	"""
-	if isinstance(sample, dict):
-		return {k: 100.0 * v / sum(sample.values()) for k, v in sample.items()}
-
-	if isinstance(sample, ExcelFile):
-		data = sample.data
-		data["Sum"] = sum([data[oxide] for oxide in oxides])
-		for column in data:
-			if column in oxides:
-				data[column] = 100*data[column]/data["Sum"]
-
-		del data["Sum"]
-		return data
-
-	if isinstance(sample, pd.DataFrame):
-		sample["Sum"] = sum([sample[oxide] for oxide in oxides])
-		for column in sample:
-			if column in oxides:
-				sample[column] = 100*sample[column]/sample["Sum"]
-
-		del sample["Sum"]
-		return sample
-
-
 def wtpercentOxides_to_formulaWeight(sample):
 	""" Converts major element oxides in wt% to the formula weight (on a 1 oxygen basis).
 	Parameters
@@ -275,6 +238,56 @@ def wtpercentOxides_to_formulaWeight(sample):
 		FW += cations[cation]*CationMass[cations_to_oxides[cation]]
 	return FW
 
+#----------DEFINE SOME NORMALIZATION METHODS-----------#	
+
+def normalize(sample):
+	"""Normalizes an input composition to 100%. This is the 'standard' normalization routine.
+
+	Parameters
+	----------
+	sample:	pandas Series, dictionary, pandas DataFrame, or ExcelFile object
+		A single composition can be passed as a dictionary. Multiple compositions can be passed either as
+		a pandas DataFrame or an ExcelFile object. Compositional information as oxides must be present.
+
+	Returns
+	-------
+	Sample passed as > Returned as
+		pandas Series > pandas Series
+		dictionary > dictionary
+		pandas DataFrame > pandas DataFrame
+		ExcelFile object > pandas DataFrame
+
+			Normalized major element oxides.
+	"""
+	def single_normalize(sample):
+		single_sample = sample
+		return {k: 100.0 * v / sum(single_sample.values()) for k, v in single_sample.items()}
+
+	def multi_normalize(sample):
+		multi_sample = sample.copy()
+		multi_sample["Sum"] = sum([multi_sample[oxide] for oxide in oxides])
+		for column in multi_sample:
+			if column in oxides:
+				multi_sample[column] = 100.0*multi_sample[column]/multi_sample["Sum"]
+
+		del multi_sample["Sum"]
+		return multi_sample
+
+	if isinstance(sample, dict):
+		_sample = sample.copy()
+		return single_normalize(_sample)
+	elif isinstance(sample, pd.core.series.Series):
+		_sample = pd.Series(sample.copy())
+		sample_dict = sample.to_dict()
+		return pd.Series(single_normalize(sample_dict))
+	elif isinstance(sample, ExcelFile):
+		_sample = sample
+		data = _sample.data
+		return multi_normalize(data)
+	elif isinstance(sample, pd.DataFrame):
+		return multi_normalize(sample)
+
+
 def normalize_FixedVolatiles(sample):
 	""" Normalizes major element oxides to 100 wt%, including volatiles. The volatile
 	wt% will remain fixed, whilst the other major element oxides are reduced proportionally
@@ -282,40 +295,69 @@ def normalize_FixedVolatiles(sample):
 
 	Parameters
 	----------
-	sample 	pandas Series or dictionary
+	sample:	pandas Series, dictionary, pandas DataFrame, or ExcelFile object
 		Major element oxides in wt%
 
 	Returns
 	-------
-	pandas Series
-		Normalized major elements in wt%.
+	Sample passed as > Returned as
+		pandas Series > pandas Series
+		dictionary > dictionary
+		pandas DataFrame > pandas DataFrame
+		ExcelFile object > pandas DataFrame
+
+			Normalized major element oxides.
 	"""
-	if type(sample) == dict:
+	def single_FixedVolatiles(sample):
+		normalized = pd.Series({})
+		volatiles = 0
+		if 'CO2' in list(_sample.index):
+			volatiles += _sample['CO2']
+		if 'H2O' in list(_sample.index):
+			volatiles += _sample['H2O']
+
+		for ox in list(_sample.index):
+			if ox != 'H2O' and ox != 'CO2':
+				normalized[ox] = _sample[ox]
+
+		normalized = normalized/np.sum(normalized)*(100-volatiles)
+
+		if 'CO2' in list(_sample.index):
+			normalized['CO2'] = _sample['CO2']
+		if 'H2O' in list(_sample.index):
+			normalized['H2O'] = _sample['H2O']
+
+		return normalized
+
+	def multi_FixedVolatiles(sample):
+		multi_sample = sample.copy()
+		multi_sample["Sum_anhy"] = sum([multi_sample[oxide] for oxide in anhydrous_oxides])
+		multi_sample["Sum_vols"] = sum([multi_sample[vol] for vol in volatiles])
+		for column in multi_sample:
+			if column in anhydrous_oxides:
+				multi_sample[column] = 100.0*multi_sample[column]/multi_sample["Sum_anhy"]
+				multi_sample[column] = multi_sample[column] / (100.0/(100.0-multi_sample["Sum_vols"]))
+		del multi_sample["Sum_anhy"]
+		del multi_sample["Sum_vols"]
+
+		return multi_sample
+
+	if isinstance(sample, dict):
 		_sample = pd.Series(sample.copy())
-	elif type(sample) != pd.core.series.Series:
-		return InputError("The composition input must be a pandas Series or dictionary.")
+		return single_FixedVolatiles(_sample).to_dict()
+	elif isinstance(sample, pd.core.series.Series):
+		_sample = pd.Series(sample.copy())
+		return single_FixedVolatiles(_sample)
+	elif isinstance(sample, ExcelFile):
+		_sample = sample
+		data = _sample.data 
+		return multi_FixedVolatiles(data)
+	elif isinstance(sample, pd.DataFrame):
+		return multi_FixedVolatiles(sample)	
 	else:
-		_sample = sample.copy()
+		return InputError("The composition input must be a pandas Series or dictionary for single sample \
+							or a pandas DataFrame or ExcelFile object for multi-sample.")
 
-	normalized = pd.Series({})
-	volatiles = 0
-	if 'CO2' in list(_sample.index):
-		volatiles += _sample['CO2']
-	if 'H2O' in list(_sample.index):
-		volatiles += _sample['H2O']
-
-	for ox in list(_sample.index):
-		if ox != 'H2O' and ox != 'CO2':
-			normalized[ox] = _sample[ox]
-
-	normalized = normalized/np.sum(normalized)*(100-volatiles)
-
-	if 'CO2' in list(_sample.index):
-		normalized['CO2'] = _sample['CO2']
-	if 'H2O' in list(_sample.index):
-		normalized['H2O'] = _sample['H2O']
-
-	return normalized
 
 def normalize_AdditionalVolatiles(sample):
 	"""Normalises major element oxide wt% to 100%, assuming it is volatile-free. If
@@ -324,33 +366,58 @@ def normalize_AdditionalVolatiles(sample):
 
 	Parameters
 	----------
-	sample 	pandas Series or dictionary
+	sample:	pandas Series, dictionary, pandas DataFrame, or ExcelFile object
 		Major element oxides in wt%
 
 	Returns
 	-------
-	pandas Series
-		Normalized major element oxides (wt%).
+	Sample passed as > Returned as
+		pandas Series > pandas Series
+		dictionary > dictionary
+		pandas DataFrame > pandas DataFrame
+		ExcelFile object > pandas DataFrame
+
+			Normalized major element oxides.
 	"""
-	if type(sample) == dict:
+	def single_AdditionalVolatiles(sample):
+		normalized = pd.Series({})
+		for ox in list(_sample.index):
+			if ox != 'H2O' and ox != 'CO2':
+				normalized[ox] = _sample[ox]
+
+		normalized = normalized/np.sum(normalized)*100
+		if 'H2O' in _sample.index:
+			normalized['H2O'] = _sample['H2O']
+		if 'CO2' in _sample.index:
+			normalized['CO2'] = _sample['CO2']
+
+		return normalized
+
+	def multi_AdditionalVolatiles(sample):
+		multi_sample = sample.copy()
+		multi_sample["Sum"] = sum([multi_sample[oxide] for oxide in anhydrous_oxides])
+		for column in multi_sample:
+			if column in anhydrous_oxides:
+				multi_sample[column] = 100.0*multi_sample[column]/multi_sample["Sum"]
+
+		del multi_sample["Sum"]
+		return multi_sample
+
+	if isinstance(sample, dict):
 		_sample = pd.Series(sample.copy())
-	elif type(sample) != pd.core.series.Series:
-		return InputError("The composition input must be a pandas Series or dictionary.")
+		return single_AdditionalVolatiles(_sample).to_dict()
+	elif isinstance(sample, pd.core.series.Series):
+		_sample = pd.Series(sample.copy())
+		return single_AdditionalVolatiles(sample)
+	elif isinstance(sample, ExcelFile):
+		_sample = sample
+		data = _sample.data
+		return multi_AdditionalVolatiles(data)
+	elif isinstance(sample, pd.DataFrame):
+		return multi_AdditionalVolatiles(sample)
 	else:
-		_sample = sample.copy()
-
-	normalized = pd.Series({})
-	for ox in list(_sample.index):
-		if ox != 'H2O' and ox != 'CO2':
-			normalized[ox] = _sample[ox]
-
-	normalized = normalized/np.sum(normalized)*100
-	if 'H2O' in _sample.index:
-		normalized['H2O'] = _sample['H2O']
-	if 'CO2' in _sample.index:
-		normalized['CO2'] = _sample['CO2']
-
-	return normalized
+		return InputError("The composition input must be a pandas Series or dictionary for single sample \
+							or a pandas DataFrame or ExcelFile object for multi-sample.")
 
 
 #------------DEFINE MAJOR CLASSES-------------------#
@@ -454,13 +521,13 @@ class ExcelFile(object):
 			if item in oxides:
 				sample_oxides.update({item: value})
 
-		if norm_style == 'standard':
+		if norm == 'standard':
 			return normalize(sample_oxides)
-		if norm_style == 'fixedvolatiles':
+		if norm == 'fixedvolatiles':
 			return normalize_FixedVolatiles(sample_oxides).to_dict()
-		if norm_style == 'anhydrous':
+		if norm == 'anhydrous':
 			return normalize_AdditionalVolatiles(sample_oxides).to_dict()
-		if norm_style == 'none':
+		if norm == 'none':
 			return sample_oxides
 
 	def save_excel_file(self):
@@ -2583,7 +2650,7 @@ class MagmaSat(Model):
 	"""
 
 	def __init__(self):
-		self.model_version = '1.2.0'
+		self.melts_version = '1.2.0'
 
 	def preprocess_sample(self,sample):
 		#--------------MELTS preamble---------------#
