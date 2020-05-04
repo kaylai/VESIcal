@@ -534,6 +534,94 @@ class ExcelFile(object):
 		#TODO write this code!
 		return("You haven't written this code yet!")
 
+	def calculate_equilibrium_fluid_comp(self, temperature, pressure): 
+	#TODO do we want this function to "overwrite" the original myfile.data information? Currently it does.
+		"""
+		Returns H2O and CO2 concentrations in wt% in a fluid in equilibrium with the given sample(s) at the given P/T condition.
+
+		Parameters
+		----------
+		sample: ExcelFile object
+			Compositional information on samples in oxides. 
+
+		temperature: float, int, or str
+			Temperature, in degrees C. Can be passed as float, in which case the
+			passed value is used as the temperature for all samples. Alternatively, temperature information for each individual
+			sample may already be present in the passed ExcelFile object. If so, pass the str value corresponding to the column
+			title in the passed ExcelFile object.
+
+		presure: float, int, or str
+			Pressure, in bars. Can be passed as float or int, in which case the
+			passed value is used as the pressure for all samples. Alternatively, pressure information for each individual
+			sample may already be present in the passed ExcelFile object. If so, pass the str value corresponding to the column
+			title in the passed ExcelFile object.
+
+		Returns
+		-------
+		pandas DataFrame 
+			Original data passed plus newly calculated values are returned.
+		"""
+		data = self.preprocess_sample(self.data)
+		oxides = self.oxides
+		melts = self.melts
+
+		if isinstance(temperature, str):
+			file_has_temp = True
+		elif isinstance(temperature, float) or isinstance(temperature, int):
+			file_has_temp = False
+		else:
+			raise InputError("temp must be type str or float or int")
+
+		if isinstance(pressure, str):
+			file_has_press = True
+		elif isinstance(pressure, float) or isinstance(pressure, int):
+			file_has_press = False
+		else:
+			raise InputError("pressure must be type str or float or int")
+
+		fluid_comp_H2O = []
+		fluid_comp_CO2 = []
+		fluid_mass_grams = []
+		fluid_system_wtper = []
+		for index, row in data.iterrows():
+			bulk_comp = {oxide:  row[oxide] for oxide in oxides}
+			feasible = melts.set_bulk_composition(bulk_comp)
+
+			if file_has_temp == True:
+				temperature = row[temperature]
+			if file_has_press == True:
+				pressure = row[pressure]
+			
+			pressureMPa = pressure / 10.0
+
+			output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
+			(status, temperature, pressureMPa, xmlout) = output[0]
+			fluid_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
+			flsystem_wtper = 100 * fluid_mass / (fluid_mass + melts.get_mass_of_phase(xmlout, phase_name='Liquid'))
+
+			if fluid_mass > 0.0:
+				fluid_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid')
+				fluid_comp_H2O.append(fluid_comp['H2O'])
+				fluid_comp_CO2.append(fluid_comp['CO2'])
+				fluid_mass_grams.append(fluid_mass)
+				fluid_system_wtper.append(flsystem_wtper)
+			else:
+				fluid_comp_H2O.append(0)
+				fluid_comp_CO2.append(0)
+
+		data["H2Ofluid_wtper"] = fluid_comp_H2O
+		data["CO2fluid_wtper"] = fluid_comp_CO2
+		data["FluidMass_grams"] = fluid_mass_grams
+		data["FluidProportion_wtper"] = fluid_system_wtper
+
+		if file_has_temp == False:
+			data["Temperature_C"] = temperature
+
+		if file_has_press == False:
+			data["Pressure_bars"] = pressure
+
+		return data
+
 	def calculate_saturation_pressure(self, temperature, print_status=False): #TODO fix weird printing
 		"""
 		Calculates the saturation pressure of multiple sample compositions in the ExcelFile.
@@ -669,81 +757,10 @@ class ExcelFile(object):
 		del data["StartingP"]
 		del data["StartingP_ref"]
 
+		if file_has_temp == False:
+			data["Temperature_C"] = temperature
+
 		feasible = melts.set_bulk_composition(bulk_comp_orig) #this needs to be reset always!
-
-		return data
-
-	def calculate_equilibrium_fluid_comp(self, temperature, pressure): 
-		"""
-		Returns H2O and CO2 concentrations in wt% in a fluid in equilibrium with the given sample(s) at the given P/T condition.
-
-		Parameters
-		----------
-		sample: ExcelFile object
-			Compositional information on samples in oxides. 
-
-		temperature: float, int, or str
-			Temperature, in degrees C. Can be passed as float, in which case the
-			passed value is used as the temperature for all samples. Alternatively, temperature information for each individual
-			sample may already be present in the passed ExcelFile object. If so, pass the str value corresponding to the column
-			title in the passed ExcelFile object.
-
-		presure: float, int, or str
-			Pressure, in bars. Can be passed as float or int, in which case the
-			passed value is used as the pressure for all samples. Alternatively, pressure information for each individual
-			sample may already be present in the passed ExcelFile object. If so, pass the str value corresponding to the column
-			title in the passed ExcelFile object.
-
-		Returns
-		-------
-		pandas DataFrame 
-			Original data passed plus newly calculated values are returned.
-		"""
-		data = self.preprocess_sample(self.data)
-		oxides = self.oxides
-		melts = self.melts
-
-		if isinstance(temperature, str):
-			file_has_temp = True
-		elif isinstance(temperature, float) or isinstance(temperature, int):
-			file_has_temp = False
-		else:
-			raise InputError("temp must be type str or float or int")
-
-		if isinstance(pressure, str):
-			file_has_press = True
-		elif isinstance(pressure, float) or isinstance(pressure, int):
-			file_has_press = False
-		else:
-			raise InputError("pressure must be type str or float or int")
-
-		fluid_comp_H2O = []
-		fluid_comp_CO2 = []
-		for index, row in data.iterrows():
-			bulk_comp = {oxide:  row[oxide] for oxide in oxides}
-			feasible = melts.set_bulk_composition(bulk_comp)
-
-			if file_has_temp == True:
-				temperature = row[temperature]
-			if file_has_press == True:
-				pressure = row[pressure]
-			
-			pressureMPa = pressure / 10.0
-
-			output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
-			(status, temperature, pressureMPa, xmlout) = output[0]
-			fluid_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
-
-			if fluid_mass > 0.0:
-				fluid_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid')
-				fluid_comp_H2O.append(fluid_comp['H2O'])
-				fluid_comp_CO2.append(fluid_comp['CO2'])
-			else:
-				fluid_comp_H2O.append(0)
-				fluid_comp_CO2.append(0)
-
-		data["H2Ofluid_wtper"] = fluid_comp_H2O
-		data["CO2fluid_wtper"] = fluid_comp_CO2
 
 		return data
 
@@ -2678,41 +2695,6 @@ class MagmaSat(Model):
 	def check_calibration_range(self,**kwargs):
 		return 0
 
-	def calculate_dissolved_volatiles(self, sample, temperature, pressure, XH2Ofluid):
-		"""
-		Calculates the amount of H2O and CO2 dissolved in a magma at the given P/T conditions and fluid composition.
-
-		Parameters
-		----------
-		sample: dict or pandas Series
-			Compositional information on one sample in oxides.
-
-		temperature: float or int
-			Temperature, in degrees C. 
-
-		presure: float or int
-			Pressure, in bars. 
-
-		XH2Ofluid: float or int
-			The mole fraction of H2O in the H2O-CO2 fluid. XH2Ofluid=1 is a pure H2O fluid. XH2O=0 is a pure CO2 fluid.
-
-		Returns
-		-------
-		dict
-			A dictionary of dissolved volatile concentrations in wt% with keys H2O and CO2.
-		"""
-		melts = self.melts
-		oxides = self.oxides
-
-		pressureMPa = pressure / 10.0
-
-		bulk_comp = {oxide:  sample[oxide] for oxide in oxides}
-		feasible = melts.set_bulk_composition(bulk_comp)
-
-		output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
-
-		pass #TODO Write this code...
-
 	def calculate_equilibrium_fluid_comp(self, sample, temperature, pressure, verbose=False): #TODO fix weird printing
 		"""
 		Returns H2O and CO2 concentrations in wt% in a fluid in equilibrium with the given sample at the given P/T condition.
@@ -2775,6 +2757,41 @@ class MagmaSat(Model):
 
 		if verbose == True:
 			return {'H2O': fluid_comp_H2O, 'CO2': fluid_comp_CO2, 'FluidMass_grams': fluid_mass, 'FluidProportion_wtper': flsystem_wtper}
+
+	def calculate_dissolved_volatiles(self, sample, temperature, pressure, XH2Ofluid):
+		"""
+		Calculates the amount of H2O and CO2 dissolved in a magma at the given P/T conditions and fluid composition.
+
+		Parameters
+		----------
+		sample: dict or pandas Series
+			Compositional information on one sample in oxides.
+
+		temperature: float or int
+			Temperature, in degrees C. 
+
+		presure: float or int
+			Pressure, in bars. 
+
+		XH2Ofluid: float or int
+			The mole fraction of H2O in the H2O-CO2 fluid. XH2Ofluid=1 is a pure H2O fluid. XH2O=0 is a pure CO2 fluid.
+
+		Returns
+		-------
+		dict
+			A dictionary of dissolved volatile concentrations in wt% with keys H2O and CO2.
+		"""
+		melts = self.melts
+		oxides = self.oxides
+
+		pressureMPa = pressure / 10.0
+
+		bulk_comp = {oxide:  sample[oxide] for oxide in oxides}
+		feasible = melts.set_bulk_composition(bulk_comp)
+
+		output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
+
+		pass #TODO Write this code...
 
 	def calculate_isobars_and_isopleths(self, sample, temperature, print_status=False, pressure_min='', pressure_max='', pressure_int='', pressure_list=''):
 		"""
