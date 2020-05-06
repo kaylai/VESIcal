@@ -577,6 +577,7 @@ class ExcelFile(object):
 
 		if isinstance(temperature, str):
 			file_has_temp = True
+			temp_name = temperature
 		elif isinstance(temperature, float) or isinstance(temperature, int):
 			file_has_temp = False
 		else:
@@ -584,6 +585,7 @@ class ExcelFile(object):
 
 		if isinstance(pressure, str):
 			file_has_press = True
+			press_name = pressure
 		elif isinstance(pressure, float) or isinstance(pressure, int):
 			file_has_press = False
 		else:
@@ -598,10 +600,10 @@ class ExcelFile(object):
 			feasible = melts.set_bulk_composition(bulk_comp)
 
 			if file_has_temp == True:
-				temperature = row[temperature]
+				temperature = row[temp_name]
 			if file_has_press == True:
-				pressure = row[pressure]
-			
+				pressure = row[press_name]
+
 			pressureMPa = pressure / 10.0
 
 			output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
@@ -623,6 +625,8 @@ class ExcelFile(object):
 			else:
 				fluid_comp_H2O.append(0)
 				fluid_comp_CO2.append(0)
+				fluid_mass_grams.append(0)
+				fluid_system_wtper.append(0)
 
 		if mode == 'wtper':
 			data["H2Ofluid_wtper"] = fluid_comp_H2O
@@ -668,6 +672,7 @@ class ExcelFile(object):
 
 		if isinstance(temperature, str):
 			file_has_temp = True
+			temp_name = temperature
 		elif isinstance(temperature, float) or isinstance(temperature, int):
 			file_has_temp = False
 		else:
@@ -692,7 +697,7 @@ class ExcelFile(object):
 			feasible = melts.set_bulk_composition(bulk_comp)
 
 			if file_has_temp == True:
-				temperature = row[temperature]
+				temperature = row[temp_name]
 
 			fluid_mass = 0.0
 			pressureMPa = 2000.0
@@ -739,7 +744,7 @@ class ExcelFile(object):
 			feasible = melts.set_bulk_composition(bulk_comp)
 
 			if file_has_temp == True:
-				temperature = row[temperature]
+				temperature = row[temp_name]
 
 			fluid_mass = 0.0
 			pressureMPa = row["StartingP_ref"]
@@ -2891,18 +2896,34 @@ class MagmaSat(Model):
 
 		XH2O_fluid = H2O_fl
 
+		#------Coarse Check------#
 		while XH2O_fluid < X_fluid - 0.1: #too low coarse check
 			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
 			H2O_val += 0.1
 
+		while XH2O_fluid > X_fluid + 0.1: #too high coarse check
+			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
+			CO2_val += 0.1
+
+		#------Refinement 1------#
 		while XH2O_fluid < X_fluid - 0.01: #too low refinement 1
 			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
 			H2O_val += 0.01
 
+		while XH2O_fluid > X_fluid + 0.01: #too high refinement 1
+			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
+			CO2_val += 0.01
+
+		#------Refinement 2------#
 		while XH2O_fluid < X_fluid - 0.001: #too low refinement 2
 			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
 			H2O_val += 0.001
 
+		while XH2O_fluid > X_fluid + 0.001: #too high refinement 2
+			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
+			CO2_val += 0.001
+
+		#------Final refinement------#
 		while XH2O_fluid < X_fluid - 0.0001: #too low final refinement
 			bulk_comp["H2O"] = H2O_val
 			bulk_comp["CO2"] = CO2_val
@@ -2937,18 +2958,6 @@ class MagmaSat(Model):
 			XH2O_fluid = H2O_fl
 
 			H2O_val += 0.0001
-
-		while XH2O_fluid > X_fluid + 0.1: #too high coarse check
-			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
-			CO2_val += 0.1
-
-		while XH2O_fluid > X_fluid + 0.01: #too high refinement 1
-			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
-			CO2_val += 0.01
-
-		while XH2O_fluid > X_fluid + 0.001: #too high refinement 2
-			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
-			CO2_val += 0.001
 
 		while XH2O_fluid > X_fluid + 0.0001: #too high final refinement
 			bulk_comp["H2O"] = H2O_val
@@ -2989,7 +2998,7 @@ class MagmaSat(Model):
 			return {"temperature": temperature, "pressure": pressure, 
 					"H2O_liq": H2O_liq, "CO2_liq": CO2_liq,
 					"XH2O_fl": H2O_fl, "XCO2_fl": CO2_fl,
-					"fluid_system_wtper": 100*fluid_mass/system_mass}
+					"FluidProportion_wtper": 100*fluid_mass/system_mass}
 
 		if verbose == False:
 			return {"H2O": H2O_liq, "CO2": CO2_liq}
