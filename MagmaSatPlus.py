@@ -2776,23 +2776,18 @@ class MagmaSat(Model):
 
 		output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
 		(status, temperature, pressureMPa, xmlout) = output[0]
-		fluid_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid')
+		fluid_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid', mode='component')
+			#NOTE mode='component' returns endmember component keys with values in mol fraction.
 
-		if "H2O" in fluid_comp:
-			H2O_fl = fluid_comp["H2O"]
+		if "Water" in fluid_comp:
+			H2O_fl = fluid_comp["Water"]
 		else:
 			H2O_fl = 0.0
-		if "CO2" in fluid_comp:
-			CO2_fl = fluid_comp["CO2"]
-		else:
-			CO2_fl = 0.0
 
-		if H2O_fl == 0 and CO2_fl == 0:
+		if H2O_fl == 0:
 			return("Composition not fluid saturated.")
-
 		else:
-			XH2O_fluid = H2O_fl / (H2O_fl + CO2_fl)
-			return XH2O_fluid
+			return H2O_fl
 
 	def calculate_dissolved_volatiles(self, sample, temperature, pressure, X_fluid=1, verbose=False):
 		"""
@@ -2853,9 +2848,8 @@ class MagmaSat(Model):
 
 		output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
 		(status, temperature, pressureMPa, xmlout) = output[0]
-		fluid_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
 		liquid_comp = melts.get_composition_of_phase(xmlout, phase_name='Liquid', mode='oxide_wt')
-		fluid_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid')
+		fluid_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid', mode='component')
 
 		if "H2O" in liquid_comp:
 			H2O_liq = liquid_comp["H2O"]
@@ -2867,17 +2861,16 @@ class MagmaSat(Model):
 		else:
 			CO2_liq = 0
 
-		if "H2O" in fluid_comp:
-			H2O_fl = fluid_comp["H2O"]
+		if "Water" in fluid_comp:
+			H2O_fl = fluid_comp["Water"]
 		else:
 			H2O_fl = 0.0
-		if "CO2" in fluid_comp:
-			CO2_fl = fluid_comp["CO2"]
+		if "Carbon Dioxide" in fluid_comp:
+			CO2_fl = fluid_comp["Carbon Dioxide"]
 		else:
 			CO2_fl = 0.0
 
-		XH2O_fluid = H2O_fl / (H2O_fl + CO2_fl)
-
+		XH2O_fluid = H2O_fl
 
 		while XH2O_fluid < X_fluid - 0.1: #too low coarse check
 			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
@@ -2900,7 +2893,7 @@ class MagmaSat(Model):
 			(status, temperature, pressureMPa, xmlout) = output[0]
 			fluid_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
 			liquid_comp = melts.get_composition_of_phase(xmlout, phase_name='Liquid', mode='oxide_wt')
-			fluid_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid')
+			fluid_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid', mode='component')
 
 			if "H2O" in liquid_comp:
 				H2O_liq = liquid_comp["H2O"]
@@ -2912,16 +2905,16 @@ class MagmaSat(Model):
 			else:
 				CO2_liq = 0
 
-			if "H2O" in fluid_comp:
-				H2O_fl = fluid_comp["H2O"]
+			if "Water" in fluid_comp:
+				H2O_fl = fluid_comp["Water"]
 			else:
 				H2O_fl = 0.0
-			if "CO2" in fluid_comp:
-				CO2_fl = fluid_comp["CO2"]
+			if "Carbon Dioxide" in fluid_comp:
+				CO2_fl = fluid_comp["Carbon Dioxide"]
 			else:
 				CO2_fl = 0.0
 
-			XH2O_fluid = H2O_fl / (H2O_fl + CO2_fl)
+			XH2O_fluid = H2O_fl
 
 			H2O_val += 0.0001
 
@@ -2946,7 +2939,7 @@ class MagmaSat(Model):
 			(status, temperature, pressureMPa, xmlout) = output[0]
 			fluid_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
 			liquid_comp = melts.get_composition_of_phase(xmlout, phase_name='Liquid', mode='oxide_wt')
-			fluid_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid')
+			fluid_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid', mode='component')
 
 			if "H2O" in liquid_comp:
 				H2O_liq = liquid_comp["H2O"]
@@ -2958,25 +2951,24 @@ class MagmaSat(Model):
 			else:
 				CO2_liq = 0
 
-			if "H2O" in fluid_comp:
-				H2O_fl = fluid_comp["H2O"]
+			if "Water" in fluid_comp:
+				H2O_fl = fluid_comp["Water"]
 			else:
 				H2O_fl = 0.0
-			if "CO2" in fluid_comp:
-				CO2_fl = fluid_comp["CO2"]
+			if "Carbon Dioxide" in fluid_comp:
+				CO2_fl = fluid_comp["Carbon Dioxide"]
 			else:
 				CO2_fl = 0.0
 
-			XH2O_fluid = H2O_fl / (H2O_fl + CO2_fl)
+			XH2O_fluid = H2O_fl
 
 			H2O_val -= 0.0001
 
 		if verbose == True:
 			return {"temperature": temperature, "pressure": pressure, 
 					"H2O_liq": H2O_liq, "CO2_liq": CO2_liq,
-					"H2O_fl": H2O_fl, "CO2_fl": CO2_fl,
-					"fluid_mass_grams": fluid_mass,
-					"X_fluid_calculated": XH2O_fluid}
+					"XH2O_fl": H2O_fl, "XCO2_fl": CO2_fl,
+					"fluid_mass_grams": fluid_mass}
 
 		if verbose == False:
 			return {"H2O": H2O_liq, "CO2": CO2_liq}
