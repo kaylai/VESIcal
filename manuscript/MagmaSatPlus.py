@@ -473,6 +473,7 @@ class ExcelFile(object):
 		for phase in self.phases:
 			melts.set_phase_inclusion_status({phase: False})
 		melts.set_phase_inclusion_status({'Fluid': True, 'Liquid': True})
+
 		self.melts = melts
 		#-------------------------------------------#
 		oxides = self.oxides
@@ -534,11 +535,114 @@ class ExcelFile(object):
 		#TODO write this code!
 		return print("You haven't written this code yet!")
 
-	def calculate_dissolved_volatiles(self, temperature, pressure, X_fluid):
+	def calculate_dissolved_volatiles(self, temperature, pressure, X_fluid=1, print_status=False):
 		"""
-		Returns H2O
+		Calculates the amount of H2O and CO2 dissolved in a magma at the given P/T conditions and fluid composition. Fluid composition
+		will be matched to within 0.0001 mole fraction.
+
+		Parameters
+		----------
+		temperature: float, int, or str
+			Temperature, in degrees C. Can be passed as float, in which case the
+			passed value is used as the temperature for all samples. Alternatively, temperature information for each individual
+			sample may already be present in the ExcelFile object. If so, pass the str value corresponding to the column
+			title in the ExcelFile object.
+
+		presure: float, int, or str
+			Pressure, in bars. Can be passed as float or int, in which case the
+			passed value is used as the pressure for all samples. Alternatively, pressure information for each individual
+			sample may already be present in the ExcelFile object. If so, pass the str value corresponding to the column
+			title in the ExcelFile object. 
+
+		X_fluid: float, int, or str
+			OPTIONAL: Default value is 1. The mole fraction of H2O in the H2O-CO2 fluid. X_fluid=1 is a pure H2O fluid. X_fluid=0 is a 
+			pure CO2 fluid. Can be passed as a float or int, in which case the passed value is used as the X_fluid for all samples.
+			Alternatively, X_fluid information for each individual sample may already be present in the ExcelFile object. If so, pass
+			the str value corresponding to the column title in the ExcelFile object.
+
+		print_status: bool
+			OPTIONAL: Default is False. If set to True, progress of the calculations will be printed to the terminal.
+
+		Returns
+		-------
+		pandas DataFrame
+			Original data passed plus newly calculated values are returned.
 		"""
-		return print("You haven't written this code yet!")
+		data = self.preprocess_sample(self.data)
+		oxides = self.oxides
+		melts = self.melts
+
+		if isinstance(temperature, str):
+			file_has_temp = True
+			temp_name = temperature
+		elif isinstance(temperature, float) or isinstance(temperature, int):
+			file_has_temp = False
+		else:
+			raise InputError("temp must be type str or float or int")
+
+		if isinstance(pressure, str):
+			file_has_press = True
+			press_name = pressure
+		elif isinstance(pressure, float) or isinstance(pressure, int):
+			file_has_press = False
+		else:
+			raise InputError("pressure must be type str or float or int")
+
+		if isinstance(X_fluid, str):
+			file_has_X = True
+			X_name = X_fluid
+		elif isinstance(X_fluid, float) or isinstance(X_fluid, int):
+			file_has_X = False
+			if X_fluid != 0 and X_fluid !=1:
+				if X_fluid < 0.001 or X_fluid > 0.999:
+					raise InputError("X_fluid is calculated to a precision of 0.0001 mole fraction. \
+									 Value for X_fluid must be between 0.0001 and 0.9999.")
+		else:
+			raise InputError("X_fluid must be type str or float or int")
+
+		liq_comp_H2O = []
+		liq_comp_CO2 = []
+		fluid_comp_H2O = []
+		fluid_comp_CO2 = []
+		fluid_system_wtper = []
+		sampleno = 0
+		for index, row in data.iterrows():
+			sampleno += 1
+			if print_status == True:
+				print("Calculating sample number " + str(sampleno))
+
+			bulk_comp = {oxide:  row[oxide] for oxide in oxides}
+
+			if file_has_temp == True:
+				temperature = row[temp_name]
+			if file_has_press == True:
+				pressure = row[press_name]
+			if file_has_X == True:
+				X_fluid = row[X_name]
+
+			pressureMPa = pressure / 10.0
+
+			calculate_it = MagmaSat().calculate_dissolved_volatiles(sample=bulk_comp, temperature=temperature, pressure=pressure, X_fluid=X_fluid, verbose=True)
+			liq_comp_H2O.append(calculate_it["H2O_liq"])
+			liq_comp_CO2.append(calculate_it["CO2_liq"])
+			fluid_comp_H2O.append(calculate_it["XH2O_fl"])
+			fluid_comp_CO2.append(calculate_it["XCO2_fl"])
+			fluid_system_wtper.append(calculate_it["FluidProportion_wtper"])
+
+		data["H2O_liq"] = liq_comp_H2O
+		data["CO2_liq"] = liq_comp_CO2
+		data["XH2O_fl"] = fluid_comp_H2O
+		data["XCO2_fl"] = fluid_comp_CO2
+		data["FluidProportion_wtper"] = fluid_system_wtper
+
+		if file_has_temp == False:
+			data["Temperature_C"] = temperature
+		if file_has_press == False:
+			data["Pressure_bars"] = pressure
+		if file_has_X == False:
+			data["X_fluid_input"] = X_fluid
+
+		return data
 
 	def calculate_equilibrium_fluid_comp(self, temperature, pressure, mode='wtper'): 
 	#TODO do we want this function to "overwrite" the original myfile.data information? Currently it does.
@@ -553,14 +657,14 @@ class ExcelFile(object):
 		temperature: float, int, or str
 			Temperature, in degrees C. Can be passed as float, in which case the
 			passed value is used as the temperature for all samples. Alternatively, temperature information for each individual
-			sample may already be present in the passed ExcelFile object. If so, pass the str value corresponding to the column
-			title in the passed ExcelFile object.
+			sample may already be present in the ExcelFile object. If so, pass the str value corresponding to the column
+			title in the  ExcelFile object.
 
 		presure: float, int, or str
 			Pressure, in bars. Can be passed as float or int, in which case the
 			passed value is used as the pressure for all samples. Alternatively, pressure information for each individual
-			sample may already be present in the passed ExcelFile object. If so, pass the str value corresponding to the column
-			title in the passed ExcelFile object.
+			sample may already be present in the ExcelFile object. If so, pass the str value corresponding to the column
+			title in the ExcelFile object.
 
 		mode: str
 			OPTIONAL. Default value is 'wtper', which returns the fluid composition in wt% oxides. Passing 'molfrac' returns
@@ -595,8 +699,12 @@ class ExcelFile(object):
 		fluid_comp_CO2 = []
 		fluid_mass_grams = []
 		fluid_system_wtper = []
+		iterno = 0
 		for index, row in data.iterrows():
 			bulk_comp = {oxide:  row[oxide] for oxide in oxides}
+			if iterno == 0:
+				bulk_comp_orig = bulk_comp
+			iterno += 1
 			feasible = melts.set_bulk_composition(bulk_comp)
 
 			if file_has_temp == True:
@@ -680,7 +788,6 @@ class ExcelFile(object):
 
 
 		# Do the melts equilibrations
-		bulk_comp = {}
 		startingP = []
 		startingP_ref = []
 		satP = []
@@ -690,10 +797,9 @@ class ExcelFile(object):
 		flsystem_wtper = []
 		iterno = 0
 		for index, row in data.iterrows():
-			if iterno == 0:
-				bulk_comp_orig = {oxide:  row[oxide] for oxide in oxides}
-
 			bulk_comp = {oxide:  row[oxide] for oxide in oxides}
+			if iterno == 0:
+				bulk_comp_orig = bulk_comp
 			feasible = melts.set_bulk_composition(bulk_comp)
 
 			if file_has_temp == True:
@@ -721,7 +827,7 @@ class ExcelFile(object):
 			feasible = melts.set_bulk_composition(bulk_comp)
 
 			if file_has_temp == True:
-				temperature = row[temperature]
+				temperature = row[temp_name]
 
 			fluid_mass = 0.0
 			pressureMPa = row["StartingP"]
@@ -2692,8 +2798,6 @@ class MagmaSat(Model):
 
 	def __init__(self):
 		self.melts_version = '1.2.0'
-
-	def preprocess_sample(self,sample):
 		#--------------MELTS preamble---------------#
 		# instantiate thermoengine equilibrate MELTS instance
 		melts = equilibrate.MELTSmodel('1.2.0')
@@ -2707,6 +2811,8 @@ class MagmaSat(Model):
 		melts.set_phase_inclusion_status({'Fluid': True, 'Liquid': True})
 		self.melts = melts
 		#-------------------------------------------#
+
+	def preprocess_sample(self,sample):
 		oxides = self.oxides
 		for oxide in oxides:
 			if oxide in sample.keys():
@@ -2848,23 +2954,22 @@ class MagmaSat(Model):
 		pressureMPa = pressure / 10.0
 
 		bulk_comp = {oxide:  sample[oxide] for oxide in oxides}
-		feasible = melts.set_bulk_composition(bulk_comp)
+		if X_fluid != 0 and X_fluid !=1:
+			if X_fluid < 0.001 or X_fluid > 0.999:
+				raise InputError("X_fluid is calculated to a precision of 0.0001 mole fraction. \
+								 Value for X_fluid must be between 0.0001 and 0.9999.")
 
-		H2O_val = 0.1
+		H2O_val = 0.0
+		CO2_val = 0.0
 		fluid_mass = 0.0
-
-		if X_fluid < 0.001 or X_fluid > 0.999:
-			raise InputError("X_fluid is calculated to a precision of 0.0001 mole fraction. \
-							 Value for X_fluid must be between 0.0001 and 0.9999.")
-
 		while fluid_mass <= 0:
 			if X_fluid == 0:
-				CO2_val = 0
+				CO2_val += 0.1
 			else:
+				H2O_val += 0.1
 				CO2_val = (H2O_val / X_fluid) - H2O_val #NOTE this is setting XH2Owt of the system (not of the fluid) to X_fluid
 
 			fluid_mass = self.get_fluid_mass(sample, temperature, pressure, H2O_val, CO2_val)
-			H2O_val += 0.1
 
 		bulk_comp["H2O"] = H2O_val
 		bulk_comp["CO2"] = CO2_val
@@ -2872,6 +2977,61 @@ class MagmaSat(Model):
 
 		output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
 		(status, temperature, pressureMPa, xmlout) = output[0]
+		liquid_comp = melts.get_composition_of_phase(xmlout, phase_name='Liquid', mode='oxide_wt')
+		fluid_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid', mode='component')
+
+		if "Water" in fluid_comp:
+			H2O_fl = fluid_comp["Water"]
+		else:
+			H2O_fl = 0.0
+
+		XH2O_fluid = H2O_fl
+
+		#------Coarse Check------#
+		while XH2O_fluid < X_fluid - 0.1: #too low coarse check
+			H2O_val += 0.1
+			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
+
+		while XH2O_fluid > X_fluid + 0.1: #too high coarse check
+			CO2_val += 0.1
+			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
+
+		#------Refinement 1------#
+		while XH2O_fluid < X_fluid - 0.01: #too low refinement 1
+			H2O_val += 0.01
+			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
+			
+		while XH2O_fluid > X_fluid + 0.01: #too high refinement 1
+			CO2_val += 0.01
+			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
+			
+		#------Refinement 2------#
+		while XH2O_fluid < X_fluid - 0.001: #too low refinement 2
+			H2O_val += 0.001
+			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
+			
+		while XH2O_fluid > X_fluid + 0.001: #too high refinement 2
+			CO2_val += 0.001
+			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
+
+		#------Final refinement------#
+		while XH2O_fluid < X_fluid - 0.0001: #too low final refinement
+			H2O_val += 0.0001
+			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
+
+		while XH2O_fluid > X_fluid + 0.0001: #too high final refinement
+			CO2_val += 0.0001
+			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
+
+		#------Get calculated values------#
+		bulk_comp["H2O"] = H2O_val
+		bulk_comp["CO2"] = CO2_val
+		feasible = melts.set_bulk_composition(bulk_comp)
+
+		output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
+		(status, temperature, pressureMPa, xmlout) = output[0]
+		fluid_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
+		system_mass = melts.get_mass_of_phase(xmlout, phase_name='System')
 		liquid_comp = melts.get_composition_of_phase(xmlout, phase_name='Liquid', mode='oxide_wt')
 		fluid_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid', mode='component')
 
@@ -2895,104 +3055,6 @@ class MagmaSat(Model):
 			CO2_fl = 0.0
 
 		XH2O_fluid = H2O_fl
-
-		#------Coarse Check------#
-		while XH2O_fluid < X_fluid - 0.1: #too low coarse check
-			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
-			H2O_val += 0.1
-
-		while XH2O_fluid > X_fluid + 0.1: #too high coarse check
-			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
-			CO2_val += 0.1
-
-		#------Refinement 1------#
-		while XH2O_fluid < X_fluid - 0.01: #too low refinement 1
-			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
-			H2O_val += 0.01
-
-		while XH2O_fluid > X_fluid + 0.01: #too high refinement 1
-			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
-			CO2_val += 0.01
-
-		#------Refinement 2------#
-		while XH2O_fluid < X_fluid - 0.001: #too low refinement 2
-			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
-			H2O_val += 0.001
-
-		while XH2O_fluid > X_fluid + 0.001: #too high refinement 2
-			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
-			CO2_val += 0.001
-
-		#------Final refinement------#
-		while XH2O_fluid < X_fluid - 0.0001: #too low final refinement
-			bulk_comp["H2O"] = H2O_val
-			bulk_comp["CO2"] = CO2_val
-			feasible = melts.set_bulk_composition(bulk_comp)
-
-			output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
-			(status, temperature, pressureMPa, xmlout) = output[0]
-			fluid_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
-			system_mass = melts.get_mass_of_phase(xmlout, phase_name='System')
-			liquid_comp = melts.get_composition_of_phase(xmlout, phase_name='Liquid', mode='oxide_wt')
-			fluid_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid', mode='component')
-
-			if "H2O" in liquid_comp:
-				H2O_liq = liquid_comp["H2O"]
-			else:
-				H2O_liq = 0
-
-			if "CO2" in liquid_comp:
-				CO2_liq = liquid_comp["CO2"]
-			else:
-				CO2_liq = 0
-
-			if "Water" in fluid_comp:
-				H2O_fl = fluid_comp["Water"]
-			else:
-				H2O_fl = 0.0
-			if "Carbon Dioxide" in fluid_comp:
-				CO2_fl = fluid_comp["Carbon Dioxide"]
-			else:
-				CO2_fl = 0.0
-
-			XH2O_fluid = H2O_fl
-
-			H2O_val += 0.0001
-
-		while XH2O_fluid > X_fluid + 0.0001: #too high final refinement
-			bulk_comp["H2O"] = H2O_val
-			bulk_comp["CO2"] = CO2_val
-			feasible = melts.set_bulk_composition(bulk_comp)
-
-			output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
-			(status, temperature, pressureMPa, xmlout) = output[0]
-			fluid_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
-			system_mass = melts.get_mass_of_phase(xmlout, phase_name='System')
-			liquid_comp = melts.get_composition_of_phase(xmlout, phase_name='Liquid', mode='oxide_wt')
-			fluid_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid', mode='component')
-
-			if "H2O" in liquid_comp:
-				H2O_liq = liquid_comp["H2O"]
-			else:
-				H2O_liq = 0
-
-			if "CO2" in liquid_comp:
-				CO2_liq = liquid_comp["CO2"]
-			else:
-				CO2_liq = 0
-
-			if "Water" in fluid_comp:
-				H2O_fl = fluid_comp["Water"]
-			else:
-				H2O_fl = 0.0
-			if "Carbon Dioxide" in fluid_comp:
-				CO2_fl = fluid_comp["Carbon Dioxide"]
-			else:
-				CO2_fl = 0.0
-
-			XH2O_fluid = H2O_fl
-
-			CO2_val += 0.0001
 
 		if verbose == True:
 			return {"temperature": temperature, "pressure": pressure, 
