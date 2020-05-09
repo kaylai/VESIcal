@@ -1,7 +1,12 @@
 # Python 3.5
-# Script written by Kayla Iacovino (kayla.iacovino@nasa.gov)
-# VERSION 0.1- MARCH 2020
+# Script written by Kayla Iacovino (kayla.iacovino@nasa.gov) and Simon Matthews (simonmatthews@jhu.edu)
+# VERSION 0.1 - MAY 2020
 
+#----------SILENCE USER WARNINGS----------#
+# import warnings
+# warnings.filterwarnings("ignore")
+
+#-----------------IMPORTS-----------------#
 import pandas as pd
 import numpy as np
 from thermoengine import equilibrate
@@ -14,6 +19,7 @@ from scipy.optimize import minimize
 print('Write code to deal with volatile undersaturation, i.e. low pressures have an upper bound on volatile solubility, so will cause errors when calculating satP')
 print("Build in a function for re-normalising wtpt after reporting H2O")
 print("Build in some knowledge of how the parameterisations want to treat Fe, H2O and CO2 in bulk comp.")
+
 
 #----------DEFINE SOME CONSTANTS-------------#
 oxides = ['SiO2', 'TiO2', 'Al2O3', 'Fe2O3', 'Cr2O3', 'FeO', 'MnO', 'MgO', 'NiO', 'CoO', 'CaO', 'Na2O', 'K2O', 'P2O5',
@@ -535,7 +541,7 @@ class ExcelFile(object):
 		#TODO write this code!
 		return print("You haven't written this code yet!")
 
-	def calculate_dissolved_volatiles(self, temperature, pressure, X_fluid=1, print_status=False):
+	def calculate_dissolved_volatiles(self, temperature, pressure, X_fluid=1, print_status=False): #TODO make this faster by extracting data from the dataframe first
 		"""
 		Calculates the amount of H2O and CO2 dissolved in a magma at the given P/T conditions and fluid composition. Fluid composition
 		will be matched to within 0.0001 mole fraction.
@@ -2797,29 +2803,33 @@ class MagmaSat(Model):
 	"""
 
 	def __init__(self):
-		self.melts_version = '1.2.0'
-		#--------------MELTS preamble---------------#
-		# instantiate thermoengine equilibrate MELTS instance
-		melts = equilibrate.MELTSmodel('1.2.0')
+		self.melts_version = '1.2.0' #just here so users can see which version is being used
 
-		# Suppress phases not required in the melts simulation
-		self.oxides = melts.get_oxide_names()
-		self.phases = melts.get_phase_names()
+		try:
+			melts
+		except NameError:
+			#--------------MELTS preamble---------------#
+			# instantiate thermoengine equilibrate MELTS instance
+			melts = equilibrate.MELTSmodel('1.2.0')
 
-		for phase in self.phases:
-			melts.set_phase_inclusion_status({phase: False})
-		melts.set_phase_inclusion_status({'Fluid': True, 'Liquid': True})
-		self.melts = melts
-		#-------------------------------------------#
+			# Suppress phases not required in the melts simulation
+			self.oxides = melts.get_oxide_names()
+			self.phases = melts.get_phase_names()
 
-	def preprocess_sample(self,sample):
+			for phase in self.phases:
+				melts.set_phase_inclusion_status({phase: False})
+			melts.set_phase_inclusion_status({'Fluid': True, 'Liquid': True})
+			self.melts = melts
+			#-------------------------------------------#
+
+	def preprocess_sample(self,sample): #TODO test this by passing weird shit to sample
 		oxides = self.oxides
 		for oxide in oxides:
 			if oxide in sample.keys():
 				pass
 			else:
 				sample[oxide] = 0.0
-
+		self.bulk_comp_orig = sample
 		return sample
 
 	def check_calibration_range(self,**kwargs):
@@ -2914,12 +2924,14 @@ class MagmaSat(Model):
 		else:
 			H2O_fl = 0.0
 
-		if H2O_fl == 0:
-			return("Composition not fluid saturated.")
-		else:
-			return H2O_fl
+		# if H2O_fl == 0:
+		# 	raise SaturationError("Composition not fluid saturated.")
 
-	def calculate_dissolved_volatiles(self, sample, temperature, pressure, X_fluid=1, verbose=False):
+		return H2O_fl
+
+	def calculate_dissolved_volatiles(self, sample, temperature, pressure, X_fluid=1, H2O_guess=0.0, verbose=False): 
+	#TODO make better initial guess at higher XH2Ofl
+	#TODO make refinements faster
 		"""
 		Calculates the amount of H2O and CO2 dissolved in a magma at the given P/T conditions and fluid composition. Fluid composition
 		will be matched to within 0.0001 mole fraction.
@@ -2951,6 +2963,16 @@ class MagmaSat(Model):
 		oxides = self.oxides
 		phases = self.phases
 
+		if isinstance(X_fluid, int) or isinstance(X_fluid, float):
+			pass
+		else:
+			raise InputError("X_fluid must be type int or float")
+
+		if isinstance(H2O_guess, int) or isinstance(H2O_guess, float):
+			pass
+		else:
+			raise InputError("H2O_guess must be type int or float")
+
 		pressureMPa = pressure / 10.0
 
 		bulk_comp = {oxide:  sample[oxide] for oxide in oxides}
@@ -2959,7 +2981,7 @@ class MagmaSat(Model):
 				raise InputError("X_fluid is calculated to a precision of 0.0001 mole fraction. \
 								 Value for X_fluid must be between 0.0001 and 0.9999.")
 
-		H2O_val = 0.0
+		H2O_val = H2O_guess
 		CO2_val = 0.0
 		fluid_mass = 0.0
 		while fluid_mass <= 0:
@@ -2968,6 +2990,7 @@ class MagmaSat(Model):
 			else:
 				H2O_val += 0.1
 				CO2_val = (H2O_val / X_fluid) - H2O_val #NOTE this is setting XH2Owt of the system (not of the fluid) to X_fluid
+				#TODO this is what needs to be higher for higher XH2O. Slows down computation by a second or two
 
 			fluid_mass = self.get_fluid_mass(sample, temperature, pressure, H2O_val, CO2_val)
 
@@ -2989,7 +3012,7 @@ class MagmaSat(Model):
 
 		#------Coarse Check------#
 		while XH2O_fluid < X_fluid - 0.1: #too low coarse check
-			H2O_val += 0.1
+			H2O_val += 0.2
 			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
 
 		while XH2O_fluid > X_fluid + 0.1: #too high coarse check
@@ -2998,7 +3021,7 @@ class MagmaSat(Model):
 
 		#------Refinement 1------#
 		while XH2O_fluid < X_fluid - 0.01: #too low refinement 1
-			H2O_val += 0.01
+			H2O_val += 0.05
 			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
 			
 		while XH2O_fluid > X_fluid + 0.01: #too high refinement 1
@@ -3007,7 +3030,7 @@ class MagmaSat(Model):
 			
 		#------Refinement 2------#
 		while XH2O_fluid < X_fluid - 0.001: #too low refinement 2
-			H2O_val += 0.001
+			H2O_val += 0.005
 			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
 			
 		while XH2O_fluid > X_fluid + 0.001: #too high refinement 2
@@ -3016,7 +3039,7 @@ class MagmaSat(Model):
 
 		#------Final refinement------#
 		while XH2O_fluid < X_fluid - 0.0001: #too low final refinement
-			H2O_val += 0.0001
+			H2O_val += 0.001
 			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
 
 		while XH2O_fluid > X_fluid + 0.0001: #too high final refinement
@@ -3227,19 +3250,15 @@ class MagmaSat(Model):
 			return {"SaturationP_bars": satP, "FluidMass_grams": flmass, "FluidProportion_wtper": flsystem_wtper,
 					"H2Ofluid_wtper": flH2O, "CO2fluid_wtper": flCO2}
 
-	def calculate_isobars_and_isopleths(self, sample, temperature, pressure_list, isopleth_list, print_status=False):
+	def calculate_isobars_and_isopleths(self, sample, temperature, pressure_list, isopleth_list=None, print_status=False, **kwargs):
 		"""
-		#TODO what if sample is not saturated at the passed pressure(s) with maximum volatile values searched?
-
 		Calculates isobars and isopleths at a constant temperature for a given sample. Isobars can be calculated
-		for any number of pressures. Pressures can be passed as min, max, interval (100.0, 500.0, 100.0 would result
-		in pressures of 100.0, 200.0, 300.0, 400.0, and 500.0 MPa). Alternatively pressures can be passed as a list of all
-		desired pressures ([100.0, 200.0, 250.0, 300.0] would calculate isobars for each of those pressures in MPa).
+		for any number of pressures. 
 
 		Parameters
 		----------
 		sample: dict
-			Dictionary or pandas Series. with values for sample composition as oxides in wt%.
+			Dictionary with values for sample composition as oxides in wt%.
 
 		temperature: float
 			Temperature in degrees C.
@@ -3247,14 +3266,20 @@ class MagmaSat(Model):
 		pressure_list: list
 			List of all pressure values at which to calculate isobars, in bars.
 
+		isopleth_list: list
+			OPTIONAL: Default value is None in which case only isobars will be calculated.
+			List of all fluid compositions in mole fraction H2O (XH2Ofluid) at which to calcualte isopleths. Values can range from 0-1.
+
 		print_status: bool
 			OPTIONAL: Default is False. If set to True, progress of the calculations will be printed to the terminal. 
 
 		Returns
 		-------
-		pandas DataFrame object
-			DataFrame containing calcualted isobar and isopleth information for the passed melt composition. Column titles
-			are 'Pressure', 'H2Omelt', 'CO2melt', 'H2Ofl', and 'CO2fl'.
+		pandas DataFrame objects
+			Two pandas DataFrames are returned; the first has isobar data, and the second has isopleth data. Columns in the
+			isobar dataframe are 'Pressure', 'H2Omelt', and 'CO2melt', correpsonding to pressure in bars and dissolved H2O
+			and CO2 in the liquid in wt%. Columns in the isopleth dataframe are 'Pressure', 'H2Ofl', and 'CO2fl',
+			corresponding to pressure in bars and H2O and CO2 concentration in the H2O-CO2 fluid, in wt%.
 		"""
 		melts = self.melts
 		phases = self.phases
@@ -3266,147 +3291,53 @@ class MagmaSat(Model):
 		else:
 			raise InputError("pressure_list must be of type list")
 
-		if isinstance(isopleth_list, list):
+		if isopleth_list is None:
+			has_isopleths = False
+			iso_vals = [0, 0.25, 0.5, 0.75, 1]
+		elif isinstance(isopleth_list, list):
 			iso_vals = isopleth_list
+			has_isopleths = True
+			if 0 not in iso_vals:
+				iso_vals[0:0] = [0]
+			if 1 not in iso_vals:
+				iso_vals.append(1)
 		else:
 			raise InputError("isopleth_list must be of type list")
 
-		volatiles_at_saturation = []
-		H2O_val = 0
-		CO2_val = 0
+		isobar_data = []
+		isopleth_data = []
+		for X in iso_vals:
+			isopleth_data.append([X, 0.0, 0.0])
+		H2O_val = 0.0
+		CO2_val = 0.0
 		fluid_mass = 0.0
 		# Calculate equilibrium phase assemblage for all P/T conditions, check if saturated in fluid...
 		for i in P_vals:
+			guess = 0.0
 			if print_status == True:
-				print("Calculating isobars at " + str(i) + " MPa")
+				print("Calculating isobar at " + str(i) + " bars")
+			for X in iso_vals:
+				if print_status == True and has_isopleths == True:
+					print("Calculating isopleth at " + str(X))
+				saturated_vols = self.calculate_dissolved_volatiles(sample=sample, temperature=temperature, pressure=i, H2O_guess=guess, X_fluid=X)
 
-			for j in np.arange(0, 15.5, 0.5):
-				bulk_comp["H2O"] = j
-				while fluid_mass <= 0.0:
-					bulk_comp["CO2"] = CO2_val
+				isobar_data.append([i, saturated_vols['H2O'], saturated_vols['CO2']])
+				isopleth_data.append([X, saturated_vols['H2O'], saturated_vols['CO2']])
 
-					melts.set_bulk_composition(bulk_comp)
-
-					output = melts.equilibrate_tp(temperature, i, initialize=True)
-					(status, temperature, i, xmlout) = output[0]
-					fluid_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
-
-					CO2_val = CO2_val + 0.1
-
-				if fluid_mass > 0.0:
-					liquid_comp = melts.get_composition_of_phase(
-						xmlout, phase_name='Liquid', mode='oxide_wt')
-					fluid_comp = melts.get_composition_of_phase(
-						xmlout, phase_name='Fluid')
-
-					if "H2O" in liquid_comp:
-								H2O_liq = liquid_comp["H2O"]
-					else:
-						H2O_liq = 0
-
-					if "CO2" in liquid_comp:
-						CO2_liq = liquid_comp["CO2"]
-					else:
-						CO2_liq = 0
-
-					if "H2O" in fluid_comp:
-						H2O_fl = fluid_comp["H2O"]
-					else:
-						H2O_fl = 0.0
-					if "CO2" in fluid_comp:
-						CO2_fl = fluid_comp["CO2"]
-					else:
-						CO2_fl = 0.0
-					volatiles_at_saturation.append(
-						[i, H2O_liq, CO2_liq, H2O_fl, CO2_fl])
-					CO2_val = 0.0
-					fluid_mass = 0.0
+				guess = saturated_vols['H2O']
 
 		if print_status == True:
 			print("Done!")
 
-		isobars_df = pd.DataFrame(volatiles_at_saturation, columns=[
-								  'Pressure', 'H2Omelt', 'CO2melt', 'H2Ofl', 'CO2fl'])
+		isobars_df = pd.DataFrame(isobar_data, columns=['Pressure', 'H2O_liq', 'CO2_liq'])
+		isopleths_df = pd.DataFrame(isopleth_data, columns=['XH2O_fl', 'H2O_liq', 'CO2_liq'])
 
-		feasible = melts.set_bulk_composition(bulk_comp_orig) #reset
+		feasible = melts.set_bulk_composition(self.bulk_comp_orig) #reset
 
-		return isobars_df
-
-	def plot_isobars_and_isopleths(self, isobars_df):
-		"""
-		Takes in a dataframe with calculated isobar and isopleth information (e.g., output from calculate_isobars_and_isopleths)
-		and plots data as isobars (lines of constant pressure) and isopleths (lines of constant fluid composition). These lines
-		represent the saturation pressures of the melt composition used to calculate the isobar and isopleth information.
-
-		Parameters
-		----------
-		isobars_df: pandas DataFrame
-			DataFrame object containing isobar and isopleth information as calculated by calculate_isobars_and_isopleths.
-
-		Returns
-		-------
-		matplotlib object
-			Plot with x-axis as H2O wt% in the melt and y-axis as CO2 wt% in the melt. Isobars, or lines of
-			constant pressure at which the sample magma composition is saturated, and isopleths, or lines of constant
-			fluid composition at which the sample magma composition is saturated, are plotted.
-		"""
-		#--------------Preamble required for every MagmaSat method within Modeller---------------#
-		# instantiate thermoengine equilibrate MELTS instance
-		melts = equilibrate.MELTSmodel(self.model_version)
-
-		# Suppress phases not required in the melts simulation
-		self.oxides = melts.get_oxide_names()
-		self.phases = melts.get_phase_names()
-
-		for phase in self.phases:
-			melts.set_phase_inclusion_status({phase: False})
-		melts.set_phase_inclusion_status({'Fluid': True, 'Liquid': True})
-		#---------------------------------------------------------------------------------------#
-
-		P_vals = isobars_df.Pressure.unique()
-		isobars_lists = isobars_df.values.tolist()
-
-		# make a list of isopleth values to plot
-		iso_step = 20.0
-		isopleth_vals = np.arange(0+iso_step, 100.0, iso_step)
-
-		# add zero values to volatiles list
-		isobars_lists.append([0.0, 0.0, 0.0, 0.0])
-
-		# draw the figure
-		fig, ax1 = plt.subplots()
-
-		# turn on interactive plotting
-		plt.ion()
-
-		plt.xlabel('H2O wt%')
-		plt.ylabel('CO2 wt%')
-
-		# Plot some stuff
-		for pressure in P_vals:
-			ax1.plot([item[1] for item in isobars_lists if item[0] == pressure],
-					 [item[2] for item in isobars_lists if item[0] == pressure])
-
-		for val in isopleth_vals:
-			val_min = val-1.0
-			val_max = val+1.0
-			x_vals_iso = [item[1]
-				for item in isobars_lists if val_min <= item[3] <= val_max]
-			x_vals_iso.append(0)
-			x_vals_iso = sorted(x_vals_iso)
-			x_vals_iso = np.array(x_vals_iso)
-			y_vals_iso = [item[2]
-				for item in isobars_lists if val_min <= item[3] <= val_max]
-			y_vals_iso.append(0)
-			y_vals_iso = sorted(y_vals_iso)
-			y_vals_iso = np.array(y_vals_iso)
-
-			ax1.plot(x_vals_iso, y_vals_iso, ls='dashed', color='k')
-
-		labels = P_vals
-		ax1.legend(labels)
-
-		return ax1
+		if has_isopleths == True:
+			return isobars_df, isopleths_df
+		if has_isopleths == False:
+			return isobars_df, None
 
 	def calculate_degassing_paths(self, sample, temperature, system='closed', init_vapor='None'):
 		"""
@@ -3642,7 +3573,85 @@ class MagmaSat(Model):
 
 			return open_degassing_df
 
-	
+#-----------MAGMASAT PLOTTING FUNCTIONS-----------#
+def plot_isobars_and_isopleths(isobars, isopleths):
+		"""
+		Takes in a dataframe with calculated isobar and isopleth information (e.g., output from calculate_isobars_and_isopleths)
+		and plots data as isobars (lines of constant pressure) and isopleths (lines of constant fluid composition). These lines
+		represent the saturation pressures of the melt composition used to calculate the isobar and isopleth information.
+
+		Parameters
+		----------
+		isobars: pandas DataFrame
+			DataFrame object containing isobar information as calculated by calculate_isobars_and_isopleths.
+
+		isopleths: pandas DataFrame
+			DataFrame object containing isopleth information as calculated by calculate_isobars_and_isopleths.
+
+		Returns
+		-------
+		matplotlib object
+			Plot with x-axis as H2O wt% in the melt and y-axis as CO2 wt% in the melt. Isobars, or lines of
+			constant pressure at which the sample magma composition is saturated, and isopleths, or lines of constant
+			fluid composition at which the sample magma composition is saturated, are plotted.
+		"""
+		P_vals = isobars.Pressure.unique()
+		XH2O_vals = isopleths.XH2O_fl.unique()
+		isobars_lists = isobars.values.tolist()
+		isopleths_lists = isopleths.values.tolist()
+
+		# add zero values to volatiles list
+		isobars_lists.append([0.0, 0.0, 0.0, 0.0])
+
+		# draw the figure
+		fig, ax1 = plt.subplots()
+		plt.xlabel('H2O wt%')
+		plt.ylabel('CO2 wt%')
+
+		# do some data smoothing
+		for pressure in P_vals:
+			Pxs = [item[1] for item in isobars_lists if item[0] == pressure]
+			Pys = [item[2] for item in isobars_lists if item[0] == pressure]
+
+			try:
+				np.seterr(divide='ignore', invalid='ignore') #turn off numpy warning
+				## calcualte polynomial
+				Pz = np.polyfit(Pxs, Pys, 3)
+				Pf = np.poly1d(Pz)
+
+				## calculate new x's and y's
+				Px_new = np.linspace(Pxs[0], Pxs[-1], 50)
+				Py_new = Pf(Px_new)
+
+				# Plot some stuff
+				ax1.plot(Px_new, Py_new)
+			except:
+				ax1.plot(Pxs, Pys)
+
+		for Xfl in XH2O_vals:
+			Xxs = [item[1] for item in isopleths_lists if item[0] == Xfl]
+			Xys = [item[2] for item in isopleths_lists if item[0] == Xfl]
+
+			try:
+				## calcualte polynomial
+				Xz = np.polyfit(Xxs, Xys, 2)
+				Xf = np.poly1d(Xz)
+
+				## calculate new x's and y's
+				Xx_new = np.linspace(Xxs[0], Xxs[-1], 50)
+				Xy_new = Xf(Xx_new)
+
+				# Plot some stuff
+				ax1.plot(Xx_new, Xy_new, ls='dashed', color='k')
+			except:
+				ax1.plot(Xxs, Xys, ls='dashed', color='k')
+
+		labels = P_vals
+		ax1.legend(labels)
+
+		np.seterr(divide='warn', invalid='warn') #turn numpy warning back on
+
+		return ax1
 
 
 #====== Define some standard model options =======================================================#
