@@ -3239,7 +3239,7 @@ class MagmaSat(Model):
 		flmass = fluid_mass
 		flsystem_wtper = 100 * fluid_mass / (fluid_mass + melts.get_mass_of_phase(xmlout, phase_name='Liquid'))
 		flcomp = melts.get_composition_of_phase(xmlout, phase_name='Fluid')
-		flH2O = flcomp["H2O"]
+		flH2O = flcomp["H2O"] #TODO - having issue here with plot degassing paths where no H2O in fluid... check if this is possible and should be mitigated here
 		flCO2 = flcomp["CO2"]
 
 		feasible = melts.set_bulk_composition(bulk_comp_orig) #this needs to be reset always!
@@ -3367,30 +3367,23 @@ class MagmaSat(Model):
 		pandas DataFrame object
 
 		"""
-		#--------------Preamble required for every MagmaSat method within Modeller---------------#
-		# instantiate thermoengine equilibrate MELTS instance
-		melts = equilibrate.MELTSmodel(self.model_version)
+		melts = self.melts
+		oxides = self.oxides
+		phases = self.phases
 
-		# Suppress phases not required in the melts simulation
-		self.oxides = melts.get_oxide_names()
-		self.phases = melts.get_phase_names()
-
-		for phase in self.phases:
-			melts.set_phase_inclusion_status({phase: False})
-		melts.set_phase_inclusion_status({'Fluid': True, 'Liquid': True})
-		#---------------------------------------------------------------------------------------#
-
-		sample = normalize(sample)
+		#sample = normalize(sample) #TODO decide when to normalize for preprocessing
 		bulk_comp_orig = sample
 
-		feasible = melts.set_bulk_composition(sample)
+		bulk_comp = {oxide:  sample[oxide] for oxide in oxides}
+		feasible = melts.set_bulk_composition(bulk_comp)
 
 		# Get saturation pressure
-		data = self.calculate_saturation_pressure(sample, temperature)
+		data = self.calculate_saturation_pressure(sample=sample, temperature=temperature, verbose=True)
+		SatP_MPa = data["SaturationP_bars"]
 
 		if system == 'closed':
 			if init_vapor == 'None':
-				P_array = np.arange(1.0, data['SaturationPressure_MPa']+10.0, 10)
+				P_array = np.arange(1.0, SatP_MPa+10.0, 10)
 				P_array = -np.sort(-P_array)
 				output = melts.equilibrate_tp(temperature, P_array)
 
@@ -3445,12 +3438,12 @@ class MagmaSat(Model):
 				return closed_degassing_df
 
 			else:
-				P_array = np.arange(1.0, data['SaturationPressure_MPa'], 10)
+				P_array = np.arange(1.0, SatP_MPa, 10)
 				P_array = -np.sort(-P_array)
-				fl_wtper = data["FluidSystem_wtper"]
+				fl_wtper = data["FluidProportion_wtper"]
 
 				while fl_wtper <= init_vapor:
-					output = melts.equilibrate_tp(temperature, data["SaturationPressure_MPa"])
+					output = melts.equilibrate_tp(temperature, SatP_MPa)
 					(status, temperature, p, xmlout) = output[0]
 					fl_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
 					liq_mass = melts.get_mass_of_phase(xmlout, phase_name='Liquid')
@@ -3508,14 +3501,14 @@ class MagmaSat(Model):
 
 				sample = bulk_comp_orig
 				feasible = melts.set_bulk_composition(sample)
-				fl_wtper = data["FluidSystem_wtper"]
+				fl_wtper = data["FluidProportion_wtper"]
 				exsolved_degassing_df = pd.DataFrame(list(zip(pressure, H2Oliq, CO2liq, H2Ofl, CO2fl, fluid_wtper)),
 											columns =['pressure', 'H2Oliq', 'CO2liq', 'H2Ofl', 'CO2fl', 'fluid_wtper'])
 
 				return exsolved_degassing_df
 
 		elif system == 'open':
-			P_array = np.arange(1.0, data['SaturationPressure_MPa']+10.0, 10)
+			P_array = np.arange(1.0, SatP_MPa+10.0, 10)
 			P_array = -np.sort(-P_array)
 
 			pressure = []
@@ -3726,7 +3719,7 @@ class calculate_saturation_pressure(Calculate):
 class calculate_degassing_paths(Calculate):
 	"""
 	"""
-	def calculate(self,pressures,sample,fractionate_vapor=1.0,**kwargs):
+	def calculate(self,sample,**kwargs):
 		check = getattr(self.model, "calculate_degassing_paths", None)
 		if callable(check):
 			melt, fluid = self.model.calculate_degassing_paths(sample=sample,pressures=pressures,
