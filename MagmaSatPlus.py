@@ -2430,39 +2430,71 @@ class DixonWater(Model):
 
 class IaconoMarzianoWater(Model):
 	"""
+	Implementation of the Iacono-Marziano et al. (2012) water solubility model, as a Model class. Two
+	calibrations are provided- the one incorporating the H2O content as a parameter (hydrous), and the
+	one that does not (anhydrous). Specify which should be used when initialising the model, with the
+	bool variable hydrous.
 	"""
 
-	def __init__(self):
-		self.set_volatile_species('H2O')
-		self.set_fugacity_model(fugacity_idealgas())
-		self.set_activity_model(activity_idealsolution())
-
-	def preprocess_sample(self,sample):
-		return sample
-
-	def calculate_dissolved_volatiles(self,pressure,temperature,sample,X_fluid=1,hydrous=True,**kwargs):
+	def __init__(self,hydrous=True):
 		"""
-		Iacono-Marziano (2012) Eq (8). Calculates the concentration of CO2 in
-		ppm dissolved in the melt at vapour saturation, for specified pressure,
-		temperature and partial pressure of CO2. Modifies the output of the equation
-		to give CO2 rather than CO3.
+		Initialise the model.
 
 		Parameters
 		----------
-		P: float
-			Pressure in bar
-		T: float
+		hydrous 	bool
+			Whether to use the hydrous parameterization, or not.
+		"""
+		self.set_volatile_species('H2O')
+		self.set_fugacity_model(fugacity_idealgas())
+		self.set_activity_model(activity_idealsolution())
+		self.hydrous = hydrous
+
+	def preprocess_sample(self,sample):
+		"""
+		Returns sample, normalized to 100 wt%, without changing the wt% of H2O and CO2 if the
+		hydrous parameterization is being used (default). If the anhydrous parameterization is
+		used, it will normalize without including H2O and CO2.
+
+		Parameters
+		----------
+		sample 	pandas Series
+			Major element oxides in wt%.
+
+		Returns
+		-------
+		pandas Series
+			Major element oxides normalized to wt%.
+		"""
+		if self.hydrous == True:
+			return normalize_FixedVolatiles(sample)
+		else:
+			return normalize_AdditionalVolatiles(sample)
+
+	def calculate_dissolved_volatiles(self,pressure,temperature,sample,X_fluid=1.0,**kwargs):
+		"""
+		Calculates the dissolved H2O concentration, using Eq (13) of Iacono-Marziano et al. (2012).
+		If using the hydrous parameterization, it will use the scipy.root_scalar routine to find the
+		root of the root_dissolved_volatiles method.
+
+		Parameters
+		----------
+		pressure	float
+			Total pressure in bars.
+		temperature 	float
 			Temperature in K
-		MajorElements: series
-			Series labelled with major element oxides in wt%. All oxides passed will be
-			included in calculating molar proportions.
-		P_CO2: float
-			Partial pressure of CO2 in bar
-		hydrous: bool
-			Use the hydrous or anhydrous calibration
+		sample 	pandas Series
+			Major element oxides in wt%.
+		X_fluid 	 float
+			Mole fraction of H2O in the fluid. Default is 1.0.
+
+		Returns
+		-------
+		float
+			Dissolved H2O concentration in wt%.
 		"""
 
-		if hydrous == True:
+		if self.hydrous == True:
 			if X_fluid==0:
 				return 0
 			H2O = root_scalar(self.root_dissolved_volatiles,args=(pressure,temperature,sample,X_fluid,kwargs),
@@ -2477,34 +2509,108 @@ class IaconoMarzianoWater(Model):
 			fugacity = self.fugacity_model.fugacity(pressure=pressure,X_fluid=X_fluid,temperature=temperature,**kwargs)
 			if fugacity == 0:
 				return 0
-			NBO_O = self.NBO_O(sample=sample,hydrous=False)
+			NBO_O = self.NBO_O(sample=sample)
 
 			H2O = np.exp(a*np.log(fugacity) + b*NBO_O + B + C*pressure/temperature)
 
 			return H2O
 
 
-	def calculate_equilibrium_fluid_comp(self,pressure,temperature,sample,hydrous=True,**kwargs):
+	def calculate_equilibrium_fluid_comp(self,pressure,temperature,sample,**kwargs):
+		""" Returns 1.0 if a pure H2O fluid is saturated.
+		Returns 0.0 if a pure H2O fluid is undersaturated.
+
+		Parameters
+		----------
+		pressure 	float
+			The total pressure of the system in bars.
+		temperature 	float
+			The temperature of the system in K.
+		sample 		pandas Series
+			Major element oxides in wt% (including H2O).
+
+		Returns
+		-------
+		float
+			1.0 if H2O-fluid saturated, 0.0 otherwise.
 		"""
-		WRITE STUFF
-		"""
-		if pressure > self.calculate_saturation_pressure(temperature=temperature,sample=sample,hydrous=hydrous,**kwargs):
+		if pressure > self.calculate_saturation_pressure(temperature=temperature,sample=sample,**kwargs):
 			return 0.0
 		else:
 			return 1.0
 
-	def calculate_saturation_pressure(self,temperature,sample,hydrous=True,**kwargs):
+	def calculate_saturation_pressure(self,temperature,sample,**kwargs):
 		"""
-		WRITE STUFF
+		Calculates the pressure at which a pure H2O fluid is saturated, for the given sample
+		composition and H2O concentration. Calls the scipy.root_scalar routine, which makes
+		repeated called to the calculate_dissolved_volatiles method.
+
+		Parameters
+		----------
+		temperature 	float
+			The temperature of the system in K.
+		sample 		pandas Series
+			Major element oxides in wt% (including H2O).
+		X_fluid 	float
+			The mole fraction of H2O in the fluid. Default is 1.0.
+
+		Returns
+		-------
+		float
+			Calculated saturation pressure in bars.
 		"""
-		return root_scalar(self.root_saturation_pressure,args=(temperature,sample,hydrous,kwargs),
+		return root_scalar(self.root_saturation_pressure,args=(temperature,sample,kwargs),
 							x0=1000.0,x1=2000.0).root
 
-	def root_saturation_pressure(self,pressure,temperature,sample,hydrous,kwargs):
-		return sample['H2O'] - self.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,sample=sample,hydrous=hydrous,**kwargs)
+	def root_saturation_pressure(self,pressure,temperature,sample,kwargs):
+		""" Function called by scipy.root_scalar when finding the saturation pressure using
+		calculate_saturation_pressure.
+
+		Parameters
+		----------
+		pressure 	float
+			Pressure guess in bars
+		temperature 	float
+			The temperature of the system in K.
+		sample 		pandas Series
+			Major elements in wt% (normalized to 100%), including H2O.
+		kwargs 		dictionary
+			Additional keyword arguments supplied to calculate_saturation_pressure. Might be required for
+			the fugacity or activity models.
+
+		Returns
+		-------
+		float
+			The differece between the dissolved H2O at the pressure guessed, and the H2O concentration
+			passed in the sample variable.
+		"""
+		return sample['H2O'] - self.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,sample=sample,**kwargs)
 
 
 	def root_dissolved_volatiles(self,h2o,pressure,temperature,sample,X_fluid,kwargs):
+		""" Function called by calculate_dissolved_volatiles method when the hydrous parameterization is
+		being used.
+
+		Parameters
+		----------
+		h2o 	float
+			Guess for the H2O concentration in wt%.
+		pressure 	float
+			Total pressure in bars.
+		temperature 	float
+			Temperature in K.
+		sample 		pandas Series
+			Major element oxides in wt%.
+		X_fluid 	float
+			Mole fraction of H2O in the fluid.
+		kwargs 	dictionary
+			Keyword arguments
+
+		Returns
+		-------
+		float
+			Difference between H2O guessed and the H2O calculated.
+		"""
 		a = 0.53
 		b = 2.35
 		B = -3.37
@@ -2512,64 +2618,140 @@ class IaconoMarzianoWater(Model):
 
 		sample_h2o = sample.copy()
 		sample_h2o['H2O'] = h2o
-		NBO_O = self.NBO_O(sample=sample_h2o,hydrous=True)
+		NBO_O = self.NBO_O(sample=sample_h2o)
 		fugacity = self.fugacity_model.fugacity(pressure=pressure,X_fluid=X_fluid,temperature=temperature,**kwargs)
 
 		return h2o - np.exp(a*np.log(fugacity) + b*NBO_O + B + C*pressure/temperature)
 
-	def NBO_O(self,sample,hydrous):
+	def NBO_O(self,sample):
+		"""
+		Calculates NBO/O according to Appendix A.1. of Iacono-Marziano et al. (2012). NBO/O
+		is calculated on either a hydrous or anhyrous basis, as set when initialising the
+		Model class.
+
+		Parameters
+		----------
+		sample 	pandas Series
+			Major element oxides in wt% (including H2O if using the hydrous parameterization).
+
+		Returns
+		-------
+		float
+			NBO/O.
+		"""
 		X = wtpercentOxides_to_molOxides(sample)
 
 		NBO = 2*(X['K2O']+X['Na2O']+X['CaO']+X['MgO']+X['FeO']-X['Al2O3'])
 		O = 2*X['SiO2']+2*X['TiO2']+3*X['Al2O3']+X['MgO']+X['FeO']+X['CaO']+X['Na2O']+X['K2O']
 
-		if hydrous == True:
+		if self.hydrous == True:
 			NBO = NBO + 2*X['H2O']
 			O = O + X['H2O']
 
 		return NBO/O
 
 	def check_calibration_range(self,**kwargs):
-		return 0
+		""" Checks whether supplied parameters and calculated results are within the calibration range
+		of the model. Designed for use with the Calculate methods. Calls the check_calibration_range
+		functions for the fugacity and activity models.
 
-class IaconoMarzianoCarbon(Model):
-	"""
-	"""
-
-	def __init__(self):
-		self.set_volatile_species('CO2')
-		self.set_fugacity_model(fugacity_idealgas())
-		self.set_activity_model(activity_idealsolution())
-
-	def preprocess_sample(self,sample):
-		return sample
-
-	def calculate_dissolved_volatiles(self,pressure,temperature,sample,X_fluid=1,hydrous=True,**kwargs):
-		"""
-		Iacono-Marziano (2012) Eq (8). Calculates the concentration of CO2 in
-		ppm dissolved in the melt at vapour saturation, for specified pressure,
-		temperature and partial pressure of CO2. Modifies the output of the equation
-		to give CO2 rather than CO3.
+		Parameters supported currently are pressure and temperature.
 
 		Parameters
 		----------
-		P: float
-			Pressure in bar
-		T: float
+		parameters 		dictionary
+			Parameters to check calibration range for, the parameter name should be given as the key, and
+			its value as the value.
+
+		Returns
+		-------
+		dictionary
+			Dictionary with parameter names as keys. The values are dictionarys, which have the model component
+			as the keys, and bool values, indicating whether the parameter is within the calibration range.
+		"""
+		results = {}
+		if 'pressure' in parameters.keys():
+			pressure_results = {'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['pressure'],
+								'Activity Model': self.activity_model.check_calibration_range(parameters)['pressure']}
+			results['pressure'] = pressure_results
+
+		if 'temperature' in parameters.keys():
+			temperature_results = {'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['temperature'],
+									'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
+			results['temperature'] = temperature_results
+
+		return results
+
+class IaconoMarzianoCarbon(Model):
+	"""
+	Implementation of the Iacono-Marziano et al. (2012) carbon solubility model, as a Model class. Two
+	calibrations are provided- the one incorporating the H2O content as a parameter (hydrous), and the
+	one that does not (anhydrous). Specify which should be used when initialising the model, with the
+	bool variable hydrous.
+	"""
+
+	def __init__(self,hydrous=True):
+		"""
+		Initialise the model.
+
+		Parameters
+		----------
+		hydrous 	bool
+			Whether to use the hydrous parameterization, or not.
+		"""
+		self.set_volatile_species('CO2')
+		self.set_fugacity_model(fugacity_idealgas())
+		self.set_activity_model(activity_idealsolution())
+		self.hydrous = hydrous
+
+	def preprocess_sample(self,sample):
+		"""
+		Returns sample, normalized to 100 wt%, without changing the wt% of H2O and CO2 if the
+		hydrous parameterization is being used (default). If the anhydrous parameterization is
+		used, it will normalize without including H2O and CO2.
+
+		Parameters
+		----------
+		sample 	pandas Series
+			Major element oxides in wt%.
+
+		Returns
+		-------
+		pandas Series
+			Major element oxides normalized to wt%.
+		"""
+		if self.hydrous == True:
+			return normalize_FixedVolatiles(sample)
+		else:
+			return normalize_AdditionalVolatiles(sample)
+
+	def calculate_dissolved_volatiles(self,pressure,temperature,sample,X_fluid=1,**kwargs):
+		"""
+		Calculates the dissolved CO2 concentration, using Eq (12) of Iacono-Marziano et al. (2012).
+		If using the hydrous parameterization, it will use the scipy.root_scalar routine to find the
+		root of the root_dissolved_volatiles method.
+
+		Parameters
+		----------
+		pressure	float
+			Total pressure in bars.
+		temperature 	float
 			Temperature in K
-		MajorElements: series
-			Series labelled with major element oxides in wt%. All oxides passed will be
-			included in calculating molar proportions.
-		P_CO2: float
-			Partial pressure of CO2 in bar
-		hydrous: bool
-			Use the hydrous or anhydrous calibration
+		sample 	pandas Series
+			Major element oxides in wt%.
+		X_fluid 	 float
+			Mole fraction of H2O in the fluid. Default is 1.0.
+
+		Returns
+		-------
+		float
+			Dissolved H2O concentration in wt%.
 		"""
 
-		if hydrous == True:
+		if self.hydrous == True:
 			im_h2o_model = IaconoMarzianoWater()
 			h2o = im_h2o_model.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,
-														sample=sample,X_fluid=1-X_fluid,hydrous=True,**kwargs)
+														sample=sample,X_fluid=1-X_fluid,**kwargs)
 			sample_h2o = sample.copy()
 			sample_h2o['H2O'] = h2o
 
@@ -2579,7 +2761,7 @@ class IaconoMarzianoCarbon(Model):
 			B = -6.0
 			C = 0.12
 
-			NBO_O = self.NBO_O(sample=sample_h2o,hydrous=True)
+			NBO_O = self.NBO_O(sample=sample_h2o)
 
 			molarProps = wtpercentOxides_to_molOxides(sample_h2o)
 
@@ -2590,7 +2772,7 @@ class IaconoMarzianoCarbon(Model):
 			B = -5.3
 			C = 0.14
 
-			NBO_O = self.NBO_O(sample=sample,hydrous=False)
+			NBO_O = self.NBO_O(sample=sample)
 
 			molarProps = wtpercentOxides_to_molOxides(sample)
 
@@ -2614,40 +2796,135 @@ class IaconoMarzianoCarbon(Model):
 		return CO2
 
 
-	def calculate_equilibrium_fluid_comp(self,pressure,temperature,sample,hydrous=True,**kwargs):
+	def calculate_equilibrium_fluid_comp(self,pressure,temperature,sample,**kwargs):
+		""" Returns 1.0 if a pure H2O fluid is saturated.
+		Returns 0.0 if a pure H2O fluid is undersaturated.
+
+		Parameters
+		----------
+		pressure 	float
+			The total pressure of the system in bars.
+		temperature 	float
+			The temperature of the system in K.
+		sample 		pandas Series
+			Major element oxides in wt% (including H2O).
+
+		Returns
+		-------
+		float
+			1.0 if H2O-fluid saturated, 0.0 otherwise.
 		"""
-		WRITE STUFF
-		"""
-		if pressure > self.calculate_saturation_pressure(temperature=temperature,sample=sample,hydrous=hydrous,**kwargs):
+		if pressure > self.calculate_saturation_pressure(temperature=temperature,sample=sample,**kwargs):
 			return 0.0
 		else:
 			return 1.0
 
-	def calculate_saturation_pressure(self,temperature,sample,hydrous=True,**kwargs):
+	def calculate_saturation_pressure(self,temperature,sample,**kwargs):
 		"""
-		WRITE STUFF
+		Calculates the pressure at which a pure CO2 fluid is saturated, for the given sample
+		composition and CO2 concentration. Calls the scipy.root_scalar routine, which makes
+		repeated called to the calculate_dissolved_volatiles method.
+
+		Parameters
+		----------
+		temperature 	float
+			The temperature of the system in K.
+		sample 		pandas Series
+			Major element oxides in wt% (including CO2).
+		X_fluid 	float
+			The mole fraction of H2O in the fluid. Default is 1.0.
+
+		Returns
+		-------
+		float
+			Calculated saturation pressure in bars.
 		"""
-		return root_scalar(self.root_saturation_pressure,args=(temperature,sample,hydrous,kwargs),
+		return root_scalar(self.root_saturation_pressure,args=(temperature,sample,kwargs),
 							x0=1000.0,x1=2000.0).root
 
-	def root_saturation_pressure(self,pressure,temperature,sample,hydrous,kwargs):
-		return sample['CO2'] - self.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,sample=sample,hydrous=hydrous,**kwargs)
+	def root_saturation_pressure(self,pressure,temperature,sample,kwargs):
+		""" Function called by scipy.root_scalar when finding the saturation pressure using
+		calculate_saturation_pressure.
+
+		Parameters
+		----------
+		pressure 	float
+			Pressure guess in bars
+		temperature 	float
+			The temperature of the system in K.
+		sample 		pandas Series
+			Major elements in wt% (normalized to 100%), including CO2.
+		kwargs 		dictionary
+			Additional keyword arguments supplied to calculate_saturation_pressure. Might be required for
+			the fugacity or activity models.
+
+		Returns
+		-------
+		float
+			The differece between the dissolved CO2 at the pressure guessed, and the CO2 concentration
+			passed in the sample variable.
+		"""
+		return sample['CO2'] - self.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,sample=sample,**kwargs)
 
 
-	def NBO_O(self,sample,hydrous):
+	def NBO_O(self,sample):
+		"""
+		Calculates NBO/O according to Appendix A.1. of Iacono-Marziano et al. (2012). NBO/O
+		is calculated on either a hydrous or anhyrous basis, as set when initialising the
+		Model class.
+
+		Parameters
+		----------
+		sample 	pandas Series
+			Major element oxides in wt% (including H2O if using the hydrous parameterization).
+
+		Returns
+		-------
+		float
+			NBO/O.
+		"""
 		X = wtpercentOxides_to_molOxides(sample)
 
 		NBO = 2*(X['K2O']+X['Na2O']+X['CaO']+X['MgO']+X['FeO']-X['Al2O3'])
 		O = 2*X['SiO2']+2*X['TiO2']+3*X['Al2O3']+X['MgO']+X['FeO']+X['CaO']+X['Na2O']+X['K2O']
 
-		if hydrous == True:
+		if self.hydrous == True:
 			NBO = NBO + 2*X['H2O']
 			O = O + X['H2O']
 
 		return NBO/O
 
 	def check_calibration_range(self,**kwargs):
-		return 0
+		""" Checks whether supplied parameters and calculated results are within the calibration range
+		of the model. Designed for use with the Calculate methods. Calls the check_calibration_range
+		functions for the fugacity and activity models.
+
+		Parameters supported currently are pressure and temperature.
+
+		Parameters
+		----------
+		parameters 		dictionary
+			Parameters to check calibration range for, the parameter name should be given as the key, and
+			its value as the value.
+
+		Returns
+		-------
+		dictionary
+			Dictionary with parameter names as keys. The values are dictionarys, which have the model component
+			as the keys, and bool values, indicating whether the parameter is within the calibration range.
+		"""
+		results = {}
+		if 'pressure' in parameters.keys():
+			pressure_results = {'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['pressure'],
+								'Activity Model': self.activity_model.check_calibration_range(parameters)['pressure']}
+			results['pressure'] = pressure_results
+
+		if 'temperature' in parameters.keys():
+			temperature_results = {'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['temperature'],
+									'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
+			results['temperature'] = temperature_results
+
+		return results
 
 class EguchiCarbon(Model):
 	"""
