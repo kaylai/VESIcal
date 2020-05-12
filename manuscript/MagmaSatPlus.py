@@ -16,10 +16,6 @@ from scipy.optimize import root_scalar
 from scipy.optimize import root
 from scipy.optimize import minimize
 
-print('Write code to deal with volatile undersaturation, i.e. low pressures have an upper bound on volatile solubility, so will cause errors when calculating satP')
-print("Build in a function for re-normalising wtpt after reporting H2O")
-print("Build in some knowledge of how the parameterisations want to treat Fe, H2O and CO2 in bulk comp.")
-
 
 #----------DEFINE SOME CONSTANTS-------------#
 oxides = ['SiO2', 'TiO2', 'Al2O3', 'Fe2O3', 'Cr2O3', 'FeO', 'MnO', 'MgO', 'NiO', 'CoO', 'CaO', 'Na2O', 'K2O', 'P2O5',
@@ -79,6 +75,7 @@ class SaturationError(Error):
 
 	def __init__(self, message):
 		self.message = message
+
 
 #----------DEFINE CUSTOM PLOTTING FORMATTING------------#
 msp_fontdict = {'family': 'serif',
@@ -244,7 +241,7 @@ def wtpercentOxides_to_formulaWeight(sample):
 		FW += cations[cation]*CationMass[cations_to_oxides[cation]]
 	return FW
 
-#----------DEFINE SOME NORMALIZATION METHODS-----------#	
+#----------DEFINE SOME NORMALIZATION METHODS-----------#
 
 def normalize(sample):
 	"""Normalizes an input composition to 100%. This is the 'standard' normalization routine.
@@ -356,10 +353,10 @@ def normalize_FixedVolatiles(sample):
 		return single_FixedVolatiles(_sample)
 	elif isinstance(sample, ExcelFile):
 		_sample = sample
-		data = _sample.data 
+		data = _sample.data
 		return multi_FixedVolatiles(data)
 	elif isinstance(sample, pd.DataFrame):
-		return multi_FixedVolatiles(sample)	
+		return multi_FixedVolatiles(sample)
 	else:
 		return InputError("The composition input must be a pandas Series or dictionary for single sample \
 							or a pandas DataFrame or ExcelFile object for multi-sample.")
@@ -537,9 +534,30 @@ class ExcelFile(object):
 		if norm == 'none':
 			return sample_oxides
 
-	def save_excel_file(self):
-		#TODO write this code!
-		return print("You haven't written this code yet!")
+	def save_excelfile(self, filename, calculations): #TODO how to handle if user just wants to normalize data?
+		"""
+		Saves data calculated by the user in batch processing mode (using the ExcelFile class methods) to an organized
+		excel file, with the original user data plus any calculated data.
+
+		Parameters
+		----------
+		filename: string
+			Name of the file. Extension (.xlsx) should be passed along with the name itself, all in quotes (e.g., 'myfile.xlsx').
+
+		calculations: list
+			List of variables containing calculated outputs from any of the core ExcelFile functions: calculate_dissolved_volatiles,
+			calculate_equilibrium_fluid_comp, and calculate_saturation_pressure.
+
+		Returns
+		-------
+		Creates and saves an Excel file with data from each calculation saved to its own sheet.
+		"""
+		with pd.ExcelWriter(filename) as writer:
+			self.data.to_excel(writer, 'Original_User_Data')
+			for n, df in enumerate(calculations):
+				df.to_excel(writer, 'Calc%s' % n)
+
+		return print("Saved " + str(filename))
 
 	def calculate_dissolved_volatiles(self, temperature, pressure, X_fluid=1, print_status=False): #TODO make this faster by extracting data from the dataframe first
 		"""
@@ -558,10 +576,10 @@ class ExcelFile(object):
 			Pressure, in bars. Can be passed as float or int, in which case the
 			passed value is used as the pressure for all samples. Alternatively, pressure information for each individual
 			sample may already be present in the ExcelFile object. If so, pass the str value corresponding to the column
-			title in the ExcelFile object. 
+			title in the ExcelFile object.
 
 		X_fluid: float, int, or str
-			OPTIONAL: Default value is 1. The mole fraction of H2O in the H2O-CO2 fluid. X_fluid=1 is a pure H2O fluid. X_fluid=0 is a 
+			OPTIONAL: Default value is 1. The mole fraction of H2O in the H2O-CO2 fluid. X_fluid=1 is a pure H2O fluid. X_fluid=0 is a
 			pure CO2 fluid. Can be passed as a float or int, in which case the passed value is used as the X_fluid for all samples.
 			Alternatively, X_fluid information for each individual sample may already be present in the ExcelFile object. If so, pass
 			the str value corresponding to the column title in the ExcelFile object.
@@ -575,6 +593,7 @@ class ExcelFile(object):
 			Original data passed plus newly calculated values are returned.
 		"""
 		data = self.preprocess_sample(self.data)
+		dissolved_data = data.copy()
 		oxides = self.oxides
 		melts = self.melts
 
@@ -612,7 +631,7 @@ class ExcelFile(object):
 		fluid_comp_CO2 = []
 		fluid_system_wtper = []
 		sampleno = 0
-		for index, row in data.iterrows():
+		for index, row in dissolved_data.iterrows():
 			sampleno += 1
 			if print_status == True:
 				print("Calculating sample number " + str(sampleno))
@@ -633,32 +652,32 @@ class ExcelFile(object):
 			liq_comp_CO2.append(calculate_it["CO2_liq"])
 			fluid_comp_H2O.append(calculate_it["XH2O_fl"])
 			fluid_comp_CO2.append(calculate_it["XCO2_fl"])
-			fluid_system_wtper.append(calculate_it["FluidProportion_wtper"])
+			fluid_system_wtper.append(calculate_it["FluidProportion_wt"])
 
-		data["H2O_liq"] = liq_comp_H2O
-		data["CO2_liq"] = liq_comp_CO2
-		data["XH2O_fl"] = fluid_comp_H2O
-		data["XCO2_fl"] = fluid_comp_CO2
-		data["FluidProportion_wtper"] = fluid_system_wtper
+		dissolved_data["H2O_liq"] = liq_comp_H2O
+		dissolved_data["CO2_liq"] = liq_comp_CO2
+		dissolved_data["XH2O_fl"] = fluid_comp_H2O
+		dissolved_data["XCO2_fl"] = fluid_comp_CO2
+		dissolved_data["FluidProportion_wt"] = fluid_system_wtper
 
 		if file_has_temp == False:
-			data["Temperature_C"] = temperature
+			dissolved_data["Temperature_C"] = temperature
 		if file_has_press == False:
-			data["Pressure_bars"] = pressure
+			dissolved_data["Pressure_bars"] = pressure
 		if file_has_X == False:
-			data["X_fluid_input"] = X_fluid
+			dissolved_data["X_fluid_input"] = X_fluid
 
-		return data
+		return dissolved_data
 
-	def calculate_equilibrium_fluid_comp(self, temperature, pressure, mode='wtper'): 
-	#TODO do we want this function to "overwrite" the original myfile.data information? Currently it does.
+	def calculate_equilibrium_fluid_comp(self, temperature, pressure, mode='molfrac'):
+	#TODO make molfrac the default
 		"""
 		Returns H2O and CO2 concentrations in wt% or mole fraction in a fluid in equilibrium with the given sample(s) at the given P/T condition.
 
 		Parameters
 		----------
 		sample: ExcelFile object
-			Compositional information on samples in oxides. 
+			Compositional information on samples in oxides.
 
 		temperature: float, int, or str
 			Temperature, in degrees C. Can be passed as float, in which case the
@@ -673,15 +692,17 @@ class ExcelFile(object):
 			title in the ExcelFile object.
 
 		mode: str
-			OPTIONAL. Default value is 'wtper', which returns the fluid composition in wt% oxides. Passing 'molfrac' returns
-			the fluid composition in mole fraction (XH2O=1 is a pure H2O fluid, XH2O=0 is a pure CO2 fluid).
+			OPTIONAL. Default value is 'molfrac', which returns the fluid composition in mole fraction (XH2O=1 is a pure 
+			H2O fluid, XH2O=0 is a pure CO2 fluid). Passing 'wtper' returns the fluid composition in wt% oxides.
+			
 
 		Returns
 		-------
-		pandas DataFrame 
+		pandas DataFrame
 			Original data passed plus newly calculated values are returned.
 		"""
 		data = self.preprocess_sample(self.data)
+		fluid_data = data.copy()
 		oxides = self.oxides
 		melts = self.melts
 
@@ -706,7 +727,7 @@ class ExcelFile(object):
 		fluid_mass_grams = []
 		fluid_system_wtper = []
 		iterno = 0
-		for index, row in data.iterrows():
+		for index, row in fluid_data.iterrows():
 			bulk_comp = {oxide:  row[oxide] for oxide in oxides}
 			if iterno == 0:
 				bulk_comp_orig = bulk_comp
@@ -743,23 +764,23 @@ class ExcelFile(object):
 				fluid_system_wtper.append(0)
 
 		if mode == 'wtper':
-			data["H2Ofluid_wtper"] = fluid_comp_H2O
-			data["CO2fluid_wtper"] = fluid_comp_CO2
+			fluid_data["H2O_fl_wt"] = fluid_comp_H2O
+			fluid_data["CO2_fl_wt"] = fluid_comp_CO2
 		if mode == 'molfrac':
-			data["XH2Ofluid"] = fluid_comp_H2O
-			data["XCO2fluid"] = fluid_comp_CO2
-		data["FluidMass_grams"] = fluid_mass_grams
-		data["FluidProportion_wtper"] = fluid_system_wtper
+			fluid_data["XH2O_fl"] = fluid_comp_H2O
+			fluid_data["XCO2_fl"] = fluid_comp_CO2
+		fluid_data["FluidMass_grams"] = fluid_mass_grams
+		fluid_data["FluidProportion_wt"] = fluid_system_wtper
 
 		if file_has_temp == False:
-			data["Temperature_C"] = temperature
+			fluid_data["Temperature_C"] = temperature
 
 		if file_has_press == False:
-			data["Pressure_bars"] = pressure
+			fluid_data["Pressure_bars"] = pressure
 
-		return data
+		return fluid_data
 
-	def calculate_saturation_pressure(self, temperature, print_status=False): #TODO fix weird printing
+	def calculate_saturation_pressure(self, temperature, mode='molfrac', print_status=False): #TODO fix weird printing
 		"""
 		Calculates the saturation pressure of multiple sample compositions in the ExcelFile.
 
@@ -774,13 +795,18 @@ class ExcelFile(object):
 		print_status: bool
 			OPTIONAL: Default is False. If set to True, progress of the calculations will be printed to the terminal.
 
+		mode: str
+			OPTIONAL. Default value is 'molfrac', which returns the fluid composition in mole fraction (XH2O=1 is a pure 
+			H2O fluid, XH2O=0 is a pure CO2 fluid). Passing 'wtper' returns the fluid composition in wt% oxides.
+
 		Returns
 		-------
 		pandas DataFrame object
 			Values returned are saturation pressure in bars, the mass of fluid present, and the composition of the
-			fluid present. 
+			fluid present.
 		"""
 		data = self.preprocess_sample(self.data)
+		satp_data = data.copy()
 		oxides = self.oxides
 		melts = self.melts
 
@@ -802,7 +828,7 @@ class ExcelFile(object):
 		flCO2 = []
 		flsystem_wtper = []
 		iterno = 0
-		for index, row in data.iterrows():
+		for index, row in satp_data.iterrows():
 			bulk_comp = {oxide:  row[oxide] for oxide in oxides}
 			if iterno == 0:
 				bulk_comp_orig = bulk_comp
@@ -826,9 +852,9 @@ class ExcelFile(object):
 			startingP.append(pressureMPa+100.0)
 			iterno += 1
 
-		data["StartingP"] = startingP
+		satp_data["StartingP"] = startingP
 
-		for index, row in data.iterrows():
+		for index, row in satp_data.iterrows():
 			bulk_comp = {oxide:  row[oxide] for oxide in oxides}
 			feasible = melts.set_bulk_composition(bulk_comp)
 
@@ -849,9 +875,9 @@ class ExcelFile(object):
 
 			startingP_ref.append(pressureMPa+10.0)
 
-		data["StartingP_ref"] = startingP_ref
+		satp_data["StartingP_ref"] = startingP_ref
 
-		for index, row in data.iterrows():
+		for index, row in satp_data.iterrows():
 			bulk_comp = {oxide:  row[oxide] for oxide in oxides}
 			feasible = melts.set_bulk_composition(bulk_comp)
 
@@ -875,9 +901,14 @@ class ExcelFile(object):
 			flsystem_wtper.append(100 * fluid_mass / (fluid_mass +
 								  melts.get_mass_of_phase(xmlout, phase_name='Liquid')))
 
-			flcomp = melts.get_composition_of_phase(xmlout, phase_name='Fluid')
-			flH2O.append(flcomp["H2O"])
-			flCO2.append(flcomp["CO2"])
+			if mode == 'wtper':
+				flcomp = melts.get_composition_of_phase(xmlout, phase_name='Fluid')
+				flH2O.append(flcomp["H2O"])
+				flCO2.append(flcomp["CO2"])
+			if mode == 'molfrac':
+				flcomp = melts.get_composition_of_phase(xmlout, phase_name='Fluid', mode='component')
+				flH2O.append(flcomp['Water'])
+				flCO2.append(flcomp['Carbon Dioxide'])
 
 			if print_status == True:
 				print(index)
@@ -885,20 +916,24 @@ class ExcelFile(object):
 				print("Fluid mass = " + str(fluid_mass))
 				print("\n")
 
-		data["SaturationPressure_bars"] = satP
-		data["FluidMassAtSaturation_grams"] = flmass
-		data["H2Ofluid_wtper"] = flH2O
-		data["CO2fluid_wtper"] = flCO2
-		data["FluidSystem_wtper"] = flsystem_wtper
-		del data["StartingP"]
-		del data["StartingP_ref"]
+		if mode == 'wtper':
+			satp_data["H2O_fl_wt"] = flH2O
+			satp_data["CO2_fl_wt"] = flCO2
+		if mode == 'molfrac':
+			satp_data["XH2O_fl"] = flH2O
+			satp_data["XCO2_fl"] = flCO2
+		satp_data["SaturationP_bars"] = satP
+		satp_data["FluidMass_grams"] = flmass
+		satp_data["FluidSystem_wt"] = flsystem_wtper
+		del satp_data["StartingP"]
+		del satp_data["StartingP_ref"]
 
 		if file_has_temp == False:
-			data["Temperature_C"] = temperature
+			satp_data["Temperature_C"] = temperature
 
 		feasible = melts.set_bulk_composition(bulk_comp_orig) #this needs to be reset always!
 
-		return data
+		return satp_data
 
 class Model(object):
 	"""The model object implements a volatile solubility model. It is composed
@@ -1999,6 +2034,7 @@ class ShishkinaWater(Model):
 
 class DixonCarbon(Model):
 	"""
+	Implementation of the Dixon (1997) carbon solubility model, as a Model class.
 	"""
 
 	def __init__(self):
@@ -2007,27 +2043,57 @@ class DixonCarbon(Model):
 		self.set_activity_model(activity_idealsolution())
 
 	def preprocess_sample(self,sample):
-		return sample
-
-	def calculate_dissolved_volatiles(self,pressure,sample,X_fluid=1.0,**kwargs):
-		"""Dixon (1997) Eqn (3).
-
-		Calculates the concentration (in ppm) of CO2 in the melt given the mole
-		fraction of carbonate ion.
+		""" Returns sample, unmodified.
 
 		Parameters
 		----------
-		XCO3: float
-			Mole fraction of carbonate ion in the melt."""
+		sample: 	pandas Series
+			The major element oxides in wt%.
 
+		Returns
+		-------
+		pandas Series
+			The major element oxides in wt%.
+		"""
+		return sample
+
+	def calculate_dissolved_volatiles(self,pressure,sample,X_fluid=1.0,**kwargs):
+		"""Calculates the dissolved CO2 concentration using Eqn (3) of Dixon (1997).
+
+		Parameters
+		----------
+		pressure  float
+			Total pressure in bars.
+		sample  	pandas Series
+			Major element oxides in wt%.
+		X_fluid  	float
+			The mol fraction of CO2 in the fluid.
+
+		Returns
+		-------
+		float
+			The CO2 concentration in wt%.
+		"""
 
 		XCO3 = self.molfrac_molecular(pressure=pressure,sample=sample,X_fluid=X_fluid,**kwargs)
 		return (4400 * XCO3) / (36.6 - 44*XCO3)
 
 
 	def calculate_equilibrium_fluid_comp(self,pressure,sample,**kwargs):
-		"""
-		WRITE STUFF
+		""" Returns 1.0 if a pure H2O fluid is saturated.
+		Returns 0.0 if a pure H2O fluid is undersaturated.
+
+		Parameters
+		----------
+		pressure 	float
+			The total pressure of the system in bars.
+		sample 		pandas Series
+			Major element oxides in wt% (including CO2).
+
+		Returns
+		-------
+		float
+			1.0 if CO2-fluid saturated, 0.0 otherwise.
 		"""
 		if self.calculate_saturation_pressure(sample=sample,**kwargs) > pressure:
 			return 0.0
@@ -2036,33 +2102,43 @@ class DixonCarbon(Model):
 
 	def calculate_saturation_pressure(self,sample,X_fluid=1.0,**kwargs):
 		"""
-		WRITE STUFF
+		Calculates the pressure at which a pure CO2 fluid is saturated, for the given sample
+		composition and CO2 concentration. Calls the scipy.root_scalar routine, which makes
+		repeated called to the calculate_dissolved_volatiles method.
+
+		Parameters
+		----------
+		sample 		pandas Series
+			Major element oxides in wt% (including CO2).
+		X_fluid 	float
+			The mole fraction of CO2 in the fluid. Default is 1.0.
+
+		Returns
+		-------
+		float
+			Calculated saturation pressure in bars.
 		"""
+
 		satP = root_scalar(self.root_saturation_pressure,x0=1000.0,x1=2000.0,args=(sample,kwargs)).root
 		return np.real(satP)
 
 	def molfrac_molecular(self,pressure,sample,X_fluid=1.0,**kwargs):
-		"""Dixon (1997) Eqn (1).
-
-		Calculates the mole fraction of carbonate ion dissolved in a tholeiitic basalt in
-		equilibrium with pure CO2 fluid at 1200C, at a chosen pressure.
+		"""Calculates the mole fraction of CO3(-2) dissolved when in equilibrium with
+		a pure CO2 fluid at 1200C, using Eqn (1) of Dixon (1997).
 
 		Parameters
 		----------
-		P:  float
-			Pressure in bar
-		XCO3Std:    float
-			Mole fraction of carbonate dissolved in tholeiitic basalt in equilibrium with
-			pure CO2 fluid at 1200C and 1 bar. Default value is 3.8e-7, as suggested in paper.
-			If MajorElements variable not set to string, this will be replaced.
-		fCO2:   float
-			Fugacity of CO2 at the pressure of interest. If value set to 0.0, fCO2 will be
-			set to that calculated using the Pitzer & Sterner equations by the CHO software.
-			This is the default option.
-		MajorElements:  series
-			If set to string XH2OStd variable passed will be used (or default value).
-			Series of major element oxide concentrations in wt%, requiring SiO2 as minimum.
-			Used to calculated XCO3std from compositional parametrisation."""
+		pressure  	float
+			Total pressure in bars.
+		sample 		pandas Series
+			Major element oxides in wt%.
+		X_fluid 	float
+			Mole fraction of CO2 in the fluid.
+
+		Returns
+		-------
+		float
+			Mole fraction of CO3(2-) dissolved."""
 
 		DeltaVr = 23 #cm3 mole-1
 		P0 = 1
@@ -2076,29 +2152,77 @@ class DixonCarbon(Model):
 		return XCO3Std * fugacity * np.exp(-DeltaVr * (pressure-P0)/(R*T0))
 
 	def XCO3_Std(self,sample):
-		"""Dixon (1997) Eq (8).
-
-		The compositional parameterisation for the mole fraction of carbonate ions
-		dissolved in a melt in equilibrium with CO2 vapour at 1200C and 1 bar.
+		""" Calculates the mole fraction of CO3(2-) dissolved when in equilibrium with pure
+		CO2 vapour at 1200C and 1 bar, using Eq (8) of Dixon (1997).
 
 		Parameters
 		----------
-		MajorElements:    dict or series (or str)
-			A dictionary or series containing 'SiO2' as a label for the SiO2 content
-			of the melt. If the variable is a str, it will return the default XCO3_std
-			value."""
+		sample    pandas Series
+			Major element oxides in wt%.
+
+		Returns
+		-------
+		float
+			Mole fraction of CO3(2-) dissolved at 1 bar and 1200C.
+		"""
 		return 8.7e-6 - 1.7e-7*sample['SiO2']
 
 	def root_saturation_pressure(self,pressure,sample,kwargs):
+		""" The function called by scipy.root_scalar when finding the saturation pressure using
+		calculate_saturation_pressure.
+
+		Parameters
+		----------
+		pressure 	float
+			Total pressure in bars.
+		sample 		float
+			Major element oxides in wt% (including CO2).
+
+		Returns
+		-------
+		float
+			The difference between the dissolved CO2 the pressure guessed, and the CO2 concentration
+			passed in the sample variable.
+		"""
 		return self.calculate_dissolved_volatiles(pressure=pressure,sample=sample,**kwargs) - sample['CO2']
 
 	def check_calibration_range(self,parameters,**kwargs):
-		return 0
+		""" Checks whether supplied parameters and calculated results are within the calibration range
+		of the model. Designed for use with the Calculate methods. Calls the check_calibration_range
+		functions for the fugacity and activity models.
+
+		Parameters supported currently are pressure and temperature. Dixon (1997) does not specify a range over
+		which the model is valid, and so no checks are made for the model itself.
+
+		Parameters
+		----------
+		parameters 		dictionary
+			Parameters to check calibration range for, the parameter name should be given as the key, and
+			its value as the value.
+
+		Returns
+		-------
+		dictionary
+			Dictionary with parameter names as keys. The values are dictionarys, which have the model component
+			as the keys, and bool values, indicating whether the parameter is within the calibration range.
+		"""
+		results = {}
+		if 'pressure' in parameters.keys():
+			pressure_results = {'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['pressure'],
+								'Activity Model': self.activity_model.check_calibration_range(parameters)['pressure']}
+			results['pressure'] = pressure_results
+
+		if 'temperature' in parameters.keys():
+			temperature_results = {'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['temperature'],
+									'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
+			results['temperature'] = temperature_results
+		return results
 
 
 
 class DixonWater(Model):
 	"""
+	Implementation of the Dixon (1997) water solubility model, as a Model class.
 	"""
 
 	def __init__(self):
@@ -2107,20 +2231,37 @@ class DixonWater(Model):
 		self.set_activity_model(activity_idealsolution())
 
 	def preprocess_sample(self,sample):
-		return sample
-
-	def calculate_dissolved_volatiles(self,pressure,sample,X_fluid=1.0,**kwargs):
-		"""Dixon (1997) Eq (5) and Eq (6).
-
-		Calculates total H2O (wt%) dissolved in the melt, given the molar fractions
-		of molecular water and hydroxyl groups dissolved.
+		""" Returns sample, unmodified.
 
 		Parameters
 		----------
-		XH2O: float
-			Mole fraction of molecular water dissolved in the melt.
-		XOH: float
-			Mole fraction of hydroxyl groups dissolved in the melt."""
+		sample: 	pandas Series
+			The major element oxides in wt%.
+
+		Returns
+		-------
+		pandas Series
+			The major element oxides in wt%.
+		"""
+		return sample
+
+	def calculate_dissolved_volatiles(self,pressure,sample,X_fluid=1.0,**kwargs):
+		"""Calculates the dissolved H2O concentration using Eqns (5) and (6) of Dixon (1997).
+
+		Parameters
+		----------
+		pressure  float
+			Total pressure in bars.
+		sample  	pandas Series
+			Major element oxides in wt%.
+		X_fluid  	float
+			The mol fraction of H2O in the fluid.
+
+		Returns
+		-------
+		float
+			The H2O concentration in wt%.
+		"""
 		XH2O = self.molfrac_molecular(pressure=pressure,sample=sample,X_fluid=X_fluid,**kwargs)
 		XOH = self.XOH(pressure=pressure,sample=sample,X_fluid=X_fluid,**kwargs)
 
@@ -2129,8 +2270,20 @@ class DixonWater(Model):
 
 
 	def calculate_equilibrium_fluid_comp(self,pressure,sample,**kwargs):
-		"""
-		WRITE STUFF
+		""" Returns 1.0 if a pure H2O fluid is saturated.
+		Returns 0.0 if a pure H2O fluid is undersaturated.
+
+		Parameters
+		----------
+		pressure 	float
+			The total pressure of the system in bars.
+		sample 		pandas Series
+			Major element oxides in wt% (including H2O).
+
+		Returns
+		-------
+		float
+			1.0 if H2O-fluid saturated, 0.0 otherwise.
 		"""
 		if self.calculate_saturation_pressure(sample=sample,**kwargs) > pressure:
 			return 0.0
@@ -2139,34 +2292,45 @@ class DixonWater(Model):
 
 	def calculate_saturation_pressure(self,sample,X_fluid=1.0,**kwargs):
 		"""
-		WRITE STUFF
+		Calculates the pressure at which a pure H2O fluid is saturated, for the given sample
+		composition and H2O concentration. Calls the scipy.root_scalar routine, which makes
+		repeated called to the calculate_dissolved_volatiles method.
+
+		Parameters
+		----------
+		sample 		pandas Series
+			Major element oxides in wt% (including H2O).
+		X_fluid 	float
+			The mole fraction of H2O in the fluid. Default is 1.0.
+
+		Returns
+		-------
+		float
+			Calculated saturation pressure in bars.
 		"""
 		satP = root_scalar(self.root_saturation_pressure,x0=1000.0,x1=2000.0,args=(sample,kwargs)).root
 
 		return np.real(satP)
 
 	def molfrac_molecular(self,pressure,sample,X_fluid=1.0,**kwargs):
-		"""Dixon (1997) Eqn (2).
-
-		Calculates the mole fraction of molecular H2O dissolved in a tholeiitic basalt in
-		equilibrium with pure H2O fluid at 1200C, at a chosen pressure.
+		"""Calculates the mole fraction of molecular H2O dissolved when in equilibrium with
+		a pure H2O fluid at 1200C, using Eqn (2) of Dixon (1997).
 
 		Parameters
 		----------
-		P: float
-			Pressure in bar
-		XH2OStd: float
-			Mole fraction of cmolecular H2O in tholeiitic basalt in equilibrium with
-			pure H2O fluid at 1200C and 1 bar. Default value is 3.28e-5, as suggested in paper.
-			If MajorElements variable not set to string, this will be replaced.
-		fH2O: float
-			Fugacity of H2O at the pressure of interest. If value set to 0.0, fH2O will be
-			set to that calculated using the Pitzer & Sterner equations by the CHO software.
-			This is the default option.
-		MajorElements:  series
-			If set to string XH2OStd variable passed will be used (or default value).
-			Series of major element oxide concentrations in wt%, requiring SiO2 as minimum.
-			Used to calculated XH2Ostd from compositional parametrisation."""
+		pressure  	float
+			Total pressure in bars.
+		sample 		pandas Series
+			Major element oxides in wt%.
+		X_fluid 	float
+			Mole fraction of H2O in the fluid.
+
+		Returns
+		-------
+		float
+			Mole fraction of molecular H2O dissolved.
+		"""
+
 		VH2O = 12 #cm3 mole-1
 		P0 = 1
 		R = 83.15
@@ -2179,32 +2343,41 @@ class DixonWater(Model):
 		return XH2OStd * fugacity * np.exp(-VH2O * (pressure-P0)/(R*T0))
 
 	def XH2O_Std(self,sample):
-		"""Dixon (1997) Eq (9).
-
-		The compositional parameterisation for the mole fraction of molecular water
-		dissolved in a melt in equilibrium with H2O vapour at 1200C and 1 bar.
+		""" Calculates the mole fraction of molecular H2O dissolved when in equilibrium with pure
+		H2O vapour at 1200C and 1 bar, using Eq (9) of Dixon (1997).
 
 		Parameters
 		----------
-		MajorElements:    dict or series (or str)
-			A dictionary or series containing 'SiO2' as a label for the SiO2 content
-			of the melt. If the variable is a str, it will return the default XH2O_std
-			value."""
+		sample    pandas Series
+			Major element oxides in wt%.
+
+		Returns
+		-------
+		float
+			Mole fraction of molecular water dissolved at 1 bar and 1200C.
+		"""
+
 		return -3.04e-5 + 1.29e-6*sample['SiO2']
 
 	def XOH(self,pressure,sample,X_fluid=1.0,**kwargs):
-		"""Solves Dixon (1997) Eq (4).
-
-		Finds the mole fraction of hydroxyl groups dissolved in the melt, given the
-		mole fraction of molecular water. Uses the Newton method to find the root of
-		Eq (4).
-
-		Often struggles to find root when XH2O -> 0.
+		"""
+		Calculates the mole fraction of hydroxyl groups dissolved by solving Eq (4) of
+		Dixon (1997). Calls scipy.root_scalar to find the root of the XOH_root method.
 
 		Parameters
 		----------
-		XH2O: float
-			Mole fraction of molecular water dissolved in melt."""
+		pressure 	float
+			Total pressure in bars.
+		sample 		pandas Series
+			Major element oxides in wt%.
+		X_fluid 	float
+			Mole fraction of H2O in the fluid.
+
+		Returns
+		-------
+		float
+			Mole fraction of hydroxyl groups dissolved.
+		"""
 
 		XH2O = self.molfrac_molecular(pressure=pressure,sample=sample,X_fluid=X_fluid,**kwargs)
 		if XH2O < 1e-14:
@@ -2213,20 +2386,23 @@ class DixonWater(Model):
 			return root_scalar(self.XOH_root,bracket=(1e-14,1),args=(XH2O)).root
 
 	def XOH_root(self,XOH,XH2O):
-		"""Dixon (1997) Eq (4).
-
-		Returns the difference between the two sides of equation (4) which relates
-		the mole fraction of hydroxyl groups to the mole fraction of molecular water.
-		For use in finding the root of the equation.
-
-		It is a regular solution model (Silver and Stolper, 1989).
+		"""
+		Method called by scipy.root_scalar when finding the saturation pressure using the
+		calculate_saturation_pressure method. Implements Eq (4) of Dixon (1997).
 
 		Parameters
 		----------
-		XOH: float
-			Mole fraction of hydroxyl groups dissolved in melt.
-		XH2O: float
-			Mole fraction of molecular water dissolved in melt."""
+		XOH	 	float
+			Guess for the mole fraction of hydroxyl groups dissolved in melt.
+		XH2O	float
+			Mole fraction of molecular water dissolved in melt.
+
+		Returns
+		-------
+		float
+			The difference between the RHS and LHS of Eq (4) of Dixon (1997) for the
+			guessed value of XOH.
+		"""
 		A = 0.403
 		B = 15.333
 		C = 10.894
@@ -2237,10 +2413,58 @@ class DixonWater(Model):
 		return rhs - lhs
 
 	def root_saturation_pressure(self,pressure,sample,kwargs):
+		""" Function called by scipy.root_scalar when finding the saturation pressure using
+		calculate_saturation_pressure.
+
+		Parameters
+		----------
+		pressure 	float
+			Pressure guess in bars
+		sample 		pandas Series
+			Major elements in wt% (normalized to 100%), including H2O.
+		kwargs 		dictionary
+			Additional keyword arguments supplied to calculate_saturation_pressure. Might be required for
+			the fugacity or activity models.
+
+		Returns
+		-------
+		float
+			The differece between the dissolved H2O at the pressure guessed, and the H2O concentration
+			passed in the sample variable.
+		"""
 		return self.calculate_dissolved_volatiles(pressure=pressure,sample=sample,**kwargs) - sample['H2O']
 
 	def check_calibration_range(self,**kwargs):
-		return 0
+		""" Checks whether supplied parameters and calculated results are within the calibration range
+		of the model. Designed for use with the Calculate methods. Calls the check_calibration_range
+		functions for the fugacity and activity models.
+
+		Parameters supported currently are pressure and temperature. Dixon (1997) does not specify a range over
+		which the model is valid, and so no checks are made for the model itself.
+
+		Parameters
+		----------
+		parameters 		dictionary
+			Parameters to check calibration range for, the parameter name should be given as the key, and
+			its value as the value.
+
+		Returns
+		-------
+		dictionary
+			Dictionary with parameter names as keys. The values are dictionarys, which have the model component
+			as the keys, and bool values, indicating whether the parameter is within the calibration range.
+		"""
+		results = {}
+		if 'pressure' in parameters.keys():
+			pressure_results = {'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['pressure'],
+								'Activity Model': self.activity_model.check_calibration_range(parameters)['pressure']}
+			results['pressure'] = pressure_results
+
+		if 'temperature' in parameters.keys():
+			temperature_results = {'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['temperature'],
+									'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
+			results['temperature'] = temperature_results
+		return results
 
 class IaconoMarzianoWater(Model):
 	"""
@@ -2929,7 +3153,7 @@ class MagmaSat(Model):
 
 		return H2O_fl
 
-	def calculate_dissolved_volatiles(self, sample, temperature, pressure, X_fluid=1, H2O_guess=0.0, verbose=False): 
+	def calculate_dissolved_volatiles(self, sample, temperature, pressure, X_fluid=1, H2O_guess=0.0, verbose=False):
 	#TODO make better initial guess at higher XH2Ofl
 	#TODO make refinements faster
 		"""
@@ -2942,16 +3166,16 @@ class MagmaSat(Model):
 			Compositional information on one sample in oxides.
 
 		temperature: float or int
-			Temperature, in degrees C. 
+			Temperature, in degrees C.
 
 		presure: float or int
-			Pressure, in bars. 
+			Pressure, in bars.
 
 		X_fluid: float or int
 			The default value is 1. The mole fraction of H2O in the H2O-CO2 fluid. X_fluid=1 is a pure H2O fluid. X_fluid=0 is a pure CO2 fluid.
 
 		verbose: bool
-			OPTIONAL: Default is False. If set to True, returns H2O and CO2 concentration in the melt, H2O and CO2 concentration in 
+			OPTIONAL: Default is False. If set to True, returns H2O and CO2 concentration in the melt, H2O and CO2 concentration in
 			the fluid, mass of the fluid in grams, and proportion of fluid in the system in wt%.
 
 		Returns
@@ -3023,16 +3247,16 @@ class MagmaSat(Model):
 		while XH2O_fluid < X_fluid - 0.01: #too low refinement 1
 			H2O_val += 0.05
 			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
-			
+
 		while XH2O_fluid > X_fluid + 0.01: #too high refinement 1
 			CO2_val += 0.01
 			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
-			
+
 		#------Refinement 2------#
 		while XH2O_fluid < X_fluid - 0.001: #too low refinement 2
 			H2O_val += 0.005
 			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
-			
+
 		while XH2O_fluid > X_fluid + 0.001: #too high refinement 2
 			CO2_val += 0.001
 			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
@@ -3080,15 +3304,15 @@ class MagmaSat(Model):
 		XH2O_fluid = H2O_fl
 
 		if verbose == True:
-			return {"temperature": temperature, "pressure": pressure, 
+			return {"temperature": temperature, "pressure": pressure,
 					"H2O_liq": H2O_liq, "CO2_liq": CO2_liq,
 					"XH2O_fl": H2O_fl, "XCO2_fl": CO2_fl,
-					"FluidProportion_wtper": 100*fluid_mass/system_mass}
+					"FluidProportion_wt": 100*fluid_mass/system_mass}
 
 		if verbose == False:
 			return {"H2O": H2O_liq, "CO2": CO2_liq}
 
-	def calculate_equilibrium_fluid_comp(self, sample, temperature, pressure, verbose=False, mode='wtper'): #TODO fix weird printing
+	def calculate_equilibrium_fluid_comp(self, sample, temperature, pressure, mode='molfrac', verbose=False): #TODO fix weird printing
 		"""
 		Returns H2O and CO2 concentrations in wt% in a fluid in equilibrium with the given sample at the given P/T condition.
 
@@ -3098,22 +3322,22 @@ class MagmaSat(Model):
 			Compositional information on one sample in oxides.
 
 		temperature: float or int
-			Temperature, in degrees C. 
+			Temperature, in degrees C.
 
 		presure: float or int
 			Pressure, in bars. #TODO check units
 
 		mode: str
-			OPTIONAL. Default value is 'wtper', which returns the fluid composition in wt% oxides. Passing 'molfrac' returns
-			the fluid composition in mole fraction (XH2O=1 is a pure H2O fluid, XH2O=0 is a pure CO2 fluid).
+			OPTIONAL. Default value is 'molfrac', which returns the fluid composition in mole fraction (XH2O=1 is a pure 
+			H2O fluid, XH2O=0 is a pure CO2 fluid). Passing 'wtper' returns the fluid composition in wt% oxides.
 
 		verbose: bool
-			OPTIONAL: Default is False. If set to True, returns H2O and CO2 concentration in the fluid, mass of the fluid in grams, 
+			OPTIONAL: Default is False. If set to True, returns H2O and CO2 concentration in the fluid, mass of the fluid in grams,
 			and proportion of fluid in the system in wt%.
 
 		Returns
 		-------
-		dict 
+		dict
 			A dictionary of fluid composition in wt% with keys 'H2O' and 'CO2' is returned. #TODO make list?
 		"""
 		melts = self.melts
@@ -3158,9 +3382,9 @@ class MagmaSat(Model):
 			return {'H2O': fluid_comp_H2O, 'CO2': fluid_comp_CO2}
 
 		if verbose == True:
-			return {'H2O': fluid_comp_H2O, 'CO2': fluid_comp_CO2, 'FluidMass_grams': fluid_mass, 'FluidProportion_wtper': flsystem_wtper}
+			return {'H2O': fluid_comp_H2O, 'CO2': fluid_comp_CO2, 'FluidMass_grams': fluid_mass, 'FluidProportion_wt': flsystem_wtper}
 
-	def calculate_saturation_pressure(self, sample, temperature, verbose=False):
+	def calculate_saturation_pressure(self, sample, temperature, mode='molfrac', verbose=False):
 		"""
 		Calculates the saturation pressure of a sample composition.
 
@@ -3171,6 +3395,10 @@ class MagmaSat(Model):
 
 		temperature: flaot or int
 			Temperature of the sample in degrees C.
+
+		mode: str
+			OPTIONAL. Default value is 'molfrac', which returns the fluid composition in mole fraction (XH2O=1 is a pure 
+			H2O fluid, XH2O=0 is a pure CO2 fluid). Passing 'wtper' returns the fluid composition in wt% oxides.
 
 		verbose: bool
 			OPTIONAL: Default is False. If set to False, only the saturation pressure is returned. If set to True,
@@ -3202,7 +3430,7 @@ class MagmaSat(Model):
 			if pressureMPa <= 0:
 				break
 
-		startingP = pressureMPa+100.0 
+		startingP = pressureMPa+100.0
 
 		#Refined search 1
 		feasible = melts.set_bulk_composition(bulk_comp)
@@ -3238,28 +3466,31 @@ class MagmaSat(Model):
 		satP = pressureMPa*10 #convert pressure to bars
 		flmass = fluid_mass
 		flsystem_wtper = 100 * fluid_mass / (fluid_mass + melts.get_mass_of_phase(xmlout, phase_name='Liquid'))
-		flcomp = melts.get_composition_of_phase(xmlout, phase_name='Fluid')
-		if "H2O" in flcomp:
-			flH2O = flcomp["H2O"]
-		else:
-			flH2O = 0.0
-		if "CO2" in flcomp:
+		if mode == 'wtper':
+			flcomp = melts.get_composition_of_phase(xmlout, phase_name='Fluid')
+			flH2O = flcomp["H2O"] #TODO - having issue here with plot degassing paths where no H2O in fluid... check if this is possible and should be mitigated here
 			flCO2 = flcomp["CO2"]
-		else:
-			flCO2 = 0.0
+		if mode == 'molfrac':
+			flcomp = melts.get_composition_of_phase(xmlout, phase_name='Fluid', mode='component')
+			flH2O = flcomp['Water']
+			flCO2 = flcomp['Carbon Dioxide']
 
 		feasible = melts.set_bulk_composition(bulk_comp_orig) #this needs to be reset always!
 
 		if verbose == False:
 			return satP
 		elif verbose == True:
-			return {"SaturationP_bars": satP, "FluidMass_grams": flmass, "FluidProportion_wtper": flsystem_wtper,
-					"H2Ofluid_wtper": flH2O, "CO2fluid_wtper": flCO2}
+			if mode == 'wtper':
+				return {"SaturationP_bars": satP, "FluidMass_grams": flmass, "FluidProportion_wt": flsystem_wtper,
+						"H2O_fl_wt": flH2O, "CO2_fl_wt": flCO2}
+			elif mode == 'molfrac':
+				return {"SaturationP_bars": satP, "FluidMass_grams": flmass, "FluidProportion_wt": flsystem_wtper,
+						"XH2O_fl": flH2O, "XCO2_fl": flCO2}
 
 	def calculate_isobars_and_isopleths(self, sample, temperature, pressure_list, isopleth_list=None, print_status=False, **kwargs):
 		"""
 		Calculates isobars and isopleths at a constant temperature for a given sample. Isobars can be calculated
-		for any number of pressures. 
+		for any number of pressures.
 
 		Parameters
 		----------
@@ -3277,7 +3508,7 @@ class MagmaSat(Model):
 			List of all fluid compositions in mole fraction H2O (XH2Ofluid) at which to calcualte isopleths. Values can range from 0-1.
 
 		print_status: bool
-			OPTIONAL: Default is False. If set to True, progress of the calculations will be printed to the terminal. 
+			OPTIONAL: Default is False. If set to True, progress of the calculations will be printed to the terminal.
 
 		Returns
 		-------
@@ -3343,7 +3574,7 @@ class MagmaSat(Model):
 		if has_isopleths == True:
 			return isobars_df, isopleths_df
 		if has_isopleths == False:
-			return isobars_df, None
+			return isobars_df, None #TODO should this just return isobars_df? Currently this requires two items to unpack, I think?
 
 	def calculate_degassing_paths(self, sample, temperature, system='closed', init_vapor='None'):
 		"""
@@ -3439,7 +3670,7 @@ class MagmaSat(Model):
 				sample = bulk_comp_orig
 				feasible = melts.set_bulk_composition(sample)
 				closed_degassing_df = pd.DataFrame(list(zip(pressure, H2Oliq, CO2liq, H2Ofl, CO2fl, fluid_wtper)),
-											columns =['pressure', 'H2Oliq', 'CO2liq', 'H2Ofl', 'CO2fl', 'fluid_wtper'])
+											columns =['pressure', 'H2O_liq', 'CO2_liq', 'H2O_fl', 'CO2_fl', 'FluidProportion_wt'])
 
 				return closed_degassing_df
 
@@ -3509,7 +3740,7 @@ class MagmaSat(Model):
 				feasible = melts.set_bulk_composition(sample)
 				fl_wtper = data["FluidProportion_wtper"]
 				exsolved_degassing_df = pd.DataFrame(list(zip(pressure, H2Oliq, CO2liq, H2Ofl, CO2fl, fluid_wtper)),
-											columns =['pressure', 'H2Oliq', 'CO2liq', 'H2Ofl', 'CO2fl', 'fluid_wtper'])
+											columns =['pressure', 'H2O_liq', 'CO2_liq', 'H2O_fl', 'CO2_fl', 'FluidProportion_wt'])
 
 				return exsolved_degassing_df
 
@@ -3568,7 +3799,7 @@ class MagmaSat(Model):
 			sample = bulk_comp_orig
 			feasible = melts.set_bulk_composition(sample) #this needs to be reset always!
 			open_degassing_df = pd.DataFrame(list(zip(pressure, H2Oliq, CO2liq, H2Ofl, CO2fl, fluid_wtper)),
-										columns =['pressure', 'H2Oliq', 'CO2liq', 'H2Ofl', 'CO2fl', 'fluid_wtper'])
+										columns =['pressure', 'H2O_liq', 'CO2_liq', 'H2O_fl', 'CO2_fl', 'FluidProportion_wt'])
 
 			return open_degassing_df
 

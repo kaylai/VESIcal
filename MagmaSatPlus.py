@@ -534,9 +534,30 @@ class ExcelFile(object):
 		if norm == 'none':
 			return sample_oxides
 
-	def save_excel_file(self):
-		#TODO write this code!
-		return print("You haven't written this code yet!")
+	def save_excelfile(self, filename, calculations): #TODO how to handle if user just wants to normalize data?
+		"""
+		Saves data calculated by the user in batch processing mode (using the ExcelFile class methods) to an organized
+		excel file, with the original user data plus any calculated data.
+
+		Parameters
+		----------
+		filename: string
+			Name of the file. Extension (.xlsx) should be passed along with the name itself, all in quotes (e.g., 'myfile.xlsx').
+
+		calculations: list
+			List of variables containing calculated outputs from any of the core ExcelFile functions: calculate_dissolved_volatiles,
+			calculate_equilibrium_fluid_comp, and calculate_saturation_pressure.
+
+		Returns
+		-------
+		Creates and saves an Excel file with data from each calculation saved to its own sheet.
+		"""
+		with pd.ExcelWriter(filename) as writer:
+			self.data.to_excel(writer, 'Original_User_Data')
+			for n, df in enumerate(calculations):
+				df.to_excel(writer, 'Calc%s' % n)
+
+		return print("Saved " + str(filename))
 
 	def calculate_dissolved_volatiles(self, temperature, pressure, X_fluid=1, print_status=False): #TODO make this faster by extracting data from the dataframe first
 		"""
@@ -572,6 +593,7 @@ class ExcelFile(object):
 			Original data passed plus newly calculated values are returned.
 		"""
 		data = self.preprocess_sample(self.data)
+		dissolved_data = data.copy()
 		oxides = self.oxides
 		melts = self.melts
 
@@ -609,7 +631,7 @@ class ExcelFile(object):
 		fluid_comp_CO2 = []
 		fluid_system_wtper = []
 		sampleno = 0
-		for index, row in data.iterrows():
+		for index, row in dissolved_data.iterrows():
 			sampleno += 1
 			if print_status == True:
 				print("Calculating sample number " + str(sampleno))
@@ -630,25 +652,25 @@ class ExcelFile(object):
 			liq_comp_CO2.append(calculate_it["CO2_liq"])
 			fluid_comp_H2O.append(calculate_it["XH2O_fl"])
 			fluid_comp_CO2.append(calculate_it["XCO2_fl"])
-			fluid_system_wtper.append(calculate_it["FluidProportion_wtper"])
+			fluid_system_wtper.append(calculate_it["FluidProportion_wt"])
 
-		data["H2O_liq"] = liq_comp_H2O
-		data["CO2_liq"] = liq_comp_CO2
-		data["XH2O_fl"] = fluid_comp_H2O
-		data["XCO2_fl"] = fluid_comp_CO2
-		data["FluidProportion_wtper"] = fluid_system_wtper
+		dissolved_data["H2O_liq"] = liq_comp_H2O
+		dissolved_data["CO2_liq"] = liq_comp_CO2
+		dissolved_data["XH2O_fl"] = fluid_comp_H2O
+		dissolved_data["XCO2_fl"] = fluid_comp_CO2
+		dissolved_data["FluidProportion_wt"] = fluid_system_wtper
 
 		if file_has_temp == False:
-			data["Temperature_C"] = temperature
+			dissolved_data["Temperature_C"] = temperature
 		if file_has_press == False:
-			data["Pressure_bars"] = pressure
+			dissolved_data["Pressure_bars"] = pressure
 		if file_has_X == False:
-			data["X_fluid_input"] = X_fluid
+			dissolved_data["X_fluid_input"] = X_fluid
 
-		return data
+		return dissolved_data
 
-	def calculate_equilibrium_fluid_comp(self, temperature, pressure, mode='wtper'):
-	#TODO do we want this function to "overwrite" the original myfile.data information? Currently it does.
+	def calculate_equilibrium_fluid_comp(self, temperature, pressure, mode='molfrac'):
+	#TODO make molfrac the default
 		"""
 		Returns H2O and CO2 concentrations in wt% or mole fraction in a fluid in equilibrium with the given sample(s) at the given P/T condition.
 
@@ -670,8 +692,9 @@ class ExcelFile(object):
 			title in the ExcelFile object.
 
 		mode: str
-			OPTIONAL. Default value is 'wtper', which returns the fluid composition in wt% oxides. Passing 'molfrac' returns
-			the fluid composition in mole fraction (XH2O=1 is a pure H2O fluid, XH2O=0 is a pure CO2 fluid).
+			OPTIONAL. Default value is 'molfrac', which returns the fluid composition in mole fraction (XH2O=1 is a pure 
+			H2O fluid, XH2O=0 is a pure CO2 fluid). Passing 'wtper' returns the fluid composition in wt% oxides.
+			
 
 		Returns
 		-------
@@ -679,6 +702,7 @@ class ExcelFile(object):
 			Original data passed plus newly calculated values are returned.
 		"""
 		data = self.preprocess_sample(self.data)
+		fluid_data = data.copy()
 		oxides = self.oxides
 		melts = self.melts
 
@@ -703,7 +727,7 @@ class ExcelFile(object):
 		fluid_mass_grams = []
 		fluid_system_wtper = []
 		iterno = 0
-		for index, row in data.iterrows():
+		for index, row in fluid_data.iterrows():
 			bulk_comp = {oxide:  row[oxide] for oxide in oxides}
 			if iterno == 0:
 				bulk_comp_orig = bulk_comp
@@ -740,23 +764,23 @@ class ExcelFile(object):
 				fluid_system_wtper.append(0)
 
 		if mode == 'wtper':
-			data["H2Ofluid_wtper"] = fluid_comp_H2O
-			data["CO2fluid_wtper"] = fluid_comp_CO2
+			fluid_data["H2O_fl_wt"] = fluid_comp_H2O
+			fluid_data["CO2_fl_wt"] = fluid_comp_CO2
 		if mode == 'molfrac':
-			data["XH2Ofluid"] = fluid_comp_H2O
-			data["XCO2fluid"] = fluid_comp_CO2
-		data["FluidMass_grams"] = fluid_mass_grams
-		data["FluidProportion_wtper"] = fluid_system_wtper
+			fluid_data["XH2O_fl"] = fluid_comp_H2O
+			fluid_data["XCO2_fl"] = fluid_comp_CO2
+		fluid_data["FluidMass_grams"] = fluid_mass_grams
+		fluid_data["FluidProportion_wt"] = fluid_system_wtper
 
 		if file_has_temp == False:
-			data["Temperature_C"] = temperature
+			fluid_data["Temperature_C"] = temperature
 
 		if file_has_press == False:
-			data["Pressure_bars"] = pressure
+			fluid_data["Pressure_bars"] = pressure
 
-		return data
+		return fluid_data
 
-	def calculate_saturation_pressure(self, temperature, print_status=False): #TODO fix weird printing
+	def calculate_saturation_pressure(self, temperature, mode='molfrac', print_status=False): #TODO fix weird printing
 		"""
 		Calculates the saturation pressure of multiple sample compositions in the ExcelFile.
 
@@ -771,6 +795,10 @@ class ExcelFile(object):
 		print_status: bool
 			OPTIONAL: Default is False. If set to True, progress of the calculations will be printed to the terminal.
 
+		mode: str
+			OPTIONAL. Default value is 'molfrac', which returns the fluid composition in mole fraction (XH2O=1 is a pure 
+			H2O fluid, XH2O=0 is a pure CO2 fluid). Passing 'wtper' returns the fluid composition in wt% oxides.
+
 		Returns
 		-------
 		pandas DataFrame object
@@ -778,6 +806,7 @@ class ExcelFile(object):
 			fluid present.
 		"""
 		data = self.preprocess_sample(self.data)
+		satp_data = data.copy()
 		oxides = self.oxides
 		melts = self.melts
 
@@ -799,7 +828,7 @@ class ExcelFile(object):
 		flCO2 = []
 		flsystem_wtper = []
 		iterno = 0
-		for index, row in data.iterrows():
+		for index, row in satp_data.iterrows():
 			bulk_comp = {oxide:  row[oxide] for oxide in oxides}
 			if iterno == 0:
 				bulk_comp_orig = bulk_comp
@@ -823,9 +852,9 @@ class ExcelFile(object):
 			startingP.append(pressureMPa+100.0)
 			iterno += 1
 
-		data["StartingP"] = startingP
+		satp_data["StartingP"] = startingP
 
-		for index, row in data.iterrows():
+		for index, row in satp_data.iterrows():
 			bulk_comp = {oxide:  row[oxide] for oxide in oxides}
 			feasible = melts.set_bulk_composition(bulk_comp)
 
@@ -846,9 +875,9 @@ class ExcelFile(object):
 
 			startingP_ref.append(pressureMPa+10.0)
 
-		data["StartingP_ref"] = startingP_ref
+		satp_data["StartingP_ref"] = startingP_ref
 
-		for index, row in data.iterrows():
+		for index, row in satp_data.iterrows():
 			bulk_comp = {oxide:  row[oxide] for oxide in oxides}
 			feasible = melts.set_bulk_composition(bulk_comp)
 
@@ -872,9 +901,14 @@ class ExcelFile(object):
 			flsystem_wtper.append(100 * fluid_mass / (fluid_mass +
 								  melts.get_mass_of_phase(xmlout, phase_name='Liquid')))
 
-			flcomp = melts.get_composition_of_phase(xmlout, phase_name='Fluid')
-			flH2O.append(flcomp["H2O"])
-			flCO2.append(flcomp["CO2"])
+			if mode == 'wtper':
+				flcomp = melts.get_composition_of_phase(xmlout, phase_name='Fluid')
+				flH2O.append(flcomp["H2O"])
+				flCO2.append(flcomp["CO2"])
+			if mode == 'molfrac':
+				flcomp = melts.get_composition_of_phase(xmlout, phase_name='Fluid', mode='component')
+				flH2O.append(flcomp['Water'])
+				flCO2.append(flcomp['Carbon Dioxide'])
 
 			if print_status == True:
 				print(index)
@@ -882,20 +916,24 @@ class ExcelFile(object):
 				print("Fluid mass = " + str(fluid_mass))
 				print("\n")
 
-		data["SaturationPressure_bars"] = satP
-		data["FluidMassAtSaturation_grams"] = flmass
-		data["H2Ofluid_wtper"] = flH2O
-		data["CO2fluid_wtper"] = flCO2
-		data["FluidSystem_wtper"] = flsystem_wtper
-		del data["StartingP"]
-		del data["StartingP_ref"]
+		if mode == 'wtper':
+			satp_data["H2O_fl_wt"] = flH2O
+			satp_data["CO2_fl_wt"] = flCO2
+		if mode == 'molfrac':
+			satp_data["XH2O_fl"] = flH2O
+			satp_data["XCO2_fl"] = flCO2
+		satp_data["SaturationP_bars"] = satP
+		satp_data["FluidMass_grams"] = flmass
+		satp_data["FluidSystem_wt"] = flsystem_wtper
+		del satp_data["StartingP"]
+		del satp_data["StartingP_ref"]
 
 		if file_has_temp == False:
-			data["Temperature_C"] = temperature
+			satp_data["Temperature_C"] = temperature
 
 		feasible = melts.set_bulk_composition(bulk_comp_orig) #this needs to be reset always!
 
-		return data
+		return satp_data
 
 class Model(object):
 	"""The model object implements a volatile solubility model. It is composed
@@ -3269,12 +3307,12 @@ class MagmaSat(Model):
 			return {"temperature": temperature, "pressure": pressure,
 					"H2O_liq": H2O_liq, "CO2_liq": CO2_liq,
 					"XH2O_fl": H2O_fl, "XCO2_fl": CO2_fl,
-					"FluidProportion_wtper": 100*fluid_mass/system_mass}
+					"FluidProportion_wt": 100*fluid_mass/system_mass}
 
 		if verbose == False:
 			return {"H2O": H2O_liq, "CO2": CO2_liq}
 
-	def calculate_equilibrium_fluid_comp(self, sample, temperature, pressure, verbose=False, mode='wtper'): #TODO fix weird printing
+	def calculate_equilibrium_fluid_comp(self, sample, temperature, pressure, mode='molfrac', verbose=False): #TODO fix weird printing
 		"""
 		Returns H2O and CO2 concentrations in wt% in a fluid in equilibrium with the given sample at the given P/T condition.
 
@@ -3290,8 +3328,8 @@ class MagmaSat(Model):
 			Pressure, in bars. #TODO check units
 
 		mode: str
-			OPTIONAL. Default value is 'wtper', which returns the fluid composition in wt% oxides. Passing 'molfrac' returns
-			the fluid composition in mole fraction (XH2O=1 is a pure H2O fluid, XH2O=0 is a pure CO2 fluid).
+			OPTIONAL. Default value is 'molfrac', which returns the fluid composition in mole fraction (XH2O=1 is a pure 
+			H2O fluid, XH2O=0 is a pure CO2 fluid). Passing 'wtper' returns the fluid composition in wt% oxides.
 
 		verbose: bool
 			OPTIONAL: Default is False. If set to True, returns H2O and CO2 concentration in the fluid, mass of the fluid in grams,
@@ -3344,9 +3382,9 @@ class MagmaSat(Model):
 			return {'H2O': fluid_comp_H2O, 'CO2': fluid_comp_CO2}
 
 		if verbose == True:
-			return {'H2O': fluid_comp_H2O, 'CO2': fluid_comp_CO2, 'FluidMass_grams': fluid_mass, 'FluidProportion_wtper': flsystem_wtper}
+			return {'H2O': fluid_comp_H2O, 'CO2': fluid_comp_CO2, 'FluidMass_grams': fluid_mass, 'FluidProportion_wt': flsystem_wtper}
 
-	def calculate_saturation_pressure(self, sample, temperature, verbose=False):
+	def calculate_saturation_pressure(self, sample, temperature, mode='molfrac', verbose=False):
 		"""
 		Calculates the saturation pressure of a sample composition.
 
@@ -3357,6 +3395,10 @@ class MagmaSat(Model):
 
 		temperature: flaot or int
 			Temperature of the sample in degrees C.
+
+		mode: str
+			OPTIONAL. Default value is 'molfrac', which returns the fluid composition in mole fraction (XH2O=1 is a pure 
+			H2O fluid, XH2O=0 is a pure CO2 fluid). Passing 'wtper' returns the fluid composition in wt% oxides.
 
 		verbose: bool
 			OPTIONAL: Default is False. If set to False, only the saturation pressure is returned. If set to True,
@@ -3424,17 +3466,26 @@ class MagmaSat(Model):
 		satP = pressureMPa*10 #convert pressure to bars
 		flmass = fluid_mass
 		flsystem_wtper = 100 * fluid_mass / (fluid_mass + melts.get_mass_of_phase(xmlout, phase_name='Liquid'))
-		flcomp = melts.get_composition_of_phase(xmlout, phase_name='Fluid')
-		flH2O = flcomp["H2O"] #TODO - having issue here with plot degassing paths where no H2O in fluid... check if this is possible and should be mitigated here
-		flCO2 = flcomp["CO2"]
+		if mode == 'wtper':
+			flcomp = melts.get_composition_of_phase(xmlout, phase_name='Fluid')
+			flH2O = flcomp["H2O"] #TODO - having issue here with plot degassing paths where no H2O in fluid... check if this is possible and should be mitigated here
+			flCO2 = flcomp["CO2"]
+		if mode == 'molfrac':
+			flcomp = melts.get_composition_of_phase(xmlout, phase_name='Fluid', mode='component')
+			flH2O = flcomp['Water']
+			flCO2 = flcomp['Carbon Dioxide']
 
 		feasible = melts.set_bulk_composition(bulk_comp_orig) #this needs to be reset always!
 
 		if verbose == False:
 			return satP
 		elif verbose == True:
-			return {"SaturationP_bars": satP, "FluidMass_grams": flmass, "FluidProportion_wtper": flsystem_wtper,
-					"H2Ofluid_wtper": flH2O, "CO2fluid_wtper": flCO2}
+			if mode == 'wtper':
+				return {"SaturationP_bars": satP, "FluidMass_grams": flmass, "FluidProportion_wt": flsystem_wtper,
+						"H2O_fl_wt": flH2O, "CO2_fl_wt": flCO2}
+			elif mode == 'molfrac':
+				return {"SaturationP_bars": satP, "FluidMass_grams": flmass, "FluidProportion_wt": flsystem_wtper,
+						"XH2O_fl": flH2O, "XCO2_fl": flCO2}
 
 	def calculate_isobars_and_isopleths(self, sample, temperature, pressure_list, isopleth_list=None, print_status=False, **kwargs):
 		"""
@@ -3523,7 +3574,7 @@ class MagmaSat(Model):
 		if has_isopleths == True:
 			return isobars_df, isopleths_df
 		if has_isopleths == False:
-			return isobars_df, None
+			return isobars_df, None #TODO should this just return isobars_df? Currently this requires two items to unpack, I think?
 
 	def calculate_degassing_paths(self, sample, temperature, system='closed', init_vapor='None'):
 		"""
@@ -3619,7 +3670,7 @@ class MagmaSat(Model):
 				sample = bulk_comp_orig
 				feasible = melts.set_bulk_composition(sample)
 				closed_degassing_df = pd.DataFrame(list(zip(pressure, H2Oliq, CO2liq, H2Ofl, CO2fl, fluid_wtper)),
-											columns =['pressure', 'H2Oliq', 'CO2liq', 'H2Ofl', 'CO2fl', 'fluid_wtper'])
+											columns =['pressure', 'H2O_liq', 'CO2_liq', 'H2O_fl', 'CO2_fl', 'FluidProportion_wt'])
 
 				return closed_degassing_df
 
@@ -3689,7 +3740,7 @@ class MagmaSat(Model):
 				feasible = melts.set_bulk_composition(sample)
 				fl_wtper = data["FluidProportion_wtper"]
 				exsolved_degassing_df = pd.DataFrame(list(zip(pressure, H2Oliq, CO2liq, H2Ofl, CO2fl, fluid_wtper)),
-											columns =['pressure', 'H2Oliq', 'CO2liq', 'H2Ofl', 'CO2fl', 'fluid_wtper'])
+											columns =['pressure', 'H2O_liq', 'CO2_liq', 'H2O_fl', 'CO2_fl', 'FluidProportion_wt'])
 
 				return exsolved_degassing_df
 
@@ -3748,7 +3799,7 @@ class MagmaSat(Model):
 			sample = bulk_comp_orig
 			feasible = melts.set_bulk_composition(sample) #this needs to be reset always!
 			open_degassing_df = pd.DataFrame(list(zip(pressure, H2Oliq, CO2liq, H2Ofl, CO2fl, fluid_wtper)),
-										columns =['pressure', 'H2Oliq', 'CO2liq', 'H2Ofl', 'CO2fl', 'fluid_wtper'])
+										columns =['pressure', 'H2O_liq', 'CO2_liq', 'H2O_fl', 'CO2_fl', 'FluidProportion_wt'])
 
 			return open_degassing_df
 
