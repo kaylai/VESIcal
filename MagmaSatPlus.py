@@ -1615,6 +1615,138 @@ class fugacity_KJ81_h2o(FugacityModel):
 			results['temperature'] = (parameters['temperature']<1323)
 		return results
 
+
+def fugacity_ZD09_co2(FugacityModel):
+	""" Implementation of the Zhang and Duan (2009) fugacity model for pure CO2
+	fluids."""
+
+	def fugacity(self,pressure,temperature,X_fluid=1.0,**kwargs):
+		""" Calculates the fugacity of a pure CO2 fluid, or a mixed fluid assuming
+		ideal mixing. Implements eqn (14) of Zhang and Duan (2009).
+
+		Paramters
+		---------
+		pressure 	float
+			Pressure in bars
+		temperature 	float
+			Temperature in K
+		X_fluid 	float
+			Mole fraction of CO2 in the fluid. Default is 1.0.
+
+		Returns
+		-------
+		float
+			Fugacity of CO2, standard state 1 bar.
+		"""
+
+		P = pressure
+		T = temperature
+
+		a = np.array([0.0,
+	                  2.95177298930e-2,
+	                  -6.33756452413e3,
+	                  -2.75265428882e5,
+	                  1.29128089283e-3,
+	                  -1.45797416153e2,
+	                  7.65938947237e4,
+	                  2.58661493537e-6,
+	                  0.52126532146,
+	                  -1.39839523753e2,
+	                  -2.36335007175e-8,
+	                  5.35026383543e-3,
+	                  -0.27110649951,
+	                  2.50387836486e4,
+	                  0.73226726041,
+	                  1.5483335997e-2])
+	    e = 235.0
+	    s = 3.79
+
+	    Pm = 3.0636*P*s**3/e
+	    Tm = 154*T/e
+	    Vm = fsolve(zhang_Vm,200,args=(P,T))
+
+	    S1 = ((a[1]+a[2]/Tm**2+a[3]/Tm**3)/Vm+
+	          (a[4]+a[5]/Tm**2+a[6]/Tm**3)/(2*Vm**2)+
+	          (a[7]+a[8]/Tm**2+a[9]/Tm**3)/(4*Vm**4)+
+	          (a[10]+a[11]/Tm**2+a[12]/Tm**3)/(5*Vm**5)+
+	          (a[13]/(2*a[15]*Tm**3)*(a[14]+1-(a[14]+1+a[15]/Vm**2)*
+	           np.exp(-a[15]/Vm**2)))
+	         )
+
+	    Z = Pm*Vm/(0.08314*Tm)
+
+	    lnfc = Z - 1 - np.log(Z) + S1
+
+	    return P*np.exp(lnfc)
+
+	def Vm(Vm,P,T):
+		""" Function to use for solving for the parameter Vm, defined by eqn (8) of
+		Zhang and Duan (2009). Called by scipy.fsolve in the fugacity method.
+
+		Parameters
+		----------
+		Vm 	float
+			Guessed value of Vm
+		P 	float
+			Pressure in bars
+		T 	float
+			Temperature in K
+
+		Returns
+		-------
+		float
+			Difference between (rearranged) LHS and RHS of eqn (8) of Zhang and Duan (2009).
+		"""
+	    Pm = 3.0636*P*3.79**3/235.0
+	    Tm = 154*T/235.0
+	    a = np.array([0.0,
+	                  2.95177298930e-2,
+	                  -6.33756452413e3,
+	                  -2.75265428882e5,
+	                  1.29128089283e-3,
+	                  -1.45797416153e2,
+	                  7.65938947237e4,
+	                  2.58661493537e-6,
+	                  0.52126532146,
+	                  -1.39839523753e2,
+	                  -2.36335007175e-8,
+	                  5.35026383543e-3,
+	                  -0.27110649951,
+	                  2.50387836486e4,
+	                  0.73226726041,
+	                  1.5483335997e-2])
+
+	    return ((1+(a[1]+a[2]/Tm**2+a[3]/Tm**3)/Vm+
+	             (a[4]+a[5]/Tm**2+a[6]/Tm**3)/Vm**2+
+	             (a[7]+a[8]/Tm**2+a[9]/Tm**3)/Vm**4)*0.08314*Tm/Pm - Vm
+	            )
+
+	def check_calibration_range(self,parameters):
+		"""Checks whether supplied parameters and calculated results are within the calibration range
+		of the model. Designed for use with the Calculate methods.
+
+		Parameters supported currently are pressure and temperature.
+
+		Parameters
+		----------
+		parameters 		dictionary
+			Parameters to check calibration range for, the parameter name should be given as the key, and
+			its value as the value.
+
+		Returns
+		-------
+		dictionary
+			Dictionary with parameter names as keys. The values are booleans
+			representing whether the parameter is in the calibrated range, or not.
+		"""
+		results = {}
+		if 'pressure' in parameters.keys():
+			results['pressure'] = (parameters['pressure']<1e5)&(parameters['pressure']>1)
+		if 'temperature' in parameters.keys():
+			results['temperature'] = (parameters['temperature']<2573)&(parameters['temperature']>473)
+		return results
+
+
 #---------------ACTVITY MODELS-------------------------------#
 
 
@@ -2396,7 +2528,7 @@ class DixonWater(Model):
 		"""
 		return self.calculate_dissolved_volatiles(pressure=pressure,sample=sample,**kwargs) - sample['H2O']
 
-	def check_calibration_range(self,**kwargs):
+	def check_calibration_range(self,parameters,**kwargs):
 		""" Checks whether supplied parameters and calculated results are within the calibration range
 		of the model. Designed for use with the Calculate methods. Calls the check_calibration_range
 		functions for the fugacity and activity models.
@@ -2650,7 +2782,7 @@ class IaconoMarzianoWater(Model):
 
 		return NBO/O
 
-	def check_calibration_range(self,**kwargs):
+	def check_calibration_range(self,parameters,**kwargs):
 		""" Checks whether supplied parameters and calculated results are within the calibration range
 		of the model. Designed for use with the Calculate methods. Calls the check_calibration_range
 		functions for the fugacity and activity models.
@@ -2797,8 +2929,8 @@ class IaconoMarzianoCarbon(Model):
 
 
 	def calculate_equilibrium_fluid_comp(self,pressure,temperature,sample,**kwargs):
-		""" Returns 1.0 if a pure H2O fluid is saturated.
-		Returns 0.0 if a pure H2O fluid is undersaturated.
+		""" Returns 1.0 if a pure CO2 fluid is saturated.
+		Returns 0.0 if a pure CO2 fluid is undersaturated.
 
 		Parameters
 		----------
@@ -2812,7 +2944,7 @@ class IaconoMarzianoCarbon(Model):
 		Returns
 		-------
 		float
-			1.0 if H2O-fluid saturated, 0.0 otherwise.
+			1.0 if CO2-fluid saturated, 0.0 otherwise.
 		"""
 		if pressure > self.calculate_saturation_pressure(temperature=temperature,sample=sample,**kwargs):
 			return 0.0
@@ -2894,7 +3026,7 @@ class IaconoMarzianoCarbon(Model):
 
 		return NBO/O
 
-	def check_calibration_range(self,**kwargs):
+	def check_calibration_range(self,parameters,**kwargs):
 		""" Checks whether supplied parameters and calculated results are within the calibration range
 		of the model. Designed for use with the Calculate methods. Calls the check_calibration_range
 		functions for the fugacity and activity models.
@@ -2928,20 +3060,65 @@ class IaconoMarzianoCarbon(Model):
 
 class EguchiCarbon(Model):
 	"""
+	Implementation of the Eguchi and Dasgupta (2018) CO2 solubility model for andesitic melts.
+	Uses the Zhang and Duan (2009) CO2 EOS for fugacity calculations, assuming a pure CO2 fluid,
+	or ideal mixing for mixed fluids.
 	"""
 
 	def __init__(self):
 		self.set_volatile_species('CO2')
-		self.set_fugacity_model(fugacity_KJ81_co2())
-		print("Warning: Eguchi and Dasgupta model should use the Zhang and Duan EOS.")
+		self.set_fugacity_model(fugacity_ZD09_co2())
 		self.set_activity_model(activity_idealsolution())
 
-	def preprocess_sample(self,sample):
-		return sample
+	def preprocess_sample(self,sample,ferric_total=0.15):
+		""" Returns normalized sample composition, with ferric iron. Where a sample
+		already contains ferric iron, the composition will be normalized to 100 wt%
+		(excluding H2O and CO2). Where a sample contains only FeO, ferric iron will
+		be calculated using the ferric/total iron ratio provided.
+
+		Parameters
+		----------
+		sample 	pandas Series
+			Major element oxides in wt%.
+		ferric_total	float
+			Mole ratio of ferric to total iron to be used
+			for calculating Fe2O3 and FeO when only FeO is
+			provided. Default is 0.15.
+
+		Returns
+		-------
+		pandas Series
+			Normalized major element oxides in wt%.
+		"""
+		_sample = sample.copy()
+		if 'Fe2O3' not in _sample.index:
+			Fe_t = _sample['FeO']/oxideMass['FeO']
+			Fe3 = ferric_total*Fe_t
+			Fe2 = Fe_t - Fe3
+			_sample['FeO'] = Fe2*oxideMass['FeO']
+		    _sample['Fe2O3'] = Fe3*oxideMass['Fe2O3']/2
+
+		return normalize_AdditionalVolatiles(_sample)
 
 	def calculate_dissolved_volatiles(self,pressure,temperature,sample,X_fluid=1.0,**kwargs):
 		"""
-		WRITE STUFF
+		Calculates the dissolved (total) CO2 using eqs (9) and (10) of Eguchi and Dasgupta (2018).
+
+		Parameters
+		----------
+		pressure 	float
+			Pressure in bars
+		temperature 	float
+			Temperature in K
+		sample 	pandas Series
+			Major element oxides in wt%.
+		X_fluid 	float
+			The mole fraction of CO2 in the fluid.
+
+		Returns
+		-------
+		float
+			Dissolved CO2 concentration.
 		"""
 		XCO3 = self.Xi_melt(pressure=pressure,temperature=temperature,sample=sample,X_fluid=X_fluid,species='CO3')
 		XCO2 = self.Xi_melt(pressure=pressure,temperature=temperature,sample=sample,X_fluid=X_fluid,species='CO2')
@@ -2955,8 +3132,22 @@ class EguchiCarbon(Model):
 
 
 	def calculate_equilibrium_fluid_comp(self,pressure,temperature,sample,**kwargs):
-		"""
-		WRITE STUFF
+		""" Returns 1.0 if a pure CO2 fluid is saturated.
+		Returns 0.0 if a pure CO2 fluid is undersaturated.
+
+		Parameters
+		----------
+		pressure 	float
+			The total pressure of the system in bars.
+		temperature 	float
+			The temperature of the system in K.
+		sample 		pandas Series
+			Major element oxides in wt% (including H2O).
+
+		Returns
+		-------
+		float
+			1.0 if CO2-fluid saturated, 0.0 otherwise.
 		"""
 		satP = self.calculate_saturation_pressure(temperature=temperature,sample=sample,X_fluid=1.0,**kwargs)
 		if pressure > satP:
@@ -2966,29 +3157,72 @@ class EguchiCarbon(Model):
 
 	def calculate_saturation_pressure(self,temperature,sample,X_fluid=1.0,**kwargs):
 		"""
-		WRITE STUFF
+		Calculates the pressure at which a pure CO2 fluid is saturated, for the given sample
+		composition and CO2 concentration. Calls the scipy.root_scalar routine, which makes
+		repeated called to the calculate_dissolved_volatiles method.
+
+		Parameters
+		----------
+		temperature 	float
+			The temperature of the system in K.
+		sample 		pandas Series
+			Major element oxides in wt% (including CO2).
+		X_fluid 	float
+			The mole fraction of H2O in the fluid. Default is 1.0.
+
+		Returns
+		-------
+		float
+			Calculated saturation pressure in bars.
 		"""
 		return root_scalar(self.root_saturation_pressure,x0=1000.0,x1=2000.0,args=(temperature,sample,X_fluid,kwargs)).root
 
 	def root_saturation_pressure(self,pressure,temperature,sample,X_fluid,kwargs):
+		""" Function called by scipy.root_scalar when finding the saturation pressure using
+		calculate_saturation_pressure.
+
+		Parameters
+		----------
+		pressure 	float
+			Pressure guess in bars
+		temperature 	float
+			The temperature of the system in K.
+		sample 		pandas Series
+			Major elements in wt% (normalized to 100%), including CO2.
+		kwargs 		dictionary
+			Additional keyword arguments supplied to calculate_saturation_pressure. Might be required for
+			the fugacity or activity models.
+
+		Returns
+		-------
+		float
+			The differece between the dissolved CO2 at the pressure guessed, and the CO2 concentration
+			passed in the sample variable.
+		"""
 		return sample['CO2'] - self.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,sample=sample,X_fluid=X_fluid,**kwargs)
 
 	def Xi_melt(self,pressure,temperature,sample,species,X_fluid=1.0,**kwargs):
 		"""
-		Equation (9) in Eguchi and Dasgupta (2018). Calculates the mole fraction
-		of dissolved molecular CO2 or carbonate CO3(2-).
+		Calculates the mole fraction of dissolved molecular CO2 or carbonate CO3(2-), using
+		eqn (9) of Eguchi and Dasgupta (2018).
 
 		Parameters
 		----------
-		P (float):  Pressure (bar)
-		T (float):  Temperature (K)
-		MajorElements (pandas Series):  Major Element Oxides.
-		species (str):  Which species to calculate, molecular CO2 or carbonate ion.
+		pressure	float
+			Pressure in bars.
+		temperature 	float
+			Temperature in K.
+		sample 		pandas Series
+			Major element oxides in wt%.
+		species		str
+			Which species to calculate, molecular CO2 'CO2' or carbonate ion 'CO3'.
+		X_fluid 	float
+			The mole fraction of CO2 in the fluid. Default is 1.0.
 
 		Returns
 		-------
-		Xi (float):     Mole fraction of selected species in the melt
-
+		float
+			Mole fraction of selected species in the melt
 		"""
 
 		if species == 'CO3':
@@ -3010,9 +3244,8 @@ class EguchiCarbon(Model):
 			A_Na2O = 0
 			A_K2O = 0
 		else:
-			print("WRITE CODE TO RAISE AN ERROR!")
+			return InputError("Species variable must be either 'CO2' or 'CO3'.")
 		R = 8.314
-
 
 		# Calculate NBO term
 		cations = wtpercentOxides_to_molSingleO(sample)
@@ -3048,8 +3281,39 @@ class EguchiCarbon(Model):
 
 		return np.exp(lnXi)
 
-	def check_calibration_range(self,**kwargs):
-		return 0
+	def check_calibration_range(self,parameters,**kwargs):
+		""" Checks whether supplied parameters and calculated results are within the calibration range
+		of the model. Designed for use with the Calculate methods. Calls the check_calibration_range
+		functions for the fugacity and activity models.
+
+		Parameters supported currently are pressure and temperature.
+
+		Parameters
+		----------
+		parameters 		dictionary
+			Parameters to check calibration range for, the parameter name should be given as the key, and
+			its value as the value.
+
+		Returns
+		-------
+		dictionary
+			Dictionary with parameter names as keys. The values are dictionarys, which have the model component
+			as the keys, and bool values, indicating whether the parameter is within the calibration range.
+		"""
+		results = {}
+		if 'pressure' in parameters.keys():
+			pressure_results = {'Eguchi Model': (parameters['pressure']>500)&(parameters['pressure']<50000),
+								'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['pressure'],
+								'Activity Model': self.activity_model.check_calibration_range(parameters)['pressure']}
+			results['pressure'] = pressure_results
+
+		if 'temperature' in parameters.keys():
+			temperature_results = {'Eguchi Model': (parameters['temperature']>950+273.15)&(parameters['temperature']<1600+273.15),
+									'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['temperature'],
+									'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
+			results['temperature'] = temperature_results
+
+		return results
 
 class AllisonCarbon(Model):
 	"""
