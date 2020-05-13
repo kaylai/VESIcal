@@ -241,6 +241,89 @@ def wtpercentOxides_to_formulaWeight(sample):
         FW += cations[cation]*CationMass[cations_to_oxides[cation]]
     return FW
 
+#----------DATA TRANSFORMATION FOR PANDAS DATAFRAMES---------#
+def fluid_molfrac_to_wt(data, H2O_colname='XH2O_fl', CO2_colname='XCO2_fl'):
+    """
+    Takes in a pandas dataframe object and converts only the fluid composition from mole fraction to wt%, leaving the melt composition
+    in tact. The user must specify the names of the XH2O_fl and XCO2_fl columns.
+
+    Parameters
+    ----------
+    data: pandas DataFrame
+        DataFrame containing columns for H2O and CO2 concentrations in the fluid.
+
+    H2O_colname: str
+        OPTIONAL. The default value is 'XH2O_fl', which is what is returned by ExcelFile() core calculations.
+        String containing the name of the column corresponding to the H2O concentration in the fluid, in mol fraction.
+
+    CO2_colname: str
+        OPTIONAL. The default value is 'XCO2_fl', which is what is returned by ExcelFile() core calculations.
+        String containing the name of the column corresponding to the CO2 concentration in the fluid, in mol fraction.
+
+    Returns
+    -------
+    pandas DataFrame
+        Original data passed plus newly calculated values are returned.
+    """
+    convData = data.copy()
+
+    MPO_H2O_list = []
+    MPO_CO2_list = []
+    for index, row in convData.iterrows():
+        MPO_H2O_list.append(row[H2O_colname] * oxideMass["H2O"])
+        MPO_CO2_list.append(row[CO2_colname] * oxideMass["CO2"])
+
+    convData["MPO_H2O"] = MPO_H2O_list
+    convData["MPO_CO2"] = MPO_CO2_list
+    convData["H2O_fl_wt"] = 100 * convData["MPO_H2O"] / (convData["MPO_H2O"] + convData["MPO_CO2"]) 
+    convData["CO2_fl_wt"] = 100 * convData["MPO_CO2"] / (convData["MPO_H2O"] + convData["MPO_CO2"]) 
+
+    del convData["MPO_H2O"]
+    del convData["MPO_CO2"]
+
+    return convData
+
+def fluid_wt_to_molfrac(data, H2O_colname='H2O_fl_wt', CO2_colname='CO2_fl_wt'):
+    """
+    Takes in a pandas dataframe object and converts only the fluid composition from wt% to mole fraction, leaving the melt composition
+    in tact. The user must specify the names of the H2O_fl_wt and CO2_fl_wt columns.
+
+    Parameters
+    ----------
+    data: pandas DataFrame
+        DataFrame containing columns for H2O and CO2 concentrations in the fluid.
+        
+    H2O_colname: str
+        OPTIONAL. The default value is 'H2O_fl_wt', which is what is returned by ExcelFile() core calculations.
+        String containing the name of the column corresponding to the H2O concentration in the fluid, in wt%.
+
+    CO2_colname: str
+        OPTIONAL. The default value is 'CO2_fl_wt', which is what is returned by ExcelFile() core calculations.
+        String containing the name of the column corresponding to the CO2 concentration in the fluid, in wt%.
+
+    Returns
+    -------
+    pandas DataFrame
+        Original data passed plus newly calculated values are returned.
+    """
+    convData = data.copy()
+
+    MPO_H2O_list = []
+    MPO_CO2_list = []
+    for index, row in convData.iterrows():
+        MPO_H2O_list.append(row[H2O_colname] / oxideMass["H2O"])
+        MPO_CO2_list.append(row[CO2_colname] / oxideMass["CO2"])
+
+    convData["MPO_H2O"] = MPO_H2O_list
+    convData["MPO_CO2"] = MPO_CO2_list
+    convData["XH2O_fl"] = convData["MPO_H2O"] / (convData["MPO_H2O"] + convData["MPO_CO2"]) 
+    convData["XCO2_fl"] = convData["MPO_CO2"] / (convData["MPO_H2O"] + convData["MPO_CO2"]) 
+
+    del convData["MPO_H2O"]
+    del convData["MPO_CO2"]
+
+    return convData
+
 #----------DEFINE SOME NORMALIZATION METHODS-----------#
 
 def normalize(sample):
@@ -780,7 +863,7 @@ class ExcelFile(object):
 
         return fluid_data
 
-    def calculate_saturation_pressure(self, temperature, mode='molfrac', print_status=False): #TODO fix weird printing
+    def calculate_saturation_pressure(self, temperature, print_status=False): #TODO fix weird printing
         """
         Calculates the saturation pressure of multiple sample compositions in the ExcelFile.
 
@@ -794,10 +877,6 @@ class ExcelFile(object):
 
         print_status: bool
             OPTIONAL: Default is False. If set to True, progress of the calculations will be printed to the terminal.
-
-        mode: str
-            OPTIONAL. Default value is 'molfrac', which returns the fluid composition in mole fraction (XH2O=1 is a pure 
-            H2O fluid, XH2O=0 is a pure CO2 fluid). Passing 'wtper' returns the fluid composition in wt% oxides.
 
         Returns
         -------
@@ -900,15 +979,9 @@ class ExcelFile(object):
             flmass.append(fluid_mass)
             flsystem_wtper.append(100 * fluid_mass / (fluid_mass +
                                   melts.get_mass_of_phase(xmlout, phase_name='Liquid')))
-
-            if mode == 'wtper':
-                flcomp = melts.get_composition_of_phase(xmlout, phase_name='Fluid')
-                flH2O.append(flcomp["H2O"])
-                flCO2.append(flcomp["CO2"])
-            if mode == 'molfrac':
-                flcomp = melts.get_composition_of_phase(xmlout, phase_name='Fluid', mode='component')
-                flH2O.append(flcomp['Water'])
-                flCO2.append(flcomp['Carbon Dioxide'])
+            flcomp = melts.get_composition_of_phase(xmlout, phase_name='Fluid', mode='component')
+            flH2O.append(flcomp['Water'])
+            flCO2.append(flcomp['Carbon Dioxide'])
 
             if print_status == True:
                 print(index)
@@ -916,12 +989,8 @@ class ExcelFile(object):
                 print("Fluid mass = " + str(fluid_mass))
                 print("\n")
 
-        if mode == 'wtper':
-            satp_data["H2O_fl_wt"] = flH2O
-            satp_data["CO2_fl_wt"] = flCO2
-        if mode == 'molfrac':
-            satp_data["XH2O_fl"] = flH2O
-            satp_data["XCO2_fl"] = flCO2
+        satp_data["XH2O_fl"] = flH2O
+        satp_data["XCO2_fl"] = flCO2
         satp_data["SaturationP_bars"] = satP
         satp_data["FluidMass_grams"] = flmass
         satp_data["FluidSystem_wt"] = flsystem_wtper
@@ -3925,7 +3994,7 @@ class MagmaSat(Model):
         if verbose == True:
             return {'H2O': fluid_comp_H2O, 'CO2': fluid_comp_CO2, 'FluidMass_grams': fluid_mass, 'FluidProportion_wt': flsystem_wtper}
 
-    def calculate_saturation_pressure(self, sample, temperature, mode='molfrac', verbose=False):
+    def calculate_saturation_pressure(self, sample, temperature, verbose=False):
         """
         Calculates the saturation pressure of a sample composition.
 
@@ -3936,10 +4005,6 @@ class MagmaSat(Model):
 
         temperature: flaot or int
             Temperature of the sample in degrees C.
-
-        mode: str
-            OPTIONAL. Default value is 'molfrac', which returns the fluid composition in mole fraction (XH2O=1 is a pure 
-            H2O fluid, XH2O=0 is a pure CO2 fluid). Passing 'wtper' returns the fluid composition in wt% oxides.
 
         verbose: bool
             OPTIONAL: Default is False. If set to False, only the saturation pressure is returned. If set to True,
@@ -4007,26 +4072,17 @@ class MagmaSat(Model):
         satP = pressureMPa*10 #convert pressure to bars
         flmass = fluid_mass
         flsystem_wtper = 100 * fluid_mass / (fluid_mass + melts.get_mass_of_phase(xmlout, phase_name='Liquid'))
-        if mode == 'wtper':
-            flcomp = melts.get_composition_of_phase(xmlout, phase_name='Fluid')
-            flH2O = flcomp["H2O"] #TODO - having issue here with plot degassing paths where no H2O in fluid... check if this is possible and should be mitigated here
-            flCO2 = flcomp["CO2"]
-        if mode == 'molfrac':
-            flcomp = melts.get_composition_of_phase(xmlout, phase_name='Fluid', mode='component')
-            flH2O = flcomp['Water']
-            flCO2 = flcomp['Carbon Dioxide']
+        flcomp = melts.get_composition_of_phase(xmlout, phase_name='Fluid', mode='component')
+        flH2O = flcomp['Water']
+        flCO2 = flcomp['Carbon Dioxide']
 
         feasible = melts.set_bulk_composition(bulk_comp_orig) #this needs to be reset always!
 
         if verbose == False:
             return satP
         elif verbose == True:
-            if mode == 'wtper':
-                return {"SaturationP_bars": satP, "FluidMass_grams": flmass, "FluidProportion_wt": flsystem_wtper,
-                        "H2O_fl_wt": flH2O, "CO2_fl_wt": flCO2}
-            elif mode == 'molfrac':
-                return {"SaturationP_bars": satP, "FluidMass_grams": flmass, "FluidProportion_wt": flsystem_wtper,
-                        "XH2O_fl": flH2O, "XCO2_fl": flCO2}
+            return {"SaturationP_bars": satP, "FluidMass_grams": flmass, "FluidProportion_wt": flsystem_wtper,
+                    "XH2O_fl": flH2O, "XCO2_fl": flCO2}
 
     def calculate_isobars_and_isopleths(self, sample, temperature, pressure_list, isopleth_list=None, print_status=False, **kwargs):
         """
