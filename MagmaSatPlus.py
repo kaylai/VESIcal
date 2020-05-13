@@ -4009,7 +4009,7 @@ class MagmaSat(Model):
         verbose: bool
             OPTIONAL: Default is False. If set to False, only the saturation pressure is returned. If set to True,
             the saturation pressure, mass of fluid in grams, proportion of fluid in wt%, and H2O and CO2 concentrations
-            in the fluid are all returned in a dict.
+            in the fluid in mole fraction are all returned in a dict.
 
         Returns
         -------
