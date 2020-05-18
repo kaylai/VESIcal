@@ -544,6 +544,18 @@ class ExcelFile(object):
         self.data = data
 
     def preprocess_sample(self,sample):
+        """
+        Instantiates MELTS and adds 0.0 values to any oxide data not passed.
+
+        Parameters
+        ----------
+        sample: pandas DataFrame
+            self.data composition of samples in wt% oxides
+
+        Returns
+        -------
+        pandas DataFrame
+        """
         #--------------MELTS preamble---------------#
         # instantiate thermoengine equilibrate MELTS instance
         melts = equilibrate.MELTSmodel('1.2.0')
@@ -3653,6 +3665,19 @@ class MagmaSat(Model):
             #-------------------------------------------#
 
     def preprocess_sample(self,sample): #TODO test this by passing weird shit to sample
+    """
+    Returns sample with 0.0 values for any oxides not passed.
+
+    Parameters
+    ----------
+    sample: dictionary
+        Sample composition in wt% oxides
+
+    Returns
+    -------
+    dictionary
+        Sample composition in wt% oxides
+    """
         oxides = self.oxides
         for oxide in oxides:
             if oxide in sample.keys():
