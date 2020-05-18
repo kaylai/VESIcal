@@ -4037,7 +4037,7 @@ class MixedFluids(Model):
                 return isobars
 
 
-    def calculate_degassing_path(self,sample,pressure='saturation',fractionate_vapor=1.0,final_pressure=100.0,
+    def calculate_degassing_path(self,sample,pressure='saturation',fractionate_vapor=0.0,final_pressure=100.0,
                                     steps=101,return_dfs=True,**kwargs):
         """
         Calculates the dissolved volatiles in a progressively degassing sample.
@@ -4052,8 +4052,8 @@ class MixedFluids(Model):
             pressure values in the list or array will define the degassing path, i.e. final_pressure and steps
             variables will be ignored. Units are bars.
         fractionate_vapor     float
-            What proportion of vapor should be removed at each step. If 1.0 (default), the degassing path will
-            correspond to open-system degassing. If 0.0, the degassing path will correspond to closed system
+            What proportion of vapor should be removed at each step. If 0.0 (default), the degassing path will
+            correspond to closed-system degassing. If 1.0, the degassing path will correspond to open-system
             degassing.
         final_pressure         float
             The final pressure on the degassing path, in bars. Ignored if a list or numpy array is passed as the
@@ -4781,7 +4781,7 @@ class MagmaSat(Model):
         if has_isopleths == False:
             return isobars_df, None #TODO should this just return isobars_df? Currently this requires two items to unpack, I think?
 
-    def calculate_degassing_path(self, sample, temperature, pressure='saturation', fractionate_vapor=1.0, init_vapor=0.0):
+    def calculate_degassing_path(self, sample, temperature, pressure='saturation', fractionate_vapor=0.0, init_vapor=0.0):
         #TODO check if fractionate_vapor is amount of vapor retained or lost at each P step
         """
         Calculates degassing path for one sample
@@ -4803,11 +4803,11 @@ class MagmaSat(Model):
             occur.
 
         fractionate_vapor: float
-            OPTIONAL. Proportion of vapor retained at each pressure step.
-            Default value is 1.0 (completely closed-system degassing). Specifies the type of calculation performed, either
-            closed system (1.0) or open system (0.0) degassing. If any value between >0.0 is chosen, user can also specify the
-            'init_vapor' argument (see below). A value in between 0 and 1 will retain that proportion of vapor at each step.
-            For example, for a value of 0.2, the calculation will remove 80% of the vapor and retain 20% of the vapor at each
+            OPTIONAL. Proportion of vapor removed at each pressure step.
+            Default value is 0.0 (completely closed-system degassing). Specifies the type of calculation performed, either
+            closed system (0.0) or open system (1.0) degassing. If any value between <1.0 is chosen, user can also specify the
+            'init_vapor' argument (see below). A value in between 0 and 1 will remove that proportion of vapor at each step.
+            For example, for a value of 0.2, the calculation will remove 20% of the vapor and retain 80% of the vapor at each
             pressure step.
 
         init_vapor: float
@@ -4841,7 +4841,7 @@ class MagmaSat(Model):
         P_array = -np.sort(-P_array)
         fl_wtper = data["FluidProportion_wt"]
 
-        if fractionate_vapor == 1 or fractionate_vapor == 1.0:
+        if fractionate_vapor == 0 or fractionate_vapor == 0.0: #closed-system
             while fl_wtper <= init_vapor:
                 output = melts.equilibrate_tp(temperature, SatP_MPa)
                 (status, temperature, p, xmlout) = output[0]
@@ -4950,11 +4950,11 @@ class MagmaSat(Model):
                     fluid_wtper.append(fl_wtper)
 
                     try:
-                        bulk_comp["H2O"] = liq_comp["H2O"] + (bulk_comp["H2O"] - liq_comp["H2O"]) * fractionate_vapor
+                        bulk_comp["H2O"] = liq_comp["H2O"] + (bulk_comp["H2O"] - liq_comp["H2O"]) * (1-fractionate_vapor)
                     except:
                         bulk_comp["H2O"] = 0
                     try:
-                        bulk_comp["CO2"] = liq_comp["CO2"] + (bulk_comp["CO2"] - liq_comp["CO2"]) * fractionate_vapor
+                        bulk_comp["CO2"] = liq_comp["CO2"] + (bulk_comp["CO2"] - liq_comp["CO2"]) * (1-fractionate_vapor)
                     except:
                         bulk_comp["CO2"] = 0
                     bulk_comp = normalize(bulk_comp)
