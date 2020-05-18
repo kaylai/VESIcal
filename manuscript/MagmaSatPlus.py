@@ -5,7 +5,6 @@
 #-----------------IMPORTS-----------------#
 import pandas as pd
 import numpy as np
-from thermoengine import equilibrate
 import matplotlib.pyplot as plt
 from abc import ABC, abstractmethod
 from scipy.optimize import root_scalar
@@ -129,27 +128,34 @@ def wtpercentOxides_to_molCations(oxides):
 
     Parameters
     ----------
-    oxides      pandas Series or dictionary
+    oxides         dict or pandas Series
         Major element oxides in wt%.
 
     Returns
     -------
-    pandas Series
+    dict or pandas Series
         Molar proportions of cations, normalised to 1.
     """
     molCations = {}
+    _oxides = oxides.copy()
     if type(oxides) == dict:
-        _oxides = pd.Series(oxides.copy())
-    elif type(oxides) != pd.core.series.Series:
-        return InputError("The composition input must be a pandas Series or dictionary.")
+        oxideslist = list(_oxides.keys())
+    elif type(oxides) == pd.core.series.Series:
+        oxideslist = list(_oxides.index)
     else:
-        _oxides = oxides.copy()
-    for ox in _oxides.index:
+        raise InputError("The composition input must be a pandas Series or dictionary.")
+    for ox in oxideslist:
         cation = oxides_to_cations[ox]
         molCations[cation] = CationNum[ox]*_oxides[ox]/oxideMass[ox]
-    molCations = pd.Series(molCations)
 
-    molCations = molCations/molCations.sum()
+    if type(oxides) == pd.core.series.Series:
+        molCations = pd.Series(molCations)
+        molCations = molCations/molCations.sum()
+    else:
+        total = np.sum(list(molCations.values()))
+        for ox in oxideslist:
+            cation = oxides_to_cations[ox]
+            molCations[cation] = molCations[cation]/total
 
     return molCations
 
@@ -159,26 +165,33 @@ def wtpercentOxides_to_molOxides(oxides):
 
     Parameters
     ----------
-    oxides      pandas Series or dictionary
+    oxides         dict or pandas Series
         Major element oxides in wt%
 
     Returns
     -------
-    pandas Series
+    dict or pandas Series
         Molar proportions of major element oxides, normalised to 1.
     """
     molOxides = {}
+    _oxides = oxides.copy()
     if type(oxides) == dict:
-        _oxides = pd.Series(oxides.copy())
-    elif type(oxides) != pd.core.series.Series:
-        return InputError("The composition input must be a pandas Series or dictionary.")
+        oxideslist = list(oxides.keys())
+    elif type(oxides) == pd.core.series.Series:
+        oxideslist = list(oxides.index)
     else:
-        _oxides = oxides.copy()
-    for ox in _oxides.index:
-        molOxides[ox] = _oxides[ox]/oxideMass[ox]
-    molOxides = pd.Series(molOxides)
+        raise InputError("The composition input must be a pandas Series or dictionary.")
 
-    molOxides = molOxides/molOxides.sum()
+    for ox in oxideslist:
+        molOxides[ox] = _oxides[ox]/oxideMass[ox]
+
+    if type(oxides) == pd.core.series.Series:
+        molOxides = pd.Series(molOxides)
+        molOxides = molOxides/molOxides.sum()
+    else:
+        total = np.sum(list(molOxides.values()))
+        for ox in oxideslist:
+            molOxides[ox] = molOxides[ox]/total
 
     return molOxides
 
@@ -188,28 +201,36 @@ def wtpercentOxides_to_molSingleO(oxides):
 
     Parameters
     ----------
-    oxides      pandas Series or dictionary
+    oxides         dict or pandas Series
         Major element oxides in wt%
 
     Returns
     -------
-    pandas Series
+    dict or pandas Series
         The chemical formula of the composition, on a single oxygen basis. Each element is
         a separate entry in the Series.
     """
     molCations = {}
+    _oxides = oxides.copy()
     if type(oxides) == dict:
-        _oxides = pd.Series(oxides.copy())
-    elif type(oxides) != pd.core.series.Series:
-        return InputError("The composition input must be a pandas Series or dictionary.")
+        oxideslist = list(oxides.keys())
+    elif type(oxides) == pd.core.series.Series:
+        oxideslist = list(oxides.index)
     else:
-        _oxides = oxides
-    for ox in _oxides.index:
+        raise InputError("The composition input must be a pandas Series or dictionary.")
+
+    for ox in oxideslist:
         cation = oxides_to_cations[ox]
         molCations[cation] = CationNum[ox]/OxygenNum[ox]*oxides[ox]/oxideMass[ox]
-    molCations = pd.Series(molCations)
 
-    molCations = molCations/molCations.sum()
+    if type(oxides) == pd.core.series.Series:
+        molCations = pd.Series(molCations)
+        molCations = molCations/molCations.sum()
+    else:
+        total = np.sum(list(molCations.values()))
+        for ox in oxideslist:
+            cation = oxides_to_cations[ox]
+            molCations[cation] = molCations[cation]/total
 
     return molCations
 
@@ -217,7 +238,7 @@ def wtpercentOxides_to_formulaWeight(sample):
     """ Converts major element oxides in wt% to the formula weight (on a 1 oxygen basis).
     Parameters
     ----------
-    sample  pandas Series
+    sample     dict or pandas Series
         Major element oxides in wt%.
 
     Returns
@@ -228,7 +249,7 @@ def wtpercentOxides_to_formulaWeight(sample):
     if type(sample) == dict:
         _sample = pd.Series(sample.copy())
     elif type(sample) != pd.core.series.Series:
-        return InputError("The composition input must be a pandas Series or dictionary.")
+        raise InputError("The composition input must be a pandas Series or dictionary.")
     else:
         _sample = sample.copy()
     cations = wtpercentOxides_to_molSingleO(_sample)
@@ -246,7 +267,7 @@ def fluid_molfrac_to_wt(data, H2O_colname='XH2O_fl', CO2_colname='XCO2_fl'):
     Parameters
     ----------
     data: pandas DataFrame
-        DataFrame containing columns for H2O and CO2 concentrations in the fluid.
+        Sample composition(s) containing columns for H2O and CO2 concentrations in the fluid.
 
     H2O_colname: str
         OPTIONAL. The default value is 'XH2O_fl', which is what is returned by ExcelFile() core calculations.
@@ -271,8 +292,8 @@ def fluid_molfrac_to_wt(data, H2O_colname='XH2O_fl', CO2_colname='XCO2_fl'):
 
     convData["MPO_H2O"] = MPO_H2O_list
     convData["MPO_CO2"] = MPO_CO2_list
-    convData["H2O_fl_wt"] = 100 * convData["MPO_H2O"] / (convData["MPO_H2O"] + convData["MPO_CO2"]) 
-    convData["CO2_fl_wt"] = 100 * convData["MPO_CO2"] / (convData["MPO_H2O"] + convData["MPO_CO2"]) 
+    convData["H2O_fl_wt"] = 100 * convData["MPO_H2O"] / (convData["MPO_H2O"] + convData["MPO_CO2"])
+    convData["CO2_fl_wt"] = 100 * convData["MPO_CO2"] / (convData["MPO_H2O"] + convData["MPO_CO2"])
 
     del convData["MPO_H2O"]
     del convData["MPO_CO2"]
@@ -288,7 +309,7 @@ def fluid_wt_to_molfrac(data, H2O_colname='H2O_fl_wt', CO2_colname='CO2_fl_wt'):
     ----------
     data: pandas DataFrame
         DataFrame containing columns for H2O and CO2 concentrations in the fluid.
-        
+
     H2O_colname: str
         OPTIONAL. The default value is 'H2O_fl_wt', which is what is returned by ExcelFile() core calculations.
         String containing the name of the column corresponding to the H2O concentration in the fluid, in wt%.
@@ -312,8 +333,8 @@ def fluid_wt_to_molfrac(data, H2O_colname='H2O_fl_wt', CO2_colname='CO2_fl_wt'):
 
     convData["MPO_H2O"] = MPO_H2O_list
     convData["MPO_CO2"] = MPO_CO2_list
-    convData["XH2O_fl"] = convData["MPO_H2O"] / (convData["MPO_H2O"] + convData["MPO_CO2"]) 
-    convData["XCO2_fl"] = convData["MPO_CO2"] / (convData["MPO_H2O"] + convData["MPO_CO2"]) 
+    convData["XH2O_fl"] = convData["MPO_H2O"] / (convData["MPO_H2O"] + convData["MPO_CO2"])
+    convData["XCO2_fl"] = convData["MPO_CO2"] / (convData["MPO_H2O"] + convData["MPO_CO2"])
 
     del convData["MPO_H2O"]
     del convData["MPO_CO2"]
@@ -327,7 +348,7 @@ def normalize(sample):
 
     Parameters
     ----------
-    sample: pandas Series, dictionary, pandas DataFrame, or ExcelFile object
+    sample:    pandas Series, dictionary, pandas DataFrame, or ExcelFile object
         A single composition can be passed as a dictionary. Multiple compositions can be passed either as
         a pandas DataFrame or an ExcelFile object. Compositional information as oxides must be present.
 
@@ -377,7 +398,7 @@ def normalize_FixedVolatiles(sample):
 
     Parameters
     ----------
-    sample: pandas Series, dictionary, pandas DataFrame, or ExcelFile object
+    sample:    pandas Series, dictionary, pandas DataFrame, or ExcelFile object
         Major element oxides in wt%
 
     Returns
@@ -391,7 +412,7 @@ def normalize_FixedVolatiles(sample):
             Normalized major element oxides.
     """
     def single_FixedVolatiles(sample):
-        normalized = pd.Series({})
+        normalized = pd.Series({},dtype=float)
         volatiles = 0
         if 'CO2' in list(_sample.index):
             volatiles += _sample['CO2']
@@ -437,7 +458,7 @@ def normalize_FixedVolatiles(sample):
     elif isinstance(sample, pd.DataFrame):
         return multi_FixedVolatiles(sample)
     else:
-        return InputError("The composition input must be a pandas Series or dictionary for single sample \
+        raise InputError("The composition input must be a pandas Series or dictionary for single sample \
                             or a pandas DataFrame or ExcelFile object for multi-sample.")
 
 
@@ -448,7 +469,7 @@ def normalize_AdditionalVolatiles(sample):
 
     Parameters
     ----------
-    sample: pandas Series, dictionary, pandas DataFrame, or ExcelFile object
+    sample:    pandas Series, dictionary, pandas DataFrame, or ExcelFile object
         Major element oxides in wt%
 
     Returns
@@ -498,8 +519,9 @@ def normalize_AdditionalVolatiles(sample):
     elif isinstance(sample, pd.DataFrame):
         return multi_AdditionalVolatiles(sample)
     else:
-        return InputError("The composition input must be a pandas Series or dictionary for single sample \
+        raise InputError("The composition input must be a pandas Series or dictionary for single sample \
                             or a pandas DataFrame or ExcelFile object for multi-sample.")
+
 
 
 #------------DEFINE MAJOR CLASSES-------------------#
@@ -515,6 +537,7 @@ class ExcelFile(object):
 
     def __init__(self, filename, input_type='wtpercent'):
         """Return an ExcelFile object whoes parameters are defined here."""
+        from thermoengine import equilibrate
         self.input_type = input_type
 
         data = pd.read_excel(filename)
@@ -783,9 +806,9 @@ class ExcelFile(object):
             title in the ExcelFile object.
 
         mode: str
-            OPTIONAL. Default value is 'molfrac', which returns the fluid composition in mole fraction (XH2O=1 is a pure 
+            OPTIONAL. Default value is 'molfrac', which returns the fluid composition in mole fraction (XH2O=1 is a pure
             H2O fluid, XH2O=0 is a pure CO2 fluid). Passing 'wtper' returns the fluid composition in wt% oxides.
-            
+
 
         Returns
         -------
@@ -1026,6 +1049,10 @@ class Model(object):
         self.set_activity_model(activity_idealsolution())
 
     def set_volatile_species(self,volatile_species):
+        if type(volatile_species) == str:
+            volatile_species = [volatile_species]
+        elif type(volatile_species) != list:
+            raise InputError("volatile_species must be a str or list.")
         self.volatile_species = volatile_species
 
     def set_fugacity_model(self,fugacity_model):
@@ -1109,7 +1136,9 @@ class Calculate(object):
     the calibration range is checked, and the results stored.
     """
     def __init__(self,sample,model='MagmaSat',**kwargs):
-        if type(model) == str:
+        if model == 'MagmaSat':
+            self.model = MagmaSat()
+        elif type(model) == str:
             self.model = default_models[model]
         else:
             self.model = model
@@ -1741,7 +1770,7 @@ class fugacity_ZD09_co2(FugacityModel):
 
         Paramters
         ---------
-        pressure    float
+        pressure     float
             Pressure in bars
         temperature     float
             Temperature in K
@@ -1778,7 +1807,7 @@ class fugacity_ZD09_co2(FugacityModel):
 
         Pm = 3.0636*P*s**3/e
         Tm = 154*T/e
-        Vm = fsolve(zhang_Vm,200,args=(P,T))
+        Vm = root_scalar(self.Vm,x0=200,x1=250,args=(P,T)).root
 
         S1 = ((a[1]+a[2]/Tm**2+a[3]/Tm**3)/Vm+
               (a[4]+a[5]/Tm**2+a[6]/Tm**3)/(2*Vm**2)+
@@ -1794,17 +1823,17 @@ class fugacity_ZD09_co2(FugacityModel):
 
         return P*np.exp(lnfc)
 
-    def Vm(Vm,P,T):
+    def Vm(self,Vm,P,T):
         """ Function to use for solving for the parameter Vm, defined by eqn (8) of
         Zhang and Duan (2009). Called by scipy.fsolve in the fugacity method.
 
         Parameters
         ----------
-        Vm  float
+        Vm     float
             Guessed value of Vm
-        P   float
+        P     float
             Pressure in bars
-        T   float
+        T     float
             Temperature in K
 
         Returns
@@ -1844,7 +1873,7 @@ class fugacity_ZD09_co2(FugacityModel):
 
         Parameters
         ----------
-        parameters      dictionary
+        parameters         dictionary
             Parameters to check calibration range for, the parameter name should be given as the key, and
             its value as the value.
 
@@ -1929,15 +1958,18 @@ class ShishkinaCarbon(Model):
 
         Parameters
         ----------
-        sample:      pandas Series
+        sample:        dict or pandas Series
             The major element oxides in wt%.
 
         Returns
         -------
-        pandas Series
+        dict or pandas Series
             The major element oxides in wt%.
 
         """
+        if type(sample) != dict and type(sample) != pd.core.series.Series:
+            raise InputError("sample must be a dict or a pandas Series.")
+
         return sample
 
     def PiStar(self,sample):
@@ -1947,7 +1979,7 @@ class ShishkinaCarbon(Model):
 
         Parameters
         ----------
-        sample:     pandas Series
+        sample:        pandas Series or dict
             Major element oxides in wt%.
 
         Returns
@@ -1955,9 +1987,16 @@ class ShishkinaCarbon(Model):
         float
             The value of the Pi* compositional parameter.
         """
+
         _mols = wtpercentOxides_to_molCations(sample)
+
+        if all(cation in _mols for cation in ['Ca','K','Na','Mg','Fe','Si','Al']) == False:
+            raise InputError("To calculate PiStar, values for CaO, K2O, Na2O, MgO, FeO, SiO2, and Al2O3\
+                                must be provided in sample.")
+
         _pi = (_mols['Ca'] + 0.8*_mols['K'] + 0.7*_mols['Na'] + 0.4*_mols['Mg'] + 0.4*_mols['Fe'])/\
                 (_mols['Si']+_mols['Al'])
+
         return _pi
 
     def calculate_dissolved_volatiles(self,pressure,sample,X_fluid=1,**kwargs):
@@ -1965,9 +2004,9 @@ class ShishkinaCarbon(Model):
 
         Parameters
         ----------
-        pressure:   float
+        pressure:    float
             (Total) pressure in bars.
-        sample:     pandas Series
+        sample:        dict or pandas Series
             Major element concentrations in wt%. Normalization does not matter.
         X_fluid:    float
             The mol-fraction of the fluid that is CO2. Default is 1, i.e. a pure CO2 fluid.
@@ -1977,6 +2016,11 @@ class ShishkinaCarbon(Model):
         float
             The dissolved CO2 concentration in wt%.
         """
+
+        if X_fluid < 0 or X_fluid > 1:
+            raise InputError("X_fluid must have a value between 0 and 1.")
+        if pressure < 0:
+            raise InputError("pressure must be a positive value.")
 
         PiStar = self.PiStar(sample)
         fugacity = self.fugacity_model.fugacity(pressure=pressure,X_fluid=X_fluid,**kwargs)
@@ -1997,9 +2041,9 @@ class ShishkinaCarbon(Model):
 
         Parameters
         ----------
-        pressure    float
+        pressure     float
             The total pressure of the system in bars.
-        sample      pandas Series
+        sample         dict or pandas Series
             Major element oxides in wt%
 
         Returns
@@ -2007,7 +2051,7 @@ class ShishkinaCarbon(Model):
         float
             1.0 if CO2-fluid saturated, 0.0 otherwise.
         """
-        if self.calculate_saturation_pressure(self,sample=sample,**kwargs) > pressure:
+        if self.calculate_saturation_pressure(sample=sample,**kwargs) > pressure:
             return 0.0
         else:
             return 1.0
@@ -2019,7 +2063,7 @@ class ShishkinaCarbon(Model):
 
         Parameters
         ----------
-        sample      pandas Series
+        sample         dict or pandas Series
             Major elements in wt%, including CO2 (also in wt%).
 
         Returns
@@ -2027,6 +2071,12 @@ class ShishkinaCarbon(Model):
         float
             Saturation pressure in bar
         """
+
+        if 'CO2' not in sample:
+            raise InputError("sample must contain CO2.")
+        if sample['CO2'] <= 0:
+            raise InputError("CO2 concentration must be greater than 0 wt%.")
+
         satP = root_scalar(self.root_saturation_pressure,x0=1000.0,x1=2000.0,args=(sample,kwargs)).root
         return satP
 
@@ -2036,11 +2086,11 @@ class ShishkinaCarbon(Model):
 
         Parameters
         ----------
-        pressure    float
+        pressure     float
             Pressure guess in bars
-        sample      pandas Series
+        sample         dict or pandas Series
             Major element oxides in wt%, including CO2 (also in wt%).
-        kwargs      dictionary
+        kwargs         dictionary
             Additional keyword arguments supplied to calculate_saturation_pressure. Might be required for
             the fugacity or activity models.
 
@@ -2061,13 +2111,13 @@ class ShishkinaCarbon(Model):
 
         Parameters
         ----------
-        parameters      dictionary
+        parameters         dict
             Parameters to check calibration range for, the parameter name should be given as the key, and
             its value as the value.
 
         Returns
         -------
-        dictionary
+        dict
             Dictionary with parameter names as keys. The values are dictionarys, which have the model component
             as the keys, and bool values, indicating whether the parameter is within the calibration range.
         """
@@ -2102,12 +2152,12 @@ class ShishkinaWater(Model):
 
         Parameters
         ----------
-        sample:      pandas Series
+        sample:         dict or pandas Series
             The major element oxides in wt%.
 
         Returns
         -------
-        pandas Series
+        dict or pandas Series
             The major element oxides in wt%.
 
         """
@@ -2118,9 +2168,9 @@ class ShishkinaWater(Model):
 
         Parameters
         ----------
-        pressure    float
+        pressure     float
             Total pressure in bars
-        sample      pandas Series
+        sample         pandas Series or dict
             Major element oxides in wt%. Normalized to zero-volatiles so that the total-alkalis
             mol fraction can be determined accurately.
         X_fluid     float
@@ -2131,7 +2181,17 @@ class ShishkinaWater(Model):
         float
             The H2O concentration in wt%
         """
+        if type(sample) != dict and type(sample) != pd.core.series.Series:
+            raise InputError("sample must be a dict or pandas Series.")
+
+        if all(ox in sample for ox in ['Na2O','K2O']) == False:
+            raise InputError("Na2O and K2O must be present in sample.")
+
+        if pressure < 0:
+            raise InputError("Pressure must be positive.")
+
         _mols = wtpercentOxides_to_molCations(sample)
+
         total_alkalis = _mols['Na'] + _mols['K']
 
         fugacity = self.fugacity_model.fugacity(pressure,X_fluid=X_fluid,**kwargs)
@@ -2148,9 +2208,9 @@ class ShishkinaWater(Model):
 
         Parameters
         ----------
-        pressure    float
+        pressure     float
             The total pressure of the system in bars.
-        sample      pandas Series
+        sample         pandas Series or dict
             Major element oxides in wt%, normalized on the basis of
             no volatiles.
 
@@ -2159,7 +2219,7 @@ class ShishkinaWater(Model):
         float
             1.0 if H2O-fluid saturated, 0.0 otherwise.
         """
-        if self.calculate_saturation_pressure(self,sample=sample,**kwargs) > pressure:
+        if self.calculate_saturation_pressure(sample=sample,**kwargs) > pressure:
             return 0.0
         else:
             return 1.0
@@ -2171,7 +2231,7 @@ class ShishkinaWater(Model):
 
         Parameters
         ----------
-        sample      pandas Series
+        sample         pandas Series or dict
             Major elements in wt% (normalized to 100%), including H2O (also in wt%, not included
             in normalization).
 
@@ -2180,6 +2240,11 @@ class ShishkinaWater(Model):
         float
             Saturation pressure in bar
         """
+        if 'H2O' not in sample:
+            raise InputError("sample must contain H2O")
+        if sample['H2O'] <= 0:
+            raise InputError("H2O concentration must be greater than 0 wt%.")
+
         satP = root_scalar(self.root_saturation_pressure,x0=1000.0,x1=2000.0,args=(sample,kwargs)).root
         return satP
 
@@ -2189,12 +2254,12 @@ class ShishkinaWater(Model):
 
         Parameters
         ----------
-        pressure    float
+        pressure     float
             Pressure guess in bars
-        sample      pandas Series
+        sample         pandas Series or dict
             Major elements in wt% (normalized to 100%), including H2O (also in wt%, not included
             in normalization).
-        kwargs      dictionary
+        kwargs         dictionary
             Additional keyword arguments supplied to calculate_saturation_pressure. Might be required for
             the fugacity or activity models.
 
@@ -2215,7 +2280,7 @@ class ShishkinaWater(Model):
 
         Parameters
         ----------
-        parameters      dictionary
+        parameters         dictionary
             Parameters to check calibration range for, the parameter name should be given as the key, and
             its value as the value.
 
@@ -2252,19 +2317,19 @@ class DixonCarbon(Model):
         self.set_activity_model(activity_idealsolution())
 
     def preprocess_sample(self,sample):
-        """ Returns sample, unmodified.
+        """ Returns sample, normalized, keep volatiles unchanged.
 
         Parameters
         ----------
-        sample:     pandas Series
+        sample:     pandas Series or dict
             The major element oxides in wt%.
 
         Returns
         -------
-        pandas Series
+        pandas Series or dict
             The major element oxides in wt%.
         """
-        return sample
+        return normalize_FixedVolatiles(sample)
 
     def calculate_dissolved_volatiles(self,pressure,sample,X_fluid=1.0,**kwargs):
         """Calculates the dissolved CO2 concentration using Eqn (3) of Dixon (1997).
@@ -2273,9 +2338,9 @@ class DixonCarbon(Model):
         ----------
         pressure  float
             Total pressure in bars.
-        sample      pandas Series
+        sample      pandas Series or dict
             Major element oxides in wt%.
-        X_fluid     float
+        X_fluid      float
             The mol fraction of CO2 in the fluid.
 
         Returns
@@ -2283,6 +2348,15 @@ class DixonCarbon(Model):
         float
             The CO2 concentration in wt%.
         """
+
+        if X_fluid < 0 or X_fluid > 1:
+            raise InputError("X_fluid must have a value between 0 and 1.")
+        if pressure < 0:
+            raise InputError("Pressure must be positive.")
+        if type(sample) != dict and type(sample) != pd.core.series.Series:
+            raise InputError("sample must be a dict or pandas Series")
+        if 'SiO2' not in sample:
+            raise InputError("sample must contain SiO2.")
 
         XCO3 = self.molfrac_molecular(pressure=pressure,sample=sample,X_fluid=X_fluid,**kwargs)
         return (4400 * XCO3) / (36.6 - 44*XCO3)
@@ -2294,9 +2368,9 @@ class DixonCarbon(Model):
 
         Parameters
         ----------
-        pressure    float
+        pressure     float
             The total pressure of the system in bars.
-        sample      pandas Series
+        sample         pandas Series or dict
             Major element oxides in wt% (including CO2).
 
         Returns
@@ -2317,7 +2391,7 @@ class DixonCarbon(Model):
 
         Parameters
         ----------
-        sample      pandas Series
+        sample         pandas Series or dict
             Major element oxides in wt% (including CO2).
         X_fluid     float
             The mole fraction of CO2 in the fluid. Default is 1.0.
@@ -2327,6 +2401,12 @@ class DixonCarbon(Model):
         float
             Calculated saturation pressure in bars.
         """
+        if type(sample) != dict and type(sample) != pd.core.series.Series:
+            raise InputError("sample must be a dict or pandas Series.")
+        if 'CO2' not in sample:
+            raise InputError("sample must contain CO2.")
+        if sample['CO2'] <= 0:
+            raise InputError("Dissolved CO2 concentration must be greater than 0 wt%.")
 
         satP = root_scalar(self.root_saturation_pressure,x0=1000.0,x1=2000.0,args=(sample,kwargs)).root
         return np.real(satP)
@@ -2337,9 +2417,9 @@ class DixonCarbon(Model):
 
         Parameters
         ----------
-        pressure    float
+        pressure      float
             Total pressure in bars.
-        sample      pandas Series
+        sample         pandas Series or dict
             Major element oxides in wt%.
         X_fluid     float
             Mole fraction of CO2 in the fluid.
@@ -2366,7 +2446,7 @@ class DixonCarbon(Model):
 
         Parameters
         ----------
-        sample    pandas Series
+        sample    pandas Series or dict
             Major element oxides in wt%.
 
         Returns
@@ -2382,9 +2462,9 @@ class DixonCarbon(Model):
 
         Parameters
         ----------
-        pressure    float
+        pressure     float
             Total pressure in bars.
-        sample      float
+        sample         pandas Series or dict
             Major element oxides in wt% (including CO2).
 
         Returns
@@ -2405,7 +2485,7 @@ class DixonCarbon(Model):
 
         Parameters
         ----------
-        parameters      dictionary
+        parameters         dictionary
             Parameters to check calibration range for, the parameter name should be given as the key, and
             its value as the value.
 
@@ -2440,19 +2520,19 @@ class DixonWater(Model):
         self.set_activity_model(activity_idealsolution())
 
     def preprocess_sample(self,sample):
-        """ Returns sample, unmodified.
+        """ Returns sample, normalized, holding volatile concentrations constant.
 
         Parameters
         ----------
-        sample:     pandas Series
+        sample:     pandas Series or dict
             The major element oxides in wt%.
 
         Returns
         -------
-        pandas Series
+        pandas Series or dict
             The major element oxides in wt%.
         """
-        return sample
+        return normalize_FixedVolatiles(sample)
 
     def calculate_dissolved_volatiles(self,pressure,sample,X_fluid=1.0,**kwargs):
         """Calculates the dissolved H2O concentration using Eqns (5) and (6) of Dixon (1997).
@@ -2461,9 +2541,9 @@ class DixonWater(Model):
         ----------
         pressure  float
             Total pressure in bars.
-        sample      pandas Series
+        sample      pandas Series or dict
             Major element oxides in wt%.
-        X_fluid     float
+        X_fluid      float
             The mol fraction of H2O in the fluid.
 
         Returns
@@ -2471,6 +2551,16 @@ class DixonWater(Model):
         float
             The H2O concentration in wt%.
         """
+        if type(sample) != dict and type(sample) != pd.core.series.Series:
+            raise InputError("sample must be a dict or a pandas Series.")
+        if 'SiO2' not in sample:
+            raise InputError("sample must contain SiO2.")
+        if pressure < 0:
+            raise InputError("Pressure must be positive")
+        if X_fluid < 0 or X_fluid > 1:
+            raise InputError("X_fluid must have a value between 0 and 1.")
+
+
         XH2O = self.molfrac_molecular(pressure=pressure,sample=sample,X_fluid=X_fluid,**kwargs)
         XOH = self.XOH(pressure=pressure,sample=sample,X_fluid=X_fluid,**kwargs)
 
@@ -2484,9 +2574,9 @@ class DixonWater(Model):
 
         Parameters
         ----------
-        pressure    float
+        pressure     float
             The total pressure of the system in bars.
-        sample      pandas Series
+        sample         pandas Series or dict
             Major element oxides in wt% (including H2O).
 
         Returns
@@ -2507,7 +2597,7 @@ class DixonWater(Model):
 
         Parameters
         ----------
-        sample      pandas Series
+        sample         pandas Series or dict
             Major element oxides in wt% (including H2O).
         X_fluid     float
             The mole fraction of H2O in the fluid. Default is 1.0.
@@ -2517,6 +2607,10 @@ class DixonWater(Model):
         float
             Calculated saturation pressure in bars.
         """
+        if 'H2O' not in sample:
+            raise InputError("sample must contain H2O")
+        if sample['H2O'] <= 0:
+            raise InputError("H2O concentration must be greater than 0 wt%.")
         satP = root_scalar(self.root_saturation_pressure,x0=1000.0,x1=2000.0,args=(sample,kwargs)).root
 
         return np.real(satP)
@@ -2527,9 +2621,9 @@ class DixonWater(Model):
 
         Parameters
         ----------
-        pressure    float
+        pressure      float
             Total pressure in bars.
-        sample      pandas Series
+        sample         pandas Series or dict
             Major element oxides in wt%.
         X_fluid     float
             Mole fraction of H2O in the fluid.
@@ -2557,7 +2651,7 @@ class DixonWater(Model):
 
         Parameters
         ----------
-        sample    pandas Series
+        sample    pandas Series or dict
             Major element oxides in wt%.
 
         Returns
@@ -2575,9 +2669,9 @@ class DixonWater(Model):
 
         Parameters
         ----------
-        pressure    float
+        pressure     float
             Total pressure in bars.
-        sample      pandas Series
+        sample         pandas Series or dict
             Major element oxides in wt%.
         X_fluid     float
             Mole fraction of H2O in the fluid.
@@ -2601,7 +2695,7 @@ class DixonWater(Model):
 
         Parameters
         ----------
-        XOH     float
+        XOH         float
             Guess for the mole fraction of hydroxyl groups dissolved in melt.
         XH2O    float
             Mole fraction of molecular water dissolved in melt.
@@ -2627,11 +2721,11 @@ class DixonWater(Model):
 
         Parameters
         ----------
-        pressure    float
+        pressure     float
             Pressure guess in bars
-        sample      pandas Series
+        sample         pandas Series or dict
             Major elements in wt% (normalized to 100%), including H2O.
-        kwargs      dictionary
+        kwargs         dictionary
             Additional keyword arguments supplied to calculate_saturation_pressure. Might be required for
             the fugacity or activity models.
 
@@ -2653,7 +2747,7 @@ class DixonWater(Model):
 
         Parameters
         ----------
-        parameters      dictionary
+        parameters         dictionary
             Parameters to check calibration range for, the parameter name should be given as the key, and
             its value as the value.
 
@@ -2705,12 +2799,12 @@ class IaconoMarzianoWater(Model):
 
         Parameters
         ----------
-        sample  pandas Series
+        sample     pandas Series or dict
             Major element oxides in wt%.
 
         Returns
         -------
-        pandas Series
+        pandas Series or dict
             Major element oxides normalized to wt%.
         """
         if self.hydrous == True:
@@ -2730,7 +2824,7 @@ class IaconoMarzianoWater(Model):
             Total pressure in bars.
         temperature     float
             Temperature in K
-        sample  pandas Series
+        sample     pandas Series or dict
             Major element oxides in wt%.
         X_fluid      float
             Mole fraction of H2O in the fluid. Default is 1.0.
@@ -2740,6 +2834,12 @@ class IaconoMarzianoWater(Model):
         float
             Dissolved H2O concentration in wt%.
         """
+        if type(sample) != dict and type(sample) != pd.core.series.Series:
+            raise InputError("sample must be a dict or a pandas Series.")
+        if pressure <= 0:
+            raise InputError("Pressure must be greater than 0 bar.")
+        if X_fluid < 0 or X_fluid > 1:
+            raise InputError("X_fluid must have a value between 0 and 1.")
 
         if self.hydrous == True:
             if X_fluid==0:
@@ -2769,11 +2869,11 @@ class IaconoMarzianoWater(Model):
 
         Parameters
         ----------
-        pressure    float
+        pressure     float
             The total pressure of the system in bars.
         temperature     float
             The temperature of the system in K.
-        sample      pandas Series
+        sample         pandas Series or dict
             Major element oxides in wt% (including H2O).
 
         Returns
@@ -2796,7 +2896,7 @@ class IaconoMarzianoWater(Model):
         ----------
         temperature     float
             The temperature of the system in K.
-        sample      pandas Series
+        sample         pandas Series or dict
             Major element oxides in wt% (including H2O).
         X_fluid     float
             The mole fraction of H2O in the fluid. Default is 1.0.
@@ -2806,6 +2906,13 @@ class IaconoMarzianoWater(Model):
         float
             Calculated saturation pressure in bars.
         """
+        if type(sample) != dict and type(sample) != pd.core.series.Series:
+            raise InputError("sample must be a dict or a pandas Series.")
+        if 'H2O' not in sample:
+            raise InputError("sample must contain H2O.")
+        if sample['H2O'] <= 0.0:
+            raise InputError("Dissolved H2O must be greater than 0 wt%.")
+
         return root_scalar(self.root_saturation_pressure,args=(temperature,sample,kwargs),
                             x0=1000.0,x1=2000.0).root
 
@@ -2815,13 +2922,13 @@ class IaconoMarzianoWater(Model):
 
         Parameters
         ----------
-        pressure    float
+        pressure     float
             Pressure guess in bars
         temperature     float
             The temperature of the system in K.
-        sample      pandas Series
+        sample         pandas Series or dict
             Major elements in wt% (normalized to 100%), including H2O.
-        kwargs      dictionary
+        kwargs         dictionary
             Additional keyword arguments supplied to calculate_saturation_pressure. Might be required for
             the fugacity or activity models.
 
@@ -2842,15 +2949,15 @@ class IaconoMarzianoWater(Model):
         ----------
         h2o     float
             Guess for the H2O concentration in wt%.
-        pressure    float
+        pressure     float
             Total pressure in bars.
         temperature     float
             Temperature in K.
-        sample      pandas Series
+        sample         pandas Series or dict
             Major element oxides in wt%.
         X_fluid     float
             Mole fraction of H2O in the fluid.
-        kwargs  dictionary
+        kwargs     dictionary
             Keyword arguments
 
         Returns
@@ -2878,7 +2985,7 @@ class IaconoMarzianoWater(Model):
 
         Parameters
         ----------
-        sample  pandas Series
+        sample     pandas Series or dict
             Major element oxides in wt% (including H2O if using the hydrous parameterization).
 
         Returns
@@ -2886,12 +2993,17 @@ class IaconoMarzianoWater(Model):
         float
             NBO/O.
         """
+        if all(ox in sample for ox in ['K2O','Na2O','CaO','MgO','FeO','Al2O3','SiO2','TiO2','Al2O3']) == False:
+            raise InputError("sample must contain K2O, Na2O, CaO, MgO, FeO, Al2O3, SiO2, TiO2 and Al2O3.")
+
         X = wtpercentOxides_to_molOxides(sample)
 
         NBO = 2*(X['K2O']+X['Na2O']+X['CaO']+X['MgO']+X['FeO']-X['Al2O3'])
         O = 2*X['SiO2']+2*X['TiO2']+3*X['Al2O3']+X['MgO']+X['FeO']+X['CaO']+X['Na2O']+X['K2O']
 
         if self.hydrous == True:
+            if 'H2O' not in sample:
+                raise InputError("sample must contain H2O.")
             NBO = NBO + 2*X['H2O']
             O = O + X['H2O']
 
@@ -2906,7 +3018,7 @@ class IaconoMarzianoWater(Model):
 
         Parameters
         ----------
-        parameters      dictionary
+        parameters         dictionary
             Parameters to check calibration range for, the parameter name should be given as the key, and
             its value as the value.
 
@@ -2959,12 +3071,12 @@ class IaconoMarzianoCarbon(Model):
 
         Parameters
         ----------
-        sample  pandas Series
+        sample     pandas Series or dict
             Major element oxides in wt%.
 
         Returns
         -------
-        pandas Series
+        pandas Series or dict
             Major element oxides normalized to wt%.
         """
         if self.hydrous == True:
@@ -2984,7 +3096,7 @@ class IaconoMarzianoCarbon(Model):
             Total pressure in bars.
         temperature     float
             Temperature in K
-        sample  pandas Series
+        sample     pandas Series or dict
             Major element oxides in wt%.
         X_fluid      float
             Mole fraction of H2O in the fluid. Default is 1.0.
@@ -2995,7 +3107,21 @@ class IaconoMarzianoCarbon(Model):
             Dissolved H2O concentration in wt%.
         """
 
+        if type(sample) != dict and type(sample) != pd.core.series.Series:
+            raise InputError("sample must be a dict or a pandas Series.")
+        if pressure <= 0:
+            raise InputError("Pressure must be greater than 0 bars.")
+        if temperature <= 0:
+            raise InputError("Temperature must be greater than 0K.")
+        if X_fluid < 0 or X_fluid > 1:
+            raise InputError("X_fluid must have a value between 0 and 1.")
+
         if self.hydrous == True:
+            if 'H2O' not in sample:
+                raise InputError("sample must contain H2O if using the hydrous parameterization.")
+            if sample['H2O'] < 0:
+                raise InputError("Dissolved H2O must be positive.")
+
             im_h2o_model = IaconoMarzianoWater()
             h2o = im_h2o_model.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,
                                                         sample=sample,X_fluid=1-X_fluid,**kwargs)
@@ -3028,9 +3154,14 @@ class IaconoMarzianoCarbon(Model):
         if fugacity == 0:
             return 0
 
+        if all(ox in molarProps for ox in ['Al2O3','CaO','K2O','Na2O','FeO','MgO','Na2O','K2O']) == False:
+            raise InputError("sample must contain Al2O3, CaO, K2O, Na2O, FeO, MgO, Na2O, and K2O.")
 
         x = list()
-        x.append(molarProps['H2O'])
+        if 'H2O' in molarProps:
+            x.append(molarProps['H2O'])
+        else:
+            x.append(0.0)
         x.append(molarProps['Al2O3']/(molarProps['CaO']+molarProps['K2O']+molarProps['Na2O']))
         x.append((molarProps['FeO']+molarProps['MgO']))
         x.append((molarProps['Na2O']+molarProps['K2O']))
@@ -3049,11 +3180,11 @@ class IaconoMarzianoCarbon(Model):
 
         Parameters
         ----------
-        pressure    float
+        pressure     float
             The total pressure of the system in bars.
         temperature     float
             The temperature of the system in K.
-        sample      pandas Series
+        sample         pandas Series or dict
             Major element oxides in wt% (including H2O).
 
         Returns
@@ -3076,16 +3207,23 @@ class IaconoMarzianoCarbon(Model):
         ----------
         temperature     float
             The temperature of the system in K.
-        sample      pandas Series
+        sample         pandas Series or dict
             Major element oxides in wt% (including CO2).
-        X_fluid     float
-            The mole fraction of H2O in the fluid. Default is 1.0.
 
         Returns
         -------
         float
             Calculated saturation pressure in bars.
         """
+        if temperature <= 0:
+            raise InputError("Temperature must be greater than 0K.")
+        if type(sample) != dict and type(sample) != pd.core.series.Series:
+            raise InputError("sample must be a dict or a pandas Series.")
+        if 'CO2' not in sample:
+            raise InputError("sample must contain CO2")
+        if sample['CO2'] <= 0:
+            raise InputError("Dissolved CO2 must be greater than 0 wt%.")
+
         return root_scalar(self.root_saturation_pressure,args=(temperature,sample,kwargs),
                             x0=1000.0,x1=2000.0).root
 
@@ -3095,13 +3233,13 @@ class IaconoMarzianoCarbon(Model):
 
         Parameters
         ----------
-        pressure    float
+        pressure     float
             Pressure guess in bars
         temperature     float
             The temperature of the system in K.
-        sample      pandas Series
+        sample         pandas Series or dict
             Major elements in wt% (normalized to 100%), including CO2.
-        kwargs      dictionary
+        kwargs         dictionary
             Additional keyword arguments supplied to calculate_saturation_pressure. Might be required for
             the fugacity or activity models.
 
@@ -3122,7 +3260,7 @@ class IaconoMarzianoCarbon(Model):
 
         Parameters
         ----------
-        sample  pandas Series
+        sample     pandas Series or dict
             Major element oxides in wt% (including H2O if using the hydrous parameterization).
 
         Returns
@@ -3130,12 +3268,19 @@ class IaconoMarzianoCarbon(Model):
         float
             NBO/O.
         """
+        if type(sample) != dict and type(sample) != pd.core.series.Series:
+            raise InputError("sample must be a dict or a pandas Series,")
+        if all(ox in sample for ox in ['K2O','Na2O','CaO','MgO','FeO','Al2O3','SiO2','TiO2']) == False:
+            raise InputError("sample must contain K2O, Na2O, CaO, MgO, FeO, Al2O3, SiO2, and TiO2.")
+
         X = wtpercentOxides_to_molOxides(sample)
 
         NBO = 2*(X['K2O']+X['Na2O']+X['CaO']+X['MgO']+X['FeO']-X['Al2O3'])
         O = 2*X['SiO2']+2*X['TiO2']+3*X['Al2O3']+X['MgO']+X['FeO']+X['CaO']+X['Na2O']+X['K2O']
 
         if self.hydrous == True:
+            if 'H2O' not in X:
+                raise InputError("sample must contain H2O if using the hydrous parameterization.")
             NBO = NBO + 2*X['H2O']
             O = O + X['H2O']
 
@@ -3150,7 +3295,7 @@ class IaconoMarzianoCarbon(Model):
 
         Parameters
         ----------
-        parameters      dictionary
+        parameters         dictionary
             Parameters to check calibration range for, the parameter name should be given as the key, and
             its value as the value.
 
@@ -3193,7 +3338,7 @@ class EguchiCarbon(Model):
 
         Parameters
         ----------
-        sample  pandas Series
+        sample     pandas Series or dict
             Major element oxides in wt%.
         ferric_total    float
             Mole ratio of ferric to total iron to be used
@@ -3202,11 +3347,21 @@ class EguchiCarbon(Model):
 
         Returns
         -------
-        pandas Series
+        pandas Series or dict
             Normalized major element oxides in wt%.
         """
+        if type(sample) != dict and type(sample) != pd.core.series.Series:
+            raise InputError("sample must be a dict or a pandas Series.")
+        if 'FeO' not in sample:
+            raise InputError("sample must contain FeO.")
+
         _sample = sample.copy()
-        if 'Fe2O3' not in _sample.index:
+
+        for ox in ['TiO2','P2O5']:
+            if ox not in _sample:
+                _sample[ox] = 0.0
+
+        if 'Fe2O3' not in _sample:
             Fe_t = _sample['FeO']/oxideMass['FeO']
             Fe3 = ferric_total*Fe_t
             Fe2 = Fe_t - Fe3
@@ -3221,11 +3376,11 @@ class EguchiCarbon(Model):
 
         Parameters
         ----------
-        pressure    float
+        pressure     float
             Pressure in bars
         temperature     float
             Temperature in K
-        sample  pandas Series
+        sample     pandas Series or dict
             Major element oxides in wt%.
         X_fluid     float
             The mole fraction of CO2 in the fluid.
@@ -3235,6 +3390,7 @@ class EguchiCarbon(Model):
         float
             Dissolved CO2 concentration.
         """
+
         XCO3 = self.Xi_melt(pressure=pressure,temperature=temperature,sample=sample,X_fluid=X_fluid,species='CO3')
         XCO2 = self.Xi_melt(pressure=pressure,temperature=temperature,sample=sample,X_fluid=X_fluid,species='CO2')
 
@@ -3252,11 +3408,11 @@ class EguchiCarbon(Model):
 
         Parameters
         ----------
-        pressure    float
+        pressure     float
             The total pressure of the system in bars.
         temperature     float
             The temperature of the system in K.
-        sample      pandas Series
+        sample         pandas Series or dict
             Major element oxides in wt% (including H2O).
 
         Returns
@@ -3280,7 +3436,7 @@ class EguchiCarbon(Model):
         ----------
         temperature     float
             The temperature of the system in K.
-        sample      pandas Series
+        sample         pandas Series or dict
             Major element oxides in wt% (including CO2).
         X_fluid     float
             The mole fraction of H2O in the fluid. Default is 1.0.
@@ -3290,6 +3446,10 @@ class EguchiCarbon(Model):
         float
             Calculated saturation pressure in bars.
         """
+        if 'CO2' not in sample:
+            raise InputError("sample must contain CO2.")
+        if sample['CO2'] <= 0.0:
+            raise InputError("Concentration of CO2 must be greater than 0 wt%.")
         return root_scalar(self.root_saturation_pressure,x0=1000.0,x1=2000.0,args=(temperature,sample,X_fluid,kwargs)).root
 
     def root_saturation_pressure(self,pressure,temperature,sample,X_fluid,kwargs):
@@ -3298,13 +3458,13 @@ class EguchiCarbon(Model):
 
         Parameters
         ----------
-        pressure    float
+        pressure     float
             Pressure guess in bars
         temperature     float
             The temperature of the system in K.
-        sample      pandas Series
+        sample         pandas Series or dict
             Major elements in wt% (normalized to 100%), including CO2.
-        kwargs      dictionary
+        kwargs         dictionary
             Additional keyword arguments supplied to calculate_saturation_pressure. Might be required for
             the fugacity or activity models.
 
@@ -3327,9 +3487,9 @@ class EguchiCarbon(Model):
             Pressure in bars.
         temperature     float
             Temperature in K.
-        sample      pandas Series
+        sample         pandas Series or dict
             Major element oxides in wt%.
-        species     str
+        species        str
             Which species to calculate, molecular CO2 'CO2' or carbonate ion 'CO3'.
         X_fluid     float
             The mole fraction of CO2 in the fluid. Default is 1.0.
@@ -3339,6 +3499,15 @@ class EguchiCarbon(Model):
         float
             Mole fraction of selected species in the melt
         """
+
+        if all(ox in sample for ox in ['MgO','CaO','FeO','Na2O','K2O','MnO','Al2O3','Fe2O3','SiO2','TiO2','P2O5']) == False:
+            raise InputError("sample must contain MgO, CaO, FeO, Na2O, K2O, MnO, Al2O3, Fe2O3, SiO3, TiO2, and P2O5.")
+        if X_fluid < 0 or X_fluid > 1:
+            raise InputError("X_fluid must have a value between 0 and 1.")
+        if pressure <= 0:
+            raise InputError("Pressure must be greater than 0 bars.")
+        if temperature <= 0:
+            raise InputError("Temperature must be greater than 0K.")
 
         if species == 'CO3':
             DH = -1.65e5
@@ -3359,16 +3528,14 @@ class EguchiCarbon(Model):
             A_Na2O = 0
             A_K2O = 0
         else:
-            return InputError("Species variable must be either 'CO2' or 'CO3'.")
+            raise InputError("species variable must be either 'CO2' or 'CO3'.")
         R = 8.314
 
         # Calculate NBO term
         cations = wtpercentOxides_to_molSingleO(sample)
         oxides = wtpercentOxides_to_molOxides(sample)
 
-        for cation in ['Mg','Ca','Fe','Na','K','Mn','Fe3']:
-            if cation not in list(cations.keys()):
-                cations[cation] = 0
+
 
         NM = (cations['Mg'] + cations['Ca'] + cations['Fe'] + cations['Na'] +
             cations['K'] + cations['Mn'])
@@ -3405,7 +3572,7 @@ class EguchiCarbon(Model):
 
         Parameters
         ----------
-        parameters      dictionary
+        parameters         dictionary
             Parameters to check calibration range for, the parameter name should be given as the key, and
             its value as the value.
 
@@ -3432,9 +3599,29 @@ class EguchiCarbon(Model):
 
 class AllisonCarbon(Model):
     """
+    Implementation of the Allison et al. (2019) CO2 solubility model. Which type of fit, and
+    which composition must be selected when the Model is initialized. The fit may be either
+    thermodynamic or power-law. The composition may be chosen from sunset, sfvf, erebus, vesuvius,
+    etna, or stromboli. Default is the power-law fit to sunset.
     """
 
     def __init__(self,model_fit='power',model_loc='sunset'):
+        """
+        Initialize the model.
+
+        Parameters
+        ----------
+        model_fit     str
+            Either 'power' for the power-law fits, or 'thermodynamic' for the
+            thermodynamic fits.
+        model_loc     str
+            One of 'sunset', 'sfvf', 'erebus', 'vesuvius', 'etna', 'stromboli'.
+        """
+        if model_fit not in ['power','thermodynamic']:
+            raise InputError("model_fit must be one of 'power', or 'thermodynamic'.")
+        if model_loc not in ['sunset','sfvf','erebus','vesuvius','etna','stromboli']:
+            raise InputError("model_loc must be one of 'sunset', 'sfvf', 'erebus', 'vesuvius', 'etna', or 'stromboli'.")
+
         self.set_volatile_species('CO2')
         self.set_fugacity_model(fugacity_KJ81_co2())
         self.set_activity_model(activity_idealsolution())
@@ -3442,15 +3629,52 @@ class AllisonCarbon(Model):
         self.model_loc = model_loc
 
     def preprocess_sample(self,sample):
-        return sample
+        """
+        Returns sample normalized to 100wt%, keeping the concentrations of H2O and CO2 constant.
+
+        Parameters
+        ----------
+        sample     pandas Series or dict
+            Major element oxides in wt%.
+
+        Returns
+        -------
+        pandas Series
+            Normalized major element oxides in wt%.
+        """
+        return normalize_FixedVolatiles(sample)
 
     def calculate_dissolved_volatiles(self,pressure,temperature,sample=None,X_fluid=1.0,**kwargs):
         """
-        WRITE STUFF
+        Calclates the dissolved CO2 concentration using (Eqns) 2-7 or 10-11 from Allison et al. (2019).
+
+        Parameters
+        ----------
+        pressure     float
+            Pressure in bars.
+        temperature     float
+            Temperature in K.
+        sample         pandas Series, dict or None
+            Major element oxides in wt%. Required if using the thermodynamic fits, need not be
+            provided if using the power law fits. Default is None.
+        X_fluid     float
+            The mole fraction of CO2 in the fluid. Default is 1.0.
+
+        Returns
+        -------
+        float
+            Dissolved CO2 concentration in wt%.
         """
+        if temperature <= 0.0:
+            raise InputError("Temperature must be greater than 0K.")
+        if pressure <= 0.0:
+            raise InputError("Pressure must be greater than 0 bars.")
+        if X_fluid < 0 or X_fluid > 1:
+            raise InputError("X_fluid must have a value between 0 and 1.")
+
         if self.model_fit == 'thermodynamic':
-            if type(sample) == type(None):
-                print("Generate an error...")
+            if type(sample) != dict and type(sample) != pd.core.series.Series:
+                raise InputError("Thermodynamic fit requires sample to be a dict or a pandas Series.")
             P0 = 1000 # bar
             params = dict({'sunset':[16.4,-14.67],
                             'sfvf':[15.02,-14.87],
@@ -3463,7 +3687,6 @@ class AllisonCarbon(Model):
 
             lnK = lnK0 - (pressure-P0)*DV/(8.3141*temperature)
             fCO2 = self.fugacity_model.fugacity(pressure=pressure,temperature=temperature,X_fluid=X_fluid,**kwargs)
-            print(fCO2)
             Kf = np.exp(lnK)*fCO2
             XCO3 = Kf/(1-Kf)
             FWone = wtpercentOxides_to_formulaWeight(sample)
@@ -3486,7 +3709,23 @@ class AllisonCarbon(Model):
 
     def calculate_equilibrium_fluid_comp(self,pressure,temperature,sample,**kwargs):
         """
-        WRITE STUFF
+        Calculates the pressure at which a pure CO2 fluid is saturated, for the given sample
+        composition and CO2 concentration. Calls the scipy.root_scalar routine, which makes
+        repeated called to the calculate_dissolved_volatiles method.
+
+        Parameters
+        ----------
+        temperature     float
+            The temperature of the system in K.
+        sample         pandas Series or dict
+            Major element oxides in wt% (including CO2).
+        X_fluid     float
+            The mole fraction of H2O in the fluid. Default is 1.0.
+
+        Returns
+        -------
+        float
+            Calculated saturation pressure in bars.
         """
         satP = self.calculate_saturation_pressure(temperature=temperature,sample=sample,X_fluid=1.0,**kwargs)
         if pressure > satP:
@@ -3496,43 +3735,191 @@ class AllisonCarbon(Model):
 
     def calculate_saturation_pressure(self,temperature,sample,X_fluid=1.0,**kwargs):
         """
-        WRITE STUFF
+        Calculates the pressure at which a pure CO2 fluid is saturated, for the given sample
+        composition and CO2 concentration. Calls the scipy.root_scalar routine, which makes
+        repeated called to the calculate_dissolved_volatiles method.
+
+        Parameters
+        ----------
+        temperature     float
+            The temperature of the system in K.
+        sample         pandas Series
+            Major element oxides in wt% (including CO2).
+        X_fluid     float
+            The mole fraction of H2O in the fluid. Default is 1.0.
+
+        Returns
+        -------
+        float
+            Calculated saturation pressure in bars.
         """
+        if temperature <= 0.0:
+            raise InputError("Temperature must be greater than 0K.")
+        if X_fluid < 0 or X_fluid > 1:
+            raise InputError("X_fluid must have a value between 0 and 1.")
+        if type(sample) != dict and type(sample) != pd.core.series.Series:
+            raise InputError("sample must be a dict or a pandas Series.")
+        if 'CO2' not in sample:
+            raise InputError("sample must contain CO2.")
+        if sample['CO2'] <= 0.0:
+            raise InputError("Dissolved CO2 concentration must be greater than 0 wt%.")
+
         return root_scalar(self.root_saturation_pressure,args=(temperature,sample,X_fluid,kwargs),x0=1000.0,x1=2000.0).root
 
     def root_saturation_pressure(self,pressure,temperature,sample,X_fluid,kwargs):
+        """ Function called by scipy.root_scalar when finding the saturation pressure using
+        calculate_saturation_pressure.
+
+        Parameters
+        ----------
+        pressure     float
+            Pressure guess in bars
+        temperature     float
+            The temperature of the system in K.
+        sample         pandas Series or dict
+            Major elements in wt% (normalized to 100%), including CO2.
+        kwargs         dictionary
+            Additional keyword arguments supplied to calculate_saturation_pressure. Might be required for
+            the fugacity or activity models.
+
+        Returns
+        -------
+        float
+            The differece between the dissolved CO2 at the pressure guessed, and the CO2 concentration
+            passed in the sample variable.
+        """
         return sample['CO2'] - self.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,sample=sample,X_fluid=X_fluid,**kwargs)
 
     def check_calibration_range(self,**kwargs):
-        return 0
+        """ Checks whether supplied parameters and calculated results are within the calibration range
+        of the model. Designed for use with the Calculate methods. Calls the check_calibration_range
+        functions for the fugacity and activity models.
+
+        Parameters supported currently are pressure and temperature.
+
+        Parameters
+        ----------
+        parameters         dictionary
+            Parameters to check calibration range for, the parameter name should be given as the key, and
+            its value as the value.
+
+        Returns
+        -------
+        dictionary
+            Dictionary with parameter names as keys. The values are dictionarys, which have the model component
+            as the keys, and bool values, indicating whether the parameter is within the calibration range.
+        """
+        results = {}
+        if 'pressure' in parameters.keys():
+            pressure_results = {'Allison Model': (parameters['pressure']>0)&(parameters['pressure']<6000),
+                                'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['pressure'],
+                                'Activity Model': self.activity_model.check_calibration_range(parameters)['pressure']}
+            results['pressure'] = pressure_results
+
+        if 'temperature' in parameters.keys():
+            temperature_results = {'Allison Model': (parameters['temperature']==1200+273.15),
+                                    'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['temperature'],
+                                    'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
+            results['temperature'] = temperature_results
+
+        return results
 
 
 #------------MIXED FLUID MODELS-------------------------------#
 class MixedFluids(Model):
-    """ HELLO!
+    """
+    Implements the generic framework for mixed fluid solubility. Any set of pure fluid solubility
+    models may be specified.
     """
     def __init__(self,models):
-        print('Write code to check models input makes sense.')
+        """
+        Initializes the mixed fluid model.
+
+        Parameters
+        ----------
+        models     dictionary
+            Dictionary with names of volatile species as keys, and the model objects as values.
+        """
         self.models = tuple(model for model in models.values())
         self.set_volatile_species(list(models.keys()))
 
     def preprocess_sample(self,sample):
+        """ Returns sample, unmodified.
+
+        Parameters
+        ----------
+        sample         pandas Series or dict
+            Major element oxides in wt%.
+
+        Returns
+        -------
+        pandas Series or dict
+            Major element oxides in wt%.
+        """
+        if type(sample) != dict and type(sample) != pd.core.series.Series:
+            raise InputError("sample must be a dict or a pandas Series.")
         return sample
 
     def calculate_dissolved_volatiles(self,pressure,X_fluid,**kwargs):
-        if len(X_fluid) != len(self.volatile_species):
-            print('YOU NEED TO WRITE THE CODE TO RAISE AN ERROR! 0')
+        """
+        Calculates the dissolved volatile concentrations in wt%, using each model's
+        calculate_dissolved_volatiles method. At present the volatile concentrations are
+        not propagated through.
+
+        Parameters
+        ----------
+        pressure     float
+            The total pressure in bars.
+        X_fluid     float, numpy.ndarry, dict, pandas Series
+            The mole fraction of each species in the fluid. If the mixed fluid model
+            contains only two species (e.g. CO2 and H2O), the value of the first species in
+            self.volatile_species may be passed on its own as a float.
+
+        Returns
+        -------
+        tuple
+            Dissolved volatile concentrations of each species in the model, in the order set
+            by self.volatile_species.
+        """
+        if len(X_fluid) == 1 and len(self.volatile_species) == 2:
+            X_fluid = (X_fluid,1-X_fluid)
+        elif len(X_fluid) != len(self.volatile_species):
+            raise InputError("X_fluid must have the same length as the number of volatile species\
+             in the MixedFluids Model class, or it may have length 1 if two species are present\
+             in the MixedFluids Model class.")
+
+        if np.sum(X_fluid) != 1.0:
+            raise InputError("X_fluid must sum to 1.0")
+        if any(val<0 for val in X_fluid) or any(val>1 for val in X_fluid):
+            raise InputError("Each mole fraction in X_fluid must have a value between 0 and 1.")
 
         if type(X_fluid) == dict or type(X_fluid) == pd.core.series.Series:
             X_fluid = tuple(X_fluid[species] for species in self.volatile_species)
-        elif type(X_fluid) != tuple and type(X_fluid) != list:
-            print('YOU NEED TO WRITE THE CODE TO RAISE AN ERROR! 1')
 
         return tuple(model.calculate_dissolved_volatiles(pressure=pressure,X_fluid=Xi,**kwargs) for model, Xi in zip(self.models,X_fluid))
 
     def calculate_equilibrium_fluid_comp(self,pressure,sample,**kwargs):
+        """ Calculates the composition of the fluid in equilibrium with the dissolved volatile
+        concentrations passed. If a fluid phase is undersaturated at the chosen pressure (0,0) will
+        be returned. Note, this currently assumes the given H2O and CO2 concentrations are
+        the system total, not the total dissolved. This should be changed.
+
+        Parameters
+        ----------
+        pressure     float
+            The total pressure in bars.
+        sample     pandas Series or dict
+            Major element oxides in wt% (including volatiles).
+
+        Returns
+        -------
+        Two floats
+            Mole fractions of the volatile species in the fluid, in the order given by
+            self.volatile_species.
+        """
         if len(self.volatile_species) != 2:
-            print('WRITE CODE TO RAISE AN ERROR- CAN ONLY HANDLE TWO VOLATILE SPECIES')
+            raise InputError("Currently equilibrium fluid compositions can only be calculated when\
+            two volatile species are present.")
 
         satP = self.calculate_saturation_pressure(sample,**kwargs)
 
@@ -3549,40 +3936,151 @@ class MixedFluids(Model):
         Xv0 = root_scalar(self.root_for_fluid_comp,args=(pressure,Xt0,Xt1,sample,kwargs),bracket=(0,1)).root
         Xv1 = 1-Xv0
 
-        return (Xv0,Xv1)
+        return Xv0, Xv1
 
     def calculate_saturation_pressure(self,sample,**kwargs):
-        sample_mod = normalize_FixedVolatiles(sample)
-        volatile_concs = np.array(tuple(sample_mod[species] for species in self.volatile_species))
+        """
+        Calculates the pressure at which a fluid will be saturated, given the dissolved volatile
+        concentrations.
+
+        Parameters
+        ----------
+        sample     pandas Series or dict
+            Major element oxides in wt% (including volatiles).
+
+        Returns
+        -------
+        float
+            The saturation pressure in bars.
+        """
+        volatile_concs = np.array(tuple(sample[species] for species in self.volatile_species))
 
         x0 = 0
         for model in self.models:
-            x0 = x0 + model.calculate_saturation_pressure(sample=sample_mod,**kwargs)
+            x0 = x0 + model.calculate_saturation_pressure(sample=sample,**kwargs)
 
-        satP = root(self.root_saturation_pressure,x0=[x0,0.5],args=(volatile_concs,sample_mod,kwargs)).x[0]
+        satP = root(self.root_saturation_pressure,x0=[x0,0.5],args=(volatile_concs,sample,kwargs)).x[0]
 
         return satP
 
-    def calculate_isobars_and_isopleths(self,pressure_list,isopleth_list=[0,1],points=101,**kwargs):
+    def calculate_isobars_and_isopleths(self,pressure_list,isopleth_list=[0,1],points=101,return_dfs=True,**kwargs):
+        """
+        Calculates isobars and isopleths. Isobars can be calculated for any number of pressures. Variables
+        required by each of the pure fluid models must be passed, e.g. sample, temperature, etc.
+
+        Parameters
+        ----------
+        pressure_list     list
+            List of all pressure values at which to calculate isobars, in bars.
+        isopleth_list     list
+            OPTIONAL: Default value is None, in which case only isobars will be calculated. List of all
+            fluid compositions in mole fraction (of the first species in self.volatile_species) at which
+            to calcualte isopleths. Values can range from 0 to 1.
+        points     int
+            The number of points in each isobar and isopleth. Default value is 101.
+        return_dfs     bool
+            If True, the results will be returned as two pandas DataFrames, as produced by the MagmaSat
+            method. If False the results will be returned as lists of numpy arrays.
+
+        Returns
+        -------
+        pandas DataFrame object(s) or list(s)
+            If isopleth_list is not None, two objects will be returned, one with the isobars and the second with
+            the isopleths. If return_dfs is True, two pandas DataFrames will be returned with column names
+            'Pressure' or 'XH2O_fl', 'H2O_liq', and 'CO2_liq'. If return_dfs is False, two lists of numpy arrays
+            will be returned. Each array is an individual isobar or isopleth, in the order passed via pressure_list
+            or isopleth_list. The arrays are the concentrations of H2O and CO2 in the liquid, in the order of the
+            species in self.volatile_species.
+
+        """
+        if len(self.volatile_species) != 2 or 'H2O' not in self.volatile_species or 'CO2' not in self.volatile_species:
+            raise InputError("calculate_isobars_and_isopleths may only be used with a H2O-CO2 fluid.")
+
+        H2O_id = self.volatile_species.index('H2O')
+        CO2_id = self.volatile_species.index('CO2')
+
+        has_isopleths = True
+        if isopleth_list is None:
+            has_isopleths = False
+
+        isobars_df = pd.DataFrame(columns=['Pressure','H2O_liq','CO2_liq'])
         isobars = []
         for pressure in pressure_list:
             dissolved = np.zeros([2,points])
             Xv0 = np.linspace(0.0,1.0,points)
             for i in range(points):
                 dissolved[:,i] = self.calculate_dissolved_volatiles(pressure=pressure,X_fluid=(Xv0[i],1-Xv0[i]),**kwargs)
+                isobars_df = isobars_df.append({'Pressure':pressure,'H2O_liq':dissolved[H2O_id,i],'CO2_liq':dissolved[CO2_id,i]},ignore_index=True)
             isobars.append(dissolved)
 
-        isopleths = []
-        for isopleth in isopleth_list:
-            dissolved = np.zeros([2,points])
-            pressure = np.linspace(np.nanmin(pressure_list),np.nanmax(pressure_list),points)
-            for i in range(points):
-                dissolved[:,i] = self.calculate_dissolved_volatiles(pressure=pressure[i],X_fluid=(isopleth,1-isopleth),**kwargs)
-            isopleths.append(dissolved)
+        if has_isopleths == True:
+            isopleths_df = pd.DataFrame(columns=['XH2O_fl','H2O_liq','CO2_liq'])
+            isopleths = []
+            for isopleth in isopleth_list:
+                dissolved = np.zeros([2,points])
+                pressure = np.linspace(np.nanmin(pressure_list),np.nanmax(pressure_list),points)
+                for i in range(points):
+                    dissolved[:,i] = self.calculate_dissolved_volatiles(pressure=pressure[i],X_fluid=(isopleth,1-isopleth),**kwargs)
+                    isopleths_df = isopleths_df.append({'XH2O_fl':[isopleth,1-isopleth][H2O_id],'H2O_liq':dissolved[H2O_id,i],'CO2_liq':dissolved[CO2_id,i]},ignore_index=True)
+                isopleths.append(dissolved)
 
-        return (isobars,isopleths)
+        if return_dfs == True:
+            if has_isopleths == True:
+                return (isobars_df, isopleths_df)
+            else:
+                return isobars_df
+        else:
+            if has_isopleths == True:
+                return (isobars, isopleths)
+            else:
+                return isobars
 
-    def calculate_degassing_paths(self,pressures,sample,fractionate_vapor=1.0,**kwargs):
+
+    def calculate_degassing_paths(self,sample,pressure='saturation',fractionate_vapor=1.0,final_pressure=100.0,
+                                    steps=101,return_dfs=True,**kwargs):
+        """
+        Calculates the dissolved volatiles in a progressively degassing sample.
+
+        Parameters
+        ----------
+        sample     pandas Series or dict
+            Major element oxides in wt% (including volatiles).
+        pressure     string, float, int, list, or numpy array
+            Defaults to 'saturation', the calculation will begin at the saturation pressure. If a number is passed
+            as either a float or int, this will be the starting pressure. If a list of numpy array is passed, the
+            pressure values in the list or array will define the degassing path, i.e. final_pressure and steps
+            variables will be ignored. Units are bars.
+        fractionate_vapor     float
+            What proportion of vapor should be removed at each step. If 1.0 (default), the degassing path will
+            correspond to open-system degassing. If 0.0, the degassing path will correspond to closed system
+            degassing.
+        final_pressure         float
+            The final pressure on the degassing path, in bars. Ignored if a list or numpy array is passed as the
+            pressure variable. Default is 1 bar.
+        steps     int
+            The number of steps in the degassing path. Ignored if a list or numpy array are passed as the pressure
+            variable.
+        return_dfs     bool
+            If True, the results will be returned in a pandas DataFrame, if False, two numpy arrays will be returned.
+
+        Returns
+        -------
+        pandas DataFrame or numpy arrays
+            If return_dfs is True (default), a DataFrame with columns 'Pressure', 'H2O_liq', 'CO2_liq',
+            'H2O_fl', 'CO2_fl', and 'FluidProportion_wt', is returned. Dissolved volatiles are in wt%,
+            the proportions of volatiles in the fluid are in mole fraction. Otherwise a numpy array containing
+            the dissolved volatile concentrations, and a numpy array containing the mole fractions of
+            volatiles in the fluid is returned. The columns are in the order of the volatiles in
+            self.volatile_species.
+
+        """
+        if pressure == 'saturation':
+            p0 = self.calculate_saturation_pressure(sample,**kwargs)
+            pressures = np.linspace(p0,final_pressure,steps)
+        elif type(pressure) == float or type(pressure) == int:
+            pressures = np.linspace(pressure,final_pressure,steps)
+        elif type(pressure) == list or type(pressure) == np.ndarray:
+            pressures = pressure
 
         Xv = np.zeros([2,len(pressures)])
         wtm = np.zeros([2,len(pressures)])
@@ -3592,33 +4090,98 @@ class MixedFluids(Model):
         wtm0s, wtm1s = (wtptoxides[self.volatile_species[0]],wtptoxides[self.volatile_species[1]])
 
         for i in range(len(pressures)):
-            X_fluid = self.calculate_equilibrium_fluid_comp(pressure=pressures[i],sample=wtptoxides,**kwargs)
-            Xv[:,i] = X_fluid
-            if X_fluid == (0,0):
-                wtm[:,i] = (wtptoxides[self.volatile_species[0]],wtptoxides[self.volatile_species[1]])
-            else:
-                if X_fluid[0] == 0:
-                    wtm[0,i] = wtptoxides[self.volatile_species[0]]
-                    wtm[1,i] = self.calculate_dissolved_volatiles(pressure=pressures[i],sample=wtptoxides,X_fluid=X_fluid,**kwargs)[1]
-                elif X_fluid[1] == 0:
-                    wtm[1,i] = wtptoxides[self.volatile_species[1]]
-                    wtm[0,i] = self.calculate_dissolved_volatiles(pressure=pressures[i],sample=wtptoxides,X_fluid=X_fluid,**kwargs)[0]
+            try:
+                X_fluid = self.calculate_equilibrium_fluid_comp(pressure=pressures[i],sample=wtptoxides,**kwargs)
+                Xv[:,i] = X_fluid
+                if X_fluid == (0,0):
+                    wtm[:,i] = (wtptoxides[self.volatile_species[0]],wtptoxides[self.volatile_species[1]])
                 else:
-                    wtm[:,i] = self.calculate_dissolved_volatiles(pressure=pressures[i],sample=wtptoxides,X_fluid=X_fluid,**kwargs)
-                wtptoxides[self.volatile_species[0]] = wtm[0,i] + (1-fractionate_vapor)*(wtm0s-wtm[0,i])
-                wtptoxides[self.volatile_species[1]] = wtm[1,i] + (1-fractionate_vapor)*(wtm1s-wtm[1,i])
-                wtptoxides = normalize_FixedVolatiles(wtptoxides)
+                    if X_fluid[0] == 0:
+                        wtm[0,i] = wtptoxides[self.volatile_species[0]]
+                        wtm[1,i] = self.calculate_dissolved_volatiles(pressure=pressures[i],sample=wtptoxides,X_fluid=X_fluid,**kwargs)[1]
+                    elif X_fluid[1] == 0:
+                        wtm[1,i] = wtptoxides[self.volatile_species[1]]
+                        wtm[0,i] = self.calculate_dissolved_volatiles(pressure=pressures[i],sample=wtptoxides,X_fluid=X_fluid,**kwargs)[0]
+                    else:
+                        wtm[:,i] = self.calculate_dissolved_volatiles(pressure=pressures[i],sample=wtptoxides,X_fluid=X_fluid,**kwargs)
+                    wtptoxides[self.volatile_species[0]] = wtm[0,i] + (1-fractionate_vapor)*(wtm0s-wtm[0,i])
+                    wtptoxides[self.volatile_species[1]] = wtm[1,i] + (1-fractionate_vapor)*(wtm1s-wtm[1,i])
+                    wtptoxides = normalize_FixedVolatiles(wtptoxides)
+            except:
+                Xv[:,i] = [np.nan]*np.shape(Xv)[0]
+                wtm[:,i] = wtm[:,i-1]
 
-        return wtm, Xv
+        if return_dfs == True:
+            exsolved_degassing_df = pd.DataFrame()
+            exsolved_degassing_df['Pressure'] = pressures
+            exsolved_degassing_df['H2O_liq'] = wtm[self.volatile_species.index('H2O'),:]
+            exsolved_degassing_df['CO2_liq'] = wtm[self.volatile_species.index('CO2'),:]
+            exsolved_degassing_df['H2O_fl'] = Xv[self.volatile_species.index('H2O'),:]
+            exsolved_degassing_df['CO2_fl'] = Xv[self.volatile_species.index('CO2'),:]
+            exsolved_degassing_df['FluidProportion_wt'] = (wtm0s+wtm1s)-exsolved_degassing_df['H2O_liq']-exsolved_degassing_df['CO2_liq']
+
+            return exsolved_degassing_df
+
+        else:
+            return (wtm, Xv)
 
 
     def root_saturation_pressure(self,x,volatile_concs,sample,kwargs):
+        """ Function called by scipy.root when finding the saturation pressure using
+        calculate_saturation_pressure.
+
+        Parameters
+        ----------
+        x     numpy array
+            The guessed value for the root. x[0] is the pressure (in bars) and x[1] is the
+            mole fraction of the first volatile in self.volatile_species.
+        volatile_concs     numpy array
+            The dissolved volatile concentrations, in the same order as self.volatile_species.
+        sample     pandas Series or dict
+            Major element oxides in wt% (including volatiles).
+        kwargs     dictionary
+            Dictionary of keyword arguments, which may be required by the pure-fluid models.
+
+        Returns
+        -------
+        numpy array
+            The difference in the dissolved volatile concentrations, and those predicted with the
+            pressure and fluid composition specified by x.
+        """
+        if x[1] < 0:
+            x[1] = 0
+        elif x[1] > 1:
+            x[1] = 1
+        if x[0] <= 0:
+            x[0] = 1
         misfit = np.array(self.calculate_dissolved_volatiles(pressure=x[0],X_fluid=(x[1],1-x[1]),sample=sample,**kwargs)) - volatile_concs
         return misfit
 
 
     def root_for_fluid_comp(self,Xv0,pressure,Xt0,Xt1,sample,kwargs):
-        # print("Need to fix volatile normalization issue.")
+        """ Function called by scipy.root_scalar when calculating the composition of equilibrium fluid
+        in the calculate_equilibrium_fluid_comp method.
+
+        Parameters
+        ----------
+        Xv0     float
+            The guessed mole fraction of the first volatile species in self.volatile_species.
+        pressure     float
+            The total pressure in bars.
+        Xt0     float
+            The total mole fraction of the first volatile species in self.volatile_species.
+        Xt1        float
+            The total mole fraction of the second volatile species in self.volatile_species.
+        sample     pandas Series
+            Major element oxides in wt%
+        kwargs     dictionary
+            A dictionary of keyword arguments that may be required by the pure fluid models.
+
+        Returns
+        -------
+        float
+            The differene in the LHS and RHS of the mass balance equation. Eq X in manuscript.
+        """
         wtm0, wtm1 = self.calculate_dissolved_volatiles(pressure=pressure,X_fluid=(Xv0,1-Xv0),sample=sample,**kwargs)
         sample_mod = sample.copy()
         sample_mod[self.volatile_species[0]] = wtm0
@@ -3634,6 +4197,22 @@ class MixedFluids(Model):
         return (Xt0-Xm0)/(Xv0-Xm0) - (Xt1-Xm1)/(1-Xv0-Xm1)
 
     def check_calibration_range(self,parameters,**kwargs):
+        """ Checks whether the calculation is being performed within the calibration range of the
+        pure fluid models.
+
+        Parameters
+        ----------
+        parameters     dictionary
+            Keys are the names of the parameters to check, values are the parameter values
+            used in the calculation.
+
+        Returns
+        -------
+        dictionary
+            A dictionary with entries for each volatile in the model. The value is the value returned
+            from each pure models own check_calibration_range method, most likely a dictionary of
+            parameters.
+        """
         results = {}
         for species, model in zip(self.volatile_species,self.models):
             results[species] = model.check_calibration_range(parameters=parameters)
@@ -3645,6 +4224,7 @@ class MagmaSat(Model):
     """
 
     def __init__(self):
+        from thermoengine import equilibrate
         self.melts_version = '1.2.0' #just here so users can see which version is being used
 
         try:
@@ -3788,8 +4368,8 @@ class MagmaSat(Model):
     #TODO make better initial guess at higher XH2Ofl
     #TODO make refinements faster
         """
-        Calculates the amount of H2O and CO2 dissolved in a magma at the given P/T conditions and fluid composition. Fluid composition
-        will be matched to within 0.0001 mole fraction.
+        Calculates the amount of H2O and CO2 dissolved in a magma at saturation at the given P/T conditions and fluid composition. 
+        Fluid composition will be matched to within 0.0001 mole fraction.
 
         Parameters
         ----------
@@ -3959,7 +4539,7 @@ class MagmaSat(Model):
             Pressure, in bars. #TODO check units
 
         mode: str
-            OPTIONAL. Default value is 'molfrac', which returns the fluid composition in mole fraction (XH2O=1 is a pure 
+            OPTIONAL. Default value is 'molfrac', which returns the fluid composition in mole fraction (XH2O=1 is a pure
             H2O fluid, XH2O=0 is a pure CO2 fluid). Passing 'wtper' returns the fluid composition in wt% oxides.
 
         verbose: bool
@@ -4215,15 +4795,15 @@ class MagmaSat(Model):
             Temperature at which to calculate degassing paths, in degrees C.
 
         pressure: float
-            OPTIONAL. The perssure at which to begin the degassing calculations. Default value is 'saturation', which runs the 
+            OPTIONAL. The perssure at which to begin the degassing calculations. Default value is 'saturation', which runs the
             calculation with the initial pressure at the saturation pressure. If a pressure greater than the saturation pressure
             is input, the calculation will start at saturation, since this is the first pressure at which any degassing will
             occur.
 
         fractionate_vapor: float
             OPTIONAL. Proportion of vapor retained at each pressure step.
-            Default value is 1.0 (completely closed-system degassing). Specifies the type of calculation performed, either 
-            closed system (1.0) or open system (0.0) degassing. If any value between >0.0 is chosen, user can also specify the 
+            Default value is 1.0 (completely closed-system degassing). Specifies the type of calculation performed, either
+            closed system (1.0) or open system (0.0) degassing. If any value between >0.0 is chosen, user can also specify the
             'init_vapor' argument (see below). A value in between 0 and 1 will retain that proportion of vapor at each step.
             For example, for a value of 0.2, the calculation will remove 80% of the vapor and retain 20% of the vapor at each
             pressure step.
@@ -4270,7 +4850,7 @@ class MagmaSat(Model):
                 try:
                     bulk_comp["H2O"] += fl_comp["H2O"]*0.0005
                 except:
-                    bulk_comp["H2O"] = bulk_comp["H2O"] * 1.1 
+                    bulk_comp["H2O"] = bulk_comp["H2O"] * 1.1
                 try:
                     bulk_comp["CO2"] += fl_comp["CO2"]*0.0005
                 except:
@@ -4466,18 +5046,17 @@ def plot_isobars_and_isopleths(isobars, isopleths):
 
 #====== Define some standard model options =======================================================#
 
-default_models = {'Shishkina':              MixedFluids({'CO2':ShishkinaCarbon(),'H2O':ShishkinaWater()}),
-                  'Dixon':                  MixedFluids({'CO2':DixonCarbon(),'H2O':DixonWater()}),
+default_models = {'Shishkina':                MixedFluids({'CO2':ShishkinaCarbon(),'H2O':ShishkinaWater()}),
+                  'Dixon':                    MixedFluids({'CO2':DixonCarbon(),'H2O':DixonWater()}),
                   'IaconoMarziano':         MixedFluids({'CO2':IaconoMarzianoCarbon(),'H2O':IaconoMarzianoWater()}),
                   'ShishkinaCarbon':        ShishkinaCarbon(),
                   'ShishkinaWater':         ShishkinaWater(),
                   'DixonCarbon':            DixonCarbon(),
-                  'DixonWater':             DixonWater(),
-                  'IaconoMarzianoCarbon':   IaconoMarzianoCarbon(),
+                  'DixonWater':                DixonWater(),
+                  'IaconoMarzianoCarbon':    IaconoMarzianoCarbon(),
                   'IaconoMarzianoWater':    IaconoMarzianoWater(),
-                  'EguchiCarbon':           EguchiCarbon(),
-                  'AllisonCarbon':          AllisonCarbon(),
-                  'MagmaSat':               MagmaSat()
+                  'EguchiCarbon':            EguchiCarbon(),
+                  'AllisonCarbon':            AllisonCarbon()
 }
 
 class calculate_dissolved_volatiles(Calculate):
@@ -4536,7 +5115,8 @@ class calculate_saturation_pressure(Calculate):
 class calculate_degassing_paths(Calculate):
     """
     """
-    def calculate(self,sample,**kwargs):
+    def calculate(self,sample,pressure='saturation',fractionate_vapor=1.0,
+                  final_pressure=100.0,steps=101,**kwargs):
         check = getattr(self.model, "calculate_degassing_paths", None)
         if callable(check):
             data = self.model.calculate_degassing_paths(sample=sample,pressure=pressure,
@@ -4551,230 +5131,194 @@ class calculate_degassing_paths(Calculate):
 
 
 
-# class fugacity_ZD09_co2(FugacityModel):
-#   def __init__(self):
-#       self.a = np.array([0.0,
-#                          2.95177298930e-2,
-#                          -6.33756452413e3,
-#                          -2.75265428882e5,
-#                          1.29128089283e-3,
-#                          -1.45797416153e2,
-#                          7.65938947237e4,
-#                          2.58661493537e-6,
-#                          0.52126532146,
-#                          -1.39839523753e2,
-#                          -2.36335007175e-8,
-#                          5.35026383543e-3,
-#                          -0.27110649951,
-#                          2.50387836486e4,
-#                          0.73226726041,
-#                          1.5483335997e-2])
-#       self.e = {'H2O':510.0,'CO2':235.0}
-#       self.s = {'H2O':2.88,'CO2':3.79}
-#       self.k1 = 0.85
-#       self.k2 = 1.02
-#
-#   def fugacity(self,pressure,temperature,X_fluid,**kwargs):
-#       phi = np.exp(self.logPhi(P=pressure,T=temperature,x=X_fluid))
-#       return pressure*X_fluid*phi
-#
-#   def volume(self,P,T,x):
-#       """ write stuff"""
-#       return root_scalar(self.root_volumez,args=(P,T,x),x0=20,method='newton',
-#                           fprime=self.root_dpdvm).root
-#
-#   def root_volume(self,v,P,T,x):
-#       e = x**2*self.e['CO2'] + (1-x)**2*self.e['H2O'] + 2*self.k1*x*(1-x)*(self.e['H2O']*self.e['CO2'])**0.5
-#       s = x**2*self.s['CO2'] + (1-x)**2*self.s['H2O'] + self.k2*x*(1-x)*(self.s['CO2']+self.s['H2O'])
-#       a = self.a
-#
-#       vm = v/1000*(3.691/s)**3
-#
-#       Pm = 3.0636*P*s**3/e
-#       Tm = 154*T/e
-#
-#       Z = 1 + (a[1]+a[2]/Tm**2 + a[3]/Tm**3)/vm + (a[4]+a[5]/Tm**2+a[6]/Tm**3)/vm**2 \
-#           + (a[7]+a[8]/Tm**2+a[9]/Tm**3)/vm**4 + (a[10]+a[11]/Tm**2+a[12]/Tm**3)/vm**5 \
-#           + a[13]/(Tm**3*vm**2)*(a[14]+a[15]/vm**2)*np.exp(-a[15]/vm**2)
-#
-#       p = Z*0.08314*Tm/vm
-#
-#       return p - P
-#
-#   def root_volumez(self,v,P,T,x):
-#       e = x**2*self.e['CO2'] + (1-x)**2*self.e['H2O'] + 2*self.k1*x*(1-x)*(self.e['H2O']*self.e['CO2'])**0.5
-#       s = x**2*self.s['CO2'] + (1-x)**2*self.s['H2O'] + self.k2*x*(1-x)*(self.s['CO2']+self.s['H2O'])
-#       a = self.a
-#
-#       vm = v/1000*(3.691/s)**3
-#
-#       Pm = 3.0636*P*s**3/e
-#       Tm = 154*T/e
-#
-#       Z = 1 + (a[1]+a[2]/Tm**2 + a[3]/Tm**3)/vm + (a[4]+a[5]/Tm**2+a[6]/Tm**3)/vm**2 \
-#           + (a[7]+a[8]/Tm**2+a[9]/Tm**3)/vm**4 + (a[10]+a[11]/Tm**2+a[12]/Tm**3)/vm**5 \
-#           + a[13]/(Tm**3*vm**2)*(a[14]+a[15]/vm**2)*np.exp(-a[15]/vm**2)
-#
-#
-#
-#       return Z - Pm*vm/0.08314/Tm
-#
-#   def volume_est(self,P,T,x):
-#
-#       delv = 1.0
-#       vPrevious = 1.0
-#       delvPrevious = 1.0
-#       vLowest = 0.017
-#
-#       e = x**2*self.e['CO2'] + (1-x)**2*self.e['H2O'] + 2*self.k1*x*(1-x)*(self.e['H2O']*self.e['CO2'])**0.5
-#       s = x**2*self.s['CO2'] + (1-x)**2*self.s['H2O'] + self.k2*x*(1-x)*(self.s['CO2']+self.s['H2O'])
-#       a = self.a
-#
-#       v = 0.08314467*T/P
-#       Pm = 3.063*s**3*P/e
-#       Tm = 154*T/e
-#       vm = v*(3.691/s)**3
-#
-#       z = self.root_z(vm,T,x)
-#
-#       iter = 0
-#       while (z < 0.0) and (iter < 200):
-#           dzdvm = self.root_dzdm(vm,T,x)
-#           vm += (0.1-z)/dzdvm
-#           z = self.root_z(vm,T,x)
-#           iter += 1
-#
-#       iter = 0
-#       while iter < 200:
-#           delv = z*0.08314467*Tm/Pm - vm
-#           if ((iter > 1) and (delv*delvprevious < 0.0)) or (np.abs(delv)<vm*1000*e):
-#               break
-#           vPrevious = vm
-#           delvPrevious = delv
-#           vm = (z*0.08314467*Tm/Pm + vm)/2.0
-#           increment = vm - vPrevious
-#
-#           while self.root_z(vm,T,x) < 0.0:
-#               increment = increment/2
-#               if np.abs(increment) < 100*e:
-#                   return False
-#               vm = vPrevious + increment
-#           if vm < vLowest:
-#               vm = vLowest
-#           iter += 1
-#           if iter == 200:
-#               if np.abs(vm-vLowest) <= 100*e:
-#                   vLowest = 0.9*vLowest
-#                   iter = 0
-#
-#       if np.abs(delv) > vm*100*e:
-#           if delv < 0.0:
-#               dx = vPrevious - vm
-#               rtb = vm
-#           else:
-#               dx = vm-vPrevious
-#               rtb = vPrevious
-#           iter = 0
-#           while iter<200:
-#               dx = dx*0.5
-#               vm = rtb + dx
-#               z = self.root_z(vm,T,x)
-#               delv = z*0.08314467*Tm/Pm - vm
-#               if delv <= 0.0:
-#                   rtb = vm
-#               if (np.abs(delv)<100*e) or delv == 0.0:
-#                   break
-#               iter += 1
-#           if (iter == 200) or (np.abs(dx) > 100.0*e):
-#               return False
-#       elif iter == 200:
-#           return False
-#
-#       return 1000.0*vm*(s/3.691)**3
-#
-#
-#
-#   def root_z(self,vm,T,x):
-#       a = self.a
-#       e = x**2*self.e['CO2'] + (1-x)**2*self.e['H2O'] + 2*self.k1*x*(1-x)*(self.e['H2O']*self.e['CO2'])**0.5
-#       Tm = 154*T/e
-#
-#       z = 1 + (a[1]+a[2]/Tm**2 + a[3]/Tm**3)/vm + (a[4]+a[5]/Tm**2+a[6]/Tm**3)/vm**2 \
-#           + (a[7]+a[8]/Tm**2+a[9]/Tm**3)/vm**4 + (a[10]+a[11]/Tm**2+a[12]/Tm**3)/vm**5 \
-#           + a[13]/(Tm**3*vm**2)*(a[14]+a[15]/vm**2)*np.exp(-a[15]/vm**2)
-#       return z
-#
-#   def root_dzdm(self,vm,T,x):
-#       a = self.a
-#       e = x**2*self.e['CO2'] + (1-x)**2*self.e['H2O'] + 2*self.k1*x*(1-x)*(self.e['H2O']*self.e['CO2'])**0.5
-#       Tm = 154*T/e
-#
-#       bv = (a[1]+a[2]/Tm**2 + a[3]/Tm**3)
-#       cv = (a[4]+a[5]/Tm**2+a[6]/Tm**3)
-#       dv = (a[7]+a[8]/Tm**2+a[9]/Tm**3)
-#       ev = (a[10]+a[11]/Tm**2+a[12]/Tm**3)
-#       fv = a[13]*a[14]/Tm**3
-#       gv = a[13]*a[15]/Tm**3
-#       gammav = a[15]
-#
-#       dzdvm = - bv/vm**2 - 2.0*cv/vm**3+ - 4.0*dv/vm**5 - 5.0*ev/vm**6 \
-#               - 2.0*(fv/vm**3) * np.exp(-gammav/vm**2) + 2.0*(fv/vm**2) * (gammav/vm**3) * np.exp(-gammav/vm**2) \
-#               - 4.0*(gv/vm**5) * np.exp(-gammav/vm**2) + 2.0*(gv/vm**4) * (gammav/vm**3) * np.exp(-gammav/vm**2)
-#
-#       return dzdvm
-#
-#   def root_dpdvm(self,vm,P,T,x):
-#       a = self.a
-#       e = x**2*self.e['CO2'] + (1-x)**2*self.e['H2O'] + 2*self.k1*x*(1-x)*(self.e['H2O']*self.e['CO2'])**0.5
-#       s = x**2*self.s['CO2'] + (1-x)**2*self.s['H2O'] + self.k2*x*(1-x)*(self.s['CO2']+self.s['H2O'])
-#       Tm = 154*T/e
-#       Pm = 3.063*s**3*P/e
-#
-#       bv = (a[1]+a[2]/Tm**2 + a[3]/Tm**3)
-#       cv = (a[4]+a[5]/Tm**2+a[6]/Tm**3)
-#       dv = (a[7]+a[8]/Tm**2+a[9]/Tm**3)
-#       ev = (a[10]+a[11]/Tm**2+a[12]/Tm**3)
-#       fv = a[13]*a[14]/Tm**3
-#       gv = a[13]*a[15]/Tm**3
-#       gammav = a[15]
-#
-#       dzdvm = - bv/vm**2 - 2.0*cv/vm**3+ - 4.0*dv/vm**5 - 5.0*ev/vm**6 \
-#               - 2.0*(fv/vm**3) * np.exp(-gammav/vm**2) + 2.0*(fv/vm**2) * (gammav/vm**3) * np.exp(-gammav/vm**2) \
-#               - 4.0*(gv/vm**5) * np.exp(-gammav/vm**2) + 2.0*(gv/vm**4) * (gammav/vm**3) * np.exp(-gammav/vm**2) \
-#               - Pm/0.08314/Tm
-#
-#       return dzdvm
-#
-#
-#
-#   def logPhi(self,P,T,x):
-#       e = x**2*self.e['CO2'] + (1-x)**2*self.e['H2O'] + 2*self.k1*x*(1-x)*(self.e['H2O']*self.e['CO2'])**0.5
-#       s = x**2*self.s['CO2'] + (1-x)**2*self.s['H2O'] + self.k2*x*(1-x)*(self.s['CO2']+self.s['H2O'])
-#       a = self.a
-#
-#       v = self.volume(P,T,x)
-#
-#       # vm = v/1000*(3.691/s)**3
-#       vm = v*(3.691/s)**3
-#
-#
-#       Pm = 3.0636*P*s**3/e
-#       Tm = 154*T/e
-#
-#       Z = 1 + (a[1]+a[2]/Tm**2 + a[3]/Tm**3)/vm + (a[4]+a[5]/Tm**2+a[6]/Tm**3)/vm**2 \
-#           + (a[7]+a[8]/Tm**2+a[9]/Tm**3)/vm**4 + (a[10]+a[11]/Tm**2+a[12]/Tm**3)/vm**5 \
-#           + a[13]/(Tm**3*vm**2)*(a[14]+a[15]/vm**2)*np.exp(-a[15]/vm**2)
-#
-#       S1 = (a[1] + a[2]/Tm**2 + a[3]/Tm**3)/vm + (a[4] + a[5]/Tm**2 + a[6]/Tm**3)/(2*vm**2) \
-#           + (a[7] + a[8]/Tm**2 + a[9]/Tm**3)/(4*vm**4) + (a[10] + a[11]/Tm**2 + a[12]/Tm**3)/(5*vm**5) \
-#           + a[13]/(2*a[15]*Tm**3)*(a[14]+1-(a[14]+1+a[15]/vm**2)*np.exp(-a[15]/vm**2))
-#
-#       S2 = (2*a[2]/Tm**2 + 3*a[3]/Tm**3)/vm + (2*a[5]/Tm**2 + 3*a[6]/Tm**3)/(2*vm**2) \
-#           + (2*a[8]/Tm**2 + 3*a[9]/Tm**3)/(4*vm**4) + (2*a[11]/Tm**2 + 3*a[12]/Tm**3)/(5*vm**5) \
-#           + 3*a[13]/(2*a[15]*Tm**3)*(a[14]+1-(a[14]+1+a[15]/vm**2)*np.exp(-a[15]/vm**2))
-#
-#       logPhi = Z - 1 - np.log(Z) + S1 + 2*S2* \
-#           (1-(self.k1*self.e['CO2'] + self.k1*(1-x)*(self.e['CO2']*self.e['H2O'])**0.5)) \
-#           + 6*(1-Z)*(1-(self.k2*x*self.s['CO2'] + self.k2*(1-x)*(self.s['CO2']+self.s['H2O'])*0.5))
-#
-#       return logPhi
+def test():
+    """
+    This is a set of tests for the module, firstly to ensure all of the functions that should run, do run.
+    Secondly, the output can be used to check the module reproduces the results in each of the manuscripts
+    describing the models.
+    """
+
+    test_sample = {'SiO2':47.95,
+                 'TiO2':1.67,
+                 'Al2O3':17.32,
+                 'FeO':10.24,
+                 'Fe2O3':0.1,
+                 'MgO':5.76,
+                 'CaO':10.93,
+                 'Na2O':3.45,
+                 'K2O':1.99,
+                 'P2O5':0.51,
+                 'MnO':0.1,
+                 'CO2':0.8,
+                 'H2O':4.0}
+
+    test_pressure = 2000.0
+    test_temperature = 1473.15
+    test_pressure_list = [1000.0,2000.0,5000.0]
+    test_isopleth_list = [0.0,0.5,1.0]
+
+    print("\n================================\n= MAGMASATPLUS TESTING ROUTINE =\n================================")
+
+    print("\n This routine will check that key methods run using typical values of variables. \
+The routine does not check that the results are correct (though this may be obvious from the outputs),\
+nor does it check every possible iteration of methods and input types. It will check that an update hasn't \
+COMPLETELY broken the module.")
+
+    for i, model_name in zip(range(len(default_models)),list(default_models.keys())):
+        print("\nTesting model {:d} of {:d}: {:s}".format(i+1,len(default_models),model_name))
+
+        ### calculate_dissolved_volatiles
+        model = default_models[model_name]
+        print("Model contains "+" ".join(model.volatile_species))
+
+        print("Testing calculate_dissolved_volatiles method...")
+
+        if len(model.volatile_species) == 1:
+            dissolved = model.calculate_dissolved_volatiles(pressure=test_pressure,temperature=test_temperature,
+                                                            sample=test_sample)
+        else:
+            X_fluid = 1.0/len(model.volatile_species)
+            X_fluid = tuple(X_fluid for x in range(len(model.volatile_species)))
+            print("Setting X_fluid to "+str(X_fluid))
+            dissolved = model.calculate_dissolved_volatiles(pressure=test_pressure,temperature=test_temperature,
+                                                            sample=test_sample,X_fluid=X_fluid)
+
+        if len(model.volatile_species) == 1:
+            print("  {:s} solubility at {:.0f} bars and {:.0f} K is {:.3f} wt%".format(model.volatile_species[0],
+                                                                                     test_pressure,test_temperature,
+                                                                                     dissolved))
+        else:
+            for i,volatile in zip(range(len(model.volatile_species)),model.volatile_species):
+                print("  {:s} solubility at {:.0f} bars and {:.0f} K is {:.3f} wt%".format(volatile,
+                                                                                         test_pressure,test_temperature,
+                                                                                         dissolved[i]))
+
+        print("Testing calculate_dissolved_volatiles class interface...")
+        if len(model.volatile_species) == 1:
+            result = calculate_dissolved_volatiles(sample=test_sample,pressure=test_pressure,
+                                                   temperature=test_temperature,model=model_name)
+        else:
+            result = calculate_dissolved_volatiles(sample=test_sample,pressure=test_pressure,
+                                                   temperature=test_temperature,model=model_name,
+                                                   X_fluid=X_fluid)
+
+        if len(model.volatile_species) == 1:
+            print("  {:s} solubility at {:.0f} bars and {:.0f} K is {:.3f} wt%".format(model.volatile_species[0],
+                                                                                     test_pressure,test_temperature,
+                                                                                     result.result))
+        else:
+            for i,volatile in zip(range(len(model.volatile_species)),model.volatile_species):
+                print("  {:s} solubility at {:.0f} bars and {:.0f} K is {:.3f} wt%".format(volatile,
+                                                                                         test_pressure,test_temperature,
+                                                                                         result.result[i]))
+
+
+
+        ### calculate_saturation_pressure
+        print("Testing calculate_saturation_pressure method...")
+        satP = model.calculate_saturation_pressure(sample=test_sample,temperature=test_temperature)
+        if len(model.volatile_species) == 1:
+            print("  A concentration of {:.2f} wt% {:s} is saturated at {:.0f} bars at {:.0f} K".format(test_sample[model.volatile_species[0]],
+                                                                                                       model.volatile_species[0],satP,
+                                                                                                       test_temperature))
+        else:
+            concstr = ""
+            for volatile in model.volatile_species:
+                concstr += "{:.2f}".format(test_sample[volatile])
+                concstr += " wt% "
+                concstr += volatile
+                concstr += ", "
+            print("  Concentrations of "+concstr[:-1]+" are saturated at {:.0f} bars at {:.0f} K".format(satP,test_temperature))
+
+        print("Testing calculate_saturation_pressure class interface...")
+        satP = calculate_saturation_pressure(model=model_name,sample=test_sample,temperature=test_temperature).result
+        if len(model.volatile_species) == 1:
+            print("  A concentration of {:.2f} wt% {:s} is saturated at {:.0f} bars at {:.0f} K".format(test_sample[model.volatile_species[0]],
+                                                                                                       model.volatile_species[0],satP,
+                                                                                                       test_temperature))
+        else:
+            concstr = ""
+            for volatile in model.volatile_species:
+                concstr += "{:.2f}".format(test_sample[volatile])
+                concstr += " wt% "
+                concstr += volatile
+                concstr += ", "
+            print("  Concentrations of "+concstr[:-1]+" are saturated at {:.0f} bars at {:.0f} K".format(satP,test_temperature))
+
+
+        ### calculate_equilibrium_fluid_comp
+        print("Testing calculate_equilibrium_fluid_comp method...")
+        fluid = model.calculate_equilibrium_fluid_comp(sample=test_sample,temperature=test_temperature,pressure=test_pressure)
+
+        if len(model.volatile_species) == 1:
+            print("  A mole fraction of {:.2f} of {:s} is present in the fluid.".format(fluid,model.volatile_species[0]))
+        else:
+            fluidstr = ""
+            for i,volatile in zip(range(len(model.volatile_species)),model.volatile_species):
+                fluidstr += "{:.2f}".format(fluid[i])
+                fluidstr += " "
+                fluidstr += volatile
+                fluidstr += ", "
+            print("  Mole fractions of "+fluidstr +"are present in the fluid.")
+            if np.sum(fluid) != 0.0 and np.sum(fluid) != 1.0:
+                print("  WARNING: MOLE FRACTIONS DO NOT SUM TO 1.0")
+
+        print("Testing calculate_equilibrium_fluid_comp class interface...")
+        fluid = model.calculate_equilibrium_fluid_comp(model=model_name,sample=test_sample,
+                                                       temperature=test_temperature,pressure=test_pressure)
+        if len(model.volatile_species) == 1:
+            print("  A mole fraction of {:.2f} of {:s} is present in the fluid.".format(fluid,model.volatile_species[0]))
+        else:
+            fluidstr = ""
+            for i,volatile in zip(range(len(model.volatile_species)),model.volatile_species):
+                fluidstr += "{:.2f}".format(fluid[i])
+                fluidstr += " "
+                fluidstr += volatile
+                fluidstr += ", "
+            print("  Mole fractions of "+fluidstr +"are present in the fluid.")
+            if np.sum(fluid) != 0.0 and np.sum(fluid) != 1.0:
+                print("  WARNING: MOLE FRACTIONS DO NOT SUM TO 1.0")
+
+        ### calculate_isobars_and_isopleths
+        if len(model.volatile_species) > 1:
+            print("Testing calculate_isobars_and_isopleths method...")
+            isobars, isopleths = model.calculate_isobars_and_isopleths(pressure_list=test_pressure_list,
+                                                                       isopleth_list=test_isopleth_list,
+                                                                       sample=test_sample,
+                                                                       temperature=test_temperature)
+            print("Isobars:")
+            print(isobars)
+            print("\nIsopleths:")
+            print(isopleths)
+
+            print("Testing calculate_isobars_and_isopleths class interface...")
+            isobars, isopleths = calculate_isobars_and_isopleths(model=model_name,pressure_list=test_pressure_list,
+                                                                 isopleth_list=test_isopleth_list,
+                                                                 sample=test_sample,
+                                                                 temperature=test_temperature).result
+            print("Isobars:")
+            print(isobars)
+            print("\nIsopleths:")
+            print(isopleths)
+
+        ### calculate_degassing_path
+        if len(model.volatile_species) > 1:
+            print("Testing calculate_degassing_path method...")
+            degassing = model.calculate_degassing_paths(sample=test_sample,temperature=test_temperature)
+            print("  Degassing path:")
+            print(degassing)
+
+            print("Testing calculate_degassing_path class interface...")
+            degassing = calculate_degassing_paths(model=model_name,sample=test_sample,
+                                                        temperature=test_temperature).result
+            print("  Degassing path:")
+            print(degassing)
+
+
+    print("\nTesting routine complete.\n")
+
+
+
+
+if __name__ == '__main__':
+    test()

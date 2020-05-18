@@ -5,7 +5,6 @@
 #-----------------IMPORTS-----------------#
 import pandas as pd
 import numpy as np
-from thermoengine import equilibrate
 import matplotlib.pyplot as plt
 from abc import ABC, abstractmethod
 from scipy.optimize import root_scalar
@@ -268,7 +267,7 @@ def fluid_molfrac_to_wt(data, H2O_colname='XH2O_fl', CO2_colname='XCO2_fl'):
     Parameters
     ----------
     data: pandas DataFrame
-        DataFrame containing columns for H2O and CO2 concentrations in the fluid.
+        Sample composition(s) containing columns for H2O and CO2 concentrations in the fluid.
 
     H2O_colname: str
         OPTIONAL. The default value is 'XH2O_fl', which is what is returned by ExcelFile() core calculations.
@@ -538,6 +537,7 @@ class ExcelFile(object):
 
     def __init__(self, filename, input_type='wtpercent'):
         """Return an ExcelFile object whoes parameters are defined here."""
+        from thermoengine import equilibrate
         self.input_type = input_type
 
         data = pd.read_excel(filename)
@@ -4224,6 +4224,7 @@ class MagmaSat(Model):
     """
 
     def __init__(self):
+        from thermoengine import equilibrate
         self.melts_version = '1.2.0' #just here so users can see which version is being used
 
         try:
@@ -4367,8 +4368,8 @@ class MagmaSat(Model):
     #TODO make better initial guess at higher XH2Ofl
     #TODO make refinements faster
         """
-        Calculates the amount of H2O and CO2 dissolved in a magma at the given P/T conditions and fluid composition. Fluid composition
-        will be matched to within 0.0001 mole fraction.
+        Calculates the amount of H2O and CO2 dissolved in a magma at saturation at the given P/T conditions and fluid composition. 
+        Fluid composition will be matched to within 0.0001 mole fraction.
 
         Parameters
         ----------
