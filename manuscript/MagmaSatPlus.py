@@ -538,6 +538,21 @@ class ExcelFile(object):
     def __init__(self, filename, input_type='wtpercent'):
         """Return an ExcelFile object whoes parameters are defined here."""
         from thermoengine import equilibrate
+        #--------------MELTS preamble---------------#
+        # instantiate thermoengine equilibrate MELTS instance
+        melts = equilibrate.MELTSmodel('1.2.0')
+
+        # Suppress phases not required in the melts simulation
+        self.oxides = melts.get_oxide_names()
+        self.phases = melts.get_phase_names()
+
+        for phase in self.phases:
+            melts.set_phase_inclusion_status({phase: False})
+        melts.set_phase_inclusion_status({'Fluid': True, 'Liquid': True})
+
+        self.melts = melts
+        #-------------------------------------------#
+
         self.input_type = input_type
 
         data = pd.read_excel(filename)
@@ -568,7 +583,7 @@ class ExcelFile(object):
 
     def preprocess_sample(self,sample):
         """
-        Instantiates MELTS and adds 0.0 values to any oxide data not passed.
+        Adds 0.0 values to any oxide data not passed.
 
         Parameters
         ----------
@@ -579,20 +594,6 @@ class ExcelFile(object):
         -------
         pandas DataFrame
         """
-        #--------------MELTS preamble---------------#
-        # instantiate thermoengine equilibrate MELTS instance
-        melts = equilibrate.MELTSmodel('1.2.0')
-
-        # Suppress phases not required in the melts simulation
-        self.oxides = melts.get_oxide_names()
-        self.phases = melts.get_phase_names()
-
-        for phase in self.phases:
-            melts.set_phase_inclusion_status({phase: False})
-        melts.set_phase_inclusion_status({'Fluid': True, 'Liquid': True})
-
-        self.melts = melts
-        #-------------------------------------------#
         oxides = self.oxides
         for oxide in oxides:
             if oxide in self.data.columns:
@@ -4230,6 +4231,7 @@ class MagmaSat(Model):
         try:
             melts
         except NameError:
+            from thermoengine import equilibrate
             #--------------MELTS preamble---------------#
             # instantiate thermoengine equilibrate MELTS instance
             melts = equilibrate.MELTSmodel('1.2.0')
