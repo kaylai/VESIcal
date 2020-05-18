@@ -4037,7 +4037,7 @@ class MixedFluids(Model):
                 return isobars
 
 
-    def calculate_degassing_paths(self,sample,pressure='saturation',fractionate_vapor=1.0,final_pressure=100.0,
+    def calculate_degassing_path(self,sample,pressure='saturation',fractionate_vapor=1.0,final_pressure=100.0,
                                     steps=101,return_dfs=True,**kwargs):
         """
         Calculates the dissolved volatiles in a progressively degassing sample.
@@ -4781,7 +4781,7 @@ class MagmaSat(Model):
         if has_isopleths == False:
             return isobars_df, None #TODO should this just return isobars_df? Currently this requires two items to unpack, I think?
 
-    def calculate_degassing_paths(self, sample, temperature, pressure='saturation', fractionate_vapor=1.0, init_vapor=0.0):
+    def calculate_degassing_path(self, sample, temperature, pressure='saturation', fractionate_vapor=1.0, init_vapor=0.0):
         #TODO check if fractionate_vapor is amount of vapor retained or lost at each P step
         """
         Calculates degassing path for one sample
@@ -5114,14 +5114,14 @@ class calculate_saturation_pressure(Calculate):
     def check_calibration_range(self,**kwargs):
         return 0
 
-class calculate_degassing_paths(Calculate):
+class calculate_degassing_path(Calculate):
     """
     """
     def calculate(self,sample,pressure='saturation',fractionate_vapor=1.0,
                   final_pressure=100.0,steps=101,**kwargs):
-        check = getattr(self.model, "calculate_degassing_paths", None)
+        check = getattr(self.model, "calculate_degassing_path", None)
         if callable(check):
-            data = self.model.calculate_degassing_paths(sample=sample,pressure=pressure,
+            data = self.model.calculate_degassing_path(sample=sample,pressure=pressure,
                                                             fractionate_vapor=fractionate_vapor,**kwargs)
             return data
         else:
@@ -5306,12 +5306,12 @@ COMPLETELY broken the module.")
         ### calculate_degassing_path
         if len(model.volatile_species) > 1:
             print("Testing calculate_degassing_path method...")
-            degassing = model.calculate_degassing_paths(sample=test_sample,temperature=test_temperature)
+            degassing = model.calculate_degassing_path(sample=test_sample,temperature=test_temperature)
             print("  Degassing path:")
             print(degassing)
 
             print("Testing calculate_degassing_path class interface...")
-            degassing = calculate_degassing_paths(model=model_name,sample=test_sample,
+            degassing = calculate_degassing_path(model=model_name,sample=test_sample,
                                                         temperature=test_temperature).result
             print("  Degassing path:")
             print(degassing)
