@@ -1049,6 +1049,10 @@ class Model(object):
         self.set_activity_model(activity_idealsolution())
 
     def set_volatile_species(self,volatile_species):
+        if type(volatile_species) == str:
+            volatile_species = [volatile_species]
+        elif type(volatile_species) != list:
+            raise InputError("volatile_species must be a str or list.")
         self.volatile_species = volatile_species
 
     def set_fugacity_model(self,fugacity_model):
