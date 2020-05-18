@@ -3665,19 +3665,19 @@ class MagmaSat(Model):
             #-------------------------------------------#
 
     def preprocess_sample(self,sample): #TODO test this by passing weird shit to sample
-    """
-    Returns sample with 0.0 values for any oxides not passed.
+        """
+        Returns sample with 0.0 values for any oxides not passed.
 
-    Parameters
-    ----------
-    sample: dictionary
-        Sample composition in wt% oxides
+        Parameters
+        ----------
+        sample: dictionary
+            Sample composition in wt% oxides
 
-    Returns
-    -------
-    dictionary
-        Sample composition in wt% oxides
-    """
+        Returns
+        -------
+        dictionary
+            Sample composition in wt% oxides
+        """
         oxides = self.oxides
         for oxide in oxides:
             if oxide in sample.keys():
