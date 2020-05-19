@@ -98,27 +98,44 @@ def printTable(myDict):
 
 #----------DEFINE SOME BASIC DATA TRANSFORMATION METHODS-----------#
 
-def mol_to_wtpercent(dataframe):
+def mol_to_wtpercent(sample):
     """
     Takes in a pandas DataFrame containing multi-sample input and returns a pandas DataFrame object
     with oxide values converted from mole percent to wt percent.
 
     Parameters
     ----------
-    dataframe: pandas DataFrame object
-        Variable name referring to the pandas DataFrame object that contains user-imported data
+    oxides: pandas DataFrame object or dictionary
+        Variable name referring to the pandas DataFrame object that contains user-imported data or a dictionary
+        for single-sample input.
     """
-    data = dataframe
+    data = sample
 
-    for key, value in oxideMass.items():
-        data.loc[:, key] *= value
+    if isinstance(sample, pd.DataFrame):
+        for key, value in oxideMass.items():
+            data.loc[:, key] *= value
 
-    data["MPOSum"] = sum([data[oxide] for oxide in oxides])
+        data["MPOSum"] = sum([data[oxide] for oxide in oxides])
 
-    for oxide in oxides:
-        data.loc[:, oxide] /= data['MPOSum']
-        data.loc[:, oxide] *= 100
-    del data['MPOSum']
+        for oxide in oxides:
+            data.loc[:, oxide] /= data['MPOSum']
+            data.loc[:, oxide] *= 100
+        del data['MPOSum']
+
+    elif isinstance(sample, dict):
+        for oxide in oxides:
+            if oxide in data.keys():
+                pass
+            else:
+                data[oxide] = 0.0
+
+        data = {oxide:  data[oxide] for oxide in oxides}
+
+        for key, value in oxideMass.items():
+            data.update({key: (data[key] * value)})
+        MPOSum = sum(data.values())
+        for key, value in data.items():
+            data.update({key: 100 * value / MPOSum})
 
     return data
 
@@ -160,7 +177,7 @@ def wtpercentOxides_to_molCations(oxides):
     return molCations
 
 def wtpercentOxides_to_molOxides(oxides):
-    """ Takes in a pandas Series containing major element oxides in wt%, and converts it
+    """ Takes in a pandas Series or dict containing major element oxides in wt%, and converts it
     to molar proportions (normalised to 1).
 
     Parameters
@@ -3598,6 +3615,168 @@ class EguchiCarbon(Model):
 
         return results
 
+class MooreWater(Model):
+    """
+    Implementation of the Moore et al. (1998) H2O solubility model for magmas up to 3,000 bars.
+    """
+
+    def __init__(self):
+        """
+        Initialize the model.
+        """
+        self.set_volatile_species('H2O')
+        self.set_fugacity_model(fugacity_idealgas())
+        self.set_activity_model(activity_idealsolution())
+
+    def preprocess_sample(self, sample):
+        """
+        Returns sample with extranneous (non oxide) information removed and any missing oxides given a value of 0.0.
+        """
+        for oxide in oxides:
+            if oxide in sample.keys():
+                pass
+            else:
+                sample[oxide] = 0.0
+
+        bulk_comp = {oxide:  sample[oxide] for oxide in oxides}
+        self.bulk_comp_orig = sample
+
+        return bulk_comp
+
+    def check_calibration_range(self,**kwargs):
+        """
+        #TODO write this
+        """
+        return 0
+
+    def calculate_dissolved_volatiles(self, sample, pressure, temperature, X_fluid=1.0, **kwargs):
+        """
+        #TODO write doc string
+        """
+        _sample = sample.copy()
+        _sample['H2O'] = 0.0
+        _sample['CO2'] = 0.0
+
+        _sample = normalize(_sample)
+
+        fH2O = self.fugacity_model.fugacity(pressure=pressure,temperature=temperature,X_fluid=X_fluid,**kwargs)
+        a = 2565.0
+        b_Al2O3 = -1.997
+        b_FeOt = -0.9275
+        b_Na2O = 2.736
+        c = 1.171
+        d = -14.21
+
+        temperatureK = temperature + 273.15
+
+        sample_molfrac = wtpercentOxides_to_molOxides(_sample)
+        FeOtot = sample_molfrac['FeO'] + sample_molfrac['Fe2O3']*0.8998
+
+        b_x_sum = b_Al2O3 * sample_molfrac['Al2O3'] + b_FeOt * FeOtot + b_Na2O * sample_molfrac['Na2O']
+        two_ln_XH2Omelt = (a / temperatureK) + b_x_sum * (pressure/temperatureK) + c * np.log(fH2O) + d 
+        ln_XH2Omelt = two_ln_XH2Omelt / 2.0
+        XH2Omelt = np.exp(ln_XH2Omelt)
+        sample_molfrac['H2O'] = XH2Omelt
+
+        #Normalize mol fractions to sum to 1, while preserving XH2O
+        for key, value in sample_molfrac.items():
+            if key != 'H2O':
+                sample_molfrac.update({key: value/(1/(1-sample_molfrac['H2O']))})
+
+        sample_wtper = mol_to_wtpercent(sample_molfrac)
+
+        return sample_wtper['H2O']
+
+    def calculate_equilibrium_fluid_comp(self, sample, pressure, temperature, **kwargs):
+        """
+        #TODO
+        """
+        _sample = sample.copy()
+        _sample = normalize_FixedVolatiles(_sample)
+
+        fH2O = self.fugacity_model.fugacity(pressure=pressure,temperature=temperature,**kwargs)
+        a = 2565.0
+        b_Al2O3 = -1.997
+        b_FeOt = -0.9275
+        b_Na2O = 2.736
+        c = 1.171
+        d = -14.21
+
+        temperatureK = temperature + 273.15
+
+        sample_molfrac = wtpercentOxides_to_molOxides(_sample)
+        FeOtot = sample_molfrac['FeO'] + sample_molfrac['Fe2O3']*0.8998
+
+        b_x_sum = b_Al2O3 * sample_molfrac['Al2O3'] + b_FeOt * FeOtot + b_Na2O * sample_molfrac['Na2O']
+        ln_fH2O = (2 * np.log(sample_molfrac['H2O']) - (a/temperatureK) - b_x_sum * (pressure/temperatureK) - d) / c
+        fH2O = np.exp(ln_fH2O)
+        XH2O_fl = fH2O / pressure
+        XCO2_fl = 1 - XH2O_fl
+
+        return {'H2O': XH2O_fl, 'CO2': XCO2_fl}
+
+    def calculate_saturation_pressure(self,temperature,sample,X_fluid=1.0,**kwargs):
+        """
+        Calculates the pressure at which a an H2O-bearing fluid is saturated. Calls the scipy.root_scalar 
+        routine, which makes repeated called to the calculate_dissolved_volatiles method.
+
+        Parameters
+        ----------
+        temperature     float
+            The temperature of the system in C.
+        sample         pandas Series
+            Major element oxides in wt% (including H2O).
+        X_fluid     float
+            The mole fraction of H2O in the fluid. Default is 1.0.
+
+        Returns
+        -------
+        float
+            Calculated saturation pressure in bars.
+        """
+        _sample = sample.copy()
+
+        temperatureK = temperature + 273.15
+        if temperatureK <= 0.0:
+            raise InputError("Temperature must be greater than 0K.")
+        if X_fluid < 0 or X_fluid > 1:
+            raise InputError("X_fluid must have a value between 0 and 1.")
+        if type(sample) != dict and type(sample) != pd.core.series.Series:
+            raise InputError("sample must be a dict or a pandas Series.")
+        if 'H2O' not in sample:
+            raise InputError("sample must contain H2O.")
+        if sample['H2O'] <= 0.0:
+            raise InputError("Dissolved H2O concentration must be greater than 0 wt%.")
+
+        satP = root_scalar(self.root_saturation_pressure,args=(temperature,_sample,X_fluid,kwargs),x0=1000.0,x1=2000.0).root
+
+        return np.real(satP)
+
+    def root_saturation_pressure(self,pressure,temperature,sample,X_fluid,kwargs):
+        """ Function called by scipy.root_scalar when finding the saturation pressure using
+        calculate_saturation_pressure.
+
+        Parameters
+        ----------
+        pressure     float
+            Pressure guess in bars
+        temperature     float
+            The temperature of the system in C.
+        sample         pandas Series or dict
+            Major elements in wt% (normalized to 100%), including H2O.
+        kwargs         dictionary
+            Additional keyword arguments supplied to calculate_saturation_pressure. Might be required for
+            the fugacity or activity models.
+
+        Returns
+        -------
+        float
+            The differece between the dissolved H2O at the pressure guessed, and the H2O concentration
+            passed in the sample variable.
+        """
+        return self.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,sample=sample,X_fluid=X_fluid,**kwargs) - sample['H2O']
+
+
 class AllisonCarbon(Model):
     """
     Implementation of the Allison et al. (2019) CO2 solubility model. Which type of fit, and
@@ -5101,7 +5280,8 @@ default_models = {'Shishkina':                MixedFluids({'CO2':ShishkinaCarbon
                   'IaconoMarzianoCarbon':    IaconoMarzianoCarbon(),
                   'IaconoMarzianoWater':    IaconoMarzianoWater(),
                   'EguchiCarbon':            EguchiCarbon(),
-                  'AllisonCarbon':            AllisonCarbon()
+                  'AllisonCarbon':            AllisonCarbon(),
+                  'MooreWater':               MooreWater()
 }
 
 class calculate_dissolved_volatiles(Calculate):
