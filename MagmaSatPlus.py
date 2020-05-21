@@ -10,6 +10,7 @@ from abc import ABC, abstractmethod
 from scipy.optimize import root_scalar
 from scipy.optimize import root
 from scipy.optimize import minimize
+import warnings
 
 
 #----------DEFINE SOME CONSTANTS-------------#
@@ -1081,33 +1082,23 @@ class Model(object):
 
     @abstractmethod
     def calculate_dissolved_volatiles(self,**kwargs):
-        """
-        WRITE STUFF
-        """
+        pass
 
     @abstractmethod
     def calculate_equilibrium_fluid_comp(self,**kwargs):
-        """
-        WRITE STUFF
-        """
+        pass
 
     @abstractmethod
     def calculate_saturation_pressure(self,**kwargs):
-        """
-        WRITE STUFF
-        """
+        pass
 
     @abstractmethod
     def preprocess_sample(self,**kwargs):
-        """
-        WRITE stuff
-        """
+        pass
 
     @abstractmethod
     def check_calibration_range(self,**kwargs):
-        """
-        WRITE stuff
-        """
+        pass
 
 
 class FugacityModel(object):
@@ -1166,6 +1157,19 @@ class Calculate(object):
 
         self.result = self.calculate(sample=self.sample,**kwargs)
         self.calib_check = self.check_calibration_range(sample=self.sample,**kwargs)
+
+        if self.calib_check is not None:
+            warning_string = ''
+            warn = False
+            for species in list(self.calib_check.keys()):
+                for variable in list(self.calib_check[species].keys()):
+                    for modelcomponent in list(self.calib_check[species][variable].keys()):
+                        if self.calib_check[species][variable][modelcomponent] == False:
+                            warning_string += variable.capitalize() + ' is outside the calibration range of the ' + species + ' ' + modelcomponent + '. '
+                            warn = True
+
+            if warn == True:
+                warnings.warn(warning_string,RuntimeWarning)
 
 
     @abstractmethod
@@ -2152,7 +2156,7 @@ class ShishkinaCarbon(Model):
                                     'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
             results['temperature'] = temperature_results
 
-        return results
+        return {'CO2':results}
 
 class ShishkinaWater(Model):
     """ Implementation of the Shishkina et al. (2014) H2O solubility model as a Model class.
@@ -2321,7 +2325,7 @@ class ShishkinaWater(Model):
                                     'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
             results['temperature'] = temperature_results
 
-        return results
+        return {'H2O':results}
 
 
 class DixonCarbon(Model):
@@ -2523,7 +2527,7 @@ class DixonCarbon(Model):
             temperature_results = {'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['temperature'],
                                     'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
             results['temperature'] = temperature_results
-        return results
+        return {'CO2':results}
 
 
 
@@ -2785,7 +2789,7 @@ class DixonWater(Model):
             temperature_results = {'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['temperature'],
                                     'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
             results['temperature'] = temperature_results
-        return results
+        return {'H2O':results}
 
 class IaconoMarzianoWater(Model):
     """
@@ -3057,7 +3061,7 @@ class IaconoMarzianoWater(Model):
                                     'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
             results['temperature'] = temperature_results
 
-        return results
+        return {'H2O':results}
 
 class IaconoMarzianoCarbon(Model):
     """
@@ -3334,7 +3338,7 @@ class IaconoMarzianoCarbon(Model):
                                     'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
             results['temperature'] = temperature_results
 
-        return results
+        return {'CO2':results}
 
 class EguchiCarbon(Model):
     """
@@ -3613,7 +3617,7 @@ class EguchiCarbon(Model):
                                     'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
             results['temperature'] = temperature_results
 
-        return results
+        return {'CO2':results}
 
 class MooreWater(Model):
     """
@@ -3643,11 +3647,11 @@ class MooreWater(Model):
 
         return bulk_comp
 
-    def check_calibration_range(self,**kwargs):
+    def check_calibration_range(self,parameters,**kwargs):
         """
         #TODO write this
         """
-        return 0
+        return None
 
     def calculate_dissolved_volatiles(self, sample, pressure, temperature, X_fluid=1.0, **kwargs):
         """
@@ -3970,7 +3974,7 @@ class AllisonCarbon(Model):
         """
         return sample['CO2'] - self.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,sample=sample,X_fluid=X_fluid,**kwargs)
 
-    def check_calibration_range(self,**kwargs):
+    def check_calibration_range(self,parameters,**kwargs):
         """ Checks whether supplied parameters and calculated results are within the calibration range
         of the model. Designed for use with the Calculate methods. Calls the check_calibration_range
         functions for the fugacity and activity models.
@@ -4002,7 +4006,7 @@ class AllisonCarbon(Model):
                                     'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
             results['temperature'] = temperature_results
 
-        return results
+        return {'CO2':results}
 
 
 #------------MIXED FLUID MODELS-------------------------------#
@@ -4153,7 +4157,7 @@ class MixedFluids(Model):
         pressure_list     list
             List of all pressure values at which to calculate isobars, in bars.
         isopleth_list     list
-            OPTIONAL: Default value is None, in which case only isobars will be calculated. List of all
+            Default value is None, in which case only isobars will be calculated. List of all
             fluid compositions in mole fraction (of the first species in self.volatile_species) at which
             to calcualte isopleths. Values can range from 0 to 1.
         points     int
@@ -4449,7 +4453,7 @@ class MagmaSat(Model):
         return sample
 
     def check_calibration_range(self,**kwargs):
-        return 0
+        return None
 
     def get_fluid_mass(self, sample, temperature, pressure, H2O, CO2):
         """An internally used function to calculate fluid mass.
@@ -5285,35 +5289,108 @@ default_models = {'Shishkina':                MixedFluids({'CO2':ShishkinaCarbon
 }
 
 class calculate_dissolved_volatiles(Calculate):
-    """ This will be used as the user interface to doing the calculation. This provides a generic
-    way of accessing the relevant functions, and here will be when calibration checking can be done.
+    """ Calculates the dissolved volatile concentration using a chosen model (default is MagmaSat).
+    Using this interface will preprocess the sample, run the calculation, and then check
+    the calibration ranges. All parameters required by the chosen model must be passed.
+
+    Parameters
+    ----------
+    sample:     dict or pandas Series
+        The major element oxides in wt%.
+    pressure:   float
+        Total pressure in bars.
+    model:  string or Model object
+        Model to be used. If using one of the default models, this can be
+        the string corresponding to the model in the default_models dict.
+
+    Returns
+    -------
+    Calculate object
+        Calculate object, access results by fetching the result property. Dissolved
+        volatile concentrations (in wt%), in order (CO2, H2O, if using a mixed fluid
+        default model).
     """
     def calculate(self,sample,pressure,**kwargs):
         dissolved = self.model.calculate_dissolved_volatiles(pressure=pressure,sample=sample,**kwargs)
         return dissolved
 
     def check_calibration_range(self,sample,pressure,**kwargs):
-        return 0
-        """
-        calib_check = self.model.check_calibration_range({'pressure':pressure,
-                                                        'sample':sample,
-                                                        'dissolved_volatiles':self.result})
+        checks = {'pressure':pressure,
+                  'sample':sample,
+                  'dissolved_volatiles':self.result}
+        if 'temperature' in kwargs:
+            checks['temperature'] = kwargs['temperature']
+
+        calib_check = self.model.check_calibration_range(checks)
         return calib_check
-        """
 
 class calculate_equilibrium_fluid_comp(Calculate):
-    """ This will be used as the user interface to doing the calculation. This provides a generic
-    way of accessing the relevant functions, and here will be when calibration checking can be done.
+    """ Calculates the equilibrium fluid composition using a chosen model (default is MagmaSat).
+    Using this interface will preprocess the sample, run the calculation, and then check
+    the calibration ranges. All parameters required by the chosen model must be passed.
+
+    Parameters
+    ----------
+    sample:     dict or pandas Series
+        The major element oxides in wt%.
+    pressure:   float
+        Total pressure in bars.
+    model:  string or Model object
+        Model to be used. If using one of the default models, this can be
+        the string corresponding to the model in the default_models dict.
+
+    Returns
+    -------
+    Calculate object
+        Calculate object, access result by fetching the result property. Mole fractions
+        of each volatile species, in order (CO2, then H2O, if using a mixed-fluid default
+        model).
     """
     def calculate(self,sample,pressure,**kwargs):
         fluid_comp = self.model.calculate_equilibrium_fluid_comp(pressure=pressure,sample=sample,**kwargs)
         return fluid_comp
-    def check_calibration_range(self,pressure,**kwargs):
-        return 0
+    def check_calibration_range(self,sample,pressure,**kwargs):
+        checks = {'pressure':pressure,
+                  'sample':sample,
+                  'dissolved_volatiles':self.result}
+        if 'temperature' in kwargs:
+            checks['temperature'] = kwargs['temperature']
+
+        calib_check = self.model.check_calibration_range(checks)
+        return calib_check
 
 
 class calculate_isobars_and_isopleths(Calculate):
-    """
+    """ Calculates isobars and isopleths using a chosen model (default is MagmaSat).
+    Using this interface will preprocess the sample, run the calculation, and then check
+    the calibration ranges. All parameters required by the chosen model must be passed.
+
+    Parameters
+    ----------
+    sample:     dict or pandas Series
+        The major element oxides in wt%.
+    pressure_list:   list
+        List of all pressure values at which to calculate isobars, in bars.
+    isopleth_list:   list
+        OPTIONAL: Default value is None, in which case only isobars will be calculated. List of all
+        fluid compositions in mole fraction (of the first species in self.volatile_species) at which
+        to calcualte isopleths. Values can range from 0 to 1.
+    points:     int
+        The number of points in each isobar and isopleth. Default value is 101.
+    model:  string or Model object
+        Model to be used. If using one of the default models, this can be
+        the string corresponding to the model in the default_models dict.
+
+    Returns
+    -------
+    Calculate object
+        Calculate object, access results by fetching the result property.
+        If isopleth_list is not None, two objects will be returned, one with the isobars and the second with
+        the isopleths. If return_dfs is True, two pandas DataFrames will be returned with column names
+        'Pressure' or 'XH2O_fl', 'H2O_liq', and 'CO2_liq'. If return_dfs is False, two lists of numpy arrays
+        will be returned. Each array is an individual isobar or isopleth, in the order passed via pressure_list
+        or isopleth_list. The arrays are the concentrations of H2O and CO2 in the liquid, in the order of the
+        species in self.volatile_species.
     """
     def calculate(self,sample,pressure_list,isopleth_list=[0,1],points=101,**kwargs):
         check = getattr(self.model, "calculate_isobars_and_isopleths", None)
@@ -5321,24 +5398,73 @@ class calculate_isobars_and_isopleths(Calculate):
             isobars, isopleths = self.model.calculate_isobars_and_isopleths(sample=sample,pressure_list=pressure_list,isopleth_list=isopleth_list,points=points,**kwargs)
             return isobars, isopleths
         else:
-            print("Write code to report error!!!!!")
+            raise InputError("This model does not have a calculate_isobars_and_isopleths method built in, most likely because it is a pure fluid model.")
 
     def check_calibration_range(self,**kwargs):
-        return 0
+        return None
 
 
 class calculate_saturation_pressure(Calculate):
     """
+    Calculates the pressure at which a fluid will be saturated, given the dissolved volatile
+    concentrations. Using this interface will preprocess the sample, run the calculation, and then check
+    the calibration ranges. All parameters required by the chosen model must be passed.
+
+    Parameters
+    ----------
+    sample     pandas Series or dict
+        Major element oxides in wt% (including volatiles).
+    model:  string or Model object
+        Model to be used. If using one of the default models, this can be
+        the string corresponding to the model in the default_models dict.
+
+    Returns
+    -------
+    Calculate object
+        Calculate object, access results by fetching the result property.
+        The saturation pressure in bars as a float.
     """
     def calculate(self,sample,**kwargs):
         satP = self.model.calculate_saturation_pressure(sample=sample,**kwargs)
         return satP
 
     def check_calibration_range(self,**kwargs):
-        return 0
+        return None
 
 class calculate_degassing_path(Calculate):
     """
+    Calculates the dissolved volatiles in a progressively degassing sample.
+
+    Parameters
+    ----------
+    sample     pandas Series or dict
+        Major element oxides in wt% (including volatiles).
+    pressure     string, float, int, list, or numpy array
+        Defaults to 'saturation', the calculation will begin at the saturation pressure. If a number is passed
+        as either a float or int, this will be the starting pressure. If a list of numpy array is passed, the
+        pressure values in the list or array will define the degassing path, i.e. final_pressure and steps
+        variables will be ignored. Units are bars.
+    fractionate_vapor     float
+        What proportion of vapor should be removed at each step. If 0.0 (default), the degassing path will
+        correspond to closed-system degassing. If 1.0, the degassing path will correspond to open-system
+        degassing.
+    final_pressure         float
+        The final pressure on the degassing path, in bars. Ignored if a list or numpy array is passed as the
+        pressure variable. Default is 1 bar.
+    steps     int
+        The number of steps in the degassing path. Ignored if a list or numpy array are passed as the pressure
+        variable.
+    model:  string or Model object
+        Model to be used. If using one of the default models, this can be
+        the string corresponding to the model in the default_models dict.
+
+    Returns
+    -------
+    Calculate object
+        Calculate object, access results by fetching the result property.
+        A DataFrame with columns 'Pressure', 'H2O_liq', 'CO2_liq',
+        'H2O_fl', 'CO2_fl', and 'FluidProportion_wt', is returned. Dissolved volatiles are in wt%,
+        the proportions of volatiles in the fluid are in mole fraction.
     """
     def calculate(self,sample,pressure='saturation',fractionate_vapor=1.0,
                   final_pressure=100.0,steps=101,**kwargs):
@@ -5348,11 +5474,10 @@ class calculate_degassing_path(Calculate):
                                                             fractionate_vapor=fractionate_vapor,**kwargs)
             return data
         else:
-            print("Write code to report error!!!!!")
+            raise InputError("This model does not have a calculate_isobars_and_isopleths method built in, most likely because it is a pure fluid model.")
 
     def check_calibration_range(self,**kwargs):
-        return 0
-
+        return None
 
 
 
@@ -5381,6 +5506,7 @@ def test():
     test_temperature = 1473.15
     test_pressure_list = [1000.0,2000.0,5000.0]
     test_isopleth_list = [0.0,0.5,1.0]
+
 
     print("\n================================\n= MAGMASATPLUS TESTING ROUTINE =\n================================")
 
