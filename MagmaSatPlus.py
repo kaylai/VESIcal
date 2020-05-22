@@ -792,8 +792,8 @@ class ExcelFile(object):
             the str value corresponding to the column title in the ExcelFile object.
 
         print_status: bool
-            OPTIONAL: The default value is True, in which case the progress of the calculation will be printed to the terminal. 
-            If set to False, nothing will be printed. MagmaSat calculations tend to be slow, and so a value of True is recommended 
+            OPTIONAL: The default value is True, in which case the progress of the calculation will be printed to the terminal.
+            If set to False, nothing will be printed. MagmaSat calculations tend to be slow, and so a value of True is recommended
             for most use cases.
 
         model: string
@@ -876,7 +876,7 @@ class ExcelFile(object):
 
                 return dissolved_data
 
-        else:        
+        else:
             liq_comp_H2O = []
             liq_comp_CO2 = []
             fluid_comp_H2O = []
@@ -913,7 +913,7 @@ class ExcelFile(object):
                         CO2_val += 0.1
                     else:
                         H2O_val += 0.5
-                        CO2_val = (H2O_val / X_fluid) - H2O_val   
+                        CO2_val = (H2O_val / X_fluid) - H2O_val
 
                     bulk_comp["H2O"] = H2O_val
                     bulk_comp["CO2"] = CO2_val
@@ -1169,8 +1169,8 @@ class ExcelFile(object):
             title in the passed ExcelFile object.
 
         print_status: bool
-            OPTIONAL: The default value is True, in which case the progress of the calculation will be printed to the terminal. 
-            If set to False, nothing will be printed. MagmaSat calculations tend to be slow, and so a value of True is recommended 
+            OPTIONAL: The default value is True, in which case the progress of the calculation will be printed to the terminal.
+            If set to False, nothing will be printed. MagmaSat calculations tend to be slow, and so a value of True is recommended
             more most use cases.
 
         model: string
@@ -2718,7 +2718,7 @@ class DixonCarbon(Model):
 
         XCO3Std = self.XCO3_Std(sample)
 
-        return XCO3Std * fugacity * np.exp(-DeltaVr * (pressure-P0)/(R*T0))
+        return 3.817e-7 * fugacity * np.exp(-DeltaVr * (pressure-P0)/(R*T0))
 
     def XCO3_Std(self,sample):
         """ Calculates the mole fraction of CO3(2-) dissolved when in equilibrium with pure
@@ -2734,7 +2734,10 @@ class DixonCarbon(Model):
         float
             Mole fraction of CO3(2-) dissolved at 1 bar and 1200C.
         """
-        return 8.7e-6 - 1.7e-7*sample['SiO2']
+        if sample['SiO2'] > 48.9:
+            return 3.817e-7
+        else:
+            return 8.7e-6 - 1.7e-7*sample['SiO2']
 
     def root_saturation_pressure(self,pressure,sample,kwargs):
         """ The function called by scipy.root_scalar when finding the saturation pressure using
@@ -2925,6 +2928,7 @@ class DixonWater(Model):
 
         return XH2OStd * fugacity * np.exp(-VH2O * (pressure-P0)/(R*T0))
 
+
     def XH2O_Std(self,sample):
         """ Calculates the mole fraction of molecular H2O dissolved when in equilibrium with pure
         H2O vapour at 1200C and 1 bar, using Eq (9) of Dixon (1997).
@@ -2939,8 +2943,10 @@ class DixonWater(Model):
         float
             Mole fraction of molecular water dissolved at 1 bar and 1200C.
         """
-
-        return -3.04e-5 + 1.29e-6*sample['SiO2']
+        if sample['SiO2'] > 48.9:
+            return 3.28e-5
+        else:
+            return -3.04e-5 + 1.29e-6*sample['SiO2']
 
     def XOH(self,pressure,sample,X_fluid=1.0,**kwargs):
         """
@@ -3940,7 +3946,7 @@ class MooreWater(Model):
         FeOtot = sample_molfrac['FeO'] + sample_molfrac['Fe2O3']*0.8998
 
         b_x_sum = (bParam_Al2O3 * sample_molfrac['Al2O3']) + (bParam_FeOt * FeOtot) + (bParam_Na2O * sample_molfrac['Na2O'])
-        two_ln_XH2Omelt = (aParam / temperatureK) + b_x_sum * (pressure/temperatureK) + cParam * np.log(fH2O) + dParam 
+        two_ln_XH2Omelt = (aParam / temperatureK) + b_x_sum * (pressure/temperatureK) + cParam * np.log(fH2O) + dParam
         ln_XH2Omelt = two_ln_XH2Omelt / 2.0
         XH2Omelt = np.exp(ln_XH2Omelt)
         sample_molfrac['H2O'] = XH2Omelt
@@ -4724,7 +4730,7 @@ class MagmaSat(Model):
         self.bulk_comp_orig = sample
         return sample
 
-    def check_calibration_range(self,**kwargs):
+    def check_calibration_range(self,parameters,**kwargs):
         return None
 
     def get_fluid_mass(self, sample, temperature, pressure, H2O, CO2):
