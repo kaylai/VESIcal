@@ -102,8 +102,8 @@ def printTable(myDict):
 
 def mol_to_wtpercent(sample):
     """
-    Takes in a pandas DataFrame containing multi-sample input and returns a pandas DataFrame object
-    with oxide values converted from mole percent to wt percent.
+    Takes in a pandas DataFrame containing multi-sample input or a dictionary containing single-sample input
+    and returns a pandas DataFrame object with oxide values converted from mole percent to wt percent.
 
     Parameters
     ----------
@@ -194,25 +194,40 @@ def wtpercentOxides_to_molOxides(oxides):
     """
     molOxides = {}
     _oxides = oxides.copy()
-    if type(oxides) == dict:
-        oxideslist = list(oxides.keys())
-    elif type(oxides) == pd.core.series.Series:
-        oxideslist = list(oxides.index)
+    if type(oxides) == dict or type(oxides) == pd.core.series.Series:
+        if type(oxides) == dict:
+            oxideslist = list(oxides.keys())
+        elif type(oxides) == pd.core.series.Series:
+            oxideslist = list(oxides.index)
+
+        for ox in oxideslist:
+            molOxides[ox] = _oxides[ox]/oxideMass[ox]
+
+        if type(oxides) == pd.core.series.Series:
+            molOxides = pd.Series(molOxides)
+            molOxides = molOxides/molOxides.sum()
+        else:
+            total = np.sum(list(molOxides.values()))
+            for ox in oxideslist:
+                molOxides[ox] = molOxides[ox]/total
+
+        return molOxides
+
+    elif isinstance(sample, pd.DataFrame):
+        data = sample
+        for key, value in oxideMass.items():
+            data.loc[:, key] /= value
+
+        data["MPOSum"] = sum([data[oxide] for oxide in oxides])
+
+        for oxide in oxides:
+            data.loc[:, oxide] /= data['MPOSum']
+        del data['MPOSum']
+
+        return data
+
     else:
         raise InputError("The composition input must be a pandas Series or dictionary.")
-
-    for ox in oxideslist:
-        molOxides[ox] = _oxides[ox]/oxideMass[ox]
-
-    if type(oxides) == pd.core.series.Series:
-        molOxides = pd.Series(molOxides)
-        molOxides = molOxides/molOxides.sum()
-    else:
-        total = np.sum(list(molOxides.values()))
-        for ox in oxideslist:
-            molOxides[ox] = molOxides[ox]/total
-
-    return molOxides
 
 def wtpercentOxides_to_molSingleO(oxides):
     """ Takes in a pandas Series containing major element oxides in wt%, and constructs
