@@ -4173,24 +4173,22 @@ class AllisonCarbon(Model):
 
 
     def calculate_equilibrium_fluid_comp(self,pressure,temperature,sample,**kwargs):
-        """
-        Calculates the pressure at which a pure CO2 fluid is saturated, for the given sample
-        composition and CO2 concentration. Calls the scipy.root_scalar routine, which makes
-        repeated called to the calculate_dissolved_volatiles method.
+        """ Returns 1.0 if a pure CO2 fluid is saturated.
+        Returns 0.0 if a pure CO2 fluid is undersaturated.
 
         Parameters
         ----------
+        pressure     float
+            The total pressure of the system in bars.
         temperature     float
             The temperature of the system in K.
         sample         pandas Series or dict
-            Major element oxides in wt% (including CO2).
-        X_fluid     float
-            The mole fraction of H2O in the fluid. Default is 1.0.
+            Major element oxides in wt% (including H2O).
 
         Returns
         -------
         float
-            Calculated saturation pressure in bars.
+            1.0 if CO2-fluid saturated, 0.0 otherwise.
         """
         satP = self.calculate_saturation_pressure(temperature=temperature,sample=sample,X_fluid=1.0,**kwargs)
         if pressure > satP:
