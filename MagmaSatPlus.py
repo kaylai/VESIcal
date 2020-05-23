@@ -3995,7 +3995,10 @@ class MooreWater(Model):
         XH2O_fl = fH2O / pressure
         XCO2_fl = 1 - XH2O_fl
 
-        return (XCO2_fl, XH2O_fl)
+        # SM: I've changed this to return X_H2O only, as otherwise it doesn't conform to other single-volatile
+        # models. I'm not sure this is the best solution though.
+        # return (XCO2_fl, XH2O_fl)
+        return XH2O_fl
 
     def calculate_saturation_pressure(self,temperature,sample,X_fluid=1.0,**kwargs):
         """
@@ -4288,7 +4291,7 @@ class AllisonCarbon(Model):
 
 
 #------------MIXED FLUID MODELS-------------------------------#
-class MixedFluids(Model):
+class MixedFluid(Model):
     """
     Implements the generic framework for mixed fluid solubility. Any set of pure fluid solubility
     models may be specified.
@@ -4360,7 +4363,7 @@ class MixedFluids(Model):
 
         return tuple(model.calculate_dissolved_volatiles(pressure=pressure,X_fluid=Xi,**kwargs) for model, Xi in zip(self.models,X_fluid))
 
-    def calculate_equilibrium_fluid_comp(self,pressure,sample,**kwargs):
+    def calculate_equilibrium_fluid_comp(self,pressure,sample,return_dict=True,**kwargs):
         """ Calculates the composition of the fluid in equilibrium with the dissolved volatile
         concentrations passed. If a fluid phase is undersaturated at the chosen pressure (0,0) will
         be returned. Note, this currently assumes the given H2O and CO2 concentrations are
@@ -4372,12 +4375,15 @@ class MixedFluids(Model):
             The total pressure in bars.
         sample     pandas Series or dict
             Major element oxides in wt% (including volatiles).
+        return_dict     bool
+            Set the return type, if true a dict will be returned, if False two floats will be
+            returned. Default is True.
 
         Returns
         -------
-        Two floats
+        dict or floats
             Mole fractions of the volatile species in the fluid, in the order given by
-            self.volatile_species.
+            self.volatile_species if floats.
         """
         if len(self.volatile_species) != 2:
             raise InputError("Currently equilibrium fluid compositions can only be calculated when\
@@ -4398,7 +4404,10 @@ class MixedFluids(Model):
         Xv0 = root_scalar(self.root_for_fluid_comp,args=(pressure,Xt0,Xt1,sample,kwargs),bracket=(0,1)).root
         Xv1 = 1-Xv0
 
-        return Xv0, Xv1
+        if return_dict == True:
+            return {self.volatile_species[0]:Xv0,self.volatile_species[1]:Xv1}
+        else:
+            return Xv0, Xv1
 
     def calculate_saturation_pressure(self,sample,**kwargs):
         """
@@ -4553,7 +4562,7 @@ class MixedFluids(Model):
 
         for i in range(len(pressures)):
             try:
-                X_fluid = self.calculate_equilibrium_fluid_comp(pressure=pressures[i],sample=wtptoxides,**kwargs)
+                X_fluid = self.calculate_equilibrium_fluid_comp(pressure=pressures[i],sample=wtptoxides,return_dict=False,**kwargs)
                 Xv[:,i] = X_fluid
                 if X_fluid == (0,0):
                     wtm[:,i] = (wtptoxides[self.volatile_species[0]],wtptoxides[self.volatile_species[1]])
@@ -5543,9 +5552,9 @@ def plot_degassing_paths(degassing_paths, labels=None):
 
 #====== Define some standard model options =======================================================#
 
-default_models = {'Shishkina':                MixedFluids({'CO2':ShishkinaCarbon(),'H2O':ShishkinaWater()}),
-                  'Dixon':                    MixedFluids({'CO2':DixonCarbon(),'H2O':DixonWater()}),
-                  'IaconoMarziano':         MixedFluids({'CO2':IaconoMarzianoCarbon(),'H2O':IaconoMarzianoWater()}),
+default_models = {'Shishkina':                MixedFluid({'CO2':ShishkinaCarbon(),'H2O':ShishkinaWater()}),
+                  'Dixon':                    MixedFluid({'CO2':DixonCarbon(),'H2O':DixonWater()}),
+                  'IaconoMarziano':         MixedFluid({'CO2':IaconoMarzianoCarbon(),'H2O':IaconoMarzianoWater()}),
                   'ShishkinaCarbon':        ShishkinaCarbon(),
                   'ShishkinaWater':         ShishkinaWater(),
                   'DixonCarbon':            DixonCarbon(),
@@ -5875,7 +5884,7 @@ COMPLETELY broken the module.")
         else:
             fluidstr = ""
             for i,volatile in zip(range(len(model.volatile_species)),model.volatile_species):
-                fluidstr += "{:.2f}".format(fluid[i])
+                fluidstr += "{:.2f}".format(fluid[model.volatile_species[i]])
                 fluidstr += " "
                 fluidstr += volatile
                 fluidstr += ", "
@@ -5891,7 +5900,7 @@ COMPLETELY broken the module.")
         else:
             fluidstr = ""
             for i,volatile in zip(range(len(model.volatile_species)),model.volatile_species):
-                fluidstr += "{:.2f}".format(fluid[i])
+                fluidstr += "{:.2f}".format(fluid[model.volatile_species[i]])
                 fluidstr += " "
                 fluidstr += volatile
                 fluidstr += ", "
@@ -5944,70 +5953,70 @@ if __name__ == '__main__':
     test()
 
 """
-                        ,,,                                     .*****                                                                                
-                       ,***,*                                  ,* *****                                                                               
-                      ,***,,,,*                              ,* ,*******                                                                              
-                     .****,,,.,**                          ,,*.,*********                                                                             
-                     *****,,,,.****                     ,,,,*.,********* *                                                                            
-                     *,**,,,,,,,******                ,,,,,* ,,********,.*                                     .                                      
-                    .*,*,, //,,.,*******            ,,,,,**.//,*******,,.,                                   //                                       
-                    ,**,, //// ,,******** ,,,,,,,, **,,,*** ((,,,,,,,,,,,*                                  //*####                                   
-                    .,* , ///((,,,******. ,,,,,,, *********(((,.#### ,,.,*                                   ///#######                               
-                     ,,** .((((,******** ,,,*,,, *********.(((#####/.,,**    .,,                              ///#*#######                            
-                     ,,**(((((.******* ,,**** **.*********.#(####(( .,**.******                                ///##/#######                          
-                      ,,***(.( ****** ,*******#*********** #*###( ,,** ******,                              /////(###########                         
-                    ,,, ,**,,,,,,. ,,,**,**.### ****.************.  .******,                        .,,,,,****, ##############                        
-                    .,,,,,,.,,,,,,,,,* *,#### ************# *************,                    ,,,,********,***/#######(#######                        
-                      ,,,,,, /(   (#,*##### *****###/ #### ************                 ,,,,,,**********,.**.#######(#########(                       
-                        ,,,,, ((((((# ### * * #..######## *****************.##        ,,,,,****************,####. (## #######                         
-                      ,,,,,,,, *(((( *###.****,#  ##### *********** #### ###         ,,,,,*********************,######*#######                        
-                     ./ ,,,,,,,   ,****########*****,       .**########### ,         ,,,*********************** (##./##.##/#*                         
-                       /////*,  ,,  *****,*,******   ,,.,((( ########### ,****      .,,.*****************,######  //#/////,                           
-                        //////  /(,. *****###.****  *((,*&((########## *****       .****,************ ###########(/////*  //                          
-                          /////,*#((/,(((*########* *((#(*##########********** .,   *****,*******    .###########//////,                              
-                             ///// ,* (((((####### %#  ##########,**********,************* **  **** /##### ///////*/ /                                
-                                ./////((((((################# ###***************************** ,,,,,  ///////*  ////                                  
-                              ///// .////(((############ .(((###**#.******,********************     .    //////.                                      
-                                * //// ////(######## ///(#########*******,****.*****************                                                      
-                                 *//////.////### */////(#########.*****,,****** ****************                                                      
-                               /////////////////////##/##########* .* ,,*******,,************ **.                                                     
-                                   ,///////////////################(,,,********,*  ************ *,*                                                   
-                                        , ////////################,,,,*********  ..,******,** **.***                                                  
-                                        , //////##/############# ,,,,,******* *****.,,*.,,, *********,,                                               
-                                       ,,,//////(#/############  ,,,,,************ ((( ,, .***********                                                
-                                       ,,///  .  ///###########((,,,,,*********.* //   ,  ,** *  *,                                                   
-                                       ,,,,,,,,,,  //#########,(( ,,,,******** *       ,, ,,**   *,                                                   
-                                       ,,,,,,,,,.   *//###( #,/// ,,,,******* *        .,,, ,,***..                                                   
-                                       .,,,***,,      ///# *,//*,,.,,,****** ,           ,,,,,,.,,,,                                                  
-                                       ,,,*****         *  // ,,,. ,,,***** *              ,,,,,,,,*.                                                 
-                                       , ,*****              ,, ,, *,,******                 ,,,,,,**                                                 
-                                       ,,,.***               ,,,,, ** *.****                  , ,,,,,                                                 
-                                       ,,,****              ,,,,,  ********                    ,,,,,,                                                 
-                                       ,,****               ,,,,,  *******                      ,,,,,                                                 
-                                       ,,***.             .,,,,    ******                       ,,,,*                                                 
-                                       ,****                       *****,                       ,,**                                                  
-                                       .***                       ,*****                        , ,                                                   
-                                                                  *****                                                                               
-                                                                 ,****                                                                                
-                                                                                                                                                      
-                                                                                                                                                                                                                        
-                           ***** *      **        ***** **          *******            *****  *                       ***     
-                        ******  *    *****     ******  **** *     *       ***       ******  *                          ***    
-                       **   *  *       *****  **   *  * ****     *         **      **   *  *                            **    
-                      *    *  **       * **  *    *  *   **      **        *      *    *  *                             **    
-                          *  ***      *          *  *             ***                 *  *                              **    
-                         **   **      *         ** **            ** ***              ** **         ****       ****      **    
-                         **   **      *         ** **             *** ***            ** **        * ***  *   * ***  *   **    
-                         **   **     *          ** ******           *** ***        **** **       *   ****   *   ****    **    
-                         **   **     *          ** *****              *** ***     * *** **      **         **    **     **    
-                         **   **     *          ** **                   ** ***       ** **      **         **    **     **    
-                          **  **    *           *  **                    ** **  **   ** **      **         **    **     **    
-                           ** *     *              *                      * *  ***   *  *       **         **    **     **    
-                            ***     *          ****         *   ***        *    ***    *        ***     *  **    **     **    
-                             *******          *  ***********   *  *********      ******          *******    ***** **    *** * 
-                               ***           *     ******     *     *****          ***            *****      ***   **    ***  
-                                             *                *                                                               
-                                              **               **                                                             
+                        ,,,                                     .*****
+                       ,***,*                                  ,* *****
+                      ,***,,,,*                              ,* ,*******
+                     .****,,,.,**                          ,,*.,*********
+                     *****,,,,.****                     ,,,,*.,********* *
+                     *,**,,,,,,,******                ,,,,,* ,,********,.*                                     .
+                    .*,*,, //,,.,*******            ,,,,,**.//,*******,,.,                                   //
+                    ,**,, //// ,,******** ,,,,,,,, **,,,*** ((,,,,,,,,,,,*                                  //*####
+                    .,* , ///((,,,******. ,,,,,,, *********(((,.#### ,,.,*                                   ///#######
+                     ,,** .((((,******** ,,,*,,, *********.(((#####/.,,**    .,,                              ///#*#######
+                     ,,**(((((.******* ,,**** **.*********.#(####(( .,**.******                                ///##/#######
+                      ,,***(.( ****** ,*******#*********** #*###( ,,** ******,                              /////(###########
+                    ,,, ,**,,,,,,. ,,,**,**.### ****.************.  .******,                        .,,,,,****, ##############
+                    .,,,,,,.,,,,,,,,,* *,#### ************# *************,                    ,,,,********,***/#######(#######
+                      ,,,,,, /(   (#,*##### *****###/ #### ************                 ,,,,,,**********,.**.#######(#########(
+                        ,,,,, ((((((# ### * * #..######## *****************.##        ,,,,,****************,####. (## #######
+                      ,,,,,,,, *(((( *###.****,#  ##### *********** #### ###         ,,,,,*********************,######*#######
+                     ./ ,,,,,,,   ,****########*****,       .**########### ,         ,,,*********************** (##./##.##/#*
+                       /////*,  ,,  *****,*,******   ,,.,((( ########### ,****      .,,.*****************,######  //#/////,
+                        //////  /(,. *****###.****  *((,*&((########## *****       .****,************ ###########(/////*  //
+                          /////,*#((/,(((*########* *((#(*##########********** .,   *****,*******    .###########//////,
+                             ///// ,* (((((####### %#  ##########,**********,************* **  **** /##### ///////*/ /
+                                ./////((((((################# ###***************************** ,,,,,  ///////*  ////
+                              ///// .////(((############ .(((###**#.******,********************     .    //////.
+                                * //// ////(######## ///(#########*******,****.*****************
+                                 *//////.////### */////(#########.*****,,****** ****************
+                               /////////////////////##/##########* .* ,,*******,,************ **.
+                                   ,///////////////################(,,,********,*  ************ *,*
+                                        , ////////################,,,,*********  ..,******,** **.***
+                                        , //////##/############# ,,,,,******* *****.,,*.,,, *********,,
+                                       ,,,//////(#/############  ,,,,,************ ((( ,, .***********
+                                       ,,///  .  ///###########((,,,,,*********.* //   ,  ,** *  *,
+                                       ,,,,,,,,,,  //#########,(( ,,,,******** *       ,, ,,**   *,
+                                       ,,,,,,,,,.   *//###( #,/// ,,,,******* *        .,,, ,,***..
+                                       .,,,***,,      ///# *,//*,,.,,,****** ,           ,,,,,,.,,,,
+                                       ,,,*****         *  // ,,,. ,,,***** *              ,,,,,,,,*.
+                                       , ,*****              ,, ,, *,,******                 ,,,,,,**
+                                       ,,,.***               ,,,,, ** *.****                  , ,,,,,
+                                       ,,,****              ,,,,,  ********                    ,,,,,,
+                                       ,,****               ,,,,,  *******                      ,,,,,
+                                       ,,***.             .,,,,    ******                       ,,,,*
+                                       ,****                       *****,                       ,,**
+                                       .***                       ,*****                        , ,
+                                                                  *****
+                                                                 ,****
+
+
+                           ***** *      **        ***** **          *******            *****  *                       ***
+                        ******  *    *****     ******  **** *     *       ***       ******  *                          ***
+                       **   *  *       *****  **   *  * ****     *         **      **   *  *                            **
+                      *    *  **       * **  *    *  *   **      **        *      *    *  *                             **
+                          *  ***      *          *  *             ***                 *  *                              **
+                         **   **      *         ** **            ** ***              ** **         ****       ****      **
+                         **   **      *         ** **             *** ***            ** **        * ***  *   * ***  *   **
+                         **   **     *          ** ******           *** ***        **** **       *   ****   *   ****    **
+                         **   **     *          ** *****              *** ***     * *** **      **         **    **     **
+                         **   **     *          ** **                   ** ***       ** **      **         **    **     **
+                          **  **    *           *  **                    ** **  **   ** **      **         **    **     **
+                           ** *     *              *                      * *  ***   *  *       **         **    **     **
+                            ***     *          ****         *   ***        *    ***    *        ***     *  **    **     **
+                             *******          *  ***********   *  *********      ******          *******    ***** **    *** *
+                               ***           *     ******     *     *****          ***            *****      ***   **    ***
+                                             *                *
+                                              **               **
 """
 
 def WhatDoesTheFoxSay():
