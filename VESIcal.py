@@ -4390,7 +4390,10 @@ class MixedFluid(Model):
         satP = self.calculate_saturation_pressure(sample,**kwargs)
 
         if satP < pressure:
-            return (0,0)
+            if return_dict == True:
+                return {self.volatile_species[0]:0,self.volatile_species[1]:0}
+            else:
+                return (0,0)
 
         sample_mod = sample.copy()
         sample_mod = normalize_FixedVolatiles(sample_mod)
@@ -4543,8 +4546,13 @@ class MixedFluid(Model):
             self.volatile_species.
 
         """
+
+        wtptoxides = sample.copy()
+        wtptoxides = normalize_FixedVolatiles(wtptoxides)
+        wtm0s, wtm1s = (wtptoxides[self.volatile_species[0]],wtptoxides[self.volatile_species[1]])
+
         if pressure == 'saturation':
-            p0 = self.calculate_saturation_pressure(sample,**kwargs)
+            p0 = self.calculate_saturation_pressure(wtptoxides,**kwargs)
             pressures = np.linspace(p0,final_pressure,steps)
         elif type(pressure) == float or type(pressure) == int:
             pressures = np.linspace(pressure,final_pressure,steps)
@@ -4554,13 +4562,11 @@ class MixedFluid(Model):
         Xv = np.zeros([2,len(pressures)])
         wtm = np.zeros([2,len(pressures)])
 
-        wtptoxides = sample.copy()
-        wtptoxides = normalize_FixedVolatiles(wtptoxides)
-        wtm0s, wtm1s = (wtptoxides[self.volatile_species[0]],wtptoxides[self.volatile_species[1]])
-
         for i in range(len(pressures)):
             try:
                 X_fluid = self.calculate_equilibrium_fluid_comp(pressure=pressures[i],sample=wtptoxides,return_dict=False,**kwargs)
+                if i == 0:
+                    print(X_fluid)
                 Xv[:,i] = X_fluid
                 if X_fluid == (0,0):
                     wtm[:,i] = (wtptoxides[self.volatile_species[0]],wtptoxides[self.volatile_species[1]])
@@ -5887,7 +5893,7 @@ COMPLETELY broken the module.")
                 fluidstr += volatile
                 fluidstr += ", "
             print("  Mole fractions of "+fluidstr +"are present in the fluid.")
-            if np.sum(fluid) != 0.0 and np.sum(fluid) != 1.0:
+            if np.sum(list(fluid.values())) != 0.0 and np.sum(list(fluid.values())) != 1.0:
                 print("  WARNING: MOLE FRACTIONS DO NOT SUM TO 1.0")
 
         print("Testing calculate_equilibrium_fluid_comp class interface...")
@@ -5903,7 +5909,7 @@ COMPLETELY broken the module.")
                 fluidstr += volatile
                 fluidstr += ", "
             print("  Mole fractions of "+fluidstr +"are present in the fluid.")
-            if np.sum(fluid) != 0.0 and np.sum(fluid) != 1.0:
+            if np.sum(list(fluid.values())) != 0.0 and np.sum(list(fluid.values())) != 1.0:
                 print("  WARNING: MOLE FRACTIONS DO NOT SUM TO 1.0")
 
         ### calculate_isobars_and_isopleths
