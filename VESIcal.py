@@ -4510,7 +4510,7 @@ class MixedFluid(Model):
 
 
     def calculate_degassing_path(self,sample,pressure='saturation',fractionate_vapor=0.0,final_pressure=100.0,
-                                    steps=101,return_dfs=True,**kwargs):
+                                    steps=101,return_dfs=True,round_to_zero=True,**kwargs):
         """
         Calculates the dissolved volatiles in a progressively degassing sample.
 
@@ -4535,6 +4535,9 @@ class MixedFluid(Model):
             variable.
         return_dfs     bool
             If True, the results will be returned in a pandas DataFrame, if False, two numpy arrays will be returned.
+        round_to_zero   bool
+            If True, the first entry of FluidProportion_wt will be rounded to zero, rather than being a value
+            within numerical error of zero. Default is True.
 
         Returns
         -------
@@ -4597,6 +4600,9 @@ class MixedFluid(Model):
             exsolved_degassing_df['H2O_fl'] = Xv[self.volatile_species.index('H2O'),:]
             exsolved_degassing_df['CO2_fl'] = Xv[self.volatile_species.index('CO2'),:]
             exsolved_degassing_df['FluidProportion_wt'] = (wtm0s+wtm1s)-exsolved_degassing_df['H2O_liq']-exsolved_degassing_df['CO2_liq']
+
+            if round_to_zero == True and np.round(exsolved_degassing_df.loc[0,'FluidProportion_wt'],2)==0:
+                exsolved_degassing_df.loc[0,'FluidProportion_wt'] = 0.0
 
             return exsolved_degassing_df
 
