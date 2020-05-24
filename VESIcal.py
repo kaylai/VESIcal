@@ -2525,6 +2525,9 @@ class ShishkinaWater(Model):
         if sample['H2O'] <= 0:
             raise InputError("H2O concentration must be greater than 0 wt%.")
 
+        if sample['H2O'] < self.calculate_dissolved_volatiles(sample=sample,pressure=0,**kwargs):
+            return np.nan
+
         satP = root_scalar(self.root_saturation_pressure,x0=1000.0,x1=2000.0,args=(sample,kwargs)).root
         return satP
 
@@ -2637,6 +2640,9 @@ class DixonCarbon(Model):
             raise InputError("sample must be a dict or pandas Series")
         if 'SiO2' not in sample:
             raise InputError("sample must contain SiO2.")
+
+        if pressure == 0:
+            return 0
 
         XCO3 = self.molfrac_molecular(pressure=pressure,sample=sample,X_fluid=X_fluid,**kwargs)
         return (4400 * XCO3) / (36.6 - 44*XCO3)
@@ -2843,6 +2849,8 @@ class DixonWater(Model):
         if X_fluid < 0 or X_fluid > 1:
             raise InputError("X_fluid must have a value between 0 and 1.")
 
+        if pressure == 0:
+            return 0
 
         XH2O = self.molfrac_molecular(pressure=pressure,sample=sample,X_fluid=X_fluid,**kwargs)
         XOH = self.XOH(pressure=pressure,sample=sample,X_fluid=X_fluid,**kwargs)
@@ -3122,10 +3130,13 @@ class IaconoMarzianoWater(Model):
         """
         if type(sample) != dict and type(sample) != pd.core.series.Series:
             raise InputError("sample must be a dict or a pandas Series.")
-        if pressure <= 0:
-            raise InputError("Pressure must be greater than 0 bar.")
+        if pressure < 0:
+            raise InputError("Pressure must be positive.")
         if X_fluid < 0 or X_fluid > 1:
             raise InputError("X_fluid must have a value between 0 and 1.")
+
+        if pressure == 0:
+            return 0
 
         if self.hydrous == True:
             if X_fluid==0:
@@ -3395,12 +3406,15 @@ class IaconoMarzianoCarbon(Model):
 
         if type(sample) != dict and type(sample) != pd.core.series.Series:
             raise InputError("sample must be a dict or a pandas Series.")
-        if pressure <= 0:
-            raise InputError("Pressure must be greater than 0 bars.")
+        if pressure < 0:
+            raise InputError("Pressure must be positive.")
         if temperature <= 0:
             raise InputError("Temperature must be greater than 0K.")
         if X_fluid < 0 or X_fluid > 1:
             raise InputError("X_fluid must have a value between 0 and 1.")
+
+        if pressure == 0:
+            return 0
 
         if self.hydrous == True:
             if 'H2O' not in sample:
@@ -3677,6 +3691,9 @@ class EguchiCarbon(Model):
             Dissolved CO2 concentration.
         """
 
+        if pressure == 0:
+            return 0
+
         XCO3 = self.Xi_melt(pressure=pressure,temperature=temperature,sample=sample,X_fluid=X_fluid,species='CO3')
         XCO2 = self.Xi_melt(pressure=pressure,temperature=temperature,sample=sample,X_fluid=X_fluid,species='CO2')
 
@@ -3790,8 +3807,8 @@ class EguchiCarbon(Model):
             raise InputError("sample must contain MgO, CaO, FeO, Na2O, K2O, MnO, Al2O3, Fe2O3, SiO3, TiO2, and P2O5.")
         if X_fluid < 0 or X_fluid > 1:
             raise InputError("X_fluid must have a value between 0 and 1.")
-        if pressure <= 0:
-            raise InputError("Pressure must be greater than 0 bars.")
+        if pressure < 0:
+            raise InputError("Pressure must be positive.")
         if temperature <= 0:
             raise InputError("Temperature must be greater than 0K.")
 
@@ -4132,10 +4149,13 @@ class AllisonCarbon(Model):
         """
         if temperature <= 0.0:
             raise InputError("Temperature must be greater than 0K.")
-        if pressure <= 0.0:
-            raise InputError("Pressure must be greater than 0 bars.")
+        if pressure < 0.0:
+            raise InputError("Pressure must be positive.")
         if X_fluid < 0 or X_fluid > 1:
             raise InputError("X_fluid must have a value between 0 and 1.")
+
+        if pressure == 0:
+            return 0
 
         if self.model_fit == 'thermodynamic':
             if type(sample) != dict and type(sample) != pd.core.series.Series:
