@@ -4395,14 +4395,15 @@ class MixedFluid(Model):
             else:
                 return (0,0)
 
-        sample_mod = sample.copy()
-        sample_mod = normalize_FixedVolatiles(sample_mod)
+        # sample_mod = sample.copy()
+        # sample_mod = normalize_FixedVolatiles(sample_mod)
 
-        molfracs = wtpercentOxides_to_molOxides(sample_mod)
+        # molfracs = wtpercentOxides_to_molOxides(sample_mod)
+        molfracs = wtpercentOxides_to_molOxides(sample)
         (Xt0, Xt1) = (molfracs[self.volatile_species[0]],molfracs[self.volatile_species[1]])
 
+        Xv0 = root_scalar(self.root_for_fluid_comp,args=(pressure,Xt0,Xt1,sample,kwargs),bracket=(molfracs[self.volatile_species[0]]+1e-15,1-molfracs[self.volatile_species[1]]-1e-15)).root
 
-        Xv0 = root_scalar(self.root_for_fluid_comp,args=(pressure,Xt0,Xt1,sample,kwargs),bracket=(0,1)).root
         Xv1 = 1-Xv0
 
         if return_dict == True:
@@ -4564,9 +4565,11 @@ class MixedFluid(Model):
 
         for i in range(len(pressures)):
             try:
-                X_fluid = self.calculate_equilibrium_fluid_comp(pressure=pressures[i],sample=wtptoxides,return_dict=False,**kwargs)
-                if i == 0:
-                    print(X_fluid)
+                if i == 0 or np.isnan(Xv[0,i-1])==True:
+                    x0 = None
+                else:
+                    x0 = Xv[0,i-1]
+                X_fluid = self.calculate_equilibrium_fluid_comp(pressure=pressures[i],sample=wtptoxides,return_dict=False,x0=x0,**kwargs)
                 Xv[:,i] = X_fluid
                 if X_fluid == (0,0):
                     wtm[:,i] = (wtptoxides[self.volatile_species[0]],wtptoxides[self.volatile_species[1]])
@@ -4581,7 +4584,7 @@ class MixedFluid(Model):
                         wtm[:,i] = self.calculate_dissolved_volatiles(pressure=pressures[i],sample=wtptoxides,X_fluid=X_fluid,**kwargs)
                     wtptoxides[self.volatile_species[0]] = wtm[0,i] + (1-fractionate_vapor)*(wtm0s-wtm[0,i])
                     wtptoxides[self.volatile_species[1]] = wtm[1,i] + (1-fractionate_vapor)*(wtm1s-wtm[1,i])
-                    wtptoxides = normalize_FixedVolatiles(wtptoxides)
+                # wtptoxides = normalize_FixedVolatiles(wtptoxides)
             except:
                 Xv[:,i] = [np.nan]*np.shape(Xv)[0]
                 wtm[:,i] = wtm[:,i-1]
@@ -4661,13 +4664,13 @@ class MixedFluid(Model):
         sample_mod = sample.copy()
         sample_mod[self.volatile_species[0]] = wtm0
         sample_mod[self.volatile_species[1]] = wtm1
-        sample_mod = normalize_FixedVolatiles(sample_mod)
+        # sample_mod = normalize_FixedVolatiles(sample_mod)
         cations = wtpercentOxides_to_molOxides(sample_mod)
         Xm0 = cations[self.volatile_species[0]]
         Xm1 = cations[self.volatile_species[1]]
-        if Xv0 == 0:
+        if Xv0 == Xm0:
             return Xt0 - Xm0*(Xt1-1)/(Xm1-1)
-        elif Xv0 == 1:
+        elif (1-Xv0) == Xm1:
             return -(Xt1 - Xm1*(Xt0-1)/(Xm0-1))
         return (Xt0-Xm0)/(Xv0-Xm0) - (Xt1-Xm1)/(1-Xv0-Xm1)
 
@@ -5748,7 +5751,7 @@ class calculate_degassing_path(Calculate):
         'H2O_fl', 'CO2_fl', and 'FluidProportion_wt', is returned. Dissolved volatiles are in wt%,
         the proportions of volatiles in the fluid are in mole fraction.
     """
-    def calculate(self,sample,pressure='saturation',fractionate_vapor=1.0,
+    def calculate(self,sample,pressure='saturation',fractionate_vapor=0.0,
                   final_pressure=100.0,steps=101,**kwargs):
         check = getattr(self.model, "calculate_degassing_path", None)
         if callable(check):
