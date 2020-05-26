@@ -93,9 +93,13 @@ def printTable(myDict):
    pandas DataFrame
 		The input dictionary converted to a pandas DataFrame
    """
+   try:
+   	oxidesum = sum(myDict[oxide] for oxide in oxides)
+   	myDict.update({"Sum oxides": oxidesum})
+   except:
+   	pass
    table = pd.DataFrame([v for v in myDict.values()], columns = ['value'],
 						 index = [k for k in myDict.keys()])
-
    return table
 
 #----------DEFINE SOME BASIC DATA TRANSFORMATION METHODS-----------#
@@ -672,6 +676,11 @@ class ExcelFile(object):
 		dictionary
 			Composition of the sample as oxides
 		"""
+		if norm == 'none' or norm == 'standard' or norm == 'fixedvolatiles' or norm == 'anhydrous':
+			pass
+		else:
+			raise InputError('norm must be either none, standard, fixedvolatiles, or anhydrous.')
+			
 		data = self.data
 		my_sample = pd.DataFrame(data.loc[sample])
 		sample_dict = (my_sample.to_dict()[sample])
@@ -683,9 +692,9 @@ class ExcelFile(object):
 		if norm == 'standard':
 			return normalize(sample_oxides)
 		if norm == 'fixedvolatiles':
-			return normalize_FixedVolatiles(sample_oxides).to_dict()
+			return normalize_FixedVolatiles(sample_oxides)
 		if norm == 'anhydrous':
-			return normalize_AdditionalVolatiles(sample_oxides).to_dict()
+			return normalize_AdditionalVolatiles(sample_oxides)
 		if norm == 'none':
 			return sample_oxides
 
@@ -4968,7 +4977,34 @@ class MagmaSat(Model):
 		return sample
 
 	def check_calibration_range(self,parameters,**kwargs):
-		return None
+		""" Checks whether supplied parameters and calculated results are within the calibration range
+		of the model. Designed for use with the Calculate methods. Calls the check_calibration_range
+		functions for the fugacity and activity models.
+
+		Parameters supported currently are pressure and temperature.
+
+		Parameters
+		----------
+		parameters         dictionary
+			Parameters to check calibration range for, the parameter name should be given as the key, and
+			its value as the value.
+
+		Returns
+		-------
+		dictionary
+			Dictionary with parameter names as keys. The values are dictionarys, which have the model component
+			as the keys, and bool values, indicating whether the parameter is within the calibration range.
+		"""
+		results = {}
+		if 'pressure' in parameters.keys():
+			pressure_results = {'MagmaSat Model': (parameters['pressure']>0)&(parameters['pressure']<30000)}
+			results['pressure'] = pressure_results
+
+		if 'temperature' in parameters.keys():
+			temperature_results = {'MagmaSat Model': (parameters['temperature']>=550)&(parameters['temperature']<=1725)}
+			results['temperature'] = temperature_results
+
+		return {'Mixed Fluids': results}
 
 	def get_fluid_mass(self, sample, temperature, pressure, H2O, CO2):
 		"""An internally used function to calculate fluid mass.
@@ -5471,7 +5507,6 @@ class MagmaSat(Model):
 			return isobars_df, None #TODO should this just return isobars_df? Currently this requires two items to unpack, I think?
 
 	def calculate_degassing_path(self, sample, temperature, pressure='saturation', fractionate_vapor=0.0, init_vapor=0.0):
-		#TODO check if fractionate_vapor is amount of vapor retained or lost at each P step
 		"""
 		Calculates degassing path for one sample
 
@@ -5557,7 +5592,7 @@ class MagmaSat(Model):
 
 			output = melts.equilibrate_tp(temperature, P_array)
 
-			pressure = []
+			pressure_list = []
 			H2Oliq = []
 			CO2liq = []
 			H2Ofl = []
@@ -5571,7 +5606,7 @@ class MagmaSat(Model):
 				fl_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
 				fl_wtper = 100 * fl_mass / (fl_mass+liq_mass)
 
-				pressure.append(p * 10.0)
+				pressure_list.append(p * 10.0)
 				try:
 					H2Oliq.append(liq_comp["H2O"])
 				except:
@@ -5602,7 +5637,7 @@ class MagmaSat(Model):
 
 			feasible = melts.set_bulk_composition(bulk_comp_orig)
 			fl_wtper = data["FluidProportion_wt"]
-			exsolved_degassing_df = pd.DataFrame(list(zip(pressure, H2Oliq, CO2liq, H2Ofl, CO2fl, fluid_wtper)),
+			exsolved_degassing_df = pd.DataFrame(list(zip(pressure_list, H2Oliq, CO2liq, H2Ofl, CO2fl, fluid_wtper)),
 										columns =['Pressure_bars', 'H2O_liq', 'CO2_liq', 'H2O_fl', 'CO2_fl', 'FluidProportion_wt'])
 
 			return exsolved_degassing_df
@@ -5692,8 +5727,8 @@ def plot_isobars_and_isopleths(isobars, isopleths):
 
 		# draw the figure
 		fig, ax1 = plt.subplots()
-		plt.xlabel('H2O wt%')
-		plt.ylabel('CO2 wt%')
+		plt.xlabel('H$_2$O wt%')
+		plt.ylabel('CO$_2$ wt%')
 
 		# do some data smoothing
 		for pressure in P_vals:
@@ -5772,7 +5807,13 @@ def plot_degassing_paths(degassing_paths, labels=None):
 			plt.plot(path["H2O_liq"], path["CO2_liq"], '-', label=labels[iterno])
 			iterno += 1
 
+	plt.gca().set_prop_cycle(None)
+	for path in degassing_paths:
+		plt.plot(path["H2O_liq"].max(), path["CO2_liq"].max(), 'o')
+
 	plt.legend()
+	plt.xlabel("H$_2$O wt%")
+	plt.ylabel("CO$_2$ wt%")
 
 	return plt.show()
 
