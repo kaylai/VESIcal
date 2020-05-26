@@ -4076,14 +4076,54 @@ class MooreWater(Model):
 		return bulk_comp
 
 	def check_calibration_range(self,parameters,**kwargs):
+		""" Checks whether supplied parameters and calculated results are within the calibration range
+		of the model. Designed for use with the Calculate methods. Calls the check_calibration_range
+		functions for the fugacity and activity models.
+
+		Parameters supported currently are pressure and temperature.
+
+		Parameters
+		----------
+		parameters         dictionary
+			Parameters to check calibration range for, the parameter name should be given as the key, and
+			its value as the value.
+
+		Returns
+		-------
+		dictionary
+			Dictionary with parameter names as keys. The values are dictionarys, which have the model component
+			as the keys, and bool values, indicating whether the parameter is within the calibration range.
 		"""
-		#TODO write this
-		"""
-		return None
+		results = {}
+		if 'pressure' in parameters.keys():
+			pressure_results = {'Moore Model': (parameters['pressure']>=1)&(parameters['pressure']<3000),
+								'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['pressure'],
+								'Activity Model': self.activity_model.check_calibration_range(parameters)['pressure']}
+			results['pressure'] = pressure_results
+
+		if 'temperature' in parameters.keys():
+			temperature_results = {'Moore Model': (parameters['temperature']>=700)&(parameters['temperature']<=1200),
+									'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['temperature'],
+									'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
+			results['temperature'] = temperature_results
+
+		return {'H2O':results}
 
 	def calculate_dissolved_volatiles(self, sample, pressure, temperature, X_fluid=1.0, **kwargs):
 		"""
-		#TODO write doc string
+		Parameters
+		----------
+		sample dict
+			Composition of sample in wt% oxides.
+
+		pressure float
+			Pressure in bars.
+
+		temperature float
+			Temperature in degrees C.
+
+		X_fluid float
+			OPTIONAL. Default is 1.0. Mole fraction of H2O in the H2O-CO2 fluid.
 
 		Returns
 		-------
@@ -4126,7 +4166,16 @@ class MooreWater(Model):
 
 	def calculate_equilibrium_fluid_comp(self, sample, pressure, temperature, **kwargs):
 		"""
-		#TODO
+		Parameters
+		----------
+		sample dict
+			Composition of sample in wt% oxides.
+
+		pressure float
+			Pressure in bars.
+
+		temperature float
+			Temperature in degrees C.
 
 		Returns
 		-------
@@ -4168,12 +4217,14 @@ class MooreWater(Model):
 
 		Parameters
 		----------
-		temperature     float
-			The temperature of the system in C.
-		sample         pandas Series
-			Major element oxides in wt% (including H2O).
-		X_fluid     float
-			The mole fraction of H2O in the fluid. Default is 1.0.
+		sample dict
+			Composition of sample in wt% oxides.
+
+		temperature float
+			Temperature in degrees C.
+
+		X_fluid float
+			OPTIONAL. Default is 1.0. Mole fraction of H2O in the H2O-CO2 fluid.
 
 		Returns
 		-------
