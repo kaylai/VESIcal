@@ -6286,6 +6286,8 @@ if __name__ == '__main__':
 							   ***           *     ******     *     *****          ***            *****      ***   **    ***
 											 *                *
 											  **               **
+
+logo courtesy Twai (http://www.twitter.com/_twai)
 """
 
 def WhatDoesTheFoxSay():
