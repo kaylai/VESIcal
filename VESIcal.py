@@ -570,7 +570,7 @@ class ExcelFile(object):
 	----------
 		input_type: str
 			String defining whether the oxide composition is given in wt percent ("wtpercent", which is the default),
-			mole percent ("molpercent"), or mole fraction ("molfrac).
+			mole percent ("molpercent"), or mole fraction ("molfrac").
 	"""
 
 	def __init__(self, filename, input_type='wtpercent', **kwargs):
@@ -766,7 +766,8 @@ class ExcelFile(object):
 
 		Returns
 		-------
-		Creates and saves an Excel file with data from each calculation saved to its own sheet.
+		Excel File
+			Creates and saves an Excel file with data from each calculation saved to its own sheet.
 		"""
 		with pd.ExcelWriter(filename) as writer:
 			self.data.to_excel(writer, 'Original_User_Data')
@@ -1298,8 +1299,14 @@ class ExcelFile(object):
 				flsystem_wtper.append(100 * fluid_mass / (fluid_mass +
 									  melts.get_mass_of_phase(xmlout, phase_name='Liquid')))
 				flcomp = melts.get_composition_of_phase(xmlout, phase_name='Fluid', mode='component')
-				flH2O.append(flcomp['Water'])
-				flCO2.append(flcomp['Carbon Dioxide'])
+				try:
+					flH2O.append(flcomp['Water'])
+				except:
+					flH2O.append(0)
+				try:
+					flCO2.append(flcomp['Carbon Dioxide'])
+				except:
+					flCO2.append(0)
 
 				if print_status == True:
 					print("Calculating sample " + str(index))
@@ -1323,8 +1330,8 @@ class ExcelFile(object):
 
 class Model(object):
 	"""The model object implements a volatile solubility model. It is composed
-	of the methods needed to evaluate calculate_dissolved_volatiles,
-	calculate_equilibrium_fluid_comp, and calculate_saturation_pressure. The
+	of the methods needed to evaluate :func:`VESIcal.calculate_dissolved_volatiles`,
+	:func:`VESIcal.calculate_equilibrium_fluid_comp`, and :func:`calculate_saturation_pressure`. The
 	fugacity and activity models for the volatiles species must be specified,
 	defaulting to ideal.
 	"""
