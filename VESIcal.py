@@ -1044,7 +1044,7 @@ class ExcelFile(object):
 				dissolved_data["Pressure_bars_VESIcal"] = pressure
 			if file_has_X == False:
 				dissolved_data["X_fluid_input_VESIcal"] = X_fluid
-			disolved_data["Model"] = "MagmaSat"
+			dissolved_data["Model"] = "MagmaSat"
 			if print_status == True:
 				print("Done!")
 
