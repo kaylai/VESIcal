@@ -665,7 +665,7 @@ class ExcelFile(object):
 			wt% will remain fixed, whilst the other major element oxides are reduced proportionally
 			so that the total is 100 wt%.
 
-			'anhydrous' normalizes oxides to 100%, assuming it is volatile-free. If
+			'additionalvolatiles' normalizes oxides to 100%, assuming it is volatile-free. If
 			H2O or CO2 are passed to the function, their un-normalized values will be retained
 			in addition to the normalized non-volatile oxides, summing to >100%.
 
@@ -676,10 +676,10 @@ class ExcelFile(object):
 		dictionary
 			Composition of the sample as oxides
 		"""
-		if norm == 'none' or norm == 'standard' or norm == 'fixedvolatiles' or norm == 'anhydrous':
+		if norm == 'none' or norm == 'standard' or norm == 'fixedvolatiles' or norm == 'additionalvolatiles':
 			pass
 		else:
-			raise InputError('norm must be either none, standard, fixedvolatiles, or anhydrous.')
+			raise InputError('norm must be either none, standard, fixedvolatiles, or additionalvolatiles.')
 			
 		data = self.data
 		my_sample = pd.DataFrame(data.loc[sample])
@@ -693,7 +693,7 @@ class ExcelFile(object):
 			return normalize(sample_oxides)
 		if norm == 'fixedvolatiles':
 			return normalize_FixedVolatiles(sample_oxides)
-		if norm == 'anhydrous':
+		if norm == 'additionalvolatiles':
 			return normalize_AdditionalVolatiles(sample_oxides)
 		if norm == 'none':
 			return sample_oxides
