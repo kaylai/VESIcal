@@ -102,6 +102,17 @@ def printTable(myDict):
 						 index = [k for k in myDict.keys()])
    return table
 
+#----------DEFINE SOME UNIVERSAL INFORMATIVE METHODS--------------#
+def get_model_names():
+	"""
+	Returns all available model names as a list of strings.
+	"""
+	model_names = []
+	for key, value in default_models.items():
+		model_names.append(key)
+
+	return model_names
+
 #----------DEFINE SOME BASIC DATA TRANSFORMATION METHODS-----------#
 
 def mol_to_wtpercent(sample):
