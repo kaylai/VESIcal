@@ -852,18 +852,29 @@ class ExcelFile(object):
 			CO2vals = []
 			if model in MixedFluidsModels:
 				for index, row in dissolved_data.iterrows():
-					if file_has_temp == True:
-						temperature = row[temp_name]
-					if file_has_press == True:
-						pressure = row[press_name]
-					if file_has_X == True:
-						X_fluid = row[X_name]
-					bulk_comp = {oxide:  row[oxide] for oxide in oxides}
-					result_of_calc = calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature, X_fluid=(X_fluid, 1-X_fluid), model=model).result
-					H2Ovals.append(result_of_calc[1])
-					CO2vals.append(result_of_calc[0])
+					try:
+						if file_has_temp == True:
+							temperature = row[temp_name]
+						if file_has_press == True:
+							pressure = row[press_name]
+						if file_has_X == True:
+							X_fluid = row[X_name]
+						bulk_comp = {oxide:  row[oxide] for oxide in oxides}
+						result_of_calc = calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature, X_fluid=(X_fluid, 1-X_fluid), model=model).result
+						H2Ovals.append(result_of_calc[1])
+						CO2vals.append(result_of_calc[0])
+					except:
+						H2Ovals.append(np.nan)
+						CO2vals.append(np.nan)
 				dissolved_data["H2O_liq_VESIcal"] = H2Ovals
 				dissolved_data["CO2_liq_VESIcal"] = CO2vals
+				if file_has_temp == False:
+					dissolved_data["Temperature_C_VESIcal"] = temperature
+				if file_has_press == False:
+					dissolved_data["Pressure_bars_VESIcal"] = pressure
+				if file_has_X == False:
+					dissolved_data["X_fluid_input_VESIcal"] = X_fluid
+				dissolved_data["Model"] = model
 
 				return dissolved_data
 			else:
@@ -876,13 +887,26 @@ class ExcelFile(object):
 						X_fluid = row[X_name]
 					bulk_comp = {oxide:  row[oxide] for oxide in oxides}
 					if 'Water' in model:
-						result_of_calc = H2Ovals.append(calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature, X_fluid=X_fluid, model=model).result)
+						try:
+							H2Ovals.append(calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature, X_fluid=X_fluid, model=model).result)
+						except:
+							H2Ovals.append(0)
 					if 'Carbon' in model:
-						result_of_calc = CO2vals.append(calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature, X_fluid=X_fluid, model=model).result)
+						try:
+							CO2vals.append(calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature, X_fluid=X_fluid, model=model).result)
+						except:
+							CO2vals.append(0)
 				if 'Water' in model:
 					dissolved_data["H2O_liq_VESIcal"] = H2Ovals
 				if 'Carbon' in model:
 					dissolved_data["CO2_liq_VESIcal"] = CO2vals
+				if file_has_temp == False:
+					dissolved_data["Temperature_C_VESIcal"] = temperature
+				if file_has_press == False:
+					dissolved_data["Pressure_bars_VESIcal"] = pressure
+				if file_has_X == False:
+					dissolved_data["X_fluid_input_VESIcal"] = X_fluid
+				dissolved_data["Model"] = model
 
 				return dissolved_data
 
@@ -1020,6 +1044,7 @@ class ExcelFile(object):
 				dissolved_data["Pressure_bars_VESIcal"] = pressure
 			if file_has_X == False:
 				dissolved_data["X_fluid_input_VESIcal"] = X_fluid
+			disolved_data["Model"] = "MagmaSat"
 			if print_status == True:
 				print("Done!")
 
@@ -1081,29 +1106,46 @@ class ExcelFile(object):
 			CO2vals = []
 			if model in MixedFluidsModels or model == "MooreWater":
 				for index, row in fluid_data.iterrows():
-					if file_has_temp == True:
-						temperature = row[temp_name]
-					if file_has_press == True:
-						pressure = row[press_name]
-					bulk_comp = {oxide:  row[oxide] for oxide in oxides}
-					result_of_calc = calculate_equilibrium_fluid_comp(sample=bulk_comp, pressure=pressure, temperature=temperature, model=model).result
-					H2Ovals.append(result_of_calc)
-					CO2vals.append(1.0 - result_of_calc)
+					try:
+						if file_has_temp == True:
+							temperature = row[temp_name]
+						if file_has_press == True:
+							pressure = row[press_name]
+						bulk_comp = {oxide:  row[oxide] for oxide in oxides}
+						result_of_calc = calculate_equilibrium_fluid_comp(sample=bulk_comp, pressure=pressure, temperature=temperature, model=model).result
+						H2Ovals.append(result_of_calc)
+						CO2vals.append(1.0 - result_of_calc)
+					except:
+						H2Ovals.append(np.nan)
+						CO2vals.append(np.nan)
 				fluid_data["XH2O_fl_VESIcal"] = H2Ovals
 				fluid_data["XCO2_fl_VESIcal"] = CO2vals
+				if file_has_temp == False:
+					fluid_data["Temperature_C_VESIcal"] = temperature
+				if file_has_press == False:
+					fluid_data["Pressure_bars_VESIcal"] = pressure
+				fluid_data["Model"] = model
 
 				return fluid_data
 			else:
 				saturated = []
 				for index, row in fluid_data.iterrows():
-					if file_has_temp == True:
-						temperature = row[temp_name]
-					if file_has_press == True:
-						pressure = row[press_name]
-					bulk_comp = {oxide:  row[oxide] for oxide in oxides}
-					result_of_calc = calculate_equilibrium_fluid_comp(sample=bulk_comp, pressure=pressure, temperature=temperature, model=model).result
-					saturated.append(result_of_calc)
+					try:
+						if file_has_temp == True:
+							temperature = row[temp_name]
+						if file_has_press == True:
+							pressure = row[press_name]
+						bulk_comp = {oxide:  row[oxide] for oxide in oxides}
+						result_of_calc = calculate_equilibrium_fluid_comp(sample=bulk_comp, pressure=pressure, temperature=temperature, model=model).result
+						saturated.append(result_of_calc)
+					except:
+						saturated.append(np.nan)
 				fluid_data["Saturated_VESIcal"] = saturated
+				if file_has_temp == False:
+					fluid_data["Temperature_C_VESIcal"] = temperature
+				if file_has_press == False:
+					fluid_data["Pressure_bars_VESIcal"] = pressure
+				fluid_data["Model"] = model
 
 				return fluid_data
 		else:
@@ -1158,9 +1200,9 @@ class ExcelFile(object):
 
 			if file_has_temp == False:
 				fluid_data["Temperature_C_VESIcal"] = temperature
-
 			if file_has_press == False:
 				fluid_data["Pressure_bars_VESIcal"] = pressure
+			fluid_data["Model"] = "MagmaSat"
 
 			if print_status == True:
 				print("Done!")
@@ -1208,11 +1250,17 @@ class ExcelFile(object):
 		if model != 'MagmaSat':
 			satP = []
 			for index, row in satp_data.iterrows():
-				if file_has_temp == True:
-					temperature = row[temp_name]
-				bulk_comp = {oxide:  row[oxide] for oxide in oxides}
-				satP.append(calculate_saturation_pressure(sample=bulk_comp, temperature=temperature, model=model).result)
+				try:
+					if file_has_temp == True:
+						temperature = row[temp_name]
+					bulk_comp = {oxide:  row[oxide] for oxide in oxides}
+					satP.append(calculate_saturation_pressure(sample=bulk_comp, temperature=temperature, model=model).result)
+				except:
+					satP.append(np.nan)
 			satp_data["SaturationP_bars_VESIcal"] = satP
+			if file_has_temp == False:
+				satp_data["Temperature_C_VESIcal"] = temperature
+			satp_data["Model"] = model
 
 			return satp_data
 
@@ -1293,20 +1341,26 @@ class ExcelFile(object):
 
 					if pressureMPa <= 0:
 						break
-
-				satP.append(pressureMPa * 10)
-				flmass.append(fluid_mass)
-				flsystem_wtper.append(100 * fluid_mass / (fluid_mass +
-									  melts.get_mass_of_phase(xmlout, phase_name='Liquid')))
-				flcomp = melts.get_composition_of_phase(xmlout, phase_name='Fluid', mode='component')
-				try:
-					flH2O.append(flcomp['Water'])
-				except:
-					flH2O.append(0)
-				try:
-					flCO2.append(flcomp['Carbon Dioxide'])
-				except:
-					flCO2.append(0)
+				if satP > 0:
+					satP.append(pressureMPa * 10)
+					flmass.append(fluid_mass)
+					flsystem_wtper.append(100 * fluid_mass / (fluid_mass +
+										  melts.get_mass_of_phase(xmlout, phase_name='Liquid')))
+					flcomp = melts.get_composition_of_phase(xmlout, phase_name='Fluid', mode='component')
+					try:
+						flH2O.append(flcomp['Water'])
+					except:
+						flH2O.append(0)
+					try:
+						flCO2.append(flcomp['Carbon Dioxide'])
+					except:
+						flCO2.append(0)
+				else:
+					satP.append(np.nan)
+					flmass.append(np.nan)
+					flsystem_wtper.append(np.nan)
+					flH2O.append(np.nan)
+					flCO2.append(np.nan)
 
 				if print_status == True:
 					print("Calculating sample " + str(index))
@@ -1321,6 +1375,7 @@ class ExcelFile(object):
 
 			if file_has_temp == False:
 				satp_data["Temperature_C_VESIcal"] = temperature
+			satp_data["Model"] = "MagmaSat"
 
 			feasible = melts.set_bulk_composition(bulk_comp_orig) #this needs to be reset always!
 
