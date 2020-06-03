@@ -1275,6 +1275,8 @@ class ExcelFile(object):
 			flsystem_wtper = []
 			iterno = 0
 			for index, row in satp_data.iterrows():
+				if print_status == True:
+					print("Calculating sample " + str(index))
 				bulk_comp = {oxide:  row[oxide] for oxide in oxides}
 				if iterno == 0:
 					bulk_comp_orig = bulk_comp
@@ -1324,6 +1326,7 @@ class ExcelFile(object):
 			satp_data["StartingP_ref"] = startingP_ref
 
 			for index, row in satp_data.iterrows():
+
 				bulk_comp = {oxide:  row[oxide] for oxide in oxides}
 				feasible = melts.set_bulk_composition(bulk_comp)
 
@@ -1341,7 +1344,7 @@ class ExcelFile(object):
 
 					if pressureMPa <= 0:
 						break
-				if satP > 0:
+				if pressureMPa > 0:
 					satP.append(pressureMPa * 10)
 					flmass.append(fluid_mass)
 					flsystem_wtper.append(100 * fluid_mass / (fluid_mass +
@@ -1361,9 +1364,6 @@ class ExcelFile(object):
 					flsystem_wtper.append(np.nan)
 					flH2O.append(np.nan)
 					flCO2.append(np.nan)
-
-				if print_status == True:
-					print("Calculating sample " + str(index))
 
 			satp_data["XH2O_fl_VESIcal"] = flH2O
 			satp_data["XCO2_fl_VESIcal"] = flCO2
