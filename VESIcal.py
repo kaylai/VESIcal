@@ -579,12 +579,18 @@ class ExcelFile(object):
 
 	Attributes
 	----------
+		filename: str
+			Path to the excel file, e.g., "my_file.xlsx"
+
 		input_type: str
-			String defining whether the oxide composition is given in wt percent ("wtpercent", which is the default),
-			mole percent ("molpercent"), or mole fraction ("molfrac").
+			OPTIONAL. Default is 'wtpercent'. String defining whether the oxide composition is given in wt percent 
+			("wtpercent", which is the default), mole percent ("molpercent"), or mole fraction ("molfrac").
+		
+		label: str
+			OPTIONAL. Default is 'Label'. Name of the column within the passed Excel file referring to sample names.
 	"""
 
-	def __init__(self, filename, input_type='wtpercent', **kwargs):
+	def __init__(self, filename, input_type='wtpercent', label='Label' **kwargs):
 		"""Return an ExcelFile object whoes parameters are defined here."""
 		try:
 			melts
@@ -611,10 +617,10 @@ class ExcelFile(object):
 		data = data.fillna(0)
 
 		try:
-			data = data.set_index('Label')
+			data = data.set_index(label)
 		except:
 			raise InputError(
-				"Imported file must contain a column of sample names with the column name \'Label\'") #TODO test
+				"Imported file must contain a column of sample names. If this column is not titled 'Label' (the default value), you must pass the column name to arg label. For example: ExcelFile('myfile.xslx', label='SampleNames')") #TODO test
 		if 'model' in kwargs:
 			warnings.warn("You don't need to pass a model here, so it will be ignored. You can specify a model when performing calculations on your dataset (e.g., calculate_dissolved_volatiles())")
 
