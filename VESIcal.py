@@ -590,7 +590,7 @@ class ExcelFile(object):
 			OPTIONAL. Default is 'Label'. Name of the column within the passed Excel file referring to sample names.
 	"""
 
-	def __init__(self, filename, input_type='wtpercent', label='Label' **kwargs):
+	def __init__(self, filename, input_type='wtpercent', label='Label', **kwargs):
 		"""Return an ExcelFile object whoes parameters are defined here."""
 		try:
 			melts
