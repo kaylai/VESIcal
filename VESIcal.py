@@ -5626,7 +5626,7 @@ class MagmaSat(Model):
 		oxides = self.oxides
 		phases = self.phases
 
-		#sample = normalize(sample) #TODO decide when to normalize for preprocessing
+		sample = normalize(sample)
 		bulk_comp_orig = sample
 
 		bulk_comp = {oxide:  sample[oxide] for oxide in oxides}
