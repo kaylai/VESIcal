@@ -2592,8 +2592,8 @@ class ShishkinaCarbon(Model):
 		if sample['CO2'] <= 0:
 			raise InputError("CO2 concentration must be greater than 0 wt%.")
 
-		satP = root_scalar(self.root_saturation_pressure,x0=1000.0,x1=2000.0,args=(sample,kwargs)).root
-		return satP
+        satP = root_scalar(self.root_saturation_pressure,bracket=[1e-15,1e5],args=(sample,kwargs)).root
+        return satP
 
 	def root_saturation_pressure(self,pressure,sample,kwargs):
 		""" Function called by scipy.root_scalar when finding the saturation pressure using
@@ -2763,8 +2763,8 @@ class ShishkinaWater(Model):
 		if sample['H2O'] < self.calculate_dissolved_volatiles(sample=sample,pressure=0,**kwargs):
 			return np.nan
 
-		satP = root_scalar(self.root_saturation_pressure,x0=1000.0,x1=2000.0,args=(sample,kwargs)).root
-		return satP
+        satP = root_scalar(self.root_saturation_pressure,bracket=[1e-15,1e5],args=(sample,kwargs)).root
+        return satP
 
 	def root_saturation_pressure(self,pressure,sample,kwargs):
 		""" Function called by scipy.root_scalar when finding the saturation pressure using
@@ -2929,8 +2929,8 @@ class DixonCarbon(Model):
 		if sample['CO2'] <= 0:
 			raise InputError("Dissolved CO2 concentration must be greater than 0 wt%.")
 
-		satP = root_scalar(self.root_saturation_pressure,x0=1000.0,x1=2000.0,args=(sample,kwargs)).root
-		return np.real(satP)
+        satP = root_scalar(self.root_saturation_pressure,bracket=[1e-15,1e5],args=(sample,kwargs)).root
+        return np.real(satP)
 
 	def molfrac_molecular(self,pressure,sample,X_fluid=1.0,**kwargs):
 		"""Calculates the mole fraction of CO3(-2) dissolved when in equilibrium with
@@ -3128,16 +3128,16 @@ class DixonWater(Model):
 		X_fluid     float
 			The mole fraction of H2O in the fluid. Default is 1.0.
 
-		Returns
-		-------
-		float
-			Calculated saturation pressure in bars.
-		"""
-		if 'H2O' not in sample:
-			raise InputError("sample must contain H2O")
-		if sample['H2O'] <= 0:
-			raise InputError("H2O concentration must be greater than 0 wt%.")
-		satP = root_scalar(self.root_saturation_pressure,x0=1000.0,x1=2000.0,args=(sample,kwargs)).root
+        Returns
+        -------
+        float
+            Calculated saturation pressure in bars.
+        """
+        if 'H2O' not in sample:
+            raise InputError("sample must contain H2O")
+        if sample['H2O'] <= 0:
+            raise InputError("H2O concentration must be greater than 0 wt%.")
+        satP = root_scalar(self.root_saturation_pressure,bracket=[1e-15,1e5],args=(sample,kwargs)).root
 
 		return np.real(satP)
 
@@ -3445,8 +3445,8 @@ class IaconoMarzianoWater(Model):
 		if sample['H2O'] <= 0.0:
 			raise InputError("Dissolved H2O must be greater than 0 wt%.")
 
-		return root_scalar(self.root_saturation_pressure,args=(temperature,sample,kwargs),
-							x0=1000.0,x1=2000.0).root
+        return root_scalar(self.root_saturation_pressure,args=(temperature,sample,kwargs),
+                            bracket=[1e-15,1e5]).root
 
 	def root_saturation_pressure(self,pressure,temperature,sample,kwargs):
 		""" Function called by scipy.root_scalar when finding the saturation pressure using
@@ -3759,8 +3759,8 @@ class IaconoMarzianoCarbon(Model):
 		if sample['CO2'] <= 0:
 			raise InputError("Dissolved CO2 must be greater than 0 wt%.")
 
-		return root_scalar(self.root_saturation_pressure,args=(temperature,sample,kwargs),
-							x0=1000.0,x1=2000.0).root
+        return root_scalar(self.root_saturation_pressure,args=(temperature,sample,kwargs),
+                            bracket=[1e-15,1e5]).root
 
 	def root_saturation_pressure(self,pressure,temperature,sample,kwargs):
 		""" Function called by scipy.root_scalar when finding the saturation pressure using
@@ -4929,20 +4929,20 @@ class MixedFluid(Model):
 		kwargs     dictionary
 			Dictionary of keyword arguments, which may be required by the pure-fluid models.
 
-		Returns
-		-------
-		numpy array
-			The difference in the dissolved volatile concentrations, and those predicted with the
-			pressure and fluid composition specified by x.
-		"""
-		if x[1] < 0:
-			x[1] = 0
-		elif x[1] > 1:
-			x[1] = 1
-		if x[0] <= 0:
-			x[0] = 1
-		misfit = np.array(self.calculate_dissolved_volatiles(pressure=x[0],X_fluid=(x[1],1-x[1]),sample=sample,**kwargs)) - volatile_concs
-		return misfit
+        Returns
+        -------
+        numpy array
+            The difference in the dissolved volatile concentrations, and those predicted with the
+            pressure and fluid composition specified by x.
+        """
+        if x[1] < 0:
+            x[1] = 0
+        elif x[1] > 1:
+            x[1] = 1
+        if x[0] <= 0:
+            x[0] = 1e-15
+        misfit = np.array(self.calculate_dissolved_volatiles(pressure=x[0],X_fluid=(x[1],1-x[1]),sample=sample,**kwargs)) - volatile_concs
+        return misfit
 
 
 	def root_for_fluid_comp(self,Xv0,pressure,Xt0,Xt1,sample,kwargs):
