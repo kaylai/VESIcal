@@ -583,9 +583,9 @@ class ExcelFile(object):
 			Path to the excel file, e.g., "my_file.xlsx"
 
 		input_type: str
-			OPTIONAL. Default is 'wtpercent'. String defining whether the oxide composition is given in wt percent 
+			OPTIONAL. Default is 'wtpercent'. String defining whether the oxide composition is given in wt percent
 			("wtpercent", which is the default), mole percent ("molpercent"), or mole fraction ("molfrac").
-		
+
 		label: str
 			OPTIONAL. Default is 'Label'. Name of the column within the passed Excel file referring to sample names.
 	"""
@@ -697,7 +697,7 @@ class ExcelFile(object):
 			pass
 		else:
 			raise InputError('norm must be either none, standard, fixedvolatiles, or additionalvolatiles.')
-			
+
 		data = self.data
 		my_sample = pd.DataFrame(data.loc[sample])
 		sample_dict = (my_sample.to_dict()[sample])
@@ -1400,6 +1400,31 @@ class ExcelFile(object):
 				print("Done!")
 			return satp_data
 
+class CalibrationRange(object):
+	""" The CalibrationRange object allows the range of allowable parameters to be specified and
+	used in checking and reporting of the results.
+	"""
+	def __init__(self,parameter_name,value,unit='',modelname='',parameter_string=None,value_fmt="{:.1f}"):
+		self.parameter_name = parameter_name
+		self.value = value
+		self.value_fmt = value_fmt
+		self.model_name = modelname
+		self.unit = unit
+		if parameter_string is not None:
+			self.parameter_string = parameter_string
+		else:
+			self.parameter_string = parameter_name
+
+	@abstractmethod
+	def check(self,parameters):
+		"""Method for checking whether parameters satisfy the calibration range."""
+		return True
+
+	@abstractmethod
+	def string(self,parameters):
+		"""Returns a string statement of the calibration check"""
+		return 'No string return defined. '
+
 class Model(object):
 	"""The model object implements a volatile solubility model. It is composed
 	of the methods needed to evaluate :func:`VESIcal.calculate_dissolved_volatiles`,
@@ -1412,6 +1437,7 @@ class Model(object):
 		self.set_volatile_species(None)
 		self.set_fugacity_model(fugacity_idealgas())
 		self.set_activity_model(activity_idealsolution())
+		self.set_calibration_ranges([])
 
 	def set_volatile_species(self,volatile_species):
 		if type(volatile_species) == str:
@@ -1425,6 +1451,9 @@ class Model(object):
 
 	def set_activity_model(self,activity_model):
 		self.activity_model = activity_model
+
+	def set_calibration_ranges(self,calibration_ranges):
+		self.calibration_ranges = calibration_ranges
 
 	@abstractmethod
 	def calculate_dissolved_volatiles(self,**kwargs):
@@ -1442,9 +1471,19 @@ class Model(object):
 	def preprocess_sample(self,**kwargs):
 		pass
 
-	@abstractmethod
-	def check_calibration_range(self,**kwargs):
-		pass
+	# @abstractmethod
+	def check_calibration_range(self,parameters):
+		s = ''
+		for cr in self.calibration_ranges:
+			if cr.check(parameters) == False:
+				s += cr.string(parameters)
+		for cr in self.fugacity_model.calibration_ranges:
+			if cr.check(parameters) == False:
+				s += cr.string(parameters)
+		for cr in self.activity_model.calibration_ranges:
+			if cr.check(parameters) == False:
+				s += cr.string(parameters)
+		return s
 
 
 class FugacityModel(object):
@@ -1454,15 +1493,24 @@ class FugacityModel(object):
 	to calculate the fugacity at a given pressure and mole fraction.
 	"""
 
+	def __init__(self):
+		self.set_calibration_ranges([])
+
+	def set_calibration_ranges(self,calibration_ranges):
+		self.calibration_ranges = calibration_ranges
+
 	@abstractmethod
 	def fugacity(self,pressure,**kwargs):
 		"""
 		"""
 
-	@abstractmethod
+	# @abstractmethod
 	def check_calibration_range(self,parameters):
-		"""
-		"""
+		s = ''
+		for cr in self.calibration_ranges:
+			if cr.check(parameters) == False:
+				s += cr.string(parameters)
+		return s
 
 
 
@@ -1471,16 +1519,24 @@ class activity_model(object):
 	for volatile species in melts. It contains all the methods required to
 	evaluate the activity.
 	"""
+	def __init__(self):
+		self.set_calibration_ranges([])
+
+	def set_calibration_ranges(self,calibration_ranges):
+		self.calibration_ranges = calibration_ranges
 
 	@abstractmethod
 	def activity(self,X,**kwargs):
 		"""
 		"""
 
-	@abstractmethod
+	# @abstractmethod
 	def check_calibration_range(self,parameters):
-		"""
-		"""
+		s = ''
+		for cr in self.calibration_ranges:
+			if cr.check(parameters) == False:
+				s += cr.string(parameters)
+		return s
 
 
 
@@ -1505,17 +1561,19 @@ class Calculate(object):
 		self.calib_check = self.check_calibration_range(sample=self.sample,**kwargs)
 
 		if self.calib_check is not None:
-			warning_string = ''
-			warn = False
-			for species in list(self.calib_check.keys()):
-				for variable in list(self.calib_check[species].keys()):
-					for modelcomponent in list(self.calib_check[species][variable].keys()):
-						if self.calib_check[species][variable][modelcomponent] == False:
-							warning_string += variable.capitalize() + ' is outside the calibration range of the ' + species + ' ' + modelcomponent + '. '
-							warn = True
-
-			if warn == True:
-				warnings.warn(warning_string,RuntimeWarning)
+			if self.calib_check != '':
+				warnings.warn(self.calib_check,RuntimeWarning)
+			# warning_string = ''
+			# warn = False
+			# for species in list(self.calib_check.keys()):
+			# 	for variable in list(self.calib_check[species].keys()):
+			# 		for modelcomponent in list(self.calib_check[species][variable].keys()):
+			# 			if self.calib_check[species][variable][modelcomponent] == False:
+			# 				warning_string += variable.capitalize() + ' is outside the calibration range of the ' + species + ' ' + modelcomponent + '. '
+			# 				warn = True
+			#
+			# if warn == True:
+			# 	warnings.warn(warning_string,RuntimeWarning)
 
 
 	@abstractmethod
@@ -1525,6 +1583,162 @@ class Calculate(object):
 	@abstractmethod
 	def check_calibration_range(self):
 		""" """
+
+#-------------DEFAULT CALIBRATIONRANGE OBJECTES--------------#
+
+class cr_EqualTo(CalibrationRange):
+	""" """
+	def check(self,parameters):
+		if self.parameter_name in parameters:
+			if parameters[self.parameter_name] == self.value:
+				return True
+			else:
+				return False
+		else:
+			return None
+
+	def string(self,parameters=None):
+		if parameters is not None:
+			checkval = self.check(parameters)
+			if checkval is None:
+				s = "{} was not provided as a parameter for checking. ".format(self.parameter_string).title()
+			elif checkval == True:
+				s = "The {} (".format(self.parameter_string)
+				s += self.value_fmt.format(parameters[self.parameter_name])
+				s += " {}) is not equal to ".format(self.unit)
+				s += self.value_fmt.format(self.value)
+				s += " {} as required by the calibration range of the {} model. ".format(self.unit,self.model_name)
+				return s
+			else:
+				s = "The {} is outside the calibration range of the {} model, as ".format(self.parameter_string,self.model_name)
+				s += self.value_fmt.format(parameters[self.parameter_name])
+				s += " {} is not equal to ".format(self.unit)
+				s += self.value_fmt.format(self.value)
+				s += ' {}. '.format(self.unit)
+				return s
+		else:
+			s = "The {} model is calibrated for {} ".format(self.parameter_string)
+			s += " equal to "
+			s += self.value_fmt.format(self.value)
+			s += " {}. ".format(self.unit)
+			return s
+
+class cr_GreaterThan(CalibrationRange):
+	""" """
+	def check(self,parameters):
+		if self.parameter_name in parameters:
+			if parameters[self.parameter_name] > self.value:
+				return True
+			else:
+				return False
+		else:
+			return None
+
+	def string(self,parameters=None):
+		if parameters is not None:
+			checkval = self.check(parameters)
+			if checkval is None:
+				s = "{} was not provided as a parameter for checking. ".format(self.parameter_string).title()
+			elif checkval == True:
+				s = "The {} (".format(self.parameter_string)
+				s += self.value_fmt.format(parameters[self.parameter_name])
+				s += " {}) is greater than ".format(self.unit)
+				s += self.value_fmt.format(self.value)
+				s += " {} as required by the calibration range of the {} model. ".format(self.unit,self.model_name)
+				return s
+			else:
+				s = "The {} is outside the calibration range of the {} model, as ".format(self.parameter_string,self.model_name)
+				s += self.value_fmt.format(parameters[self.parameter_name])
+				s += " {} is not greater than ".format(self.unit)
+				s += self.value_fmt.format(self.value)
+				s += ' {}. '.format(self.unit)
+				return s
+		else:
+			s = "The {} model is calibrated for {} ".format(self.parameter_string)
+			s += " greater than "
+			s += self.value_fmt.format(self.value)
+			s += " {}. ".format(self.unit)
+			return s
+
+class cr_LessThan(CalibrationRange):
+	""" """
+	def check(self,parameters):
+		if self.parameter_name in parameters:
+			if parameters[self.parameter_name] > self.value:
+				return True
+			else:
+				return False
+		else:
+			return None
+
+	def string(self,parameters=None):
+		if parameters is not None:
+			checkval = self.check(parameters)
+			if checkval is None:
+				s = "{} was not provided as a parameter for checking. ".format(self.parameter_string).title()
+			elif checkval == True:
+				s = "The {} (".format(self.parameter_string)
+				s += self.value_fmt.format(parameters[self.parameter_name])
+				s += " {}) is less than ".format(self.unit)
+				s += self.value_fmt.format(self.value)
+				s += " {} as required by the calibration range of the {} model. ".format(self.unit,self.model_name)
+				return s
+			else:
+				s = "The {} is outside the calibration range of the {} model, as ".format(self.parameter_string,self.model_name)
+				s += self.value_fmt.format(parameters[self.parameter_name])
+				s += " {} is not less than ".format(self.unit)
+				s += self.value_fmt.format(self.value)
+				s += ' {}. '.format(self.unit)
+				return s
+		else:
+			s = "The {} model is calibrated for {} ".format(self.model_name,self.parameter_string)
+			s += " less than "
+			s += self.value_fmt.format(self.value)
+			s += " {}. ".format(self.unit)
+			return s
+
+class cr_Between(CalibrationRange):
+	""" """
+	def check(self,parameters):
+		if self.parameter_name in parameters:
+			if parameters[self.parameter_name] > self.value[0] and parameters[self.parameter_name] < self.value[1]:
+				return True
+			else:
+				return False
+		else:
+			return False
+
+	def string(self,parameters=None):
+		if parameters is not None:
+			checkval = self.check(parameters)
+			if checkval is None:
+				s = "{} was not provided as a parameter for checking. ".format(self.parameter_string).title()
+			elif checkval == True:
+				s = "The {} (".format(self.parameter_string)
+				s += self.value_fmt.format(parameters[self.parameter_name])
+				s += " {}) is between ".format(self.unit)
+				s += self.value_fmt.format(self.value[0])
+				s += ' and '
+				s += self.value_fmt.format(self.value[1])
+				s += " {} as required by the calibration range of the {} model. ".format(self.unit,self.model_name)
+				return s
+			else:
+				s = "The {} is outside the calibration range of the {} model, as ".format(self.parameter_string,self.model_name)
+				s += self.value_fmt.format(parameters[self.parameter_name])
+				s += " {} is not between ".format(self.unit)
+				s += self.value_fmt.format(self.value[0])
+				s += ' and '
+				s += self.value_fmt.format(self.value[1])
+				s += ' {}. '.format(self.unit)
+				return s
+		else:
+			s = "The {} model is calibrated for {} ".format(self.model_name,self.parameter_string)
+			s += " between "
+			s += self.value_fmt.format(self.value[0])
+			s += " and "
+			s += self.value_fmt.format(self.value[1])
+			s += " {}.".format(self.unit)
+			return s
 
 #-------------FUGACITY MODELS--------------------------------#
 
@@ -1576,6 +1790,9 @@ class fugacity_KJ81_co2(FugacityModel):
 	""" Implementation of the Kerrick and Jacobs (1981) EOS for mixed fluids. This class
 	will return the properties of the CO2 component of the mixed fluid.
 	"""
+	def __init__(self):
+		self.set_calibration_ranges([cr_LessThan('pressure',20000.0,'bar','Kerrick and Jacobs (1981) EOS'),
+									 cr_LessThan('temperature',1323,'K','Kerrick and Jacobs (1981) EOS')])
 
 	def fugacity(self,pressure,temperature,X_fluid,**kwargs):
 		""" Calculates the fugacity of CO2 in a mixed CO2-H2O fluid. Above 1050C,
@@ -1824,36 +2041,39 @@ class fugacity_KJ81_co2(FugacityModel):
 
 		return lnPhi
 
-	def check_calibration_range(self,parameters,**kwargs):
-		"""Checks whether supplied parameters and calculated results are within the calibration range
-		of the model. Designed for use with the Calculate methods.
-
-		Parameters supported currently are pressure and temperature.
-
-		Parameters
-		----------
-		parameters      dictionary
-			Parameters to check calibration range for, the parameter name should be given as the key, and
-			its value as the value.
-
-		Returns
-		-------
-		dictionary
-			Dictionary with parameter names as keys. The values are booleans
-			representing whether the parameter is in the calibrated range, or not.
-		"""
-		results = {}
-		if 'pressure' in parameters.keys():
-			results['pressure'] = (parameters['pressure']<20000)
-		if 'temperature' in parameters.keys():
-			results['temperature'] = (parameters['temperature']<1323)
-		return results
+	# def check_calibration_range(self,parameters,**kwargs):
+	# 	"""Checks whether supplied parameters and calculated results are within the calibration range
+	# 	of the model. Designed for use with the Calculate methods.
+	#
+	# 	Parameters supported currently are pressure and temperature.
+	#
+	# 	Parameters
+	# 	----------
+	# 	parameters      dictionary
+	# 		Parameters to check calibration range for, the parameter name should be given as the key, and
+	# 		its value as the value.
+	#
+	# 	Returns
+	# 	-------
+	# 	dictionary
+	# 		Dictionary with parameter names as keys. The values are booleans
+	# 		representing whether the parameter is in the calibrated range, or not.
+	# 	"""
+	# 	results = {}
+	# 	if 'pressure' in parameters.keys():
+	# 		results['pressure'] = (parameters['pressure']<20000)
+	# 	if 'temperature' in parameters.keys():
+	# 		results['temperature'] = (parameters['temperature']<1323)
+	# 	return results
 
 
 class fugacity_KJ81_h2o(FugacityModel):
 	"""Implementation of the Kerrick and Jacobs (1981) EOS for mixed fluids. This class
 	will return the properties of the H2O component of the mixed fluid.
 	"""
+	def __init__(self):
+		self.set_calibration_ranges([cr_LessThan('pressure',20000.0,'bar','Kerrick and Jacobs (1981) EOS'),
+									 cr_LessThan('temperature',1323,'K','Kerrick and Jacobs (1981) EOS')])
 
 	def fugacity(self,pressure,temperature,X_fluid,**kwargs):
 		""" Calculates the fugacity of H2O in a mixed CO2-H2O fluid. Above 1050C,
@@ -2102,35 +2322,39 @@ class fugacity_KJ81_h2o(FugacityModel):
 
 		return lnPhi
 
-	def check_calibration_range(self,parameters,**kwargs):
-		"""Checks whether supplied parameters and calculated results are within the calibration range
-		of the model. Designed for use with the Calculate methods.
-
-		Parameters supported currently are pressure and temperature.
-
-		Parameters
-		----------
-		parameters      dictionary
-			Parameters to check calibration range for, the parameter name should be given as the key, and
-			its value as the value.
-
-		Returns
-		-------
-		dictionary
-			Dictionary with parameter names as keys. The values are booleans
-			representing whether the parameter is in the calibrated range, or not.
-		"""
-		results = {}
-		if 'pressure' in parameters.keys():
-			results['pressure'] = (parameters['pressure']<20000)
-		if 'temperature' in parameters.keys():
-			results['temperature'] = (parameters['temperature']<1323)
-		return results
+	# def check_calibration_range(self,parameters,**kwargs):
+	# 	"""Checks whether supplied parameters and calculated results are within the calibration range
+	# 	of the model. Designed for use with the Calculate methods.
+	#
+	# 	Parameters supported currently are pressure and temperature.
+	#
+	# 	Parameters
+	# 	----------
+	# 	parameters      dictionary
+	# 		Parameters to check calibration range for, the parameter name should be given as the key, and
+	# 		its value as the value.
+	#
+	# 	Returns
+	# 	-------
+	# 	dictionary
+	# 		Dictionary with parameter names as keys. The values are booleans
+	# 		representing whether the parameter is in the calibrated range, or not.
+	# 	"""
+	# 	results = {}
+	# 	if 'pressure' in parameters.keys():
+	# 		results['pressure'] = (parameters['pressure']<20000)
+	# 	if 'temperature' in parameters.keys():
+	# 		results['temperature'] = (parameters['temperature']<1323)
+	# 	return results
 
 
 class fugacity_ZD09_co2(FugacityModel):
 	""" Implementation of the Zhang and Duan (2009) fugacity model for pure CO2
 	fluids."""
+	def __init__(self):
+		self.set_calibration_ranges([cr_Between('pressure',[1,1e5],'bar','Kerrick and Jacobs (1981) EOS'),
+									 cr_Between('temperature',[473,2573],'K','Kerrick and Jacobs (1981) EOS')])
+
 
 	def fugacity(self,pressure,temperature,X_fluid=1.0,**kwargs):
 		""" Calculates the fugacity of a pure CO2 fluid, or a mixed fluid assuming
@@ -2233,36 +2457,40 @@ class fugacity_ZD09_co2(FugacityModel):
 				 (a[7]+a[8]/Tm**2+a[9]/Tm**3)/Vm**4)*0.08314*Tm/Pm - Vm
 				)
 
-	def check_calibration_range(self,parameters):
-		"""Checks whether supplied parameters and calculated results are within the calibration range
-		of the model. Designed for use with the Calculate methods.
-
-		Parameters supported currently are pressure and temperature.
-
-		Parameters
-		----------
-		parameters         dictionary
-			Parameters to check calibration range for, the parameter name should be given as the key, and
-			its value as the value.
-
-		Returns
-		-------
-		dictionary
-			Dictionary with parameter names as keys. The values are booleans
-			representing whether the parameter is in the calibrated range, or not.
-		"""
-		results = {}
-		if 'pressure' in parameters.keys():
-			results['pressure'] = (parameters['pressure']<1e5)&(parameters['pressure']>1)
-		if 'temperature' in parameters.keys():
-			results['temperature'] = (parameters['temperature']<2573)&(parameters['temperature']>473)
-		return results
+	# def check_calibration_range(self,parameters):
+	# 	"""Checks whether supplied parameters and calculated results are within the calibration range
+	# 	of the model. Designed for use with the Calculate methods.
+	#
+	# 	Parameters supported currently are pressure and temperature.
+	#
+	# 	Parameters
+	# 	----------
+	# 	parameters         dictionary
+	# 		Parameters to check calibration range for, the parameter name should be given as the key, and
+	# 		its value as the value.
+	#
+	# 	Returns
+	# 	-------
+	# 	dictionary
+	# 		Dictionary with parameter names as keys. The values are booleans
+	# 		representing whether the parameter is in the calibrated range, or not.
+	# 	"""
+	# 	results = {}
+	# 	if 'pressure' in parameters.keys():
+	# 		results['pressure'] = (parameters['pressure']<1e5)&(parameters['pressure']>1)
+	# 	if 'temperature' in parameters.keys():
+	# 		results['temperature'] = (parameters['temperature']<2573)&(parameters['temperature']>473)
+	# 	return results
 
 class fugacity_RedlichKwong(FugacityModel):
 	"""
 	Implementation of the Redlich Kwong EoS
 	Code derived from http://people.ds.cam.ac.uk/pjb10/thermo/pure.html - Patrick J. Barrie 30 October 2003.
 	"""
+	def __init__(self):
+		self.set_calibration_ranges([cr_Between('pressure',[1.0,1e5],'bar','Redlich Kwong EOS'),
+									 cr_GreaterThan('temperature',500,'oC','Redlich Kwong EOS')])
+
 
 	def gamma(self, temperature, pressure, species):
 		"""
@@ -2337,7 +2565,7 @@ class fugacity_RedlichKwong(FugacityModel):
 			gamma = np.arctan(temp2)
 
 			if gamma < 0:
-				gamma = gamma + np.pi 
+				gamma = gamma + np.pi
 
 			Z0 = 2.0 * np.sqrt(P1) * np.cos(gamma/3.0) - C2 / 3.0
 			Z1 = 2.0 * np.sqrt(P1) * np.cos((gamma + 2.0 * np.pi) / 3.0) - C2/3.0
@@ -2380,30 +2608,30 @@ class fugacity_RedlichKwong(FugacityModel):
 
 		return fugacityH2Opure * X_fluid
 
-	def check_calibration_range(self,parameters):
-		"""Checks whether supplied parameters and calculated results are within the calibration range
-		of the model. Designed for use with the Calculate methods.
-
-		Parameters supported currently are pressure and temperature.
-
-		Parameters
-		----------
-		parameters         dictionary
-			Parameters to check calibration range for, the parameter name should be given as the key, and
-			its value as the value.
-
-		Returns
-		-------
-		dictionary
-			Dictionary with parameter names as keys. The values are booleans
-			representing whether the parameter is in the calibrated range, or not.
-		"""
-		results = {}
-		if 'pressure' in parameters.keys():
-			results['pressure'] = (parameters['pressure']<1e5)&(parameters['pressure']>1)
-		if 'temperature' in parameters.keys():
-			results['temperature'] = (parameters['temperature']>500)
-		return results
+	# def check_calibration_range(self,parameters):
+	# 	"""Checks whether supplied parameters and calculated results are within the calibration range
+	# 	of the model. Designed for use with the Calculate methods.
+	#
+	# 	Parameters supported currently are pressure and temperature.
+	#
+	# 	Parameters
+	# 	----------
+	# 	parameters         dictionary
+	# 		Parameters to check calibration range for, the parameter name should be given as the key, and
+	# 		its value as the value.
+	#
+	# 	Returns
+	# 	-------
+	# 	dictionary
+	# 		Dictionary with parameter names as keys. The values are booleans
+	# 		representing whether the parameter is in the calibrated range, or not.
+	# 	"""
+	# 	results = {}
+	# 	if 'pressure' in parameters.keys():
+	# 		results['pressure'] = (parameters['pressure']<1e5)&(parameters['pressure']>1)
+	# 	if 'temperature' in parameters.keys():
+	# 		results['temperature'] = (parameters['temperature']>500)
+	# 	return results
 
 
 #---------------ACTVITY MODELS-------------------------------#
@@ -2464,6 +2692,8 @@ class ShishkinaCarbon(Model):
 		self.set_volatile_species(['CO2'])
 		self.set_fugacity_model(fugacity_idealgas())
 		self.set_activity_model(activity_idealsolution())
+		self.set_calibration_ranges([cr_Between('pressure',[500.0,5000.0],'bar','Shishkina et al. carbon'),
+									 cr_Between('temperature',[1473.15,1523.15],'K','Shishkina et al. carbon')])
 
 	def preprocess_sample(self,sample):
 		""" Returns sample, unmodified. The Pi* compositional parameter is a ratio of cations,
@@ -2592,8 +2822,8 @@ class ShishkinaCarbon(Model):
 		if sample['CO2'] <= 0:
 			raise InputError("CO2 concentration must be greater than 0 wt%.")
 
-        satP = root_scalar(self.root_saturation_pressure,bracket=[1e-15,1e5],args=(sample,kwargs)).root
-        return satP
+		satP = root_scalar(self.root_saturation_pressure,bracket=[1e-15,1e5],args=(sample,kwargs)).root
+		return satP
 
 	def root_saturation_pressure(self,pressure,sample,kwargs):
 		""" Function called by scipy.root_scalar when finding the saturation pressure using
@@ -2617,39 +2847,39 @@ class ShishkinaCarbon(Model):
 		"""
 		return self.calculate_dissolved_volatiles(pressure=pressure,sample=sample,**kwargs)-sample['CO2']
 
-	def check_calibration_range(self,parameters,**kwargs):
-		""" Checks whether supplied parameters and calculated results are within the calibration range
-		of the model. Designed for use with the Calculate methods. Calls the check_calibration_range
-		functions for the fugacity and activity models.
-
-		Parameters supported currently are pressure and temperature.
-
-		Parameters
-		----------
-		parameters         dict
-			Parameters to check calibration range for, the parameter name should be given as the key, and
-			its value as the value.
-
-		Returns
-		-------
-		dict
-			Dictionary with parameter names as keys. The values are dictionarys, which have the model component
-			as the keys, and bool values, indicating whether the parameter is within the calibration range.
-		"""
-		results = {}
-		if 'pressure' in parameters.keys():
-			pressure_results = {'Shishkina Model': (parameters['pressure']>500.0) and (parameters['pressure']<5000.0),
-								'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['pressure'],
-								'Activity Model': self.activity_model.check_calibration_range(parameters)['pressure']}
-			results['pressure'] = pressure_results
-
-		if 'temperature' in parameters.keys():
-			temperature_results = {'Shishkina Model': (parameters['temperature']>1200+273.15) and (parameters['temperature']<1250+273.15),
-									'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['temperature'],
-									'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
-			results['temperature'] = temperature_results
-
-		return {'CO2':results}
+	# def check_calibration_range(self,parameters,**kwargs):
+	# 	""" Checks whether supplied parameters and calculated results are within the calibration range
+	# 	of the model. Designed for use with the Calculate methods. Calls the check_calibration_range
+	# 	functions for the fugacity and activity models.
+	#
+	# 	Parameters supported currently are pressure and temperature.
+	#
+	# 	Parameters
+	# 	----------
+	# 	parameters         dict
+	# 		Parameters to check calibration range for, the parameter name should be given as the key, and
+	# 		its value as the value.
+	#
+	# 	Returns
+	# 	-------
+	# 	dict
+	# 		Dictionary with parameter names as keys. The values are dictionarys, which have the model component
+	# 		as the keys, and bool values, indicating whether the parameter is within the calibration range.
+	# 	"""
+	# 	results = {}
+	# 	if 'pressure' in parameters.keys():
+	# 		pressure_results = {'Shishkina Model': (parameters['pressure']>500.0) and (parameters['pressure']<5000.0),
+	# 							'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['pressure'],
+	# 							'Activity Model': self.activity_model.check_calibration_range(parameters)['pressure']}
+	# 		results['pressure'] = pressure_results
+	#
+	# 	if 'temperature' in parameters.keys():
+	# 		temperature_results = {'Shishkina Model': (parameters['temperature']>1200+273.15) and (parameters['temperature']<1250+273.15),
+	# 								'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['temperature'],
+	# 								'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
+	# 		results['temperature'] = temperature_results
+	#
+	# 	return {'CO2':results}
 
 class ShishkinaWater(Model):
 	""" Implementation of the Shishkina et al. (2014) H2O solubility model as a Model class.
@@ -2658,6 +2888,8 @@ class ShishkinaWater(Model):
 		self.set_volatile_species(['H2O'])
 		self.set_fugacity_model(fugacity_idealgas())
 		self.set_activity_model(activity_idealsolution())
+		self.set_calibration_ranges([cr_Between('pressure',[500.0,5000.0],'bar','Shishkina et al. water'),
+									 cr_Between('temperature',[1473.15,1523.15],'K','Shishkina et al. water')])
 
 	def preprocess_sample(self,sample):
 		""" Returns sample, renormlized so that the major element oxides (excluding volatiles) sum to 100%.
@@ -2763,8 +2995,8 @@ class ShishkinaWater(Model):
 		if sample['H2O'] < self.calculate_dissolved_volatiles(sample=sample,pressure=0,**kwargs):
 			return np.nan
 
-        satP = root_scalar(self.root_saturation_pressure,bracket=[1e-15,1e5],args=(sample,kwargs)).root
-        return satP
+		satP = root_scalar(self.root_saturation_pressure,bracket=[1e-15,1e5],args=(sample,kwargs)).root
+		return satP
 
 	def root_saturation_pressure(self,pressure,sample,kwargs):
 		""" Function called by scipy.root_scalar when finding the saturation pressure using
@@ -2789,39 +3021,39 @@ class ShishkinaWater(Model):
 		"""
 		return self.calculate_dissolved_volatiles(pressure=pressure,sample=sample,**kwargs)-sample['H2O']
 
-	def check_calibration_range(self,parameters,**kwargs):
-		""" Checks whether supplied parameters and calculated results are within the calibration range
-		of the model. Designed for use with the Calculate methods. Calls the check_calibration_range
-		functions for the fugacity and activity models.
-
-		Parameters supported currently are pressure and temperature.
-
-		Parameters
-		----------
-		parameters         dictionary
-			Parameters to check calibration range for, the parameter name should be given as the key, and
-			its value as the value.
-
-		Returns
-		-------
-		dictionary
-			Dictionary with parameter names as keys. The values are dictionarys, which have the model component
-			as the keys, and bool values, indicating whether the parameter is within the calibration range.
-		"""
-		results = {}
-		if 'pressure' in parameters.keys():
-			pressure_results = {'Shishkina Model': (parameters['pressure']>500.0) and (parameters['pressure']<5000.0),
-								'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['pressure'],
-								'Activity Model': self.activity_model.check_calibration_range(parameters)['pressure']}
-			results['pressure'] = pressure_results
-
-		if 'temperature' in parameters.keys():
-			temperature_results = {'Shishkina Model': (parameters['temperature']>1200+273.15) and (parameters['temperature']<1250+273.15),
-									'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['temperature'],
-									'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
-			results['temperature'] = temperature_results
-
-		return {'H2O':results}
+	# def check_calibration_range(self,parameters,**kwargs):
+	# 	""" Checks whether supplied parameters and calculated results are within the calibration range
+	# 	of the model. Designed for use with the Calculate methods. Calls the check_calibration_range
+	# 	functions for the fugacity and activity models.
+	#
+	# 	Parameters supported currently are pressure and temperature.
+	#
+	# 	Parameters
+	# 	----------
+	# 	parameters         dictionary
+	# 		Parameters to check calibration range for, the parameter name should be given as the key, and
+	# 		its value as the value.
+	#
+	# 	Returns
+	# 	-------
+	# 	dictionary
+	# 		Dictionary with parameter names as keys. The values are dictionarys, which have the model component
+	# 		as the keys, and bool values, indicating whether the parameter is within the calibration range.
+	# 	"""
+	# 	results = {}
+	# 	if 'pressure' in parameters.keys():
+	# 		pressure_results = {'Shishkina Model': (parameters['pressure']>500.0) and (parameters['pressure']<5000.0),
+	# 							'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['pressure'],
+	# 							'Activity Model': self.activity_model.check_calibration_range(parameters)['pressure']}
+	# 		results['pressure'] = pressure_results
+	#
+	# 	if 'temperature' in parameters.keys():
+	# 		temperature_results = {'Shishkina Model': (parameters['temperature']>1200+273.15) and (parameters['temperature']<1250+273.15),
+	# 								'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['temperature'],
+	# 								'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
+	# 		results['temperature'] = temperature_results
+	#
+	# 	return {'H2O':results}
 
 
 class DixonCarbon(Model):
@@ -2830,9 +3062,10 @@ class DixonCarbon(Model):
 	"""
 
 	def __init__(self):
-		self.set_volatile_species('CO2')
+		self.set_volatile_species(['CO2'])
 		self.set_fugacity_model(fugacity_KJ81_co2())
 		self.set_activity_model(activity_idealsolution())
+		self.set_calibration_ranges([])
 
 	def preprocess_sample(self,sample):
 		""" Returns sample, normalized, keep volatiles unchanged.
@@ -2929,8 +3162,8 @@ class DixonCarbon(Model):
 		if sample['CO2'] <= 0:
 			raise InputError("Dissolved CO2 concentration must be greater than 0 wt%.")
 
-        satP = root_scalar(self.root_saturation_pressure,bracket=[1e-15,1e5],args=(sample,kwargs)).root
-        return np.real(satP)
+		satP = root_scalar(self.root_saturation_pressure,bracket=[1e-15,1e5],args=(sample,kwargs)).root
+		return np.real(satP)
 
 	def molfrac_molecular(self,pressure,sample,X_fluid=1.0,**kwargs):
 		"""Calculates the mole fraction of CO3(-2) dissolved when in equilibrium with
@@ -2999,37 +3232,37 @@ class DixonCarbon(Model):
 		"""
 		return self.calculate_dissolved_volatiles(pressure=pressure,sample=sample,**kwargs) - sample['CO2']
 
-	def check_calibration_range(self,parameters,**kwargs):
-		""" Checks whether supplied parameters and calculated results are within the calibration range
-		of the model. Designed for use with the Calculate methods. Calls the check_calibration_range
-		functions for the fugacity and activity models.
-
-		Parameters supported currently are pressure and temperature. Dixon (1997) does not specify a range over
-		which the model is valid, and so no checks are made for the model itself.
-
-		Parameters
-		----------
-		parameters         dictionary
-			Parameters to check calibration range for, the parameter name should be given as the key, and
-			its value as the value.
-
-		Returns
-		-------
-		dictionary
-			Dictionary with parameter names as keys. The values are dictionarys, which have the model component
-			as the keys, and bool values, indicating whether the parameter is within the calibration range.
-		"""
-		results = {}
-		if 'pressure' in parameters.keys():
-			pressure_results = {'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['pressure'],
-								'Activity Model': self.activity_model.check_calibration_range(parameters)['pressure']}
-			results['pressure'] = pressure_results
-
-		if 'temperature' in parameters.keys():
-			temperature_results = {'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['temperature'],
-									'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
-			results['temperature'] = temperature_results
-		return {'CO2':results}
+	# def check_calibration_range(self,parameters,**kwargs):
+	# 	""" Checks whether supplied parameters and calculated results are within the calibration range
+	# 	of the model. Designed for use with the Calculate methods. Calls the check_calibration_range
+	# 	functions for the fugacity and activity models.
+	#
+	# 	Parameters supported currently are pressure and temperature. Dixon (1997) does not specify a range over
+	# 	which the model is valid, and so no checks are made for the model itself.
+	#
+	# 	Parameters
+	# 	----------
+	# 	parameters         dictionary
+	# 		Parameters to check calibration range for, the parameter name should be given as the key, and
+	# 		its value as the value.
+	#
+	# 	Returns
+	# 	-------
+	# 	dictionary
+	# 		Dictionary with parameter names as keys. The values are dictionarys, which have the model component
+	# 		as the keys, and bool values, indicating whether the parameter is within the calibration range.
+	# 	"""
+	# 	results = {}
+	# 	if 'pressure' in parameters.keys():
+	# 		pressure_results = {'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['pressure'],
+	# 							'Activity Model': self.activity_model.check_calibration_range(parameters)['pressure']}
+	# 		results['pressure'] = pressure_results
+	#
+	# 	if 'temperature' in parameters.keys():
+	# 		temperature_results = {'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['temperature'],
+	# 								'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
+	# 		results['temperature'] = temperature_results
+	# 	return {'CO2':results}
 
 
 
@@ -3039,9 +3272,10 @@ class DixonWater(Model):
 	"""
 
 	def __init__(self):
-		self.set_volatile_species('H2O')
+		self.set_volatile_species(['H2O'])
 		self.set_fugacity_model(fugacity_KJ81_h2o())
 		self.set_activity_model(activity_idealsolution())
+		self.set_calibration_ranges([])
 
 	def preprocess_sample(self,sample):
 		""" Returns sample, normalized, holding volatile concentrations constant.
@@ -3128,17 +3362,20 @@ class DixonWater(Model):
 		X_fluid     float
 			The mole fraction of H2O in the fluid. Default is 1.0.
 
-        Returns
-        -------
-        float
-            Calculated saturation pressure in bars.
-        """
-        if 'H2O' not in sample:
-            raise InputError("sample must contain H2O")
-        if sample['H2O'] <= 0:
-            raise InputError("H2O concentration must be greater than 0 wt%.")
-        satP = root_scalar(self.root_saturation_pressure,bracket=[1e-15,1e5],args=(sample,kwargs)).root
-
+		Returns
+		-------
+		float
+			Calculated saturation pressure in bars.
+		"""
+		if 'H2O' not in sample:
+			raise InputError("sample must contain H2O")
+		if sample['H2O'] <= 0:
+			raise InputError("H2O concentration must be greater than 0 wt%.")
+		try:
+			satP = root_scalar(self.root_saturation_pressure,bracket=[1e-15,1e8],args=(sample,kwargs)).root
+		except:
+			warnings.warn("Saturation pressure not in interval 1e-15 - 1e8 bar, most likely because vapour is undersaturated.",RuntimeWarning)
+			satP = np.nan
 		return np.real(satP)
 
 	def molfrac_molecular(self,pressure,sample,X_fluid=1.0,**kwargs):
@@ -3266,37 +3503,37 @@ class DixonWater(Model):
 		"""
 		return self.calculate_dissolved_volatiles(pressure=pressure,sample=sample,**kwargs) - sample['H2O']
 
-	def check_calibration_range(self,parameters,**kwargs):
-		""" Checks whether supplied parameters and calculated results are within the calibration range
-		of the model. Designed for use with the Calculate methods. Calls the check_calibration_range
-		functions for the fugacity and activity models.
-
-		Parameters supported currently are pressure and temperature. Dixon (1997) does not specify a range over
-		which the model is valid, and so no checks are made for the model itself.
-
-		Parameters
-		----------
-		parameters         dictionary
-			Parameters to check calibration range for, the parameter name should be given as the key, and
-			its value as the value.
-
-		Returns
-		-------
-		dictionary
-			Dictionary with parameter names as keys. The values are dictionarys, which have the model component
-			as the keys, and bool values, indicating whether the parameter is within the calibration range.
-		"""
-		results = {}
-		if 'pressure' in parameters.keys():
-			pressure_results = {'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['pressure'],
-								'Activity Model': self.activity_model.check_calibration_range(parameters)['pressure']}
-			results['pressure'] = pressure_results
-
-		if 'temperature' in parameters.keys():
-			temperature_results = {'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['temperature'],
-									'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
-			results['temperature'] = temperature_results
-		return {'H2O':results}
+	# def check_calibration_range(self,parameters,**kwargs):
+	# 	""" Checks whether supplied parameters and calculated results are within the calibration range
+	# 	of the model. Designed for use with the Calculate methods. Calls the check_calibration_range
+	# 	functions for the fugacity and activity models.
+	#
+	# 	Parameters supported currently are pressure and temperature. Dixon (1997) does not specify a range over
+	# 	which the model is valid, and so no checks are made for the model itself.
+	#
+	# 	Parameters
+	# 	----------
+	# 	parameters         dictionary
+	# 		Parameters to check calibration range for, the parameter name should be given as the key, and
+	# 		its value as the value.
+	#
+	# 	Returns
+	# 	-------
+	# 	dictionary
+	# 		Dictionary with parameter names as keys. The values are dictionarys, which have the model component
+	# 		as the keys, and bool values, indicating whether the parameter is within the calibration range.
+	# 	"""
+	# 	results = {}
+	# 	if 'pressure' in parameters.keys():
+	# 		pressure_results = {'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['pressure'],
+	# 							'Activity Model': self.activity_model.check_calibration_range(parameters)['pressure']}
+	# 		results['pressure'] = pressure_results
+	#
+	# 	if 'temperature' in parameters.keys():
+	# 		temperature_results = {'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['temperature'],
+	# 								'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
+	# 		results['temperature'] = temperature_results
+	# 	return {'H2O':results}
 
 class IaconoMarzianoWater(Model):
 	"""
@@ -3315,10 +3552,11 @@ class IaconoMarzianoWater(Model):
 		hydrous     bool
 			Whether to use the hydrous parameterization, or not.
 		"""
-		self.set_volatile_species('H2O')
+		self.set_volatile_species(['H2O'])
 		self.set_fugacity_model(fugacity_idealgas())
 		self.set_activity_model(activity_idealsolution())
 		self.hydrous = hydrous
+		self.set_calibration_ranges([])
 
 	def preprocess_sample(self,sample):
 		"""
@@ -3445,8 +3683,8 @@ class IaconoMarzianoWater(Model):
 		if sample['H2O'] <= 0.0:
 			raise InputError("Dissolved H2O must be greater than 0 wt%.")
 
-        return root_scalar(self.root_saturation_pressure,args=(temperature,sample,kwargs),
-                            bracket=[1e-15,1e5]).root
+		return root_scalar(self.root_saturation_pressure,args=(temperature,sample,kwargs),
+							bracket=[1e-15,1e5]).root
 
 	def root_saturation_pressure(self,pressure,temperature,sample,kwargs):
 		""" Function called by scipy.root_scalar when finding the saturation pressure using
@@ -3541,37 +3779,37 @@ class IaconoMarzianoWater(Model):
 
 		return NBO/O
 
-	def check_calibration_range(self,parameters,**kwargs):
-		""" Checks whether supplied parameters and calculated results are within the calibration range
-		of the model. Designed for use with the Calculate methods. Calls the check_calibration_range
-		functions for the fugacity and activity models.
-
-		Parameters supported currently are pressure and temperature.
-
-		Parameters
-		----------
-		parameters         dictionary
-			Parameters to check calibration range for, the parameter name should be given as the key, and
-			its value as the value.
-
-		Returns
-		-------
-		dictionary
-			Dictionary with parameter names as keys. The values are dictionarys, which have the model component
-			as the keys, and bool values, indicating whether the parameter is within the calibration range.
-		"""
-		results = {}
-		if 'pressure' in parameters.keys():
-			pressure_results = {'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['pressure'],
-								'Activity Model': self.activity_model.check_calibration_range(parameters)['pressure']}
-			results['pressure'] = pressure_results
-
-		if 'temperature' in parameters.keys():
-			temperature_results = {'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['temperature'],
-									'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
-			results['temperature'] = temperature_results
-
-		return {'H2O':results}
+	# def check_calibration_range(self,parameters,**kwargs):
+	# 	""" Checks whether supplied parameters and calculated results are within the calibration range
+	# 	of the model. Designed for use with the Calculate methods. Calls the check_calibration_range
+	# 	functions for the fugacity and activity models.
+	#
+	# 	Parameters supported currently are pressure and temperature.
+	#
+	# 	Parameters
+	# 	----------
+	# 	parameters         dictionary
+	# 		Parameters to check calibration range for, the parameter name should be given as the key, and
+	# 		its value as the value.
+	#
+	# 	Returns
+	# 	-------
+	# 	dictionary
+	# 		Dictionary with parameter names as keys. The values are dictionarys, which have the model component
+	# 		as the keys, and bool values, indicating whether the parameter is within the calibration range.
+	# 	"""
+	# 	results = {}
+	# 	if 'pressure' in parameters.keys():
+	# 		pressure_results = {'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['pressure'],
+	# 							'Activity Model': self.activity_model.check_calibration_range(parameters)['pressure']}
+	# 		results['pressure'] = pressure_results
+	#
+	# 	if 'temperature' in parameters.keys():
+	# 		temperature_results = {'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['temperature'],
+	# 								'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
+	# 		results['temperature'] = temperature_results
+	#
+	# 	return {'H2O':results}
 
 class IaconoMarzianoCarbon(Model):
 	"""
@@ -3590,9 +3828,10 @@ class IaconoMarzianoCarbon(Model):
 		hydrous     bool
 			Whether to use the hydrous parameterization, or not.
 		"""
-		self.set_volatile_species('CO2')
+		self.set_volatile_species(['CO2'])
 		self.set_fugacity_model(fugacity_idealgas())
 		self.set_activity_model(activity_idealsolution())
+		self.set_calibration_ranges([])
 		self.hydrous = hydrous
 
 	def preprocess_sample(self,sample):
@@ -3759,8 +3998,8 @@ class IaconoMarzianoCarbon(Model):
 		if sample['CO2'] <= 0:
 			raise InputError("Dissolved CO2 must be greater than 0 wt%.")
 
-        return root_scalar(self.root_saturation_pressure,args=(temperature,sample,kwargs),
-                            bracket=[1e-15,1e5]).root
+		return root_scalar(self.root_saturation_pressure,args=(temperature,sample,kwargs),
+							bracket=[1e-15,1e5]).root
 
 	def root_saturation_pressure(self,pressure,temperature,sample,kwargs):
 		""" Function called by scipy.root_scalar when finding the saturation pressure using
@@ -3821,37 +4060,37 @@ class IaconoMarzianoCarbon(Model):
 
 		return NBO/O
 
-	def check_calibration_range(self,parameters,**kwargs):
-		""" Checks whether supplied parameters and calculated results are within the calibration range
-		of the model. Designed for use with the Calculate methods. Calls the check_calibration_range
-		functions for the fugacity and activity models.
-
-		Parameters supported currently are pressure and temperature.
-
-		Parameters
-		----------
-		parameters         dictionary
-			Parameters to check calibration range for, the parameter name should be given as the key, and
-			its value as the value.
-
-		Returns
-		-------
-		dictionary
-			Dictionary with parameter names as keys. The values are dictionarys, which have the model component
-			as the keys, and bool values, indicating whether the parameter is within the calibration range.
-		"""
-		results = {}
-		if 'pressure' in parameters.keys():
-			pressure_results = {'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['pressure'],
-								'Activity Model': self.activity_model.check_calibration_range(parameters)['pressure']}
-			results['pressure'] = pressure_results
-
-		if 'temperature' in parameters.keys():
-			temperature_results = {'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['temperature'],
-									'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
-			results['temperature'] = temperature_results
-
-		return {'CO2':results}
+	# def check_calibration_range(self,parameters,**kwargs):
+	# 	""" Checks whether supplied parameters and calculated results are within the calibration range
+	# 	of the model. Designed for use with the Calculate methods. Calls the check_calibration_range
+	# 	functions for the fugacity and activity models.
+	#
+	# 	Parameters supported currently are pressure and temperature.
+	#
+	# 	Parameters
+	# 	----------
+	# 	parameters         dictionary
+	# 		Parameters to check calibration range for, the parameter name should be given as the key, and
+	# 		its value as the value.
+	#
+	# 	Returns
+	# 	-------
+	# 	dictionary
+	# 		Dictionary with parameter names as keys. The values are dictionarys, which have the model component
+	# 		as the keys, and bool values, indicating whether the parameter is within the calibration range.
+	# 	"""
+	# 	results = {}
+	# 	if 'pressure' in parameters.keys():
+	# 		pressure_results = {'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['pressure'],
+	# 							'Activity Model': self.activity_model.check_calibration_range(parameters)['pressure']}
+	# 		results['pressure'] = pressure_results
+	#
+	# 	if 'temperature' in parameters.keys():
+	# 		temperature_results = {'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['temperature'],
+	# 								'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
+	# 		results['temperature'] = temperature_results
+	#
+	# 	return {'CO2':results}
 
 class EguchiCarbon(Model):
 	"""
@@ -3861,9 +4100,11 @@ class EguchiCarbon(Model):
 	"""
 
 	def __init__(self):
-		self.set_volatile_species('CO2')
+		self.set_volatile_species(['CO2'])
 		self.set_fugacity_model(fugacity_ZD09_co2())
 		self.set_activity_model(activity_idealsolution())
+		self.set_calibration_ranges([cr_Between('pressure',[500.0,50000.0],'bar','Eguchi & Dasgupta (2018) carbon'),
+									 cr_Between('temperature',[950.0+273.15,1600+273.15],'K','Eguchi & Dasgupta (2018) carbon')])
 
 	def preprocess_sample(self,sample,ferric_total=0.15):
 		""" Returns normalized sample composition, with ferric iron. Where a sample
@@ -4101,39 +4342,39 @@ class EguchiCarbon(Model):
 
 		return np.exp(lnXi)
 
-	def check_calibration_range(self,parameters,**kwargs):
-		""" Checks whether supplied parameters and calculated results are within the calibration range
-		of the model. Designed for use with the Calculate methods. Calls the check_calibration_range
-		functions for the fugacity and activity models.
-
-		Parameters supported currently are pressure and temperature.
-
-		Parameters
-		----------
-		parameters         dictionary
-			Parameters to check calibration range for, the parameter name should be given as the key, and
-			its value as the value.
-
-		Returns
-		-------
-		dictionary
-			Dictionary with parameter names as keys. The values are dictionarys, which have the model component
-			as the keys, and bool values, indicating whether the parameter is within the calibration range.
-		"""
-		results = {}
-		if 'pressure' in parameters.keys():
-			pressure_results = {'Eguchi Model': (parameters['pressure']>500)&(parameters['pressure']<50000),
-								'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['pressure'],
-								'Activity Model': self.activity_model.check_calibration_range(parameters)['pressure']}
-			results['pressure'] = pressure_results
-
-		if 'temperature' in parameters.keys():
-			temperature_results = {'Eguchi Model': (parameters['temperature']>950+273.15)&(parameters['temperature']<1600+273.15),
-									'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['temperature'],
-									'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
-			results['temperature'] = temperature_results
-
-		return {'CO2':results}
+	# def check_calibration_range(self,parameters,**kwargs):
+	# 	""" Checks whether supplied parameters and calculated results are within the calibration range
+	# 	of the model. Designed for use with the Calculate methods. Calls the check_calibration_range
+	# 	functions for the fugacity and activity models.
+	#
+	# 	Parameters supported currently are pressure and temperature.
+	#
+	# 	Parameters
+	# 	----------
+	# 	parameters         dictionary
+	# 		Parameters to check calibration range for, the parameter name should be given as the key, and
+	# 		its value as the value.
+	#
+	# 	Returns
+	# 	-------
+	# 	dictionary
+	# 		Dictionary with parameter names as keys. The values are dictionarys, which have the model component
+	# 		as the keys, and bool values, indicating whether the parameter is within the calibration range.
+	# 	"""
+	# 	results = {}
+	# 	if 'pressure' in parameters.keys():
+	# 		pressure_results = {'Eguchi Model': (parameters['pressure']>500)&(parameters['pressure']<50000),
+	# 							'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['pressure'],
+	# 							'Activity Model': self.activity_model.check_calibration_range(parameters)['pressure']}
+	# 		results['pressure'] = pressure_results
+	#
+	# 	if 'temperature' in parameters.keys():
+	# 		temperature_results = {'Eguchi Model': (parameters['temperature']>950+273.15)&(parameters['temperature']<1600+273.15),
+	# 								'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['temperature'],
+	# 								'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
+	# 		results['temperature'] = temperature_results
+	#
+	# 	return {'CO2':results}
 
 class MooreWater(Model):
 	"""
@@ -4144,9 +4385,13 @@ class MooreWater(Model):
 		"""
 		Initialize the model.
 		"""
-		self.set_volatile_species('H2O')
+		self.set_volatile_species(['H2O'])
 		self.set_fugacity_model(fugacity_idealgas())
 		self.set_activity_model(activity_idealsolution())
+		self.set_calibration_ranges([cr_Between('pressure',[1.0,3000.0],'bar','Moore et al. (1998) water'),
+									 cr_Between('temperature',[700.0+273.15,1200+273.15],'oC','Moore et al. (1998) water')])
+
+
 
 	def preprocess_sample(self, sample):
 		"""
@@ -4163,39 +4408,39 @@ class MooreWater(Model):
 
 		return bulk_comp
 
-	def check_calibration_range(self,parameters,**kwargs):
-		""" Checks whether supplied parameters and calculated results are within the calibration range
-		of the model. Designed for use with the Calculate methods. Calls the check_calibration_range
-		functions for the fugacity and activity models.
-
-		Parameters supported currently are pressure and temperature.
-
-		Parameters
-		----------
-		parameters         dictionary
-			Parameters to check calibration range for, the parameter name should be given as the key, and
-			its value as the value.
-
-		Returns
-		-------
-		dictionary
-			Dictionary with parameter names as keys. The values are dictionarys, which have the model component
-			as the keys, and bool values, indicating whether the parameter is within the calibration range.
-		"""
-		results = {}
-		if 'pressure' in parameters.keys():
-			pressure_results = {'Moore Model': (parameters['pressure']>=1)&(parameters['pressure']<3000),
-								'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['pressure'],
-								'Activity Model': self.activity_model.check_calibration_range(parameters)['pressure']}
-			results['pressure'] = pressure_results
-
-		if 'temperature' in parameters.keys():
-			temperature_results = {'Moore Model': (parameters['temperature']>=700)&(parameters['temperature']<=1200),
-									'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['temperature'],
-									'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
-			results['temperature'] = temperature_results
-
-		return {'H2O':results}
+	# def check_calibration_range(self,parameters,**kwargs):
+	# 	""" Checks whether supplied parameters and calculated results are within the calibration range
+	# 	of the model. Designed for use with the Calculate methods. Calls the check_calibration_range
+	# 	functions for the fugacity and activity models.
+	#
+	# 	Parameters supported currently are pressure and temperature.
+	#
+	# 	Parameters
+	# 	----------
+	# 	parameters         dictionary
+	# 		Parameters to check calibration range for, the parameter name should be given as the key, and
+	# 		its value as the value.
+	#
+	# 	Returns
+	# 	-------
+	# 	dictionary
+	# 		Dictionary with parameter names as keys. The values are dictionarys, which have the model component
+	# 		as the keys, and bool values, indicating whether the parameter is within the calibration range.
+	# 	"""
+	# 	results = {}
+	# 	if 'pressure' in parameters.keys():
+	# 		pressure_results = {'Moore Model': (parameters['pressure']>=1)&(parameters['pressure']<3000),
+	# 							'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['pressure'],
+	# 							'Activity Model': self.activity_model.check_calibration_range(parameters)['pressure']}
+	# 		results['pressure'] = pressure_results
+	#
+	# 	if 'temperature' in parameters.keys():
+	# 		temperature_results = {'Moore Model': (parameters['temperature']>=700)&(parameters['temperature']<=1200),
+	# 								'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['temperature'],
+	# 								'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
+	# 		results['temperature'] = temperature_results
+	#
+	# 	return {'H2O':results}
 
 	def calculate_dissolved_volatiles(self, sample, pressure, temperature, X_fluid=1.0, **kwargs):
 		"""
@@ -4387,9 +4632,12 @@ class AllisonCarbon(Model):
 		if model_loc not in ['sunset','sfvf','erebus','vesuvius','etna','stromboli']:
 			raise InputError("model_loc must be one of 'sunset', 'sfvf', 'erebus', 'vesuvius', 'etna', or 'stromboli'.")
 
-		self.set_volatile_species('CO2')
+		self.set_volatile_species(['CO2'])
 		self.set_fugacity_model(fugacity_KJ81_co2())
 		self.set_activity_model(activity_idealsolution())
+		self.set_calibration_ranges([cr_Between('pressure',[0.0,6000.0],'bar','Allison et al. (2019) water'),
+									 cr_EqualTo('temperature',1473.15,'K','Allison et al. (2019) water')])
+
 		self.model_fit = model_fit
 		self.model_loc = model_loc
 
@@ -4556,39 +4804,39 @@ class AllisonCarbon(Model):
 		"""
 		return sample['CO2'] - self.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,sample=sample,X_fluid=X_fluid,**kwargs)
 
-	def check_calibration_range(self,parameters,**kwargs):
-		""" Checks whether supplied parameters and calculated results are within the calibration range
-		of the model. Designed for use with the Calculate methods. Calls the check_calibration_range
-		functions for the fugacity and activity models.
-
-		Parameters supported currently are pressure and temperature.
-
-		Parameters
-		----------
-		parameters         dictionary
-			Parameters to check calibration range for, the parameter name should be given as the key, and
-			its value as the value.
-
-		Returns
-		-------
-		dictionary
-			Dictionary with parameter names as keys. The values are dictionarys, which have the model component
-			as the keys, and bool values, indicating whether the parameter is within the calibration range.
-		"""
-		results = {}
-		if 'pressure' in parameters.keys():
-			pressure_results = {'Allison Model': (parameters['pressure']>0)&(parameters['pressure']<6000),
-								'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['pressure'],
-								'Activity Model': self.activity_model.check_calibration_range(parameters)['pressure']}
-			results['pressure'] = pressure_results
-
-		if 'temperature' in parameters.keys():
-			temperature_results = {'Allison Model': (parameters['temperature']==1200+273.15),
-									'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['temperature'],
-									'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
-			results['temperature'] = temperature_results
-
-		return {'CO2':results}
+	# def check_calibration_range(self,parameters,**kwargs):
+	# 	""" Checks whether supplied parameters and calculated results are within the calibration range
+	# 	of the model. Designed for use with the Calculate methods. Calls the check_calibration_range
+	# 	functions for the fugacity and activity models.
+	#
+	# 	Parameters supported currently are pressure and temperature.
+	#
+	# 	Parameters
+	# 	----------
+	# 	parameters         dictionary
+	# 		Parameters to check calibration range for, the parameter name should be given as the key, and
+	# 		its value as the value.
+	#
+	# 	Returns
+	# 	-------
+	# 	dictionary
+	# 		Dictionary with parameter names as keys. The values are dictionarys, which have the model component
+	# 		as the keys, and bool values, indicating whether the parameter is within the calibration range.
+	# 	"""
+	# 	results = {}
+	# 	if 'pressure' in parameters.keys():
+	# 		pressure_results = {'Allison Model': (parameters['pressure']>0)&(parameters['pressure']<6000),
+	# 							'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['pressure'],
+	# 							'Activity Model': self.activity_model.check_calibration_range(parameters)['pressure']}
+	# 		results['pressure'] = pressure_results
+	#
+	# 	if 'temperature' in parameters.keys():
+	# 		temperature_results = {'Allison Model': (parameters['temperature']==1200+273.15),
+	# 								'Fugacity Model': self.fugacity_model.check_calibration_range(parameters)['temperature'],
+	# 								'Activity Model': self.activity_model.check_calibration_range(parameters)['temperature']}
+	# 		results['temperature'] = temperature_results
+	#
+	# 	return {'CO2':results}
 
 
 #------------MIXED FLUID MODELS-------------------------------#
@@ -4733,7 +4981,9 @@ class MixedFluid(Model):
 
 		x0 = 0
 		for model in self.models:
-			x0 = x0 + model.calculate_saturation_pressure(sample=sample,**kwargs)
+			xx0 = model.calculate_saturation_pressure(sample=sample,**kwargs)
+			if np.isnan(xx0) == False:
+				x0 += xx0
 
 		satP = root(self.root_saturation_pressure,x0=[x0,0.5],args=(volatile_concs,sample,kwargs)).x[0]
 
@@ -4929,20 +5179,20 @@ class MixedFluid(Model):
 		kwargs     dictionary
 			Dictionary of keyword arguments, which may be required by the pure-fluid models.
 
-        Returns
-        -------
-        numpy array
-            The difference in the dissolved volatile concentrations, and those predicted with the
-            pressure and fluid composition specified by x.
-        """
-        if x[1] < 0:
-            x[1] = 0
-        elif x[1] > 1:
-            x[1] = 1
-        if x[0] <= 0:
-            x[0] = 1e-15
-        misfit = np.array(self.calculate_dissolved_volatiles(pressure=x[0],X_fluid=(x[1],1-x[1]),sample=sample,**kwargs)) - volatile_concs
-        return misfit
+		Returns
+		-------
+		numpy array
+			The difference in the dissolved volatile concentrations, and those predicted with the
+			pressure and fluid composition specified by x.
+		"""
+		if x[1] < 0:
+			x[1] = 0
+		elif x[1] > 1:
+			x[1] = 1
+		if x[0] <= 0:
+			x[0] = 1e-15
+		misfit = np.array(self.calculate_dissolved_volatiles(pressure=x[0],X_fluid=(x[1],1-x[1]),sample=sample,**kwargs)) - volatile_concs
+		return misfit
 
 
 	def root_for_fluid_comp(self,Xv0,pressure,Xt0,Xt1,sample,kwargs):
@@ -4983,7 +5233,7 @@ class MixedFluid(Model):
 			return -(Xt1 - Xm1*(Xt0-1)/(Xm0-1))
 		return (Xt0-Xm0)/(Xv0-Xm0) - (Xt1-Xm1)/(1-Xv0-Xm1)
 
-	def check_calibration_range(self,parameters,**kwargs):
+	def check_calibration_range(self,parameters):
 		""" Checks whether the calculation is being performed within the calibration range of the
 		pure fluid models.
 
@@ -5000,10 +5250,23 @@ class MixedFluid(Model):
 			from each pure models own check_calibration_range method, most likely a dictionary of
 			parameters.
 		"""
-		results = {}
-		for species, model in zip(self.volatile_species,self.models):
-			results[species] = model.check_calibration_range(parameters=parameters)
-		return results
+		# results = {}
+		# for species, model in zip(self.volatile_species,self.models):
+		# 	results[species] = model.check_calibration_range(parameters=parameters)
+		# return results
+		s = ''
+		for model in self.models:
+			for cr in model.calibration_ranges:
+				if cr.check(parameters) == False:
+					s += cr.string(parameters)
+			for cr in model.fugacity_model.calibration_ranges:
+				if cr.check(parameters) == False:
+					s += cr.string(parameters)
+			for cr in model.activity_model.calibration_ranges:
+				if cr.check(parameters) == False:
+					s += cr.string(parameters)
+		return s
+
 
 class MagmaSat(Model):
 	"""
@@ -5941,13 +6204,20 @@ class calculate_dissolved_volatiles(Calculate):
 		return dissolved
 
 	def check_calibration_range(self,sample,pressure,**kwargs):
-		checks = {'pressure':pressure,
-				  'sample':sample,
-				  'dissolved_volatiles':self.result}
-		if 'temperature' in kwargs:
-			checks['temperature'] = kwargs['temperature']
+		parameters = kwargs
+		parameters.update(dict(sample))
+		parameters['pressure'] = pressure
+		if len(self.model.volatile_species) == 1:
+			volspec = self.model.volatile_species
+			volconc = [self.result]
+		else:
+			 volspec = self.model.volatile_species
+			 volconc = self.result
 
-		calib_check = self.model.check_calibration_range(checks)
+		for i,v in zip(range(len(volspec)),volspec):
+			parameters[v] = volconc[i]
+
+		calib_check = self.model.check_calibration_range(parameters)
 		return calib_check
 
 class calculate_equilibrium_fluid_comp(Calculate):
@@ -5976,13 +6246,20 @@ class calculate_equilibrium_fluid_comp(Calculate):
 		fluid_comp = self.model.calculate_equilibrium_fluid_comp(pressure=pressure,sample=sample,**kwargs)
 		return fluid_comp
 	def check_calibration_range(self,sample,pressure,**kwargs):
-		checks = {'pressure':pressure,
-				  'sample':sample,
-				  'dissolved_volatiles':self.result}
-		if 'temperature' in kwargs:
-			checks['temperature'] = kwargs['temperature']
+		parameters = kwargs
+		parameters.update(dict(sample))
+		parameters['pressure'] = pressure
+		if type(self.model.volatile_species) == str:
+			volspec = [self.model.volatile_species]
+			volconc = {volspec[0]:self.result}
+		elif type(self.model.volatile_species) == list:
+			 volspec = self.model.volatile_species
+			 volconc = self.result
 
-		calib_check = self.model.check_calibration_range(checks)
+		for i,v in zip(range(len(volspec)),volspec):
+			parameters[v] = volconc[i]
+
+		calib_check = self.model.check_calibration_range(parameters)
 		return calib_check
 
 
