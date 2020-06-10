@@ -1485,6 +1485,16 @@ class Model(object):
 				s += cr.string(parameters)
 		return s
 
+	def get_calibration_range(self):
+		s = ''
+		for cr in self.calibration_ranges:
+			s += cr.string(None)
+		for cr in self.fugacity_model.calibration_ranges:
+			s += cr.string(None)
+		for cr in self.activity_model.calibration_ranges:
+			s += cr.string(None)
+		return s
+
 
 class FugacityModel(object):
 	""" The fugacity model object is for implementations of fugacity models
@@ -5265,6 +5275,17 @@ class MixedFluid(Model):
 			for cr in model.activity_model.calibration_ranges:
 				if cr.check(parameters) == False:
 					s += cr.string(parameters)
+		return s
+
+	def get_calibration_range(self):
+		s = ''
+		for model in self.models:
+			for cr in model.calibration_ranges:
+				s += cr.string(None)
+			for cr in model.fugacity_model.calibration_ranges:
+				s += cr.string(None)
+			for cr in model.activity_model.calibration_ranges:
+				s += cr.string(None)
 		return s
 
 
