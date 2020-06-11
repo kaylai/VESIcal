@@ -1610,8 +1610,43 @@ class Calculate(object):
 #-------------DEFAULT CALIBRATIONRANGE OBJECTS---------------#
 
 class cr_EqualTo(CalibrationRange):
-	""" """
+	"""An instance of the CalibrationRange object for properties calibrated for a
+	single value.
+
+	Parameters
+	----------
+	parameter_name 	str
+		The name of the variable, as implemented in the code, e.g. 'pressure' or
+		'temperature'.
+	value 	float
+		The value the parameter should be equal to.
+	unit 	str
+		The unit of the parameter, for use in printing.
+	modelname 	str
+		The name of the model to use when printing.
+	parameter_string 	str
+		If the parameter should be called something different to parameter_name when
+		printing, it should be defined here. If None the parameter_name will be used.
+	value_fmt 	str
+		The format the value should be printed with in strings, default is {:.1f}
+	"""
 	def check(self,parameters):
+		""" Checks whether the calibration range condition is met. If the parameters
+		variable does not contain the parameter the CalibrationRange object is defined
+		for, None will be returned.
+
+		Parameters
+		----------
+		parameters 	dict
+			The parameters to check.
+
+		Returns
+		-------
+		bool or None
+			Whether the CalibrationRange condition is met, or none if the parameter
+			has not been supplied in the parameters variable.
+
+		"""
 		if self.parameter_name in parameters:
 			if parameters[self.parameter_name] == self.value:
 				return True
@@ -1621,6 +1656,27 @@ class cr_EqualTo(CalibrationRange):
 			return None
 
 	def string(self,parameters=None,report_nonexistance=True):
+		"""Constructs a string description of the CalibrationRange object, or a
+		description of how the check passes or fails.
+
+		Parameters
+		----------
+		parameters 	dict or None
+			The parameters to check. If None, a description of the CalibrationRange
+			object will be constructed and returned.
+
+		report_nonexistance		bool
+			If the parameter the CalibrationRange check is defined for is not contained
+			within the parameters variable, report_nonexistance determines whether a
+			string stating this is returned, or whether an empty string is returned.
+
+		Returns
+		-------
+		str
+			A description of the CalibrationRange object if None supplied as a parameter,
+			otherwise a description of how the CalibrationRange check is passed or failed.
+
+		"""
 		if parameters is not None:
 			checkval = self.check(parameters)
 			if checkval is None:
@@ -1648,8 +1704,43 @@ class cr_EqualTo(CalibrationRange):
 			return s
 
 class cr_GreaterThan(CalibrationRange):
-	""" """
+	"""An instance of the CalibrationRange object for properties calibrated higher than
+	a particular value.
+
+	Parameters
+	----------
+	parameter_name 	str
+		The name of the variable, as implemented in the code, e.g. 'pressure' or
+		'temperature'.
+	value 	float
+		The value the parameter should be equal to.
+	unit 	str
+		The unit of the parameter, for use in printing.
+	modelname 	str
+		The name of the model to use when printing.
+	parameter_string 	str
+		If the parameter should be called something different to parameter_name when
+		printing, it should be defined here. If None the parameter_name will be used.
+	value_fmt 	str
+		The format the value should be printed with in strings, default is {:.1f}
+	"""
 	def check(self,parameters):
+		""" Checks whether the calibration range condition is met. If the parameters
+		variable does not contain the parameter the CalibrationRange object is defined
+		for, None will be returned.
+
+		Parameters
+		----------
+		parameters 	dict
+			The parameters to check.
+
+		Returns
+		-------
+		bool or None
+			Whether the CalibrationRange condition is met, or none if the parameter
+			has not been supplied in the parameters variable.
+
+		"""
 		if self.parameter_name in parameters:
 			if parameters[self.parameter_name] >= self.value:
 				return True
@@ -1659,6 +1750,27 @@ class cr_GreaterThan(CalibrationRange):
 			return None
 
 	def string(self,parameters=None,report_nonexistance=True):
+		"""Constructs a string description of the CalibrationRange object, or a
+		description of how the check passes or fails.
+
+		Parameters
+		----------
+		parameters 	dict or None
+			The parameters to check. If None, a description of the CalibrationRange
+			object will be constructed and returned.
+
+		report_nonexistance		bool
+			If the parameter the CalibrationRange check is defined for is not contained
+			within the parameters variable, report_nonexistance determines whether a
+			string stating this is returned, or whether an empty string is returned.
+
+		Returns
+		-------
+		str
+			A description of the CalibrationRange object if None supplied as a parameter,
+			otherwise a description of how the CalibrationRange check is passed or failed.
+
+		"""
 		if parameters is not None:
 			checkval = self.check(parameters)
 			if checkval is None:
@@ -1686,8 +1798,43 @@ class cr_GreaterThan(CalibrationRange):
 			return s
 
 class cr_LessThan(CalibrationRange):
-	""" """
+	"""An instance of the CalibrationRange object for properties calibrated lower
+	than a particular value.
+
+	Parameters
+	----------
+	parameter_name 	str
+		The name of the variable, as implemented in the code, e.g. 'pressure' or
+		'temperature'.
+	value 	float
+		The value the parameter should be equal to.
+	unit 	str
+		The unit of the parameter, for use in printing.
+	modelname 	str
+		The name of the model to use when printing.
+	parameter_string 	str
+		If the parameter should be called something different to parameter_name when
+		printing, it should be defined here. If None the parameter_name will be used.
+	value_fmt 	str
+		The format the value should be printed with in strings, default is {:.1f}
+	"""
 	def check(self,parameters):
+		""" Checks whether the calibration range condition is met. If the parameters
+		variable does not contain the parameter the CalibrationRange object is defined
+		for, None will be returned.
+
+		Parameters
+		----------
+		parameters 	dict
+			The parameters to check.
+
+		Returns
+		-------
+		bool or None
+			Whether the CalibrationRange condition is met, or none if the parameter
+			has not been supplied in the parameters variable.
+
+		"""
 		if self.parameter_name in parameters:
 			if parameters[self.parameter_name] <= self.value:
 				return True
@@ -1697,6 +1844,27 @@ class cr_LessThan(CalibrationRange):
 			return None
 
 	def string(self,parameters=None,report_nonexistance=True):
+		"""Constructs a string description of the CalibrationRange object, or a
+		description of how the check passes or fails.
+
+		Parameters
+		----------
+		parameters 	dict or None
+			The parameters to check. If None, a description of the CalibrationRange
+			object will be constructed and returned.
+
+		report_nonexistance		bool
+			If the parameter the CalibrationRange check is defined for is not contained
+			within the parameters variable, report_nonexistance determines whether a
+			string stating this is returned, or whether an empty string is returned.
+
+		Returns
+		-------
+		str
+			A description of the CalibrationRange object if None supplied as a parameter,
+			otherwise a description of how the CalibrationRange check is passed or failed.
+
+		"""
 		if parameters is not None:
 			checkval = self.check(parameters)
 			if checkval is None:
@@ -1724,10 +1892,45 @@ class cr_LessThan(CalibrationRange):
 			return s
 
 class cr_Between(CalibrationRange):
-	""" """
+	"""An instance of the CalibrationRange object for properties calibrated for a
+	between two values
+
+	Parameters
+	----------
+	parameter_name 	str
+		The name of the variable, as implemented in the code, e.g. 'pressure' or
+		'temperature'.
+	value 	list
+		The minimum and maximum values for the parameter.
+	unit 	str
+		The unit of the parameter, for use in printing.
+	modelname 	str
+		The name of the model to use when printing.
+	parameter_string 	str
+		If the parameter should be called something different to parameter_name when
+		printing, it should be defined here. If None the parameter_name will be used.
+	value_fmt 	str
+		The format the value should be printed with in strings, default is {:.1f}
+	"""
 	def check(self,parameters):
+		""" Checks whether the calibration range condition is met. If the parameters
+		variable does not contain the parameter the CalibrationRange object is defined
+		for, None will be returned.
+
+		Parameters
+		----------
+		parameters 	dict
+			The parameters to check.
+
+		Returns
+		-------
+		bool or None
+			Whether the CalibrationRange condition is met, or none if the parameter
+			has not been supplied in the parameters variable.
+
+		"""
 		if self.parameter_name in parameters:
-			if parameters[self.parameter_name] > self.value[0] and parameters[self.parameter_name] < self.value[1]:
+			if parameters[self.parameter_name] >= self.value[0] and parameters[self.parameter_name] <= self.value[1]:
 				return True
 			else:
 				return False
@@ -1735,6 +1938,27 @@ class cr_Between(CalibrationRange):
 			return None
 
 	def string(self,parameters=None,report_nonexistance=True):
+		"""Constructs a string description of the CalibrationRange object, or a
+		description of how the check passes or fails.
+
+		Parameters
+		----------
+		parameters 	dict or None
+			The parameters to check. If None, a description of the CalibrationRange
+			object will be constructed and returned.
+
+		report_nonexistance		bool
+			If the parameter the CalibrationRange check is defined for is not contained
+			within the parameters variable, report_nonexistance determines whether a
+			string stating this is returned, or whether an empty string is returned.
+
+		Returns
+		-------
+		str
+			A description of the CalibrationRange object if None supplied as a parameter,
+			otherwise a description of how the CalibrationRange check is passed or failed.
+
+		"""
 		if parameters is not None:
 			checkval = self.check(parameters)
 			if checkval is None:
