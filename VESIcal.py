@@ -2727,7 +2727,7 @@ class ShishkinaCarbon(Model):
 
 		if 'CO2' not in sample:
 			raise InputError("sample must contain CO2.")
-		if sample['CO2'] <= 0:
+		if sample['CO2'] < 0:
 			raise InputError("CO2 concentration must be greater than 0 wt%.")
 
 		try:
@@ -2869,7 +2869,7 @@ class ShishkinaWater(Model):
 		"""
 		if 'H2O' not in sample:
 			raise InputError("sample must contain H2O")
-		if sample['H2O'] <= 0:
+		if sample['H2O'] < 0:
 			raise InputError("H2O concentration must be greater than 0 wt%.")
 
 		if sample['H2O'] < self.calculate_dissolved_volatiles(sample=sample,pressure=0,**kwargs):
@@ -3010,7 +3010,7 @@ class DixonCarbon(Model):
 			raise InputError("sample must be a dict or pandas Series.")
 		if 'CO2' not in sample:
 			raise InputError("sample must contain CO2.")
-		if sample['CO2'] <= 0:
+		if sample['CO2'] < 0:
 			raise InputError("Dissolved CO2 concentration must be greater than 0 wt%.")
 
 		try:
@@ -3193,7 +3193,7 @@ class DixonWater(Model):
 		"""
 		if 'H2O' not in sample:
 			raise InputError("sample must contain H2O")
-		if sample['H2O'] <= 0:
+		if sample['H2O'] < 0:
 			raise InputError("H2O concentration must be greater than 0 wt%.")
 		try:
 			satP = root_scalar(self.root_saturation_pressure,x0=100.0,x1=1000.0,args=(sample,kwargs)).root
@@ -3473,7 +3473,7 @@ class IaconoMarzianoWater(Model):
 			raise InputError("sample must be a dict or a pandas Series.")
 		if 'H2O' not in sample:
 			raise InputError("sample must contain H2O.")
-		if sample['H2O'] <= 0.0:
+		if sample['H2O'] < 0.0:
 			raise InputError("Dissolved H2O must be greater than 0 wt%.")
 
 		try:
@@ -3762,7 +3762,7 @@ class IaconoMarzianoCarbon(Model):
 			raise InputError("sample must be a dict or a pandas Series.")
 		if 'CO2' not in sample:
 			raise InputError("sample must contain CO2")
-		if sample['CO2'] <= 0:
+		if sample['CO2'] < 0:
 			raise InputError("Dissolved CO2 must be greater than 0 wt%.")
 
 		try:
@@ -3969,7 +3969,7 @@ class EguchiCarbon(Model):
 		"""
 		if 'CO2' not in sample:
 			raise InputError("sample must contain CO2.")
-		if sample['CO2'] <= 0.0:
+		if sample['CO2'] < 0.0:
 			raise InputError("Concentration of CO2 must be greater than 0 wt%.")
 		try:
 			satP = root_scalar(self.root_saturation_pressure,x0=1000.0,x1=2000.0,
@@ -4256,7 +4256,7 @@ class MooreWater(Model):
 			raise InputError("sample must be a dict or a pandas Series.")
 		if 'H2O' not in sample:
 			raise InputError("sample must contain H2O.")
-		if sample['H2O'] <= 0.0:
+		if sample['H2O'] < 0.0:
 			raise InputError("Dissolved H2O concentration must be greater than 0 wt%.")
 
 		try:
@@ -4460,7 +4460,7 @@ class AllisonCarbon(Model):
 			raise InputError("sample must be a dict or a pandas Series.")
 		if 'CO2' not in sample:
 			raise InputError("sample must contain CO2.")
-		if sample['CO2'] <= 0.0:
+		if sample['CO2'] < 0.0:
 			raise InputError("Dissolved CO2 concentration must be greater than 0 wt%.")
 
 		try:
@@ -4574,7 +4574,8 @@ class MixedFluid(Model):
 		""" Calculates the composition of the fluid in equilibrium with the dissolved volatile
 		concentrations passed. If a fluid phase is undersaturated at the chosen pressure (0,0) will
 		be returned. Note, this currently assumes the given H2O and CO2 concentrations are
-		the system total, not the total dissolved. This should be changed.
+		the system total, not the total dissolved. If one of the volatile species has a zero or
+		negative concentration, the pure fluid model for the other volatile species will be used.
 
 		Parameters
 		----------
@@ -4596,45 +4597,49 @@ class MixedFluid(Model):
 			raise InputError("Currently equilibrium fluid compositions can only be calculated when\
 			two volatile species are present.")
 
-		satP = self.calculate_saturation_pressure(sample,**kwargs)
-
-		if satP < pressure:
-			if return_dict == True:
-				return {self.volatile_species[0]:0,self.volatile_species[1]:0}
-			else:
-				return (0,0)
-
-		# sample_mod = sample.copy()
-		# sample_mod = normalize_FixedVolatiles(sample_mod)
-
-		# molfracs = wtpercentOxides_to_molOxides(sample_mod)
-		molfracs = wtpercentOxides_to_molOxides(sample)
-		(Xt0, Xt1) = (molfracs[self.volatile_species[0]],molfracs[self.volatile_species[1]])
-
-		# Find which interval the root lies in.
-		bnds = np.array([molfracs[self.volatile_species[0]],1-molfracs[self.volatile_species[1]]])
-		bnds = np.sort(bnds)
-
-		test1 = (self.root_for_fluid_comp(0,pressure,Xt0,Xt1,sample,kwargs)*
-				self.root_for_fluid_comp(bnds[0]-1e-15,pressure,Xt0,Xt1,sample,kwargs))
-		test2 = (self.root_for_fluid_comp(bnds[0]+1e-15,pressure,Xt0,Xt1,sample,kwargs)*
-				self.root_for_fluid_comp(bnds[1]-1e-15,pressure,Xt0,Xt1,sample,kwargs))
-		test3 = (self.root_for_fluid_comp(bnds[1]+1e-15,pressure,Xt0,Xt1,sample,kwargs)*
-				self.root_for_fluid_comp(1.0,pressure,Xt0,Xt1,sample,kwargs))
-
-		if test1 < 0:
-			Xv0 = root_scalar(self.root_for_fluid_comp,args=(pressure,Xt0,Xt1,sample,kwargs),
-				bracket=(0,bnds[0]-1e-15)).root
-		elif test2 < 0:
-			Xv0 = root_scalar(self.root_for_fluid_comp,args=(pressure,Xt0,Xt1,sample,kwargs),
-				bracket=(bnds[0]+1e-15,bnds[1]-1e-15)).root
-		elif test3 < 0:
-			Xv0 = root_scalar(self.root_for_fluid_comp,args=(pressure,Xt0,Xt1,sample,kwargs),
-				bracket=(bnds[1]+1e-15,1)).root
+		if sample[self.volatile_species[0]] <= 0.0:
+			Xv0 = 0.0
+			Xv1 = self.models[1].calculate_equilibrium_fluid_comp(pressure=pressure,sample=sample,**kwargs)
+		elif sample[self.volatile_species[1]] <= 0.0:
+			Xv1 = 0.0
+			Xv0 = self.models[0].calculate_equilibrium_fluid_comp(pressure=pressure,sample=sample,**kwargs)
 		else:
-			raise SaturationError("An equilibrium fluid composition was not found.")
+			satP = self.calculate_saturation_pressure(sample,**kwargs)
 
-		Xv1 = 1-Xv0
+			if satP < pressure:
+				if return_dict == True:
+					return {self.volatile_species[0]:0,self.volatile_species[1]:0}
+				else:
+					return (0,0)
+
+
+			molfracs = wtpercentOxides_to_molOxides(sample)
+			(Xt0, Xt1) = (molfracs[self.volatile_species[0]],molfracs[self.volatile_species[1]])
+
+			# Find which interval the root lies in.
+			bnds = np.array([molfracs[self.volatile_species[0]],1-molfracs[self.volatile_species[1]]])
+			bnds = np.sort(bnds)
+
+			test1 = (self.root_for_fluid_comp(0,pressure,Xt0,Xt1,sample,kwargs)*
+					self.root_for_fluid_comp(bnds[0]-1e-15,pressure,Xt0,Xt1,sample,kwargs))
+			test2 = (self.root_for_fluid_comp(bnds[0]+1e-15,pressure,Xt0,Xt1,sample,kwargs)*
+					self.root_for_fluid_comp(bnds[1]-1e-15,pressure,Xt0,Xt1,sample,kwargs))
+			test3 = (self.root_for_fluid_comp(bnds[1]+1e-15,pressure,Xt0,Xt1,sample,kwargs)*
+					self.root_for_fluid_comp(1.0,pressure,Xt0,Xt1,sample,kwargs))
+
+			if test1 < 0:
+				Xv0 = root_scalar(self.root_for_fluid_comp,args=(pressure,Xt0,Xt1,sample,kwargs),
+					bracket=(0,bnds[0]-1e-15)).root
+			elif test2 < 0:
+				Xv0 = root_scalar(self.root_for_fluid_comp,args=(pressure,Xt0,Xt1,sample,kwargs),
+					bracket=(bnds[0]+1e-15,bnds[1]-1e-15)).root
+			elif test3 < 0:
+				Xv0 = root_scalar(self.root_for_fluid_comp,args=(pressure,Xt0,Xt1,sample,kwargs),
+					bracket=(bnds[1]+1e-15,1)).root
+			else:
+				raise SaturationError("An equilibrium fluid composition was not found.")
+
+			Xv1 = 1-Xv0
 
 		if return_dict == True:
 			return {self.volatile_species[0]:Xv0,self.volatile_species[1]:Xv1}
@@ -4644,7 +4649,8 @@ class MixedFluid(Model):
 	def calculate_saturation_pressure(self,sample,**kwargs):
 		"""
 		Calculates the pressure at which a fluid will be saturated, given the dissolved volatile
-		concentrations.
+		concentrations. If one of the volatile species has a zero or negative concentration the
+		pure fluid model for the other species will be used.
 
 		Parameters
 		----------
@@ -4656,19 +4662,24 @@ class MixedFluid(Model):
 		float
 			The saturation pressure in bars.
 		"""
-		volatile_concs = np.array(tuple(sample[species] for species in self.volatile_species))
+		if sample[self.volatile_species[0]] <= 0.0:
+			satP = self.models[1].calculate_saturation_pressure(sample=sample,**kwargs)
+		elif sample[self.volatile_species[1]] <= 0.0:
+			satP = self.models[0].calculate_saturation_pressure(sample=sample,**kwargs)
+		else:
+			volatile_concs = np.array(tuple(sample[species] for species in self.volatile_species))
 
-		x0 = 0
-		for model in self.models:
-			xx0 = model.calculate_saturation_pressure(sample=sample,**kwargs)
-			if np.isnan(xx0) == False:
-				x0 += xx0
+			x0 = 0
+			for model in self.models:
+				xx0 = model.calculate_saturation_pressure(sample=sample,**kwargs)
+				if np.isnan(xx0) == False:
+					x0 += xx0
 
-		try:
-			satP = root(self.root_saturation_pressure,x0=[x0,0.5],args=(volatile_concs,sample,kwargs)).x[0]
-		except:
-			warnings.warn("Saturation pressure not found.",RuntimeWarning)
-			satP = np.nan
+			try:
+				satP = root(self.root_saturation_pressure,x0=[x0,0.5],args=(volatile_concs,sample,kwargs)).x[0]
+			except:
+				warnings.warn("Saturation pressure not found.",RuntimeWarning)
+				satP = np.nan
 
 		return satP
 
