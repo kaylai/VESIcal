@@ -1607,7 +1607,7 @@ class Calculate(object):
 	def check_calibration_range(self):
 		""" """
 
-#-------------DEFAULT CALIBRATIONRANGE OBJECTES--------------#
+#-------------DEFAULT CALIBRATIONRANGE OBJECTS---------------#
 
 class cr_EqualTo(CalibrationRange):
 	""" """
@@ -1687,7 +1687,7 @@ class cr_LessThan(CalibrationRange):
 	""" """
 	def check(self,parameters):
 		if self.parameter_name in parameters:
-			if parameters[self.parameter_name] > self.value:
+			if parameters[self.parameter_name] < self.value:
 				return True
 			else:
 				return False
@@ -2730,7 +2730,11 @@ class ShishkinaCarbon(Model):
 		if sample['CO2'] <= 0:
 			raise InputError("CO2 concentration must be greater than 0 wt%.")
 
-		satP = root_scalar(self.root_saturation_pressure,bracket=[1e-15,1e5],args=(sample,kwargs)).root
+		try:
+			satP = root_scalar(self.root_saturation_pressure,bracket=[1e-15,1e5],args=(sample,kwargs)).root
+		except:
+			warnings.warn("Saturation pressure not found.",RuntimeWarning)
+			satP = np.nan
 		return satP
 
 	def root_saturation_pressure(self,pressure,sample,kwargs):
@@ -2871,7 +2875,11 @@ class ShishkinaWater(Model):
 		if sample['H2O'] < self.calculate_dissolved_volatiles(sample=sample,pressure=0,**kwargs):
 			return np.nan
 
-		satP = root_scalar(self.root_saturation_pressure,bracket=[1e-15,1e5],args=(sample,kwargs)).root
+		try:
+			satP = root_scalar(self.root_saturation_pressure,bracket=[1e-15,1e5],args=(sample,kwargs)).root
+		except:
+			warnings.warn("Saturation pressure not found.",RuntimeWarning)
+			satP = np.nan
 		return satP
 
 	def root_saturation_pressure(self,pressure,sample,kwargs):
@@ -3005,7 +3013,11 @@ class DixonCarbon(Model):
 		if sample['CO2'] <= 0:
 			raise InputError("Dissolved CO2 concentration must be greater than 0 wt%.")
 
-		satP = root_scalar(self.root_saturation_pressure,bracket=[1e-15,1e5],args=(sample,kwargs)).root
+		try:
+			satP = root_scalar(self.root_saturation_pressure,x0=100.0,x1=1000.0,args=(sample,kwargs)).root
+		except:
+			warnings.warn("Saturation pressure not found.",RuntimeWarning)
+			satP = np.nan
 		return np.real(satP)
 
 	def molfrac_molecular(self,pressure,sample,X_fluid=1.0,**kwargs):
@@ -3184,9 +3196,9 @@ class DixonWater(Model):
 		if sample['H2O'] <= 0:
 			raise InputError("H2O concentration must be greater than 0 wt%.")
 		try:
-			satP = root_scalar(self.root_saturation_pressure,bracket=[1e-15,1e8],args=(sample,kwargs)).root
+			satP = root_scalar(self.root_saturation_pressure,x0=100.0,x1=1000.0,args=(sample,kwargs)).root
 		except:
-			warnings.warn("Saturation pressure not in interval 1e-15 - 1e8 bar, most likely because vapour is undersaturated.",RuntimeWarning)
+			warnings.warn("Saturation pressure not found.",RuntimeWarning)
 			satP = np.nan
 		return np.real(satP)
 
@@ -3464,8 +3476,13 @@ class IaconoMarzianoWater(Model):
 		if sample['H2O'] <= 0.0:
 			raise InputError("Dissolved H2O must be greater than 0 wt%.")
 
-		return root_scalar(self.root_saturation_pressure,args=(temperature,sample,kwargs),
-							bracket=[1e-15,1e5]).root
+		try:
+			satP = root_scalar(self.root_saturation_pressure,args=(temperature,sample,kwargs),
+								bracket=[1e-15,1e5]).root
+		except:
+			warnings.warn("Saturation pressure not found.",RuntimeWarning)
+			satP = np.nan
+		return satP
 
 	def root_saturation_pressure(self,pressure,temperature,sample,kwargs):
 		""" Function called by scipy.root_scalar when finding the saturation pressure using
@@ -3748,8 +3765,13 @@ class IaconoMarzianoCarbon(Model):
 		if sample['CO2'] <= 0:
 			raise InputError("Dissolved CO2 must be greater than 0 wt%.")
 
-		return root_scalar(self.root_saturation_pressure,args=(temperature,sample,kwargs),
-							bracket=[1e-15,1e5]).root
+		try:
+			satP = root_scalar(self.root_saturation_pressure,args=(temperature,sample,kwargs),
+								bracket=[1e-15,1e5]).root
+		except:
+			warnings.warn("Saturation pressure not found.",RuntimeWarning)
+			satP = np.nan
+		return satP
 
 	def root_saturation_pressure(self,pressure,temperature,sample,kwargs):
 		""" Function called by scipy.root_scalar when finding the saturation pressure using
@@ -3949,7 +3971,13 @@ class EguchiCarbon(Model):
 			raise InputError("sample must contain CO2.")
 		if sample['CO2'] <= 0.0:
 			raise InputError("Concentration of CO2 must be greater than 0 wt%.")
-		return root_scalar(self.root_saturation_pressure,x0=1000.0,x1=2000.0,args=(temperature,sample,X_fluid,kwargs)).root
+		try:
+			satP = root_scalar(self.root_saturation_pressure,x0=1000.0,x1=2000.0,
+								args=(temperature,sample,X_fluid,kwargs)).root
+		except:
+			warnings.warn("Saturation pressure not found.",RuntimeWarning)
+			satP = np.nan
+		return satP
 
 	def root_saturation_pressure(self,pressure,temperature,sample,X_fluid,kwargs):
 		""" Function called by scipy.root_scalar when finding the saturation pressure using
@@ -4231,8 +4259,12 @@ class MooreWater(Model):
 		if sample['H2O'] <= 0.0:
 			raise InputError("Dissolved H2O concentration must be greater than 0 wt%.")
 
-		satP = root_scalar(self.root_saturation_pressure,args=(temperature,_sample,X_fluid,kwargs),x0=1000.0,x1=2000.0).root
-
+		try:
+			satP = root_scalar(self.root_saturation_pressure,args=(temperature,_sample,X_fluid,kwargs),
+								x0=1000.0,x1=2000.0).root
+		except:
+			warnings.warn("Saturation pressure not found.",RuntimeWarning)
+			satP = np.nan
 		return np.real(satP)
 
 	def root_saturation_pressure(self,pressure,temperature,sample,X_fluid,kwargs):
@@ -4431,7 +4463,13 @@ class AllisonCarbon(Model):
 		if sample['CO2'] <= 0.0:
 			raise InputError("Dissolved CO2 concentration must be greater than 0 wt%.")
 
-		return root_scalar(self.root_saturation_pressure,args=(temperature,sample,X_fluid,kwargs),x0=1000.0,x1=2000.0).root
+		try:
+			satP = root_scalar(self.root_saturation_pressure,args=(temperature,sample,X_fluid,kwargs),
+								x0=1000.0,x1=2000.0).root
+		except:
+			warnings.warn("Saturation pressure not found.",RuntimeWarning)
+			satP = np.nan
+		return satP
 
 	def root_saturation_pressure(self,pressure,temperature,sample,X_fluid,kwargs):
 		""" Function called by scipy.root_scalar when finding the saturation pressure using
@@ -4573,7 +4611,28 @@ class MixedFluid(Model):
 		molfracs = wtpercentOxides_to_molOxides(sample)
 		(Xt0, Xt1) = (molfracs[self.volatile_species[0]],molfracs[self.volatile_species[1]])
 
-		Xv0 = root_scalar(self.root_for_fluid_comp,args=(pressure,Xt0,Xt1,sample,kwargs),bracket=(molfracs[self.volatile_species[0]]+1e-15,1-molfracs[self.volatile_species[1]]-1e-15)).root
+		# Find which interval the root lies in.
+		bnds = np.array([molfracs[self.volatile_species[0]],1-molfracs[self.volatile_species[1]]])
+		bnds = np.sort(bnds)
+
+		test1 = (self.root_for_fluid_comp(0,pressure,Xt0,Xt1,sample,kwargs)*
+				self.root_for_fluid_comp(bnds[0]-1e-15,pressure,Xt0,Xt1,sample,kwargs))
+		test2 = (self.root_for_fluid_comp(bnds[0]+1e-15,pressure,Xt0,Xt1,sample,kwargs)*
+				self.root_for_fluid_comp(bnds[1]-1e-15,pressure,Xt0,Xt1,sample,kwargs))
+		test3 = (self.root_for_fluid_comp(bnds[1]+1e-15,pressure,Xt0,Xt1,sample,kwargs)*
+				self.root_for_fluid_comp(1.0,pressure,Xt0,Xt1,sample,kwargs))
+
+		if test1 < 0:
+			Xv0 = root_scalar(self.root_for_fluid_comp,args=(pressure,Xt0,Xt1,sample,kwargs),
+				bracket=(0,bnds[0]-1e-15)).root
+		elif test2 < 0:
+			Xv0 = root_scalar(self.root_for_fluid_comp,args=(pressure,Xt0,Xt1,sample,kwargs),
+				bracket=(bnds[0]+1e-15,bnds[1]-1e-15)).root
+		elif test3 < 0:
+			Xv0 = root_scalar(self.root_for_fluid_comp,args=(pressure,Xt0,Xt1,sample,kwargs),
+				bracket=(bnds[1]+1e-15,1)).root
+		else:
+			raise SaturationError("An equilibrium fluid composition was not found.")
 
 		Xv1 = 1-Xv0
 
@@ -4605,7 +4664,11 @@ class MixedFluid(Model):
 			if np.isnan(xx0) == False:
 				x0 += xx0
 
-		satP = root(self.root_saturation_pressure,x0=[x0,0.5],args=(volatile_concs,sample,kwargs)).x[0]
+		try:
+			satP = root(self.root_saturation_pressure,x0=[x0,0.5],args=(volatile_concs,sample,kwargs)).x[0]
+		except:
+			warnings.warn("Saturation pressure not found.",RuntimeWarning)
+			satP = np.nan
 
 		return satP
 
@@ -4847,10 +4910,10 @@ class MixedFluid(Model):
 		cations = wtpercentOxides_to_molOxides(sample_mod)
 		Xm0 = cations[self.volatile_species[0]]
 		Xm1 = cations[self.volatile_species[1]]
-		if Xv0 == Xm0:
-			return Xt0 - Xm0*(Xt1-1)/(Xm1-1)
-		elif (1-Xv0) == Xm1:
-			return -(Xt1 - Xm1*(Xt0-1)/(Xm0-1))
+		# if Xv0 == Xm0:
+		# 	return Xt0 - Xm0*(Xt1-1)/(Xm1-1)
+		# elif (1-Xv0) == Xm1:
+		# 	return -(Xt1 - Xm1*(Xt0-1)/(Xm0-1))
 		return (Xt0-Xm0)/(Xv0-Xm0) - (Xt1-Xm1)/(1-Xv0-Xm1)
 
 	def check_calibration_range(self,parameters):
