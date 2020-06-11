@@ -4620,22 +4620,22 @@ class MixedFluid(Model):
 			bnds = np.array([molfracs[self.volatile_species[0]],1-molfracs[self.volatile_species[1]]])
 			bnds = np.sort(bnds)
 
-			test1 = (self.root_for_fluid_comp(0,pressure,Xt0,Xt1,sample,kwargs)*
+			test1 = (self.root_for_fluid_comp(1e-15,pressure,Xt0,Xt1,sample,kwargs)*
 					self.root_for_fluid_comp(bnds[0]-1e-15,pressure,Xt0,Xt1,sample,kwargs))
 			test2 = (self.root_for_fluid_comp(bnds[0]+1e-15,pressure,Xt0,Xt1,sample,kwargs)*
 					self.root_for_fluid_comp(bnds[1]-1e-15,pressure,Xt0,Xt1,sample,kwargs))
 			test3 = (self.root_for_fluid_comp(bnds[1]+1e-15,pressure,Xt0,Xt1,sample,kwargs)*
-					self.root_for_fluid_comp(1.0,pressure,Xt0,Xt1,sample,kwargs))
+					self.root_for_fluid_comp(1.0-1e-15,pressure,Xt0,Xt1,sample,kwargs))
 
 			if test1 < 0:
 				Xv0 = root_scalar(self.root_for_fluid_comp,args=(pressure,Xt0,Xt1,sample,kwargs),
-					bracket=(0,bnds[0]-1e-15)).root
+					bracket=(1e-15,bnds[0]-1e-15)).root
 			elif test2 < 0:
 				Xv0 = root_scalar(self.root_for_fluid_comp,args=(pressure,Xt0,Xt1,sample,kwargs),
 					bracket=(bnds[0]+1e-15,bnds[1]-1e-15)).root
 			elif test3 < 0:
 				Xv0 = root_scalar(self.root_for_fluid_comp,args=(pressure,Xt0,Xt1,sample,kwargs),
-					bracket=(bnds[1]+1e-15,1)).root
+					bracket=(bnds[1]+1e-15,1-1e-15)).root
 			else:
 				raise SaturationError("An equilibrium fluid composition was not found.")
 
@@ -4921,10 +4921,7 @@ class MixedFluid(Model):
 		cations = wtpercentOxides_to_molOxides(sample_mod)
 		Xm0 = cations[self.volatile_species[0]]
 		Xm1 = cations[self.volatile_species[1]]
-		# if Xv0 == Xm0:
-		# 	return Xt0 - Xm0*(Xt1-1)/(Xm1-1)
-		# elif (1-Xv0) == Xm1:
-		# 	return -(Xt1 - Xm1*(Xt0-1)/(Xm0-1))
+
 		return (Xt0-Xm0)/(Xv0-Xm0) - (Xt1-Xm1)/(1-Xv0-Xm1)
 
 	def check_calibration_range(self,parameters):
