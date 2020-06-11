@@ -1756,11 +1756,11 @@ class cr_Between(CalibrationRange):
 				return s
 		else:
 			s = "The {} model is calibrated for {} ".format(self.model_name,self.parameter_string)
-			s += " between "
+			s += "between "
 			s += self.value_fmt.format(self.value[0])
 			s += " and "
 			s += self.value_fmt.format(self.value[1])
-			s += " {}.".format(self.unit)
+			s += " {}. ".format(self.unit)
 			return s
 
 #-------------FUGACITY MODELS--------------------------------#
@@ -4994,6 +4994,9 @@ class MagmaSat(Model):
 			self.melts = melts
 			#-------------------------------------------#
 
+		self.set_calibration_ranges([cr_Between('pressure',[0,30000],'bar','MagmaSat'),
+									 cr_Between('temperature',[550,1725],'oC','MagmaSat')])
+
 	def preprocess_sample(self,sample): #TODO test this by passing weird shit to sample
 		"""
 		Returns sample with 0.0 values for any oxides not passed.
@@ -5019,33 +5022,40 @@ class MagmaSat(Model):
 
 	def check_calibration_range(self,parameters,**kwargs):
 		""" Checks whether supplied parameters and calculated results are within the calibration range
-		of the model. Designed for use with the Calculate methods. Calls the check_calibration_range
-		functions for the fugacity and activity models.
-
-		Parameters supported currently are pressure and temperature.
+		of the model, defined by the CalibrationRange objects. An empty string will be returned if all
+		parameters are within the calibration range. If a parameter is not within the calibration range,
+		a description of the problem will be returned in the string.
 
 		Parameters
 		----------
-		parameters         dictionary
-			Parameters to check calibration range for, the parameter name should be given as the key, and
-			its value as the value.
+		parameters 	dict
+			Dictionary keys are the names of the parameters to be checked, e.g., pressure
+			temperature, SiO2, etc. Values are the values of each parameter. A complete set
+			need not be given.
 
 		Returns
 		-------
-		dictionary
-			Dictionary with parameter names as keys. The values are dictionarys, which have the model component
-			as the keys, and bool values, indicating whether the parameter is within the calibration range.
+		str
+			String description of any parameters falling outside of the calibration range.
 		"""
-		results = {}
-		if 'pressure' in parameters.keys():
-			pressure_results = {'MagmaSat Model': (parameters['pressure']>0)&(parameters['pressure']<30000)}
-			results['pressure'] = pressure_results
+		s = ''
+		for cr in self.calibration_ranges:
+			if cr.check(parameters) == False:
+				s += cr.string(parameters)
+		return s
 
-		if 'temperature' in parameters.keys():
-			temperature_results = {'MagmaSat Model': (parameters['temperature']>=550)&(parameters['temperature']<=1725)}
-			results['temperature'] = temperature_results
+	def get_calibration_range(self):
+		""" Returns a string describing the calibration ranges defined by the CalibrationRange
+		objects for the model.
 
-		return {'Mixed Fluids': results}
+		Returns
+		-------
+		str
+			String description of the calibration range objects."""
+		s = ''
+		for cr in self.calibration_ranges:
+			s += cr.string(None)
+		return s
 
 	def get_fluid_mass(self, sample, temperature, pressure, H2O, CO2):
 		"""An internally used function to calculate fluid mass.
