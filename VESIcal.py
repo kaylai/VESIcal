@@ -1472,7 +1472,7 @@ class Model(object):
 		pass
 
 	# @abstractmethod
-	def check_calibration_range(self,parameters):
+	def check_calibration_range(self,parameters,report_nonexistance=True):
 		""" Checks whether the given parameters are within the ranges defined by the
 		CalibrationRange objects for the model and its fugacity and activity models. An empty
 		string will be returned if all parameters are within the calibration range. If a
@@ -1494,13 +1494,13 @@ class Model(object):
 		s = ''
 		for cr in self.calibration_ranges:
 			if cr.check(parameters) == False:
-				s += cr.string(parameters)
+				s += cr.string(parameters,report_nonexistance)
 		for cr in self.fugacity_model.calibration_ranges:
 			if cr.check(parameters) == False:
-				s += cr.string(parameters)
+				s += cr.string(parameters,report_nonexistance)
 		for cr in self.activity_model.calibration_ranges:
 			if cr.check(parameters) == False:
-				s += cr.string(parameters)
+				s += cr.string(parameters,report_nonexistance)
 		return s
 
 	def get_calibration_range(self):
@@ -1540,11 +1540,11 @@ class FugacityModel(object):
 		"""
 
 	# @abstractmethod
-	def check_calibration_range(self,parameters):
+	def check_calibration_range(self,parameters,report_nonexistance=True):
 		s = ''
 		for cr in self.calibration_ranges:
 			if cr.check(parameters) == False:
-				s += cr.string(parameters)
+				s += cr.string(parameters,report_nonexistance)
 		return s
 
 
@@ -1566,11 +1566,11 @@ class activity_model(object):
 		"""
 
 	# @abstractmethod
-	def check_calibration_range(self,parameters):
+	def check_calibration_range(self,parameters,report_nonexistance=True):
 		s = ''
 		for cr in self.calibration_ranges:
 			if cr.check(parameters) == False:
-				s += cr.string(parameters)
+				s += cr.string(parameters,report_nonexistance)
 		return s
 
 
@@ -1620,11 +1620,12 @@ class cr_EqualTo(CalibrationRange):
 		else:
 			return None
 
-	def string(self,parameters=None):
+	def string(self,parameters=None,report_nonexistance=True):
 		if parameters is not None:
 			checkval = self.check(parameters)
 			if checkval is None:
-				s = "{} was not provided as a parameter for checking. ".format(self.parameter_string).title()
+				if report_nonexistance==True:
+					s = "{} was not provided as a parameter for checking. ".format(self.parameter_string).title()
 			elif checkval == True:
 				s = "The {} (".format(self.parameter_string)
 				s += self.value_fmt.format(parameters[self.parameter_name])
@@ -1650,18 +1651,19 @@ class cr_GreaterThan(CalibrationRange):
 	""" """
 	def check(self,parameters):
 		if self.parameter_name in parameters:
-			if parameters[self.parameter_name] > self.value:
+			if parameters[self.parameter_name] >= self.value:
 				return True
 			else:
 				return False
 		else:
 			return None
 
-	def string(self,parameters=None):
+	def string(self,parameters=None,report_nonexistance=True):
 		if parameters is not None:
 			checkval = self.check(parameters)
 			if checkval is None:
-				s = "{} was not provided as a parameter for checking. ".format(self.parameter_string).title()
+				if report_nonexistance==True:
+					s = "{} was not provided as a parameter for checking. ".format(self.parameter_string).title()
 			elif checkval == True:
 				s = "The {} (".format(self.parameter_string)
 				s += self.value_fmt.format(parameters[self.parameter_name])
@@ -1687,18 +1689,19 @@ class cr_LessThan(CalibrationRange):
 	""" """
 	def check(self,parameters):
 		if self.parameter_name in parameters:
-			if parameters[self.parameter_name] < self.value:
+			if parameters[self.parameter_name] <= self.value:
 				return True
 			else:
 				return False
 		else:
 			return None
 
-	def string(self,parameters=None):
+	def string(self,parameters=None,report_nonexistance=True):
 		if parameters is not None:
 			checkval = self.check(parameters)
 			if checkval is None:
-				s = "{} was not provided as a parameter for checking. ".format(self.parameter_string).title()
+				if report_nonexistance==True:
+					s = "{} was not provided as a parameter for checking. ".format(self.parameter_string).title()
 			elif checkval == True:
 				s = "The {} (".format(self.parameter_string)
 				s += self.value_fmt.format(parameters[self.parameter_name])
@@ -1729,13 +1732,14 @@ class cr_Between(CalibrationRange):
 			else:
 				return False
 		else:
-			return False
+			return None
 
-	def string(self,parameters=None):
+	def string(self,parameters=None,report_nonexistance=True):
 		if parameters is not None:
 			checkval = self.check(parameters)
 			if checkval is None:
-				s = "{} was not provided as a parameter for checking. ".format(self.parameter_string).title()
+				if report_nonexistance==True:
+					s = "{} was not provided as a parameter for checking. ".format(self.parameter_string).title()
 			elif checkval == True:
 				s = "The {} (".format(self.parameter_string)
 				s += self.value_fmt.format(parameters[self.parameter_name])
@@ -1786,28 +1790,7 @@ class fugacity_idealgas(FugacityModel):
 		"""
 		return pressure*X_fluid
 
-	def check_calibration_range(self,parameters):
-		""" Checks that the parameters are within the calbrated range of
-		the model, for use with the Calculate methods. Since this is a
-		statement of ideality, everything is within its calibrated range.
 
-		Parameters
-		----------
-		parameters  dictionary
-			Parameter names (keys) and their values, for checking.
-
-		Returns
-		-------
-		dictionary
-			Dictionary with parameter names as keys. The values are booleans
-			representing whether the parameter is in the calibrated range, or not.
-			Always True for this instance.
-
-		"""
-		results = {}
-		for param in list(parameters.keys()):
-			results[param] = True
-		return results
 
 class fugacity_KJ81_co2(FugacityModel):
 	""" Implementation of the Kerrick and Jacobs (1981) EOS for mixed fluids. This class
@@ -4650,7 +4633,9 @@ class MixedFluid(Model):
 		"""
 		Calculates the pressure at which a fluid will be saturated, given the dissolved volatile
 		concentrations. If one of the volatile species has a zero or negative concentration the
-		pure fluid model for the other species will be used.
+		pure fluid model for the other species will be used. If one of the volatile species has a
+		concentration lower than the concentration dissolved at 0 bar, the pure fluid model for the
+		other species will be used.
 
 		Parameters
 		----------
@@ -4662,9 +4647,12 @@ class MixedFluid(Model):
 		float
 			The saturation pressure in bars.
 		"""
-		if sample[self.volatile_species[0]] <= 0.0:
+		dissolved_at_0bar = [self.models[0].calculate_dissolved_volatiles(sample=sample,pressure=0.0,**kwargs),
+							 self.models[1].calculate_dissolved_volatiles(sample=sample,pressure=0.0,**kwargs)]
+
+		if sample[self.volatile_species[0]] <= 0.0 or sample[self.volatile_species[0]] <= dissolved_at_0bar[0]:
 			satP = self.models[1].calculate_saturation_pressure(sample=sample,**kwargs)
-		elif sample[self.volatile_species[1]] <= 0.0:
+		elif sample[self.volatile_species[1]] <= 0.0 or sample[self.volatile_species[1]] <= dissolved_at_0bar[1]:
 			satP = self.models[0].calculate_saturation_pressure(sample=sample,**kwargs)
 		else:
 			volatile_concs = np.array(tuple(sample[species] for species in self.volatile_species))
@@ -4924,7 +4912,7 @@ class MixedFluid(Model):
 
 		return (Xt0-Xm0)/(Xv0-Xm0) - (Xt1-Xm1)/(1-Xv0-Xm1)
 
-	def check_calibration_range(self,parameters):
+	def check_calibration_range(self,parameters,report_nonexistance=True):
 		""" Checks whether the given parameters are within the ranges defined by the
 		CalibrationRange objects for each model and its fugacity and activity models. An empty
 		string will be returned if all parameters are within the calibration range. If a
@@ -4947,13 +4935,13 @@ class MixedFluid(Model):
 		for model in self.models:
 			for cr in model.calibration_ranges:
 				if cr.check(parameters) == False:
-					s += cr.string(parameters)
+					s += cr.string(parameters,report_nonexistance)
 			for cr in model.fugacity_model.calibration_ranges:
 				if cr.check(parameters) == False:
-					s += cr.string(parameters)
+					s += cr.string(parameters,report_nonexistance)
 			for cr in model.activity_model.calibration_ranges:
 				if cr.check(parameters) == False:
-					s += cr.string(parameters)
+					s += cr.string(parameters,report_nonexistance)
 		return s
 
 	def get_calibration_range(self):
@@ -5962,6 +5950,7 @@ class calculate_equilibrium_fluid_comp(Calculate):
 	def calculate(self,sample,pressure,**kwargs):
 		fluid_comp = self.model.calculate_equilibrium_fluid_comp(pressure=pressure,sample=sample,**kwargs)
 		return fluid_comp
+
 	def check_calibration_range(self,sample,pressure,**kwargs):
 		parameters = kwargs
 		parameters.update(dict(sample))
@@ -6020,8 +6009,16 @@ class calculate_isobars_and_isopleths(Calculate):
 		else:
 			raise InputError("This model does not have a calculate_isobars_and_isopleths method built in, most likely because it is a pure fluid model.")
 
-	def check_calibration_range(self,**kwargs):
-		return None
+	def check_calibration_range(self,sample,pressure_list,**kwargs):
+		parameters = kwargs
+		parameters.update(dict(sample))
+		s = ''
+		s += self.model.check_calibration_range(parameters)
+		parameters = {}
+		for pressure in pressure_list:
+			parameters['pressure'] = pressure
+			s += self.model.check_calibration_range(parameters,report_nonexistance=False)
+		return s
 
 
 class calculate_saturation_pressure(Calculate):
@@ -6048,8 +6045,12 @@ class calculate_saturation_pressure(Calculate):
 		satP = self.model.calculate_saturation_pressure(sample=sample,**kwargs)
 		return satP
 
-	def check_calibration_range(self,**kwargs):
-		return None
+	def check_calibration_range(self,sample,**kwargs):
+		parameters = kwargs
+		parameters['pressure'] = self.result
+		parameters.update(dict(sample))
+		s = self.model.check_calibration_range(parameters)
+		return s
 
 class calculate_degassing_path(Calculate):
 	"""
@@ -6096,8 +6097,14 @@ class calculate_degassing_path(Calculate):
 		else:
 			raise InputError("This model does not have a calculate_isobars_and_isopleths method built in, most likely because it is a pure fluid model.")
 
-	def check_calibration_range(self,**kwargs):
-		return None
+	def check_calibration_range(self,sample,**kwargs):
+		parameters = kwargs
+		parameters.update(sample)
+		s = self.model.check_calibration_range(parameters)
+		parameters = {}
+		parameters['pressure'] = np.nanmax(self.result.Pressure)
+		s += self.model.check_calibration_range(parameters,report_nonexistance=False)
+		return s
 
 
 
