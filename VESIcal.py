@@ -2911,7 +2911,7 @@ class ShishkinaCarbon(Model):
 		float
 			1.0 if CO2-fluid saturated, 0.0 otherwise.
 		"""
-		if self.calculate_saturation_pressure(sample=sample,**kwargs) > pressure:
+		if self.calculate_saturation_pressure(sample=sample,**kwargs) < pressure:
 			return 0.0
 		else:
 			return 1.0
@@ -3053,7 +3053,7 @@ class ShishkinaWater(Model):
 		float
 			1.0 if H2O-fluid saturated, 0.0 otherwise.
 		"""
-		if self.calculate_saturation_pressure(sample=sample,**kwargs) > pressure:
+		if self.calculate_saturation_pressure(sample=sample,**kwargs) < pressure:
 			return 0.0
 		else:
 			return 1.0
@@ -3190,7 +3190,7 @@ class DixonCarbon(Model):
 		float
 			1.0 if CO2-fluid saturated, 0.0 otherwise.
 		"""
-		if self.calculate_saturation_pressure(sample=sample,**kwargs) > pressure:
+		if self.calculate_saturation_pressure(sample=sample,**kwargs) < pressure:
 			return 0.0
 		else:
 			return 1.0
@@ -3375,7 +3375,7 @@ class DixonWater(Model):
 		float
 			1.0 if H2O-fluid saturated, 0.0 otherwise.
 		"""
-		if self.calculate_saturation_pressure(sample=sample,**kwargs) > pressure:
+		if self.calculate_saturation_pressure(sample=sample,**kwargs) < pressure:
 			return 0.0
 		else:
 			return 1.0
@@ -4149,7 +4149,7 @@ class EguchiCarbon(Model):
 			1.0 if CO2-fluid saturated, 0.0 otherwise.
 		"""
 		satP = self.calculate_saturation_pressure(temperature=temperature,sample=sample,X_fluid=1.0,**kwargs)
-		if pressure > satP:
+		if pressure < satP:
 			return 1.0
 		else:
 			return 0.0
@@ -4634,7 +4634,7 @@ class AllisonCarbon(Model):
 			1.0 if CO2-fluid saturated, 0.0 otherwise.
 		"""
 		satP = self.calculate_saturation_pressure(temperature=temperature,sample=sample,X_fluid=1.0,**kwargs)
-		if pressure > satP:
+		if pressure < satP:
 			return 1.0
 		else:
 			return 0.0
@@ -4804,10 +4804,14 @@ class MixedFluid(Model):
 			raise InputError("Currently equilibrium fluid compositions can only be calculated when\
 			two volatile species are present.")
 
-		if sample[self.volatile_species[0]] <= 0.0:
+		dissolved_at_0bar = [self.models[0].calculate_dissolved_volatiles(sample=sample,pressure=0.0,**kwargs),
+							 self.models[1].calculate_dissolved_volatiles(sample=sample,pressure=0.0,**kwargs)]
+
+
+		if sample[self.volatile_species[0]] <= 0.0 or sample[self.volatile_species[0]] <= dissolved_at_0bar[0]:
 			Xv0 = 0.0
 			Xv1 = self.models[1].calculate_equilibrium_fluid_comp(pressure=pressure,sample=sample,**kwargs)
-		elif sample[self.volatile_species[1]] <= 0.0:
+		elif sample[self.volatile_species[1]] <= 0.0 or sample[self.volatile_species[1]] <= dissolved_at_0bar[1]:
 			Xv1 = 0.0
 			Xv0 = self.models[0].calculate_equilibrium_fluid_comp(pressure=pressure,sample=sample,**kwargs)
 		else:
@@ -5027,11 +5031,7 @@ class MixedFluid(Model):
 
 		for i in range(len(pressures)):
 			try:
-				if i == 0 or np.isnan(Xv[0,i-1])==True:
-					x0 = None
-				else:
-					x0 = Xv[0,i-1]
-				X_fluid = self.calculate_equilibrium_fluid_comp(pressure=pressures[i],sample=wtptoxides,return_dict=False,x0=x0,**kwargs)
+				X_fluid = self.calculate_equilibrium_fluid_comp(pressure=pressures[i],sample=wtptoxides,return_dict=False,**kwargs)
 				Xv[:,i] = X_fluid
 				if X_fluid == (0,0):
 					wtm[:,i] = (wtptoxides[self.volatile_species[0]],wtptoxides[self.volatile_species[1]])
@@ -5044,6 +5044,7 @@ class MixedFluid(Model):
 						wtm[0,i] = self.calculate_dissolved_volatiles(pressure=pressures[i],sample=wtptoxides,X_fluid=X_fluid,**kwargs)[0]
 					else:
 						wtm[:,i] = self.calculate_dissolved_volatiles(pressure=pressures[i],sample=wtptoxides,X_fluid=X_fluid,**kwargs)
+
 					wtptoxides[self.volatile_species[0]] = wtm[0,i] + (1-fractionate_vapor)*(wtm0s-wtm[0,i])
 					wtptoxides[self.volatile_species[1]] = wtm[1,i] + (1-fractionate_vapor)*(wtm1s-wtm[1,i])
 				# wtptoxides = normalize_FixedVolatiles(wtptoxides)
