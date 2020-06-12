@@ -3124,6 +3124,8 @@ class DixonCarbon(Model):
 		self.set_fugacity_model(fugacity_KJ81_co2())
 		self.set_activity_model(activity_idealsolution())
 		self.set_calibration_ranges([])
+		#self.set_calibration_ranges([cr_Between('pressure',[1000,20000],'bar','DixonCarbon'),
+									 #cr_Between('temperature',[1200,1200],'oC','DixonCarbon')])
 
 	def preprocess_sample(self,sample):
 		""" Returns sample, normalized, keep volatiles unchanged.
@@ -3307,6 +3309,9 @@ class DixonWater(Model):
 		self.set_fugacity_model(fugacity_KJ81_h2o())
 		self.set_activity_model(activity_idealsolution())
 		self.set_calibration_ranges([])
+		#self.set_calibration_ranges([cr_Between('pressure',[201,717],'bar','DixonWater'),
+									 #cr_Between('temperature',[1200,1200],'oC','DixonWater')])
+
 
 	def preprocess_sample(self,sample):
 		""" Returns sample, normalized, holding volatile concentrations constant.
@@ -3557,6 +3562,8 @@ class IaconoMarzianoWater(Model):
 		self.set_activity_model(activity_idealsolution())
 		self.hydrous = hydrous
 		self.set_calibration_ranges([])
+		#self.set_calibration_ranges([cr_Between('pressure',[163,6067],'bar','IaconoMarzianoWater'),
+									 #cr_Between('temperature',[999.85,1250],'oC','IaconoMarzianoWater')])
 
 	def preprocess_sample(self,sample):
 		"""
@@ -5216,7 +5223,7 @@ class MagmaSat(Model):
 			#-------------------------------------------#
 
 		self.set_calibration_ranges([cr_Between('pressure',[0,30000],'bar','MagmaSat'),
-									 cr_Between('temperature',[550,1725],'oC','MagmaSat')])
+									 cr_Between('temperature',[550,1730],'oC','MagmaSat')])
 
 	def preprocess_sample(self,sample): #TODO test this by passing weird shit to sample
 		"""
@@ -6328,6 +6335,8 @@ class calculate_degassing_path(Calculate):
 		s = self.model.check_calibration_range(parameters)
 		parameters = {}
 		parameters['pressure'] = np.nanmax(self.result.Pressure)
+		# if istype(kwargs.get("pressure"), float) or istype(kwargs.get("pressure"), int):
+		# 	parameters['pressure'] = kwargs.get("pressure")
 		s += self.model.check_calibration_range(parameters,report_nonexistance=False)
 		return s
 
