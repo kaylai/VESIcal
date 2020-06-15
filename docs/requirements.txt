@@ -8,3 +8,4 @@ pandoc
 numpy
 matplotlib
 ipynb
+scipy
