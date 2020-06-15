@@ -128,3 +128,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+manuscript/tables/~$List_of_Datasets.xlsx
+
+testDataSets/~$Moore_et_al_1998.xlsx
