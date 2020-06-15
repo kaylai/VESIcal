@@ -8,9 +8,6 @@ version: 2
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
   configuration: docs/conf.py
-channels:
-  - conda-forge
-  - defaults
 dependencies:
   - _ipyw_jlab_nb_ext_conf=0.1.0=py37_0
   - alabaster=0.7.12=py37_0
