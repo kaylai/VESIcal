@@ -1,6 +1,10 @@
 sphinx>=1.4
+sphinx_rtd_theme
 ipykernel
 nbsphinx
 pandas
+pypandoc
+pandoc
 numpy
 matplotlib
+ipynb
