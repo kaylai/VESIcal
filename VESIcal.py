@@ -5012,7 +5012,7 @@ class MixedFluid(Model):
 		Returns
 		-------
 		pandas DataFrame or numpy arrays
-			If return_dfs is True (default), a DataFrame with columns 'Pressure', 'H2O_liq', 'CO2_liq',
+			If return_dfs is True (default), a DataFrame with columns 'Pressure_bars', 'H2O_liq', 'CO2_liq',
 			'H2O_fl', 'CO2_fl', and 'FluidProportion_wt', is returned. Dissolved volatiles are in wt%,
 			the proportions of volatiles in the fluid are in mole fraction. Otherwise a numpy array containing
 			the dissolved volatile concentrations, and a numpy array containing the mole fractions of
@@ -5061,7 +5061,7 @@ class MixedFluid(Model):
 
 		if return_dfs == True:
 			exsolved_degassing_df = pd.DataFrame()
-			exsolved_degassing_df['Pressure'] = pressures
+			exsolved_degassing_df['Pressure_bars'] = pressures
 			exsolved_degassing_df['H2O_liq'] = wtm[self.volatile_species.index('H2O'),:]
 			exsolved_degassing_df['CO2_liq'] = wtm[self.volatile_species.index('CO2'),:]
 			exsolved_degassing_df['H2O_fl'] = Xv[self.volatile_species.index('H2O'),:]
@@ -6334,7 +6334,7 @@ class calculate_degassing_path(Calculate):
 		parameters.update(sample)
 		s = self.model.check_calibration_range(parameters)
 		parameters = {}
-		parameters['pressure'] = np.nanmax(self.result.Pressure)
+		parameters['pressure'] = np.nanmax(self.result.Pressure_bars)
 		# if istype(kwargs.get("pressure"), float) or istype(kwargs.get("pressure"), int):
 		# 	parameters['pressure'] = kwargs.get("pressure")
 		s += self.model.check_calibration_range(parameters,report_nonexistance=False)
