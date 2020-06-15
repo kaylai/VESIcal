@@ -1,3 +1,7 @@
 sphinx>=1.4
 ipykernel
 nbsphinx
+pandas
+numpy
+matplotlib
+warnings
