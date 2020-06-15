@@ -1,4 +1,8 @@
-name: docvenv
+# Read the Docs configuration file
+# See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
+# create a virtual env with just everything on my machine since readthedocs kept insisting on failing to build
+# conda env export > readthedocs.yml
+
 # Required
 version: 2
 # Build documentation in the docs/ directory with Sphinx
