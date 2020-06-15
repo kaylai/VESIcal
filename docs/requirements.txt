@@ -4,4 +4,3 @@ nbsphinx
 pandas
 numpy
 matplotlib
-warnings
