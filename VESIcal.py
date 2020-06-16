@@ -5337,7 +5337,7 @@ class MagmaSat(Model):
 			melts.set_phase_inclusion_status({'Fluid': True, 'Liquid': True})
 			self.melts = melts
 			#-------------------------------------------#
-
+		self.set_volatile_species(['H2O', 'CO2'])
 		self.set_calibration_ranges([cr_Between('pressure',[0,30000],'bar','MagmaSat'),
 									 cr_Between('temperature',[550,1730],'oC','MagmaSat')])
 
