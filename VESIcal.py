@@ -5543,7 +5543,7 @@ class MagmaSat(Model):
 
 		return H2O_fl
 
-	def calculate_dissolved_volatiles(self, sample, temperature, pressure, X_fluid=1, H2O_guess=0.0, verbose=False):
+	def calculate_dissolved_volatiles(self, sample, temperature, pressure, X_fluid=1, H2O_guess=0.0, verbose=False, **kwargs):
 	#TODO make better initial guess at higher XH2Ofl
 	#TODO make refinements faster
 		"""
@@ -5702,7 +5702,7 @@ class MagmaSat(Model):
 		if verbose == False:
 			return {"H2O": H2O_liq, "CO2": CO2_liq}
 
-	def calculate_equilibrium_fluid_comp(self, sample, temperature, pressure, verbose=False): #TODO fix weird printing
+	def calculate_equilibrium_fluid_comp(self, sample, temperature, pressure, verbose=False, **kwargs): #TODO fix weird printing
 		"""
 		Returns H2O and CO2 concentrations in wt% in a fluid in equilibrium with the given sample at the given P/T condition.
 
@@ -5765,7 +5765,7 @@ class MagmaSat(Model):
 		if verbose == True:
 			return {'H2O': fluid_comp_H2O, 'CO2': fluid_comp_CO2, 'FluidMass_grams': fluid_mass, 'FluidProportion_wt': flsystem_wtper}
 
-	def calculate_saturation_pressure(self, sample, temperature, verbose=False):
+	def calculate_saturation_pressure(self, sample, temperature, verbose=False, **kwargs):
 		"""
 		Calculates the saturation pressure of a sample composition.
 
@@ -5949,7 +5949,7 @@ class MagmaSat(Model):
 		if has_isopleths == False:
 			return isobars_df, None #TODO should this just return isobars_df? Currently this requires two items to unpack, I think?
 
-	def calculate_degassing_path(self, sample, temperature, pressure='saturation', fractionate_vapor=0.0, init_vapor=0.0):
+	def calculate_degassing_path(self, sample, temperature, pressure='saturation', fractionate_vapor=0.0, init_vapor=0.0, **kwargs):
 		"""
 		Calculates degassing path for one sample
 
