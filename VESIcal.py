@@ -2808,7 +2808,7 @@ class ShishkinaCarbon(Model):
 		self.set_fugacity_model(fugacity_idealgas())
 		self.set_activity_model(activity_idealsolution())
 		self.set_calibration_ranges([cr_Between('pressure',[500.0,5000.0],'bar','Shishkina et al. carbon'),
-									 cr_Between('temperature',[1473.15,1523.15],'K','Shishkina et al. carbon')])
+									 cr_Between('temperature',[1200.0,1250.0],'oC','Shishkina et al. carbon')])
 
 	def preprocess_sample(self,sample):
 		""" Returns sample, unmodified. The Pi* compositional parameter is a ratio of cations,
@@ -2876,6 +2876,8 @@ class ShishkinaCarbon(Model):
 		float
 			The dissolved CO2 concentration in wt%.
 		"""
+
+
 
 		if X_fluid < 0 or X_fluid > 1:
 			raise InputError("X_fluid must have a value between 0 and 1.")
@@ -2976,7 +2978,7 @@ class ShishkinaWater(Model):
 		self.set_fugacity_model(fugacity_idealgas())
 		self.set_activity_model(activity_idealsolution())
 		self.set_calibration_ranges([cr_Between('pressure',[500.0,5000.0],'bar','Shishkina et al. water'),
-									 cr_Between('temperature',[1473.15,1523.15],'K','Shishkina et al. water')])
+									 cr_Between('temperature',[1200.0,1250.0],'oC','Shishkina et al. water')])
 
 	def preprocess_sample(self,sample):
 		""" Returns sample, renormlized so that the major element oxides (excluding volatiles) sum to 100%.
@@ -3597,7 +3599,7 @@ class IaconoMarzianoWater(Model):
 		pressure    float
 			Total pressure in bars.
 		temperature     float
-			Temperature in K
+			Temperature in C
 		sample     pandas Series or dict
 			Major element oxides in wt%.
 		X_fluid      float
@@ -3608,6 +3610,9 @@ class IaconoMarzianoWater(Model):
 		float
 			Dissolved H2O concentration in wt%.
 		"""
+
+		temperature = temperature + 273.15 #translate T from C to K
+
 		if type(sample) != dict and type(sample) != pd.core.series.Series:
 			raise InputError("sample must be a dict or a pandas Series.")
 		if pressure < 0:
@@ -3649,7 +3654,7 @@ class IaconoMarzianoWater(Model):
 		pressure     float
 			The total pressure of the system in bars.
 		temperature     float
-			The temperature of the system in K.
+			The temperature of the system in C.
 		sample         pandas Series or dict
 			Major element oxides in wt% (including H2O).
 
@@ -3658,6 +3663,8 @@ class IaconoMarzianoWater(Model):
 		float
 			1.0 if H2O-fluid saturated, 0.0 otherwise.
 		"""
+		temperature = temperature + 273.15 #translate T from C to K
+
 		if pressure > self.calculate_saturation_pressure(temperature=temperature,sample=sample,**kwargs):
 			return 0.0
 		else:
@@ -3672,7 +3679,7 @@ class IaconoMarzianoWater(Model):
 		Parameters
 		----------
 		temperature     float
-			The temperature of the system in K.
+			The temperature of the system in C.
 		sample         pandas Series or dict
 			Major element oxides in wt% (including H2O).
 		X_fluid     float
@@ -3683,6 +3690,8 @@ class IaconoMarzianoWater(Model):
 		float
 			Calculated saturation pressure in bars.
 		"""
+		temperature = temperature + 273.15 #translate T from C to K
+
 		if type(sample) != dict and type(sample) != pd.core.series.Series:
 			raise InputError("sample must be a dict or a pandas Series.")
 		if 'H2O' not in sample:
@@ -3707,7 +3716,7 @@ class IaconoMarzianoWater(Model):
 		pressure     float
 			Pressure guess in bars
 		temperature     float
-			The temperature of the system in K.
+			The temperature of the system in C.
 		sample         pandas Series or dict
 			Major elements in wt% (normalized to 100%), including H2O.
 		kwargs         dictionary
@@ -3720,6 +3729,7 @@ class IaconoMarzianoWater(Model):
 			The differece between the dissolved H2O at the pressure guessed, and the H2O concentration
 			passed in the sample variable.
 		"""
+		temperature = temperature + 273.15 #translate T from C to K
 		return sample['H2O'] - self.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,sample=sample,**kwargs)
 
 
@@ -3734,7 +3744,7 @@ class IaconoMarzianoWater(Model):
 		pressure     float
 			Total pressure in bars.
 		temperature     float
-			Temperature in K.
+			Temperature in C.
 		sample         pandas Series or dict
 			Major element oxides in wt%.
 		X_fluid     float
@@ -3747,6 +3757,8 @@ class IaconoMarzianoWater(Model):
 		float
 			Difference between H2O guessed and the H2O calculated.
 		"""
+		temperature = temperature + 273.15 #translate T from C to K
+
 		a = 0.53
 		b = 2.35
 		B = -3.37
@@ -3847,7 +3859,7 @@ class IaconoMarzianoCarbon(Model):
 		pressure    float
 			Total pressure in bars.
 		temperature     float
-			Temperature in K
+			Temperature in C
 		sample     pandas Series or dict
 			Major element oxides in wt%.
 		X_fluid      float
@@ -3858,6 +3870,7 @@ class IaconoMarzianoCarbon(Model):
 		float
 			Dissolved H2O concentration in wt%.
 		"""
+		temperature = temperature + 273.15 #translate T from C to K
 
 		if type(sample) != dict and type(sample) != pd.core.series.Series:
 			raise InputError("sample must be a dict or a pandas Series.")
@@ -3938,7 +3951,7 @@ class IaconoMarzianoCarbon(Model):
 		pressure     float
 			The total pressure of the system in bars.
 		temperature     float
-			The temperature of the system in K.
+			The temperature of the system in C.
 		sample         pandas Series or dict
 			Major element oxides in wt% (including H2O).
 
@@ -3947,6 +3960,8 @@ class IaconoMarzianoCarbon(Model):
 		float
 			1.0 if CO2-fluid saturated, 0.0 otherwise.
 		"""
+		temperature = temperature + 273.15 #translate T from C to K
+
 		if pressure > self.calculate_saturation_pressure(temperature=temperature,sample=sample,**kwargs):
 			return 0.0
 		else:
@@ -3961,7 +3976,7 @@ class IaconoMarzianoCarbon(Model):
 		Parameters
 		----------
 		temperature     float
-			The temperature of the system in K.
+			The temperature of the system in C.
 		sample         pandas Series or dict
 			Major element oxides in wt% (including CO2).
 
@@ -3970,6 +3985,8 @@ class IaconoMarzianoCarbon(Model):
 		float
 			Calculated saturation pressure in bars.
 		"""
+		temperature = temperature + 273.15 #translate T from C to K
+
 		if temperature <= 0:
 			raise InputError("Temperature must be greater than 0K.")
 		if type(sample) != dict and type(sample) != pd.core.series.Series:
@@ -3996,7 +4013,7 @@ class IaconoMarzianoCarbon(Model):
 		pressure     float
 			Pressure guess in bars
 		temperature     float
-			The temperature of the system in K.
+			The temperature of the system in C.
 		sample         pandas Series or dict
 			Major elements in wt% (normalized to 100%), including CO2.
 		kwargs         dictionary
@@ -4009,6 +4026,8 @@ class IaconoMarzianoCarbon(Model):
 			The differece between the dissolved CO2 at the pressure guessed, and the CO2 concentration
 			passed in the sample variable.
 		"""
+		temperature = temperature + 273.15 #translate T from C to K
+
 		return sample['CO2'] - self.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,sample=sample,**kwargs)
 
 
@@ -4060,7 +4079,7 @@ class EguchiCarbon(Model):
 		self.set_fugacity_model(fugacity_ZD09_co2())
 		self.set_activity_model(activity_idealsolution())
 		self.set_calibration_ranges([cr_Between('pressure',[500.0,50000.0],'bar','Eguchi & Dasgupta (2018) carbon'),
-									 cr_Between('temperature',[950.0+273.15,1600+273.15],'K','Eguchi & Dasgupta (2018) carbon')])
+									 cr_Between('temperature',[950.0,1600],'C','Eguchi & Dasgupta (2018) carbon')])
 
 	def preprocess_sample(self,sample,ferric_total=0.15):
 		""" Returns normalized sample composition, with ferric iron. Where a sample
@@ -4111,7 +4130,7 @@ class EguchiCarbon(Model):
 		pressure     float
 			Pressure in bars
 		temperature     float
-			Temperature in K
+			Temperature in C
 		sample     pandas Series or dict
 			Major element oxides in wt%.
 		X_fluid     float
@@ -4122,6 +4141,7 @@ class EguchiCarbon(Model):
 		float
 			Dissolved CO2 concentration.
 		"""
+		temperature = temperature + 273.15 #translate T from C to K
 
 		if pressure == 0:
 			return 0
@@ -4146,7 +4166,7 @@ class EguchiCarbon(Model):
 		pressure     float
 			The total pressure of the system in bars.
 		temperature     float
-			The temperature of the system in K.
+			The temperature of the system in C.
 		sample         pandas Series or dict
 			Major element oxides in wt% (including H2O).
 
@@ -4155,6 +4175,8 @@ class EguchiCarbon(Model):
 		float
 			1.0 if CO2-fluid saturated, 0.0 otherwise.
 		"""
+		temperature = temperature + 273.15 #translate T from C to K
+
 		satP = self.calculate_saturation_pressure(temperature=temperature,sample=sample,X_fluid=1.0,**kwargs)
 		if pressure < satP:
 			return 1.0
@@ -4170,7 +4192,7 @@ class EguchiCarbon(Model):
 		Parameters
 		----------
 		temperature     float
-			The temperature of the system in K.
+			The temperature of the system in C.
 		sample         pandas Series or dict
 			Major element oxides in wt% (including CO2).
 		X_fluid     float
@@ -4181,6 +4203,8 @@ class EguchiCarbon(Model):
 		float
 			Calculated saturation pressure in bars.
 		"""
+		temperature = temperature + 273.15 #translate T from C to K
+
 		if 'CO2' not in sample:
 			raise InputError("sample must contain CO2.")
 		if sample['CO2'] < 0.0:
@@ -4202,7 +4226,7 @@ class EguchiCarbon(Model):
 		pressure     float
 			Pressure guess in bars
 		temperature     float
-			The temperature of the system in K.
+			The temperature of the system in C.
 		sample         pandas Series or dict
 			Major elements in wt% (normalized to 100%), including CO2.
 		kwargs         dictionary
@@ -4215,6 +4239,7 @@ class EguchiCarbon(Model):
 			The differece between the dissolved CO2 at the pressure guessed, and the CO2 concentration
 			passed in the sample variable.
 		"""
+		temperature = temperature + 273.15 #translate T from C to K
 		return sample['CO2'] - self.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,sample=sample,X_fluid=X_fluid,**kwargs)
 
 	def Xi_melt(self,pressure,temperature,sample,species,X_fluid=1.0,**kwargs):
@@ -4227,7 +4252,7 @@ class EguchiCarbon(Model):
 		pressure    float
 			Pressure in bars.
 		temperature     float
-			Temperature in K.
+			Temperature in C.
 		sample         pandas Series or dict
 			Major element oxides in wt%.
 		species        str
@@ -4240,6 +4265,7 @@ class EguchiCarbon(Model):
 		float
 			Mole fraction of selected species in the melt
 		"""
+		temperature = temperature + 273.15 #translate T from C to K
 
 		if all(ox in sample for ox in ['MgO','CaO','FeO','Na2O','K2O','MnO','Al2O3','Fe2O3','SiO2','TiO2','P2O5']) == False:
 			raise InputError("sample must contain MgO, CaO, FeO, Na2O, K2O, MnO, Al2O3, Fe2O3, SiO3, TiO2, and P2O5.")
@@ -4535,7 +4561,7 @@ class AllisonCarbon(Model):
 		self.set_fugacity_model(fugacity_KJ81_co2())
 		self.set_activity_model(activity_idealsolution())
 		self.set_calibration_ranges([cr_Between('pressure',[0.0,6000.0],'bar','Allison et al. (2019) water'),
-									 cr_EqualTo('temperature',1473.15,'K','Allison et al. (2019) water')])
+									 cr_EqualTo('temperature',1200,'C','Allison et al. (2019) water')])
 
 		self.model_fit = model_fit
 		self.model_loc = model_loc
@@ -4565,7 +4591,7 @@ class AllisonCarbon(Model):
 		pressure     float
 			Pressure in bars.
 		temperature     float
-			Temperature in K.
+			Temperature in C.
 		sample         pandas Series, dict or None
 			Major element oxides in wt%. Required if using the thermodynamic fits, need not be
 			provided if using the power law fits. Default is None.
@@ -4577,6 +4603,8 @@ class AllisonCarbon(Model):
 		float
 			Dissolved CO2 concentration in wt%.
 		"""
+		temperature = temperature + 273.15 #translate T from C to K
+
 		if temperature <= 0.0:
 			raise InputError("Temperature must be greater than 0K.")
 		if pressure < 0.0:
@@ -4631,7 +4659,7 @@ class AllisonCarbon(Model):
 		pressure     float
 			The total pressure of the system in bars.
 		temperature     float
-			The temperature of the system in K.
+			The temperature of the system in C.
 		sample         pandas Series or dict
 			Major element oxides in wt% (including H2O).
 
@@ -4640,6 +4668,8 @@ class AllisonCarbon(Model):
 		float
 			1.0 if CO2-fluid saturated, 0.0 otherwise.
 		"""
+		temperature = temperature + 273.15 #translate T from C to K
+
 		satP = self.calculate_saturation_pressure(temperature=temperature,sample=sample,X_fluid=1.0,**kwargs)
 		if pressure < satP:
 			return 1.0
@@ -4655,7 +4685,7 @@ class AllisonCarbon(Model):
 		Parameters
 		----------
 		temperature     float
-			The temperature of the system in K.
+			The temperature of the system in C.
 		sample         pandas Series
 			Major element oxides in wt% (including CO2).
 		X_fluid     float
@@ -4666,6 +4696,8 @@ class AllisonCarbon(Model):
 		float
 			Calculated saturation pressure in bars.
 		"""
+		temperature = temperature + 273.15 #translate T from C to K
+
 		if temperature <= 0.0:
 			raise InputError("Temperature must be greater than 0K.")
 		if X_fluid < 0 or X_fluid > 1:
@@ -4694,7 +4726,7 @@ class AllisonCarbon(Model):
 		pressure     float
 			Pressure guess in bars
 		temperature     float
-			The temperature of the system in K.
+			The temperature of the system in C.
 		sample         pandas Series or dict
 			Major elements in wt% (normalized to 100%), including CO2.
 		kwargs         dictionary
@@ -4707,6 +4739,7 @@ class AllisonCarbon(Model):
 			The differece between the dissolved CO2 at the pressure guessed, and the CO2 concentration
 			passed in the sample variable.
 		"""
+		temperature = temperature + 273.15 #translate T from C to K
 		return sample['CO2'] - self.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,sample=sample,X_fluid=X_fluid,**kwargs)
 
 
@@ -5385,7 +5418,7 @@ class MagmaSat(Model):
 		s = ''
 		for cr in self.calibration_ranges:
 			if cr.check(parameters) == False:
-				s += cr.string(parameters)
+				s += cr.string(parameters,report_nonexistance)
 		return s
 
 	def get_calibration_range(self):
