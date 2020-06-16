@@ -2,6 +2,10 @@
 # Script written by Kayla Iacovino (kayla.iacovino@nasa.gov) and Simon Matthews (simonmatthews@jhu.edu)
 # VERSION 0.1 - MAY 2020
 
+#--------TURN OFF MAGMASAT WARNING--------#
+import warnings
+warnings.filterwarnings("ignore", message="rubicon.objc.ctypes_patch has only been tested ")
+
 #-----------------IMPORTS-----------------#
 import pandas as pd
 import numpy as np
@@ -10,7 +14,6 @@ from abc import ABC, abstractmethod
 from scipy.optimize import root_scalar
 from scipy.optimize import root
 from scipy.optimize import minimize
-import warnings
 
 
 #----------DEFINE SOME CONSTANTS-------------#
