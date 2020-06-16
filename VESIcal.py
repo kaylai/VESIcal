@@ -4746,7 +4746,7 @@ class MixedFluid(Model):
 			raise InputError("sample must be a dict or a pandas Series.")
 		return sample
 
-	def calculate_dissolved_volatiles(self,pressure,X_fluid,**kwargs):
+	def calculate_dissolved_volatiles(self,pressure,X_fluid,returndict=False,**kwargs):
 		"""
 		Calculates the dissolved volatile concentrations in wt%, using each model's
 		calculate_dissolved_volatiles method. At present the volatile concentrations are
@@ -4760,6 +4760,9 @@ class MixedFluid(Model):
 			The mole fraction of each species in the fluid. If the mixed fluid model
 			contains only two species (e.g. CO2 and H2O), the value of the first species in
 			self.volatile_species may be passed on its own as a float.
+		returndict 		bool
+			If True, the results will be returned in a dict, otherwise they will be returned
+			as a tuple.
 
 		Returns
 		-------
@@ -4782,7 +4785,16 @@ class MixedFluid(Model):
 		if type(X_fluid) == dict or type(X_fluid) == pd.core.series.Series:
 			X_fluid = tuple(X_fluid[species] for species in self.volatile_species)
 
-		return tuple(model.calculate_dissolved_volatiles(pressure=pressure,X_fluid=Xi,**kwargs) for model, Xi in zip(self.models,X_fluid))
+		result = tuple(model.calculate_dissolved_volatiles(pressure=pressure,X_fluid=Xi,**kwargs) for model, Xi in zip(self.models,X_fluid))
+
+		if returndict == True:
+			resultsdict = {}
+			for i,v in zip(range(len(self.volatile_species)),self.volatile_species):
+				resultsdict.update({v:result[i]})
+			return resultsdict
+		else:
+			return result
+
 
 	def calculate_equilibrium_fluid_comp(self,pressure,sample,return_dict=True,**kwargs):
 		""" Calculates the composition of the fluid in equilibrium with the dissolved volatile
@@ -6253,7 +6265,7 @@ class calculate_dissolved_volatiles(Calculate):
 		default model).
 	"""
 	def calculate(self,sample,pressure,**kwargs):
-		dissolved = self.model.calculate_dissolved_volatiles(pressure=pressure,sample=sample,**kwargs)
+		dissolved = self.model.calculate_dissolved_volatiles(pressure=pressure,sample=sample,returndict=True,**kwargs)
 		return dissolved
 
 	def check_calibration_range(self,sample,pressure,**kwargs):
@@ -6262,13 +6274,10 @@ class calculate_dissolved_volatiles(Calculate):
 		parameters['pressure'] = pressure
 		if len(self.model.volatile_species) == 1:
 			volspec = self.model.volatile_species
-			volconc = [self.result]
+			volconc = self.result
+			parameters.update({volspec:volconc})
 		else:
-			 volspec = self.model.volatile_species
-			 volconc = self.result
-
-		for i,v in zip(range(len(volspec)),volspec):
-			parameters[v] = volconc[i]
+			 parameters.update(self.result)
 
 		calib_check = self.model.check_calibration_range(parameters)
 		return calib_check
@@ -6535,10 +6544,10 @@ COMPLETELY broken the module.")
 																					 test_pressure,test_temperature,
 																					 result.result))
 		else:
-			for i,volatile in zip(range(len(model.volatile_species)),model.volatile_species):
+			for volatile in model.volatile_species:
 				print("  {:s} solubility at {:.0f} bars and {:.0f} K is {:.3f} wt%".format(volatile,
 																						 test_pressure,test_temperature,
-																						 result.result[i]))
+																						 result.result[volatile]))
 
 
 
