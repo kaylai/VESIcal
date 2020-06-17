@@ -585,7 +585,16 @@ class ExcelFile(object):
 		filename: str
 			Path to the excel file, e.g., "my_file.xlsx"
 
-		input_type: str
+		sheet_name: str
+			OPTIONAL. Default value is 0 which gets the first sheet in the excel spreadsheet file. This implements the pandas.
+			read_excel() sheet_name parameter. But functionality to read in more than one sheet at a time (e.g., pandas.read_excel(sheet_name=None))
+			is not yet imlpemented in VESIcal. From the pandas 1.0.4 documentation:
+				Available cases:
+					- Defaults to 0: 1st sheet as a DataFrame
+					- 1: 2nd sheet as a DataFrame
+					- "Sheet1": Load sheet with name “Sheet1”
+
+		input_type: str or int
 			OPTIONAL. Default is 'wtpercent'. String defining whether the oxide composition is given in wt percent
 			("wtpercent", which is the default), mole percent ("molpercent"), or mole fraction ("molfrac").
 
@@ -593,8 +602,12 @@ class ExcelFile(object):
 			OPTIONAL. Default is 'Label'. Name of the column within the passed Excel file referring to sample names.
 	"""
 
-	def __init__(self, filename, input_type='wtpercent', label='Label', **kwargs):
+	def __init__(self, filename, sheet_name=0, input_type='wtpercent', label='Label', **kwargs):
 		"""Return an ExcelFile object whoes parameters are defined here."""
+		if isinstance(sheet_name, str) or isinstance(sheet_name, int):
+			pass
+		else:
+			raise InputError("If sheet_name is passed, it must be of type str or int. Currently, VESIcal cannot import more than one sheet at a time.")
 		try:
 			melts
 		except:
@@ -616,7 +629,7 @@ class ExcelFile(object):
 
 		self.input_type = input_type
 
-		data = pd.read_excel(filename)
+		data = pd.read_excel(filename, sheet_name=sheet_name)
 		data = data.fillna(0)
 
 		try:
