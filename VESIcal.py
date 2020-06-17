@@ -6309,7 +6309,7 @@ class calculate_dissolved_volatiles(Calculate):
 		parameters.update(dict(sample))
 		parameters['pressure'] = pressure
 		if len(self.model.volatile_species) == 1:
-			volspec = self.model.volatile_species
+			volspec = self.model.volatile_species[0]
 			volconc = self.result
 			parameters.update({volspec:volconc})
 		else:
@@ -6349,14 +6349,13 @@ class calculate_equilibrium_fluid_comp(Calculate):
 		parameters.update(dict(sample))
 		parameters['pressure'] = pressure
 		if type(self.model.volatile_species) == str:
-			volspec = [self.model.volatile_species]
+			volspec = self.model.volatile_species
 			volconc = {volspec[0]:self.result}
 		elif type(self.model.volatile_species) == list:
 			 volspec = self.model.volatile_species
 			 volconc = self.result
 
-		for i,v in zip(range(len(volspec)),volspec):
-			parameters[v] = volconc[i]
+		parameters.update(volconc)
 
 		calib_check = self.model.check_calibration_range(parameters)
 		return calib_check
