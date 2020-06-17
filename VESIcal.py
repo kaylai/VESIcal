@@ -770,7 +770,7 @@ class ExcelFile(object):
 
 		return H2O_fl
 
-	def save_excelfile(self, filename, calculations): #TODO how to handle if user just wants to normalize data?
+	def save_excelfile(self, filename, calculations, sheet_name=None): #TODO how to handle if user just wants to normalize data?
 		"""
 		Saves data calculated by the user in batch processing mode (using the ExcelFile class methods) to an organized
 		excel file, with the original user data plus any calculated data.
@@ -784,15 +784,36 @@ class ExcelFile(object):
 			List of variables containing calculated outputs from any of the core ExcelFile functions: calculate_dissolved_volatiles,
 			calculate_equilibrium_fluid_comp, and calculate_saturation_pressure.
 
+		sheet_name: None or list
+			OPTIONAL. Default value is None. Allows user to set the name of the sheet or sheets written to the Excel file.
+
 		Returns
 		-------
 		Excel File
 			Creates and saves an Excel file with data from each calculation saved to its own sheet.
 		"""
+		if isinstance(calculations, list) and isinstance(sheet_name, list):
+			pass
+		else:
+			raise InputError("calculations and sheet_name must be type list. If you only have one calculation or sheet_name to pass, make sure they are passed in square brackets []")
 		with pd.ExcelWriter(filename) as writer:
 			self.data.to_excel(writer, 'Original_User_Data')
-			for n, df in enumerate(calculations):
-				df.to_excel(writer, 'Calc%s' % n)
+			if sheet_name is None:
+				for n, df in enumerate(calculations):
+					df.to_excel(writer, 'Calc%s' % n)	
+			elif isinstance(sheet_name, list):
+				if len(sheet_name) == len(calculations):
+					pass
+				else:
+					raise InputError("calculations and sheet_name must have the same length")
+
+				for i in range(len(calculations)):
+					if isinstance(sheet_name[i], str):
+						calculations[i].to_excel(writer, sheet_name[i])
+					else:
+						raise InputError("if sheet_name is passed, it must be list of strings")
+			else:
+				raise InputError("sheet_name must be type list")
 
 		return print("Saved " + str(filename))
 
@@ -1033,21 +1054,23 @@ class ExcelFile(object):
 				if "H2O" in liquid_comp:
 					liq_comp_H2O.append(liquid_comp["H2O"])
 				else:
-					H2O_liq = 0
+					liq_comp_H2O.append(0)
 
 				if "CO2" in liquid_comp:
 					liq_comp_CO2.append(liquid_comp["CO2"])
 				else:
-					CO2_liq = 0
+					liq_comp_CO2.append(0)
 
 				if "Water" in fluid_comp:
 					fluid_comp_H2O.append(fluid_comp["Water"])
 				else:
-					H2O_fl = 0.0
+					fluid_comp_H2O.append(0)
+
 				if "Carbon Dioxide" in fluid_comp:
 					fluid_comp_CO2.append(fluid_comp["Carbon Dioxide"])
 				else:
-					CO2_fl = 0.0
+					fluid_comp_CO2.append(0)
+
 				fluid_system_wtper.append(100.0*fluid_mass/(fluid_mass + system_mass))
 
 				XH2O_fluid = H2O_fl
