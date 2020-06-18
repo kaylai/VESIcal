@@ -1629,7 +1629,7 @@ class Calculate(object):
 	have a common workflow- sample is read in, preprocessed, the calculation is performed,
 	the calibration range is checked, and the results stored.
 	"""
-	def __init__(self,sample,model='MagmaSat',**kwargs):
+	def __init__(self,sample,model='MagmaSat',silence_warnings=False,**kwargs):
 		if model == 'MagmaSat':
 			self.model = MagmaSat()
 		elif type(model) == str:
@@ -1643,7 +1643,7 @@ class Calculate(object):
 		self.result = self.calculate(sample=self.sample,**kwargs)
 		self.calib_check = self.check_calibration_range(sample=self.sample,**kwargs)
 
-		if self.calib_check is not None:
+		if self.calib_check is not None and silence_warnings == False:
 			if self.calib_check != '':
 				warnings.warn(self.calib_check,RuntimeWarning)
 
@@ -6204,6 +6204,8 @@ class calculate_dissolved_volatiles(Calculate):
 	model:  string or Model object
 		Model to be used. If using one of the default models, this can be
 		the string corresponding to the model in the default_models dict.
+	silence_warnings 	bool
+		If set to True, no warnings will be raised automatically when calibration checks fail.
 
 	Returns
 	-------
@@ -6244,6 +6246,8 @@ class calculate_equilibrium_fluid_comp(Calculate):
 	model:  string or Model object
 		Model to be used. If using one of the default models, this can be
 		the string corresponding to the model in the default_models dict.
+	silence_warnings 	bool
+		If set to True, no warnings will be raised automatically when calibration checks fail.
 
 	Returns
 	-------
@@ -6291,6 +6295,8 @@ class calculate_isobars_and_isopleths(Calculate):
 	model:  string or Model object
 		Model to be used. If using one of the default models, this can be
 		the string corresponding to the model in the default_models dict.
+	silence_warnings 	bool
+		If set to True, no warnings will be raised automatically when calibration checks fail.
 
 	Returns
 	-------
@@ -6336,6 +6342,8 @@ class calculate_saturation_pressure(Calculate):
 	model:  string or Model object
 		Model to be used. If using one of the default models, this can be
 		the string corresponding to the model in the default_models dict.
+	silence_warnings 	bool
+		If set to True, no warnings will be raised automatically when calibration checks fail.
 
 	Returns
 	-------
@@ -6380,6 +6388,8 @@ class calculate_degassing_path(Calculate):
 	model:  string or Model object
 		Model to be used. If using one of the default models, this can be
 		the string corresponding to the model in the default_models dict.
+	silence_warnings 	bool
+		If set to True, no warnings will be raised automatically when calibration checks fail.
 
 	Returns
 	-------
