@@ -638,7 +638,16 @@ class ExcelFile(object):
 			raise InputError(
 				"Imported file must contain a column of sample names. If this column is not titled 'Label' (the default value), you must pass the column name to arg label. For example: ExcelFile('myfile.xslx', label='SampleNames')") #TODO test
 		if 'model' in kwargs:
-			warnings.warn("You don't need to pass a model here, so it will be ignored. You can specify a model when performing calculations on your dataset (e.g., calculate_dissolved_volatiles())")
+			warnings.warn("You don't need to pass a model here, so it will be ignored. You can specify a model when performing calculations on your dataset (e.g., calculate_dissolved_volatiles())",RuntimeWarning)
+
+		total_iron_columns = ["FeOt", "FeOtot", "FeOtotal", "FeOstar", "FeO*"]
+		for name in total_iron_columns:
+			if name in data.columns:
+				if 'FeO' in data.columns:
+					warnings.warn("Both " + str(name) + " and FeO columns were passed. " + str(name) + " column will be ignored.",RuntimeWarning)
+				else:
+					warnings.warn("Total iron column " + str(name) + " detected. This column will be treated as FeO. If Fe2O3 data are not given, Fe2O3 will be 0.0.",RuntimeWarning)
+					data['FeO'] = data[name]
 
 		for oxide in oxides:
 			if oxide in data.columns:
@@ -5736,7 +5745,7 @@ class MagmaSat(Model):
 					"FluidProportion_wt": 100*fluid_mass/system_mass}
 
 		if verbose == False:
-			return {"H2O": H2O_liq, "CO2": CO2_liq}
+			return {"CO2": CO2_liq, "H2O": H2O_liq}
 
 	def calculate_equilibrium_fluid_comp(self, sample, temperature, pressure, verbose=False, **kwargs): #TODO fix weird printing
 		"""
@@ -5796,10 +5805,10 @@ class MagmaSat(Model):
 		feasible = melts.set_bulk_composition(bulk_comp) #reset
 
 		if verbose == False:
-			return {'H2O': fluid_comp_H2O, 'CO2': fluid_comp_CO2}
+			return {'CO2': fluid_comp_CO2, 'H2O': fluid_comp_H2O}
 
 		if verbose == True:
-			return {'H2O': fluid_comp_H2O, 'CO2': fluid_comp_CO2, 'FluidMass_grams': fluid_mass, 'FluidProportion_wt': flsystem_wtper}
+			return {'CO2': fluid_comp_CO2, 'H2O': fluid_comp_H2O, 'FluidMass_grams': fluid_mass, 'FluidProportion_wt': flsystem_wtper}
 
 	def calculate_saturation_pressure(self, sample, temperature, verbose=False, **kwargs):
 		"""
