@@ -6260,14 +6260,12 @@ class calculate_equilibrium_fluid_comp(Calculate):
 		parameters = kwargs
 		parameters.update(dict(sample))
 		parameters['pressure'] = pressure
-		if type(self.model.volatile_species) == str:
+		if len(self.model.volatile_species) == 1:
 			volspec = self.model.volatile_species
 			volconc = {volspec[0]:self.result}
+			parameters.update(volconc)
 		elif type(self.model.volatile_species) == list:
-			 volspec = self.model.volatile_species
-			 volconc = self.result
-
-		parameters.update(volconc)
+			 parameters.update(self.result)
 
 		calib_check = self.model.check_calibration_range(parameters)
 		return calib_check
