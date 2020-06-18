@@ -15,6 +15,7 @@ from scipy.optimize import root_scalar
 from scipy.optimize import root
 from scipy.optimize import minimize
 import sys
+import sympy
 
 
 #----------DEFINE SOME CONSTANTS-------------#
@@ -4509,8 +4510,8 @@ class MooreWater(Model):
 
 		Returns
 		-------
-		tuple
-			Calculated equilibrium fluid concentration in mole fraction as (CO2, H2O).
+		float
+			Calculated equilibrium fluid concentration in XH2Ofluid mole fraction.
 		"""
 		_sample = sample.copy()
 		sample_anhy = sample.copy()
@@ -4607,6 +4608,371 @@ class MooreWater(Model):
 		"""
 		return self.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,sample=sample,X_fluid=X_fluid,**kwargs) - sample['H2O']
 
+class LiuWater(Model):
+	"""
+	Implementation of the Liu et al. (2005) H2O solubility model for metaluminous high-silica rhyolitic melts.
+	"""
+
+	def __init__(self):
+		"""
+		Initialize the model.
+		"""
+		self.set_volatile_species(['H2O'])
+		self.set_fugacity_model(fugacity_idealgas())
+		self.set_activity_model(activity_idealsolution())
+		self.set_calibration_ranges([cr_Between('pressure',[1.0,5000.0],'bar','Liu et al. (2005) water'),
+									 cr_Between('temperature',[700.0,1200],'oC','Liu et al. (2005) water')])
+
+	def preprocess_sample(self, sample):
+		"""
+		Returns sample with extranneous (non oxide) information removed and any missing oxides given a value of 0.0.
+		"""
+		for oxide in oxides:
+			if oxide in sample.keys():
+				pass
+			else:
+				sample[oxide] = 0.0
+
+		bulk_comp = {oxide:  sample[oxide] for oxide in oxides}
+		self.bulk_comp_orig = sample
+
+		return bulk_comp
+
+	def calculate_dissolved_volatiles(self, sample, pressure, temperature, X_fluid=1.0, **kwargs):
+		"""
+		Parameters
+		----------
+		sample dict
+			Composition of sample in wt% oxides.
+
+		pressure float
+			Pressure in bars.
+
+		temperature float
+			Temperature in degrees C.
+
+		X_fluid float
+			OPTIONAL. Default is 1.0. Mole fraction of H2O in the H2O-CO2 fluid.
+
+		Returns
+		-------
+		float
+			Calculated dissolved H2O concentration in wt%.
+		"""
+		pressureMPa = pressure / 10.0
+		Pw = pressureMPa * X_fluid
+		PCO2 = pressureMPa * (1 - X_fluid)
+
+		temperatureK = temperature + 273.15
+
+		H2Ot = ((354.94*Pw**(0.5) + 9.623*Pw - 1.5223*Pw**(1.5)) / temperatureK + 
+				0.0012439*Pw**(1.5) + PCO2*(-1.084*10**(-4)*Pw**(0.5) - 1.362*10**(-5)*Pw))		
+
+		return H2Ot
+
+	def calculate_equilibrium_fluid_comp(self, sample, pressure, temperature, **kwargs):
+		"""
+		Parameters
+		----------
+		sample dict
+			Composition of sample in wt% oxides.
+
+		pressure float
+			Pressure in bars.
+
+		temperature float
+			Temperature in degrees C.
+
+		Returns
+		-------
+		float
+			Calculated equilibrium fluid concentration in XH2Ofluid mole fraction.
+		"""
+		temperatureK = temperature + 273.15
+		pressureMPa = pressure / 10.0
+
+		_sample = sample.copy()
+		H2Ot = _sample["H2O"]
+
+		#calculate saturation pressure and assert that input P <= SatP
+		satP = self.calculate_saturation_pressure(temperature,sample)
+		is_saturated = satP - pressure
+		if is_saturated >= 0:
+			pass
+		else:
+			warnings.warn(str(pressure) + " bars is above the saturation pressure (" + str(satP) + " bars) for this sample. Results from this calculation may be nonsensical.")
+
+		#Use sympy to solve solubility equation for XH2Ofluid
+		XH2Ofluid = sympy.symbols('XH2Ofluid') #XH2Ofluid is the variable to solve for
+
+		equation = ((354.94*(XH2Ofluid*pressureMPa)**(0.5) + 9.623*(XH2Ofluid*pressureMPa)
+						- 1.5223*(XH2Ofluid*pressureMPa)**(1.5)) / temperatureK
+				     	+ 0.0012439*(XH2Ofluid*pressureMPa)**(1.5)
+				     	+ pressureMPa*(1-XH2Ofluid)*(-1.084*10**(-4)*(XH2Ofluid*pressureMPa)**(0.5)
+				     	- 1.362*10**(-5)*(XH2Ofluid*pressureMPa)) - H2Ot)
+
+		XH2Ofluid = sympy.solve(equation, XH2Ofluid)[0]
+		if XH2Ofluid > 1:
+			XH2Ofluid = 1
+		if XH2Ofluid < 0:
+			XH2Ofluid = 0
+
+		return XH2Ofluid
+
+	def calculate_saturation_pressure(self,temperature,sample,X_fluid=1.0,**kwargs):
+		"""
+		Calculates the pressure at which a an H2O-bearing fluid is saturated. Calls the scipy.root_scalar
+		routine, which makes repeated called to the calculate_dissolved_volatiles method.
+
+		Parameters
+		----------
+		sample dict
+			Composition of sample in wt% oxides.
+
+		temperature float
+			Temperature in degrees C.
+
+		X_fluid float
+			OPTIONAL. Default is 1.0. Mole fraction of H2O in the H2O-CO2 fluid.
+
+		Returns
+		-------
+		float
+			Calculated saturation pressure in bars.
+		"""
+		_sample = sample.copy()
+
+		temperatureK = temperature + 273.15
+		if temperatureK <= 0.0:
+			raise InputError("Temperature must be greater than 0K.")
+		if X_fluid < 0 or X_fluid > 1:
+			raise InputError("X_fluid must have a value between 0 and 1.")
+		if type(sample) != dict and type(sample) != pd.core.series.Series:
+			raise InputError("sample must be a dict or a pandas Series.")
+		if 'H2O' not in sample:
+			raise InputError("sample must contain H2O.")
+		if sample['H2O'] < 0.0:
+			raise InputError("Dissolved H2O concentration must be greater than 0 wt%.")
+
+		try:
+			satP = root_scalar(self.root_saturation_pressure,args=(temperature,_sample,X_fluid,kwargs),
+								x0=10.0,x1=200.0).root
+		except:
+			warnings.warn("Saturation pressure not found.",RuntimeWarning)
+			satP = np.nan
+		return np.real(satP)
+
+	def root_saturation_pressure(self,pressure,temperature,sample,X_fluid,kwargs):
+		""" Function called by scipy.root_scalar when finding the saturation pressure using
+		calculate_saturation_pressure.
+
+		Parameters
+		----------
+		pressure     float
+			Pressure guess in bars
+		temperature     float
+			The temperature of the system in C.
+		sample         pandas Series or dict
+			Major elements in wt% (normalized to 100%), including H2O.
+		kwargs         dictionary
+			Additional keyword arguments supplied to calculate_saturation_pressure. Might be required for
+			the fugacity or activity models.
+
+		Returns
+		-------
+		float
+			The differece between the dissolved H2O at the pressure guessed, and the H2O concentration
+			passed in the sample variable.
+		"""
+		return self.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,sample=sample,X_fluid=X_fluid,**kwargs) - sample['H2O']
+
+class LiuCarbon(Model):
+	"""
+	Implementation of the Liu et al. (2005) H2O-CO2 solubility model for metaluminous high-silica rhyolitic melts.
+	"""
+
+	def __init__(self):
+		"""
+		Initialize the model.
+		"""
+		self.set_volatile_species(['CO2'])
+		self.set_fugacity_model(fugacity_idealgas())
+		self.set_activity_model(activity_idealsolution())
+		self.set_calibration_ranges([cr_Between('pressure',[1.0,5000.0],'bar','Liu et al. (2005) carbon'),
+									 cr_Between('temperature',[700.0,1200],'oC','Liu et al. (2005) carbon')])
+
+	def preprocess_sample(self, sample):
+		"""
+		Returns sample with extranneous (non oxide) information removed and any missing oxides given a value of 0.0.
+		"""
+		for oxide in oxides:
+			if oxide in sample.keys():
+				pass
+			else:
+				sample[oxide] = 0.0
+
+		bulk_comp = {oxide:  sample[oxide] for oxide in oxides}
+		self.bulk_comp_orig = sample
+
+		return bulk_comp
+
+	def calculate_dissolved_volatiles(self, sample, pressure, temperature, X_fluid=1, **kwargs):
+		"""
+		Parameters
+		----------
+		sample dict
+			Composition of sample in wt% oxides.
+
+		pressure float
+			Pressure in bars.
+
+		temperature float
+			Temperature in degrees C.
+
+		X_fluid float
+			OPTIONAL. Default is 1. Mole fraction of H2O in the H2O-CO2 fluid.
+
+		Returns
+		-------
+		float
+			Calculated dissolved CO2 concentration in wt%.
+		"""
+		pressureMPa = pressure / 10.0
+		Pw = pressureMPa * X_fluid
+		PCO2 = pressureMPa * (1 - X_fluid)
+
+		temperatureK = temperature + 273.15
+
+		CO2melt_ppm = (PCO2*(5668 - 55.99*Pw)/temperatureK
+					+ PCO2*(0.4133*Pw**(0.5) + 2.041*10**(-3)*Pw**(1.5)))
+
+		CO2melt = CO2melt_ppm / 10000	
+
+		return CO2melt
+
+	def calculate_equilibrium_fluid_comp(self, sample, pressure, temperature, **kwargs):
+		"""
+		Parameters
+		----------
+		sample dict
+			Composition of sample in wt% oxides.
+
+		pressure float
+			Pressure in bars.
+
+		temperature float
+			Temperature in degrees C.
+
+		Returns
+		-------
+		float
+			Calculated equilibrium fluid concentration in XH2Ofluid mole fraction.
+		"""
+		temperatureK = temperature + 273.15
+		pressureMPa = pressure / 10.0
+
+		if temperatureK <= 0.0:
+			raise InputError("Temperature must be greater than 0K.")
+		if type(sample) != dict and type(sample) != pd.core.series.Series:
+			raise InputError("sample must be a dict or a pandas Series.")
+		if 'CO2' not in sample:
+			raise InputError("sample must contain CO2.")
+		if sample['CO2'] < 0.0:
+			raise InputError("Dissolved CO2 concentration must be greater than 0 wt%.")
+
+		_sample = sample.copy()
+		CO2melt_wt = _sample["CO2"]
+		CO2melt_ppm = CO2melt_wt * 10000
+
+		#calculate saturation pressure and assert that input P <= SatP
+		satP = self.calculate_saturation_pressure(temperature,sample)
+		is_saturated = satP - pressure
+		if is_saturated >= 0:
+			pass
+		else:
+			warnings.warn(str(pressure) + " bars is above the saturation pressure (" + str(satP) + " bars) for this sample. Results from this calculation may be nonsensical.")
+
+		#Use sympy to solve solubility equation for XH2Ofluid
+		XCO2fluid = sympy.symbols('XCO2fluid') #XCO2fluid is the variable to solve for
+
+		equation = (((XCO2fluid*pressureMPa)*(5668 - 55.99*(pressureMPa*(1-XCO2fluid)))/temperatureK
+					+ (XCO2fluid*pressureMPa)*(0.4133*(pressureMPa*(1-XCO2fluid))**(0.5) 
+					+ 2.041*10**(-3)*(pressureMPa*(1-XCO2fluid))**(1.5))) - CO2melt_ppm)
+
+		XCO2fluid = sympy.solve(equation, XCO2fluid)[0]
+		if XCO2fluid > 1:
+			XCO2fluid = 1
+		if XCO2fluid < 0:
+			XCO2fluid = 0
+
+		return 1 - XCO2fluid
+
+	def calculate_saturation_pressure(self,temperature,sample,X_fluid=1,**kwargs):
+		"""
+		Calculates the pressure at which a an CO2-bearing fluid is saturated. Calls the scipy.root_scalar
+		routine, which makes repeated called to the calculate_dissolved_volatiles method.
+
+		Parameters
+		----------
+		sample dict
+			Composition of sample in wt% oxides.
+
+		temperature float
+			Temperature in degrees C.
+
+		X_fluid float
+			OPTIONAL. Default is 1. Mole fraction of H2O in the H2O-CO2 fluid.
+
+		Returns
+		-------
+		float
+			Calculated saturation pressure in bars.
+		"""
+		_sample = sample.copy()
+
+		temperatureK = temperature + 273.15
+		if temperatureK <= 0.0:
+			raise InputError("Temperature must be greater than 0K.")
+		if X_fluid < 0 or X_fluid > 1:
+			raise InputError("X_fluid must have a value between 0 and 1.")
+		if type(sample) != dict and type(sample) != pd.core.series.Series:
+			raise InputError("sample must be a dict or a pandas Series.")
+		if 'CO2' not in sample:
+			raise InputError("sample must contain CO2.")
+		if sample['CO2'] < 0.0:
+			raise InputError("Dissolved CO2 concentration must be greater than 0 wt%.")
+
+		try:
+			satP = root_scalar(self.root_saturation_pressure,args=(temperature,_sample,X_fluid,kwargs),
+								x0=10.0,x1=200.0).root
+		except:
+			warnings.warn("Saturation pressure not found.",RuntimeWarning)
+			satP = np.nan
+		return np.real(satP)
+
+	def root_saturation_pressure(self,pressure,temperature,sample,X_fluid,kwargs):
+		""" Function called by scipy.root_scalar when finding the saturation pressure using
+		calculate_saturation_pressure.
+
+		Parameters
+		----------
+		pressure     float
+			Pressure guess in bars
+		temperature     float
+			The temperature of the system in C.
+		sample         pandas Series or dict
+			Major elements in wt% (normalized to 100%), including H2O.
+		kwargs         dictionary
+			Additional keyword arguments supplied to calculate_saturation_pressure. Might be required for
+			the fugacity or activity models.
+
+		Returns
+		-------
+		float
+			The differece between the dissolved H2O at the pressure guessed, and the H2O concentration
+			passed in the sample variable.
+		"""
+		return self.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,sample=sample,X_fluid=X_fluid,**kwargs) - sample['CO2']
 
 class AllisonCarbon(Model):
 	"""
@@ -4925,7 +5291,6 @@ class MixedFluid(Model):
 			Mole fractions of the volatile species in the fluid, in the order given by
 			self.volatile_species if floats.
 		"""
-
 		if len(self.volatile_species) != 2:
 			raise InputError("Currently equilibrium fluid compositions can only be calculated when\
 			two volatile species are present.")
@@ -5117,6 +5482,10 @@ class MixedFluid(Model):
 			self.volatile_species.
 
 		"""
+
+		if 'model' in kwargs and model=='Liu':
+			final_pressure = 1.0
+			print('hello')
 
 		wtptoxides = sample.copy()
 		wtptoxides = normalize_FixedVolatiles(wtptoxides)
@@ -6213,16 +6582,19 @@ def plot_degassing_paths(degassing_paths, labels=None):
 
 default_models = {'Shishkina':                MixedFluid({'CO2':ShishkinaCarbon(),'H2O':ShishkinaWater()}),
 				  'Dixon':                    MixedFluid({'CO2':DixonCarbon(),'H2O':DixonWater()}),
-				  'IaconoMarziano':         MixedFluid({'CO2':IaconoMarzianoCarbon(),'H2O':IaconoMarzianoWater()}),
-				  'ShishkinaCarbon':        ShishkinaCarbon(),
-				  'ShishkinaWater':         ShishkinaWater(),
-				  'DixonCarbon':            DixonCarbon(),
-				  'DixonWater':                DixonWater(),
-				  'IaconoMarzianoCarbon':    IaconoMarzianoCarbon(),
-				  'IaconoMarzianoWater':    IaconoMarzianoWater(),
-				  # 'EguchiCarbon':            EguchiCarbon(),
+				  'IaconoMarziano':           MixedFluid({'CO2':IaconoMarzianoCarbon(),'H2O':IaconoMarzianoWater()}),
+				  'Liu':					  MixedFluid({'CO2':LiuCarbon(),'H2O':LiuWater()}),
+				  'ShishkinaCarbon':          ShishkinaCarbon(),
+				  'ShishkinaWater':           ShishkinaWater(),
+				  'DixonCarbon':              DixonCarbon(),
+				  'DixonWater':               DixonWater(),
+				  'IaconoMarzianoCarbon':     IaconoMarzianoCarbon(),
+				  'IaconoMarzianoWater':      IaconoMarzianoWater(),
+				  #'EguchiCarbon':             EguchiCarbon(),
 				  'AllisonCarbon':            AllisonCarbon(),
-				  'MooreWater':               MooreWater()
+				  'MooreWater':               MooreWater(),
+				  'LiuWater':				  LiuWater(),
+				  'LiuCarbon':				  LiuCarbon()
 }
 
 class calculate_dissolved_volatiles(Calculate):
