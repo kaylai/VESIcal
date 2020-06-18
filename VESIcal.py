@@ -2583,8 +2583,8 @@ class fugacity_ZD09_co2(FugacityModel):
 	""" Implementation of the Zhang and Duan (2009) fugacity model for pure CO2
 	fluids."""
 	def __init__(self):
-		self.set_calibration_ranges([cr_Between('pressure',[1,1e5],'bar','Kerrick and Jacobs (1981) EOS'),
-									 cr_Between('temperature',[473,2573],'K','Kerrick and Jacobs (1981) EOS')])
+		self.set_calibration_ranges([cr_Between('pressure',[1,1e5],'bar','Zhang and Duan (2009) EOS'),
+									 cr_Between('temperature',[473,2573],'K','Zhang and Duan (2009) EOS')])
 
 
 	def fugacity(self,pressure,temperature,X_fluid=1.0,**kwargs):
@@ -2606,7 +2606,7 @@ class fugacity_ZD09_co2(FugacityModel):
 			Fugacity of CO2, standard state 1 bar.
 		"""
 
-		P = pressure
+		P = pressure/10
 		T = temperature
 
 		a = np.array([0.0,
@@ -2630,7 +2630,7 @@ class fugacity_ZD09_co2(FugacityModel):
 
 		Pm = 3.0636*P*s**3/e
 		Tm = 154*T/e
-		Vm = root_scalar(self.Vm,x0=200,x1=250,args=(P,T)).root
+		Vm = root_scalar(self.Vm,x0=200,x1=100,args=(P,T)).root
 
 		S1 = ((a[1]+a[2]/Tm**2+a[3]/Tm**3)/Vm+
 			  (a[4]+a[5]/Tm**2+a[6]/Tm**3)/(2*Vm**2)+
@@ -2640,11 +2640,11 @@ class fugacity_ZD09_co2(FugacityModel):
 			   np.exp(-a[15]/Vm**2)))
 			 )
 
-		Z = Pm*Vm/(0.08314*Tm)
+		Z = Pm*Vm/(8.314*Tm)
 
 		lnfc = Z - 1 - np.log(Z) + S1
 
-		return P*np.exp(lnfc)
+		return P*np.exp(lnfc)*10
 
 	def Vm(self,Vm,P,T):
 		""" Function to use for solving for the parameter Vm, defined by eqn (8) of
@@ -2655,7 +2655,7 @@ class fugacity_ZD09_co2(FugacityModel):
 		Vm     float
 			Guessed value of Vm
 		P     float
-			Pressure in bars
+			Pressure in MPa
 		T     float
 			Temperature in K
 
@@ -2687,6 +2687,7 @@ class fugacity_ZD09_co2(FugacityModel):
 				 (a[4]+a[5]/Tm**2+a[6]/Tm**3)/Vm**2+
 				 (a[7]+a[8]/Tm**2+a[9]/Tm**3)/Vm**4)*0.08314*Tm/Pm - Vm
 				)
+
 
 
 class fugacity_RedlichKwong(FugacityModel):
@@ -3711,7 +3712,6 @@ class IaconoMarzianoWater(Model):
 		float
 			1.0 if H2O-fluid saturated, 0.0 otherwise.
 		"""
-		temperature = temperature + 273.15 #translate T from C to K
 
 		if pressure > self.calculate_saturation_pressure(temperature=temperature,sample=sample,**kwargs):
 			return 0.0
@@ -3738,7 +3738,6 @@ class IaconoMarzianoWater(Model):
 		float
 			Calculated saturation pressure in bars.
 		"""
-		temperature = temperature + 273.15 #translate T from C to K
 
 		if type(sample) != dict and type(sample) != pd.core.series.Series:
 			raise InputError("sample must be a dict or a pandas Series.")
@@ -3777,7 +3776,6 @@ class IaconoMarzianoWater(Model):
 			The differece between the dissolved H2O at the pressure guessed, and the H2O concentration
 			passed in the sample variable.
 		"""
-		temperature = temperature + 273.15 #translate T from C to K
 		return sample['H2O'] - self.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,sample=sample,**kwargs)
 
 
@@ -3792,7 +3790,7 @@ class IaconoMarzianoWater(Model):
 		pressure     float
 			Total pressure in bars.
 		temperature     float
-			Temperature in C.
+			Temperature in K.
 		sample         pandas Series or dict
 			Major element oxides in wt%.
 		X_fluid     float
@@ -3805,7 +3803,6 @@ class IaconoMarzianoWater(Model):
 		float
 			Difference between H2O guessed and the H2O calculated.
 		"""
-		temperature = temperature + 273.15 #translate T from C to K
 
 		a = 0.53
 		b = 2.35
@@ -4008,7 +4005,6 @@ class IaconoMarzianoCarbon(Model):
 		float
 			1.0 if CO2-fluid saturated, 0.0 otherwise.
 		"""
-		temperature = temperature + 273.15 #translate T from C to K
 
 		if pressure > self.calculate_saturation_pressure(temperature=temperature,sample=sample,**kwargs):
 			return 0.0
@@ -4033,7 +4029,6 @@ class IaconoMarzianoCarbon(Model):
 		float
 			Calculated saturation pressure in bars.
 		"""
-		temperature = temperature + 273.15 #translate T from C to K
 
 		if temperature <= 0:
 			raise InputError("Temperature must be greater than 0K.")
@@ -4074,7 +4069,6 @@ class IaconoMarzianoCarbon(Model):
 			The differece between the dissolved CO2 at the pressure guessed, and the CO2 concentration
 			passed in the sample variable.
 		"""
-		temperature = temperature + 273.15 #translate T from C to K
 
 		return sample['CO2'] - self.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,sample=sample,**kwargs)
 
@@ -4123,6 +4117,7 @@ class EguchiCarbon(Model):
 	"""
 
 	def __init__(self):
+		warnings.warn("Eguchi model is not working correctly. Do not use any results calculated.")
 		self.set_volatile_species(['CO2'])
 		self.set_fugacity_model(fugacity_ZD09_co2())
 		self.set_activity_model(activity_idealsolution())
@@ -4189,7 +4184,8 @@ class EguchiCarbon(Model):
 		float
 			Dissolved CO2 concentration.
 		"""
-		temperature = temperature + 273.15 #translate T from C to K
+		if pressure < 0:
+			raise InputError("Pressure must be greater than 0 bar.")
 
 		if pressure == 0:
 			return 0
@@ -4223,7 +4219,6 @@ class EguchiCarbon(Model):
 		float
 			1.0 if CO2-fluid saturated, 0.0 otherwise.
 		"""
-		temperature = temperature + 273.15 #translate T from C to K
 
 		satP = self.calculate_saturation_pressure(temperature=temperature,sample=sample,X_fluid=1.0,**kwargs)
 		if pressure < satP:
@@ -4251,7 +4246,6 @@ class EguchiCarbon(Model):
 		float
 			Calculated saturation pressure in bars.
 		"""
-		temperature = temperature + 273.15 #translate T from C to K
 
 		if 'CO2' not in sample:
 			raise InputError("sample must contain CO2.")
@@ -4287,7 +4281,6 @@ class EguchiCarbon(Model):
 			The differece between the dissolved CO2 at the pressure guessed, and the CO2 concentration
 			passed in the sample variable.
 		"""
-		temperature = temperature + 273.15 #translate T from C to K
 		return sample['CO2'] - self.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,sample=sample,X_fluid=X_fluid,**kwargs)
 
 	def Xi_melt(self,pressure,temperature,sample,species,X_fluid=1.0,**kwargs):
@@ -4716,7 +4709,6 @@ class AllisonCarbon(Model):
 		float
 			1.0 if CO2-fluid saturated, 0.0 otherwise.
 		"""
-		temperature = temperature + 273.15 #translate T from C to K
 
 		satP = self.calculate_saturation_pressure(temperature=temperature,sample=sample,X_fluid=1.0,**kwargs)
 		if pressure < satP:
@@ -4744,7 +4736,6 @@ class AllisonCarbon(Model):
 		float
 			Calculated saturation pressure in bars.
 		"""
-		temperature = temperature + 273.15 #translate T from C to K
 
 		if temperature <= 0.0:
 			raise InputError("Temperature must be greater than 0K.")
@@ -4787,7 +4778,6 @@ class AllisonCarbon(Model):
 			The differece between the dissolved CO2 at the pressure guessed, and the CO2 concentration
 			passed in the sample variable.
 		"""
-		temperature = temperature + 273.15 #translate T from C to K
 		return sample['CO2'] - self.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,sample=sample,X_fluid=X_fluid,**kwargs)
 
 
@@ -4900,6 +4890,7 @@ class MixedFluid(Model):
 			Mole fractions of the volatile species in the fluid, in the order given by
 			self.volatile_species if floats.
 		"""
+
 		warnings.warn("MixedFluid.calculate_equilibrium_fluid_comp() is likely to run but produce incorrect results.")
 
 		if len(self.volatile_species) != 2:
@@ -4908,7 +4899,6 @@ class MixedFluid(Model):
 
 		dissolved_at_0bar = [self.models[0].calculate_dissolved_volatiles(sample=sample,pressure=0.0,**kwargs),
 							 self.models[1].calculate_dissolved_volatiles(sample=sample,pressure=0.0,**kwargs)]
-
 
 		if sample[self.volatile_species[0]] <= 0.0 or sample[self.volatile_species[0]] <= dissolved_at_0bar[0]:
 			Xv0 = 0.0
@@ -4929,35 +4919,74 @@ class MixedFluid(Model):
 			molfracs = wtpercentOxides_to_molOxides(sample)
 			(Xt0, Xt1) = (molfracs[self.volatile_species[0]],molfracs[self.volatile_species[1]])
 
-			# Find which interval the root lies in.
-			bnds = np.array([molfracs[self.volatile_species[0]],1-molfracs[self.volatile_species[1]]])
-			bnds = np.sort(bnds)
-
-			test1 = (self.root_for_fluid_comp(1e-15,pressure,Xt0,Xt1,sample,kwargs)*
-					self.root_for_fluid_comp(bnds[0]-1e-15,pressure,Xt0,Xt1,sample,kwargs))
-			test2 = (self.root_for_fluid_comp(bnds[0]+1e-15,pressure,Xt0,Xt1,sample,kwargs)*
-					self.root_for_fluid_comp(bnds[1]-1e-15,pressure,Xt0,Xt1,sample,kwargs))
-			test3 = (self.root_for_fluid_comp(bnds[1]+1e-15,pressure,Xt0,Xt1,sample,kwargs)*
-					self.root_for_fluid_comp(1.0-1e-15,pressure,Xt0,Xt1,sample,kwargs))
-
-			if test1 < 0:
-				Xv0 = root_scalar(self.root_for_fluid_comp,args=(pressure,Xt0,Xt1,sample,kwargs),
-					bracket=(1e-15,bnds[0]-1e-15)).root
-			elif test2 < 0:
-				Xv0 = root_scalar(self.root_for_fluid_comp,args=(pressure,Xt0,Xt1,sample,kwargs),
-					bracket=(bnds[0]+1e-15,bnds[1]-1e-15)).root
-			elif test3 < 0:
-				Xv0 = root_scalar(self.root_for_fluid_comp,args=(pressure,Xt0,Xt1,sample,kwargs),
-					bracket=(bnds[1]+1e-15,1-1e-15)).root
-			else:
-				raise SaturationError("An equilibrium fluid composition was not found.")
-
-			Xv1 = 1-Xv0
+			Xv0 = root_scalar(self.root_for_fluid_comp,bracket=[1e-15,1-1e-15],args=(pressure,Xt0,Xt1,sample,kwargs)).root
+			Xv1 = 1 - Xv0
 
 		if return_dict == True:
 			return {self.volatile_species[0]:Xv0,self.volatile_species[1]:Xv1}
 		else:
 			return Xv0, Xv1
+
+
+
+		# warnings.warn("MixedFluid.calculate_equilibrium_fluid_comp() is likely to run but produce incorrect results.")
+		#
+		# if len(self.volatile_species) != 2:
+		# 	raise InputError("Currently equilibrium fluid compositions can only be calculated when\
+		# 	two volatile species are present.")
+		#
+		# dissolved_at_0bar = [self.models[0].calculate_dissolved_volatiles(sample=sample,pressure=0.0,**kwargs),
+		# 					 self.models[1].calculate_dissolved_volatiles(sample=sample,pressure=0.0,**kwargs)]
+		#
+		#
+		# if sample[self.volatile_species[0]] <= 0.0 or sample[self.volatile_species[0]] <= dissolved_at_0bar[0]:
+		# 	Xv0 = 0.0
+		# 	Xv1 = self.models[1].calculate_equilibrium_fluid_comp(pressure=pressure,sample=sample,**kwargs)
+		# elif sample[self.volatile_species[1]] <= 0.0 or sample[self.volatile_species[1]] <= dissolved_at_0bar[1]:
+		# 	Xv1 = 0.0
+		# 	Xv0 = self.models[0].calculate_equilibrium_fluid_comp(pressure=pressure,sample=sample,**kwargs)
+		# else:
+		# 	satP = self.calculate_saturation_pressure(sample,**kwargs)
+		#
+		# 	if satP < pressure:
+		# 		if return_dict == True:
+		# 			return {self.volatile_species[0]:0,self.volatile_species[1]:0}
+		# 		else:
+		# 			return (0,0)
+		#
+		#
+		# 	molfracs = wtpercentOxides_to_molOxides(sample)
+		# 	(Xt0, Xt1) = (molfracs[self.volatile_species[0]],molfracs[self.volatile_species[1]])
+		#
+		# 	# Find which interval the root lies in.
+		# 	bnds = np.array([molfracs[self.volatile_species[0]],1-molfracs[self.volatile_species[1]]])
+		# 	bnds = np.sort(bnds)
+		#
+		# 	test1 = (self.root_for_fluid_comp(1e-15,pressure,Xt0,Xt1,sample,kwargs)*
+		# 			self.root_for_fluid_comp(bnds[0]-1e-15,pressure,Xt0,Xt1,sample,kwargs))
+		# 	test2 = (self.root_for_fluid_comp(bnds[0]+1e-15,pressure,Xt0,Xt1,sample,kwargs)*
+		# 			self.root_for_fluid_comp(bnds[1]-1e-15,pressure,Xt0,Xt1,sample,kwargs))
+		# 	test3 = (self.root_for_fluid_comp(bnds[1]+1e-15,pressure,Xt0,Xt1,sample,kwargs)*
+		# 			self.root_for_fluid_comp(1.0-1e-15,pressure,Xt0,Xt1,sample,kwargs))
+		#
+		# 	if test1 < 0:
+		# 		Xv0 = root_scalar(self.root_for_fluid_comp,args=(pressure,Xt0,Xt1,sample,kwargs),
+		# 			bracket=(1e-15,bnds[0]-1e-15)).root
+		# 	elif test2 < 0:
+		# 		Xv0 = root_scalar(self.root_for_fluid_comp,args=(pressure,Xt0,Xt1,sample,kwargs),
+		# 			bracket=(bnds[0]+1e-15,bnds[1]-1e-15)).root
+		# 	elif test3 < 0:
+		# 		Xv0 = root_scalar(self.root_for_fluid_comp,args=(pressure,Xt0,Xt1,sample,kwargs),
+		# 			bracket=(bnds[1]+1e-15,1-1e-15)).root
+		# 	else:
+		# 		raise SaturationError("An equilibrium fluid composition was not found.")
+		#
+		# 	Xv1 = 1-Xv0
+		#
+		# if return_dict == True:
+		# 	return {self.volatile_species[0]:Xv0,self.volatile_species[1]:Xv1}
+		# else:
+		# 	return Xv0, Xv1
 
 		# if len(self.volatile_species) != 2:
 		# 	raise InputError("Currently equilibrium fluid compositions can only be calculated when\
@@ -5318,6 +5347,7 @@ class MixedFluid(Model):
 			return (1-Xv0) - Xm1
 
 
+
 	def root_for_fluid_comp(self,Xv0,pressure,Xt0,Xt1,sample,kwargs):
 		""" Function called by scipy.root_scalar when calculating the composition of equilibrium fluid
 		in the calculate_equilibrium_fluid_comp method.
@@ -5342,6 +5372,17 @@ class MixedFluid(Model):
 		float
 			The differene in the LHS and RHS of the mass balance equation. Eq X in manuscript.
 		"""
+		# wtm0, wtm1 = self.calculate_dissolved_volatiles(pressure=pressure,X_fluid=(Xv0,1-Xv0),sample=sample,**kwargs)
+		# sample_mod = sample.copy()
+		# sample_mod[self.volatile_species[0]] = wtm0
+		# sample_mod[self.volatile_species[1]] = wtm1
+		# # sample_mod = normalize_FixedVolatiles(sample_mod)
+		# cations = wtpercentOxides_to_molOxides(sample_mod)
+		# Xm0 = cations[self.volatile_species[0]]
+		# Xm1 = cations[self.volatile_species[1]]
+		#
+		# return (Xt0-Xm0)/(Xv0-Xm0) - (Xt1-Xm1)/(1-Xv0-Xm1)
+
 		wtm0, wtm1 = self.calculate_dissolved_volatiles(pressure=pressure,X_fluid=(Xv0,1-Xv0),sample=sample,**kwargs)
 		sample_mod = sample.copy()
 		sample_mod[self.volatile_species[0]] = wtm0
@@ -5351,7 +5392,9 @@ class MixedFluid(Model):
 		Xm0 = cations[self.volatile_species[0]]
 		Xm1 = cations[self.volatile_species[1]]
 
-		return (Xt0-Xm0)/(Xv0-Xm0) - (Xt1-Xm1)/(1-Xv0-Xm1)
+		f = (Xt0-Xm0)/(Xv0-Xm0)
+
+		return (1-f)*Xm1 + f*(1-Xv0) - Xt1
 
 	def check_calibration_range(self,parameters,report_nonexistance=True):
 		""" Checks whether the given parameters are within the ranges defined by the
@@ -6318,7 +6361,7 @@ default_models = {'Shishkina':                MixedFluid({'CO2':ShishkinaCarbon(
 				  'DixonWater':                DixonWater(),
 				  'IaconoMarzianoCarbon':    IaconoMarzianoCarbon(),
 				  'IaconoMarzianoWater':    IaconoMarzianoWater(),
-				  'EguchiCarbon':            EguchiCarbon(),
+				  # 'EguchiCarbon':            EguchiCarbon(),
 				  'AllisonCarbon':            AllisonCarbon(),
 				  'MooreWater':               MooreWater()
 }
