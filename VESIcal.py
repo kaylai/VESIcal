@@ -822,7 +822,7 @@ class ExcelFile(object):
 			self.data.to_excel(writer, 'Original_User_Data')
 			if sheet_name is None:
 				for n, df in enumerate(calculations):
-					df.to_excel(writer, 'Calc%s' % n)	
+					df.to_excel(writer, 'Calc%s' % n)
 			elif isinstance(sheet_name, list):
 				if len(sheet_name) == len(calculations):
 					pass
@@ -4891,8 +4891,6 @@ class MixedFluid(Model):
 			self.volatile_species if floats.
 		"""
 
-		warnings.warn("MixedFluid.calculate_equilibrium_fluid_comp() is likely to run but produce incorrect results.")
-
 		if len(self.volatile_species) != 2:
 			raise InputError("Currently equilibrium fluid compositions can only be calculated when\
 			two volatile species are present.")
@@ -4927,144 +4925,6 @@ class MixedFluid(Model):
 		else:
 			return Xv0, Xv1
 
-
-
-		# warnings.warn("MixedFluid.calculate_equilibrium_fluid_comp() is likely to run but produce incorrect results.")
-		#
-		# if len(self.volatile_species) != 2:
-		# 	raise InputError("Currently equilibrium fluid compositions can only be calculated when\
-		# 	two volatile species are present.")
-		#
-		# dissolved_at_0bar = [self.models[0].calculate_dissolved_volatiles(sample=sample,pressure=0.0,**kwargs),
-		# 					 self.models[1].calculate_dissolved_volatiles(sample=sample,pressure=0.0,**kwargs)]
-		#
-		#
-		# if sample[self.volatile_species[0]] <= 0.0 or sample[self.volatile_species[0]] <= dissolved_at_0bar[0]:
-		# 	Xv0 = 0.0
-		# 	Xv1 = self.models[1].calculate_equilibrium_fluid_comp(pressure=pressure,sample=sample,**kwargs)
-		# elif sample[self.volatile_species[1]] <= 0.0 or sample[self.volatile_species[1]] <= dissolved_at_0bar[1]:
-		# 	Xv1 = 0.0
-		# 	Xv0 = self.models[0].calculate_equilibrium_fluid_comp(pressure=pressure,sample=sample,**kwargs)
-		# else:
-		# 	satP = self.calculate_saturation_pressure(sample,**kwargs)
-		#
-		# 	if satP < pressure:
-		# 		if return_dict == True:
-		# 			return {self.volatile_species[0]:0,self.volatile_species[1]:0}
-		# 		else:
-		# 			return (0,0)
-		#
-		#
-		# 	molfracs = wtpercentOxides_to_molOxides(sample)
-		# 	(Xt0, Xt1) = (molfracs[self.volatile_species[0]],molfracs[self.volatile_species[1]])
-		#
-		# 	# Find which interval the root lies in.
-		# 	bnds = np.array([molfracs[self.volatile_species[0]],1-molfracs[self.volatile_species[1]]])
-		# 	bnds = np.sort(bnds)
-		#
-		# 	test1 = (self.root_for_fluid_comp(1e-15,pressure,Xt0,Xt1,sample,kwargs)*
-		# 			self.root_for_fluid_comp(bnds[0]-1e-15,pressure,Xt0,Xt1,sample,kwargs))
-		# 	test2 = (self.root_for_fluid_comp(bnds[0]+1e-15,pressure,Xt0,Xt1,sample,kwargs)*
-		# 			self.root_for_fluid_comp(bnds[1]-1e-15,pressure,Xt0,Xt1,sample,kwargs))
-		# 	test3 = (self.root_for_fluid_comp(bnds[1]+1e-15,pressure,Xt0,Xt1,sample,kwargs)*
-		# 			self.root_for_fluid_comp(1.0-1e-15,pressure,Xt0,Xt1,sample,kwargs))
-		#
-		# 	if test1 < 0:
-		# 		Xv0 = root_scalar(self.root_for_fluid_comp,args=(pressure,Xt0,Xt1,sample,kwargs),
-		# 			bracket=(1e-15,bnds[0]-1e-15)).root
-		# 	elif test2 < 0:
-		# 		Xv0 = root_scalar(self.root_for_fluid_comp,args=(pressure,Xt0,Xt1,sample,kwargs),
-		# 			bracket=(bnds[0]+1e-15,bnds[1]-1e-15)).root
-		# 	elif test3 < 0:
-		# 		Xv0 = root_scalar(self.root_for_fluid_comp,args=(pressure,Xt0,Xt1,sample,kwargs),
-		# 			bracket=(bnds[1]+1e-15,1-1e-15)).root
-		# 	else:
-		# 		raise SaturationError("An equilibrium fluid composition was not found.")
-		#
-		# 	Xv1 = 1-Xv0
-		#
-		# if return_dict == True:
-		# 	return {self.volatile_species[0]:Xv0,self.volatile_species[1]:Xv1}
-		# else:
-		# 	return Xv0, Xv1
-
-		# if len(self.volatile_species) != 2:
-		# 	raise InputError("Currently equilibrium fluid compositions can only be calculated when\
-		# 	two volatile species are present.")
-		#
-		# dissolved_at_0bar = [self.models[0].calculate_dissolved_volatiles(sample=sample,pressure=0.0,**kwargs),
-		# 					 self.models[1].calculate_dissolved_volatiles(sample=sample,pressure=0.0,**kwargs)]
-		#
-		#
-		# if sample[self.volatile_species[0]] <= 0.0 or sample[self.volatile_species[0]] <= dissolved_at_0bar[0]:
-		# 	Xv0 = 0.0
-		# 	Xv1 = self.models[1].calculate_equilibrium_fluid_comp(pressure=pressure,sample=sample,**kwargs)
-		# elif sample[self.volatile_species[1]] <= 0.0 or sample[self.volatile_species[1]] <= dissolved_at_0bar[1]:
-		# 	Xv1 = 0.0
-		# 	Xv0 = self.models[0].calculate_equilibrium_fluid_comp(pressure=pressure,sample=sample,**kwargs)
-		# else:
-		# 	satP = self.calculate_saturation_pressure(sample,**kwargs)
-		#
-		# 	if satP < pressure:
-		# 		if return_dict == True:
-		# 			return {self.volatile_species[0]:0,self.volatile_species[1]:0}
-		# 		else:
-		# 			return (0,0)
-		#
-		#
-		# 	molfracs = wtpercentOxides_to_molOxides(sample)
-		# 	(Xt0, Xt1) = (molfracs[self.volatile_species[0]],molfracs[self.volatile_species[1]])
-		#
-		# 	# Find which interval the root lies in.
-		# 	try:
-		# 		bnd0 = root_scalar(self.root_for_fluid_comp_bounds,bracket=(1e-15,1-1e-15),args=(pressure,sample,0,kwargs)).root
-		# 	except:
-		# 		bnd0 = np.nan
-		# 	try:
-		# 		bnd1 = root_scalar(self.root_for_fluid_comp_bounds,bracket=(1e-15,1-1e-15),args=(pressure,sample,1,kwargs)).root
-		# 	except:
-		# 		bnd1 = np.nan
-		# 	bnds = np.array([bnd0,bnd1])
-		# 	# bnds = np.sort(bnds)
-		#
-		# 	if bnds[0]>1e-15:
-		# 		test1 = (self.root_for_fluid_comp(1e-15,pressure,Xt0,Xt1,sample,kwargs)*
-		# 				self.root_for_fluid_comp(bnds[0]-1e-15,pressure,Xt0,Xt1,sample,kwargs))
-		# 	else:
-		# 		test1 = np.nan
-		# 	if bnds[0]<1-1e-15 and bnds[1]>1e-15:
-		# 		test2 = (self.root_for_fluid_comp(bnds[0]+1e-15,pressure,Xt0,Xt1,sample,kwargs)*
-		# 				self.root_for_fluid_comp(bnds[1]-1e-15,pressure,Xt0,Xt1,sample,kwargs))
-		# 	else:
-		# 		test2 = np.nan
-		# 	if bnds[1]<1-1e-15:
-		# 		test3 = (self.root_for_fluid_comp(bnds[1]+1e-15,pressure,Xt0,Xt1,sample,kwargs)*
-		# 				self.root_for_fluid_comp(1.0-1e-15,pressure,Xt0,Xt1,sample,kwargs))
-		# 	else:
-		# 		test3 = np.nan
-		#
-		# 	if test1 < 0:
-		# 		Xv0 = root_scalar(self.root_for_fluid_comp,args=(pressure,Xt0,Xt1,sample,kwargs),
-		# 			bracket=(1e-15,bnds[0]-1e-15)).root
-		# 	elif test2 < 0:
-		# 		Xv0 = root_scalar(self.root_for_fluid_comp,args=(pressure,Xt0,Xt1,sample,kwargs),
-		# 			bracket=(bnds[0]+1e-15,bnds[1]-1e-15)).root
-		# 	elif test3 < 0:
-		# 		Xv0 = root_scalar(self.root_for_fluid_comp,args=(pressure,Xt0,Xt1,sample,kwargs),
-		# 			bracket=(bnds[1]+1e-15,1-1e-15)).root
-		# 	else:
-		# 		try:
-		# 			Xv0 = root_scalar(self.root_for_fluid_comp,args=(pressure,Xt0,Xt1,sample,kwargs),
-		# 				bracket=(0,1)).root
-		# 		except:
-		# 			raise SaturationError("An equilibrium fluid composition was not found.")
-		#
-		# 	Xv1 = 1-Xv0
-		#
-		# if return_dict == True:
-		# 	return {self.volatile_species[0]:Xv0,self.volatile_species[1]:Xv1}
-		# else:
-		# 	return Xv0, Xv1
 
 	def calculate_saturation_pressure(self,sample,**kwargs):
 		"""
@@ -5222,7 +5082,6 @@ class MixedFluid(Model):
 			self.volatile_species.
 
 		"""
-		warnings.warn("MixedFluid.calculate_degassing_path() is likely to run but produce incorrect results.")
 
 		wtptoxides = sample.copy()
 		wtptoxides = normalize_FixedVolatiles(wtptoxides)
@@ -5230,6 +5089,7 @@ class MixedFluid(Model):
 
 		if pressure == 'saturation':
 			p0 = self.calculate_saturation_pressure(wtptoxides,**kwargs)
+			print(p0)
 			pressures = np.linspace(p0,final_pressure,steps)
 		elif type(pressure) == float or type(pressure) == int:
 			pressures = np.linspace(pressure,final_pressure,steps)
@@ -5310,42 +5170,6 @@ class MixedFluid(Model):
 			x[0] = 1e-15
 		misfit = np.array(self.calculate_dissolved_volatiles(pressure=x[0],X_fluid=(x[1],1-x[1]),sample=sample,**kwargs)) - volatile_concs
 		return misfit
-
-	def root_for_fluid_comp_bounds(self,Xv0,pressure,sample,bnd,kwargs):
-		""" Function called by scipy.root_scalar when calculating the bounds on Xv for
-		the calculate_equilibrium_fluid_comp method.
-
-		Parameters
-		----------
-		Xv0     float
-			The guessed mole fraction of the first volatile species in self.volatile_species.
-		pressure     float
-			The total pressure in bars.
-		sample     pandas Series
-			Major element oxides in wt%
-		bnd     int
-			0 or 1 to specify which bound to calculate.
-		kwargs     dictionary
-			A dictionary of keyword arguments that may be required by the pure fluid models.
-
-		Returns
-		-------
-		float
-			The difference in mole fraction for specified volatile species in the vapour and
-			melt.
-		"""
-		wtm0, wtm1 = self.calculate_dissolved_volatiles(pressure=pressure,X_fluid=(Xv0,1-Xv0),sample=sample,**kwargs)
-		sample_mod = sample.copy()
-		sample_mod[self.volatile_species[0]] = wtm0
-		sample_mod[self.volatile_species[1]] = wtm1
-		cations = wtpercentOxides_to_molOxides(sample_mod)
-		Xm0 = cations[self.volatile_species[0]]
-		Xm1 = cations[self.volatile_species[1]]
-		if bnd == 0:
-			return Xv0 - Xm0
-		else:
-			return (1-Xv0) - Xm1
-
 
 
 	def root_for_fluid_comp(self,Xv0,pressure,Xt0,Xt1,sample,kwargs):
