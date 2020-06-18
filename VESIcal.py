@@ -14,6 +14,7 @@ from abc import ABC, abstractmethod
 from scipy.optimize import root_scalar
 from scipy.optimize import root
 from scipy.optimize import minimize
+import sys
 
 
 #----------DEFINE SOME CONSTANTS-------------#
@@ -839,7 +840,7 @@ class ExcelFile(object):
 
 		return print("Saved " + str(filename))
 
-	def calculate_dissolved_volatiles(self, temperature, pressure, X_fluid=1, print_status=True, model='MagmaSat', **kwargs):
+	def calculate_dissolved_volatiles(self, temperature, pressure, X_fluid=1, print_status=True, model='MagmaSat', record_errors=False, **kwargs):
 		"""
 		Calculates the amount of H2O and CO2 dissolved in a magma at the given P/T conditions and fluid composition. Fluid composition
 		will be matched to within 0.0001 mole fraction.
@@ -871,6 +872,9 @@ class ExcelFile(object):
 
 		model: string
 			The default value is 'MagmaSat'. Any other model name can be passed here as a string (in single quotes).
+
+		record_errors: bool
+			OPTIONAL: If True, any errors arising during the calculation will be recorded as a column.
 
 		Returns
 		-------
@@ -913,6 +917,8 @@ class ExcelFile(object):
 		if model != 'MagmaSat':
 			H2Ovals = []
 			CO2vals = []
+			warnings = []
+			errors = []
 			if model in MixedFluidsModels:
 				for index, row in dissolved_data.iterrows():
 					try:
@@ -923,14 +929,20 @@ class ExcelFile(object):
 						if file_has_X == True:
 							X_fluid = row[X_name]
 						bulk_comp = {oxide:  row[oxide] for oxide in oxides}
-						result_of_calc = calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature, X_fluid=(X_fluid, 1-X_fluid), model=model).result
-						H2Ovals.append(result_of_calc[1])
-						CO2vals.append(result_of_calc[0])
-					except:
+						calc = calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature,
+																		X_fluid=(X_fluid, 1-X_fluid), model=model, silence_warnings=True)
+						H2Ovals.append(calc.result['H2O'])
+						CO2vals.append(calc.result['CO2'])
+						warnings.append(calc.calib_check)
+						errors.append('')
+					except Exception as inst:
 						H2Ovals.append(np.nan)
 						CO2vals.append(np.nan)
+						warnings.append('Calculation Failed.')
+						errors.append(sys.exc_info()[0])
 				dissolved_data["H2O_liq_VESIcal"] = H2Ovals
 				dissolved_data["CO2_liq_VESIcal"] = CO2vals
+
 				if file_has_temp == False:
 					dissolved_data["Temperature_C_VESIcal"] = temperature
 				if file_has_press == False:
@@ -938,6 +950,9 @@ class ExcelFile(object):
 				if file_has_X == False:
 					dissolved_data["X_fluid_input_VESIcal"] = X_fluid
 				dissolved_data["Model"] = model
+				dissolved_data["Warnings"] = warnings
+				if record_errors == True:
+					dissolved_data["Errors"] = errors
 
 				return dissolved_data
 			else:
@@ -951,12 +966,18 @@ class ExcelFile(object):
 					bulk_comp = {oxide:  row[oxide] for oxide in oxides}
 					if 'Water' in model:
 						try:
-							H2Ovals.append(calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature, X_fluid=X_fluid, model=model).result)
+							calc = calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature,
+																 X_fluid=X_fluid, model=model, silence_warnings=True)
+							H2Ovals.append(calc.result)
+							warnings.append(calc.calib_check)
 						except:
 							H2Ovals.append(0)
 					if 'Carbon' in model:
 						try:
-							CO2vals.append(calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature, X_fluid=X_fluid, model=model).result)
+							calc = calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature,
+																 X_fluid=X_fluid, model=model, silence_warnings=True)
+							CO2vals.append(calc.result)
+							warnings.append(calc.calib_check)
 						except:
 							CO2vals.append(0)
 				if 'Water' in model:
@@ -970,6 +991,7 @@ class ExcelFile(object):
 				if file_has_X == False:
 					dissolved_data["X_fluid_input_VESIcal"] = X_fluid
 				dissolved_data["Model"] = model
+				dissolved_data["Warnings"] = warnings
 
 				return dissolved_data
 
