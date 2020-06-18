@@ -1191,6 +1191,7 @@ class ExcelFile(object):
 		if model != 'MagmaSat':
 			H2Ovals = []
 			CO2vals = []
+			warnings = []
 			if model in MixedFluidsModels or model == "MooreWater":
 				for index, row in fluid_data.iterrows():
 					try:
@@ -1199,12 +1200,15 @@ class ExcelFile(object):
 						if file_has_press == True:
 							pressure = row[press_name]
 						bulk_comp = {oxide:  row[oxide] for oxide in oxides}
-						result_of_calc = calculate_equilibrium_fluid_comp(sample=bulk_comp, pressure=pressure, temperature=temperature, model=model).result
-						H2Ovals.append(result_of_calc)
-						CO2vals.append(1.0 - result_of_calc)
+						calc = calculate_equilibrium_fluid_comp(sample=bulk_comp, pressure=pressure, temperature=temperature, model=model, silence_warnings=True)
+
+						H2Ovals.append(calc.result['H2O'])
+						CO2vals.append(calc.result['CO2'])
+						warnings.append(calc.calib_check)
 					except:
 						H2Ovals.append(np.nan)
 						CO2vals.append(np.nan)
+						warnings.append("Calculation Failed.")
 				fluid_data["XH2O_fl_VESIcal"] = H2Ovals
 				fluid_data["XCO2_fl_VESIcal"] = CO2vals
 				if file_has_temp == False:
@@ -1212,6 +1216,7 @@ class ExcelFile(object):
 				if file_has_press == False:
 					fluid_data["Pressure_bars_VESIcal"] = pressure
 				fluid_data["Model"] = model
+				fluid_data["Warnings"] = warnings
 
 				return fluid_data
 			else:
@@ -1223,16 +1228,19 @@ class ExcelFile(object):
 						if file_has_press == True:
 							pressure = row[press_name]
 						bulk_comp = {oxide:  row[oxide] for oxide in oxides}
-						result_of_calc = calculate_equilibrium_fluid_comp(sample=bulk_comp, pressure=pressure, temperature=temperature, model=model).result
-						saturated.append(result_of_calc)
+						calc = calculate_equilibrium_fluid_comp(sample=bulk_comp, pressure=pressure, temperature=temperature, model=model, silence_warnings=True)
+						saturated.append(calc.result)
+						warnings.append(calc.calib_check)
 					except:
 						saturated.append(np.nan)
+						warnings.append("Calculation Failed.")
 				fluid_data["Saturated_VESIcal"] = saturated
 				if file_has_temp == False:
 					fluid_data["Temperature_C_VESIcal"] = temperature
 				if file_has_press == False:
 					fluid_data["Pressure_bars_VESIcal"] = pressure
 				fluid_data["Model"] = model
+				fluid_data["Warnings"] = warnings
 
 				return fluid_data
 		else:
@@ -1336,18 +1344,23 @@ class ExcelFile(object):
 
 		if model != 'MagmaSat':
 			satP = []
+			warnings = []
 			for index, row in satp_data.iterrows():
 				try:
 					if file_has_temp == True:
 						temperature = row[temp_name]
 					bulk_comp = {oxide:  row[oxide] for oxide in oxides}
-					satP.append(calculate_saturation_pressure(sample=bulk_comp, temperature=temperature, model=model).result)
+					calc = calculate_saturation_pressure(sample=bulk_comp, temperature=temperature, model=model, silence_warnings=True)
+					satP.append(calc.result)
+					warnings.append(calc.calib_check)
 				except:
 					satP.append(np.nan)
+					warnings.append("Calculation Failed")
 			satp_data["SaturationP_bars_VESIcal"] = satP
 			if file_has_temp == False:
 				satp_data["Temperature_C_VESIcal"] = temperature
 			satp_data["Model"] = model
+			satp_data["Warnings"] = warnings
 
 			return satp_data
 
