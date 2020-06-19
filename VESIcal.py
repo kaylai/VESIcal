@@ -3372,7 +3372,7 @@ class DixonCarbon(Model):
 
 		XCO3Std = self.XCO3_Std(sample)
 
-		return 3.817e-7 * fugacity * np.exp(-DeltaVr * (pressure-P0)/(R*T0))
+		return XCO3Std * fugacity * np.exp(-DeltaVr * (pressure-P0)/(R*T0))
 
 	def XCO3_Std(self,sample):
 		""" Calculates the mole fraction of CO3(2-) dissolved when in equilibrium with pure
