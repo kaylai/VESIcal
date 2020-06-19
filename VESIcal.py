@@ -4665,8 +4665,8 @@ class LiuWater(Model):
 
 		temperatureK = temperature + 273.15
 
-		H2Ot = ((354.94*Pw**(0.5) + 9.623*Pw - 1.5223*Pw**(1.5)) / temperatureK + 
-				0.0012439*Pw**(1.5) + PCO2*(-1.084*10**(-4)*Pw**(0.5) - 1.362*10**(-5)*Pw))		
+		H2Ot = ((354.94*Pw**(0.5) + 9.623*Pw - 1.5223*Pw**(1.5)) / temperatureK +
+				0.0012439*Pw**(1.5) + PCO2*(-1.084*10**(-4)*Pw**(0.5) - 1.362*10**(-5)*Pw))
 
 		return H2Ot
 
@@ -4846,7 +4846,7 @@ class LiuCarbon(Model):
 		CO2melt_ppm = (PCO2*(5668 - 55.99*Pw)/temperatureK
 					+ PCO2*(0.4133*Pw**(0.5) + 2.041*10**(-3)*Pw**(1.5)))
 
-		CO2melt = CO2melt_ppm / 10000	
+		CO2melt = CO2melt_ppm / 10000
 
 		return CO2melt
 
@@ -4896,7 +4896,7 @@ class LiuCarbon(Model):
 		XCO2fluid = sympy.symbols('XCO2fluid') #XCO2fluid is the variable to solve for
 
 		equation = (((XCO2fluid*pressureMPa)*(5668 - 55.99*(pressureMPa*(1-XCO2fluid)))/temperatureK
-					+ (XCO2fluid*pressureMPa)*(0.4133*(pressureMPa*(1-XCO2fluid))**(0.5) 
+					+ (XCO2fluid*pressureMPa)*(0.4133*(pressureMPa*(1-XCO2fluid))**(0.5)
 					+ 2.041*10**(-3)*(pressureMPa*(1-XCO2fluid))**(1.5))) - CO2melt_ppm)
 
 		XCO2fluid = sympy.solve(equation, XCO2fluid)[0]
@@ -5317,8 +5317,15 @@ class MixedFluid(Model):
 			molfracs = wtpercentOxides_to_molOxides(sample)
 			(Xt0, Xt1) = (molfracs[self.volatile_species[0]],molfracs[self.volatile_species[1]])
 
-			Xv0 = root_scalar(self.root_for_fluid_comp,bracket=[1e-15,1-1e-15],args=(pressure,Xt0,Xt1,sample,kwargs)).root
-			Xv1 = 1 - Xv0
+			try:
+				Xv0 = root_scalar(self.root_for_fluid_comp,bracket=[1e-15,1-1e-15],args=(pressure,Xt0,Xt1,sample,kwargs)).root
+				Xv1 = 1 - Xv0
+			except:
+				try:
+					Xv0 = root_scalar(self.root_for_fluid_comp,x0=0.5,x1=0.1,args=(pressure,Xt0,Xt1,sample,kwargs)).root
+					Xv1 = 1 - Xv0
+				except:
+					raise SaturationError("Equilibrium fluid not found. Likely an issue with the numerical solver.")
 
 		if return_dict == True:
 			return {self.volatile_species[0]:Xv0,self.volatile_species[1]:Xv1}
@@ -5483,9 +5490,9 @@ class MixedFluid(Model):
 
 		"""
 
-		if 'model' in kwargs and model=='Liu':
-			final_pressure = 1.0
-			print('hello')
+		# if 'model' in kwargs and model=='Liu':
+		# 	final_pressure = 1.0
+		# 	print('hello')
 
 		wtptoxides = sample.copy()
 		wtptoxides = normalize_FixedVolatiles(wtptoxides)
@@ -5600,15 +5607,21 @@ class MixedFluid(Model):
 			The differene in the LHS and RHS of the mass balance equation. Eq X in manuscript.
 		"""
 
+		wtt0 = sample[self.volatile_species[0]]
+		wtt1 = sample[self.volatile_species[1]]
 
 		wtm0, wtm1 = self.calculate_dissolved_volatiles(pressure=pressure,X_fluid=(Xv0,1-Xv0),sample=sample,**kwargs)
-		sample_mod = sample.copy()
-		sample_mod[self.volatile_species[0]] = wtm0
-		sample_mod[self.volatile_species[1]] = wtm1
-		# sample_mod = normalize_FixedVolatiles(sample_mod)
-		cations = wtpercentOxides_to_molOxides(sample_mod)
-		Xm0 = cations[self.volatile_species[0]]
-		Xm1 = cations[self.volatile_species[1]]
+		# sample_mod = sample.copy()
+		# sample_mod[self.volatile_species[0]] = wtm0
+		# sample_mod[self.volatile_species[1]] = wtm1
+		# # sample_mod = normalize_FixedVolatiles(sample_mod)
+		# cations = wtpercentOxides_to_molOxides(sample_mod)
+
+		Xm0 = Xt0/wtt0*wtm0
+		Xm1 = Xt1/wtt1*wtm1
+
+		# Xm0 = cations[self.volatile_species[0]]
+		# Xm1 = cations[self.volatile_species[1]]
 
 		f = (Xt0-Xm0)/(Xv0-Xm0)
 
