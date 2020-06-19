@@ -2724,7 +2724,31 @@ class fugacity_ZD09_co2(FugacityModel):
 				 (a[7]+a[8]/Tm**2+a[9]/Tm**3)/Vm**4)*0.08314*Tm/Pm - Vm
 				)
 
+class fugacity_RK_co2(FugacityModel):
+	"""
+	Implementation of the Redlich Kwong EoS for CO2.
+	Code derived from http://people.ds.cam.ac.uk/pjb10/thermo/pure.html - Patrick J. Barrie 30 October 2003.
+	"""
+	def __init__(self):
+		self.set_calibration_ranges([cr_Between('pressure',[1.0,1e5],'bar','Redlich Kwong EOS'),
+									 cr_GreaterThan('temperature',500,'oC','Redlich Kwong EOS')])
+		self.RKmodel = fugacity_RedlichKwong()
 
+	def fugacity(self,pressure,temperature,X_fluid,**kwargs):
+		return self.RKmodel.fugacity(pressure, temperature, X_fluid, 'CO2')
+
+class fugacity_RK_h2o(FugacityModel):
+	"""
+	Implementation of the Redlich Kwong EoS for H2O.
+	Code derived from http://people.ds.cam.ac.uk/pjb10/thermo/pure.html - Patrick J. Barrie 30 October 2003.
+	"""
+	def __init__(self):
+		self.set_calibration_ranges([cr_Between('pressure',[1.0,1e5],'bar','Redlich Kwong EOS'),
+									 cr_GreaterThan('temperature',500,'oC','Redlich Kwong EOS')])
+		self.RKmodel = fugacity_RedlichKwong()
+
+	def fugacity(self,pressure,temperature,X_fluid,**kwargs):
+		return self.RKmodel.fugacity(pressure, temperature, X_fluid, 'H2O')
 
 class fugacity_RedlichKwong(FugacityModel):
 	"""
@@ -2837,7 +2861,7 @@ class fugacity_RedlichKwong(FugacityModel):
 
 		return gamma
 
-	def fugacity(self, temperature, pressure, X_fluid=1.0, **kwargs):
+	def fugacity(self, temperature, pressure, X_fluid=1.0, species='H2O', **kwargs):
 		"""
 		Calculates the fugacity of H2O in a mixed H2O-CO2 fluid using the universal relationships:
 		P_i = f_i/gamma_i = (fpure_i * Xfluid_i) / gamma_i
@@ -2850,7 +2874,12 @@ class fugacity_RedlichKwong(FugacityModel):
 		fugacityH2Opure = pressure * gammaH2O
 		fugacityCO2pure = pressure * gammaCO2
 
-		return fugacityH2Opure * X_fluid
+		if species == 'H2O':
+			return fugacityH2Opure * X_fluid
+		elif species == 'CO2':
+			return fugacityCO2pure * X_fluid
+		else:
+			raise InputError("Species must be H2O or CO2.")
 
 
 
