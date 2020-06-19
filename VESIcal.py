@@ -5493,7 +5493,6 @@ class MixedFluid(Model):
 
 		if pressure == 'saturation':
 			p0 = self.calculate_saturation_pressure(wtptoxides,**kwargs)
-			print(p0)
 			pressures = np.linspace(p0,final_pressure,steps)
 		elif type(pressure) == float or type(pressure) == int:
 			pressures = np.linspace(pressure,final_pressure,steps)
@@ -5600,16 +5599,7 @@ class MixedFluid(Model):
 		float
 			The differene in the LHS and RHS of the mass balance equation. Eq X in manuscript.
 		"""
-		# wtm0, wtm1 = self.calculate_dissolved_volatiles(pressure=pressure,X_fluid=(Xv0,1-Xv0),sample=sample,**kwargs)
-		# sample_mod = sample.copy()
-		# sample_mod[self.volatile_species[0]] = wtm0
-		# sample_mod[self.volatile_species[1]] = wtm1
-		# # sample_mod = normalize_FixedVolatiles(sample_mod)
-		# cations = wtpercentOxides_to_molOxides(sample_mod)
-		# Xm0 = cations[self.volatile_species[0]]
-		# Xm1 = cations[self.volatile_species[1]]
-		#
-		# return (Xt0-Xm0)/(Xv0-Xm0) - (Xt1-Xm1)/(1-Xv0-Xm1)
+
 
 		wtm0, wtm1 = self.calculate_dissolved_volatiles(pressure=pressure,X_fluid=(Xv0,1-Xv0),sample=sample,**kwargs)
 		sample_mod = sample.copy()
@@ -6810,8 +6800,8 @@ class calculate_degassing_path(Calculate):
 				  final_pressure=100.0,steps=101,**kwargs):
 		check = getattr(self.model, "calculate_degassing_path", None)
 		if callable(check):
-			data = self.model.calculate_degassing_path(sample=sample,pressure=pressure,
-															fractionate_vapor=fractionate_vapor,**kwargs)
+			data = self.model.calculate_degassing_path(sample=sample, pressure=pressure, fractionate_vapor=fractionate_vapor,
+													   final_pressure=final_pressure, steps=steps, **kwargs)
 			return data
 		else:
 			raise InputError("This model does not have a calculate_isobars_and_isopleths method built in, most likely because it is a pure fluid model.")
