@@ -3141,8 +3141,13 @@ class ShishkinaWater(Model):
 			raise InputError("Pressure must be positive.")
 
 		_mols = wtpercentOxides_to_molCations(sample)
+		_mol_volatiles = 0
+		if 'H' in _mols:
+			_mol_volatiles += _mols['H']
+		if 'C' in _mols:
+			_mol_volatiles += _mols['C']
 
-		total_alkalis = _mols['Na'] + _mols['K']
+		total_alkalis = (_mols['Na'] + _mols['K'])/(1-_mol_volatiles)
 
 		fugacity = self.fugacity_model.fugacity(pressure,X_fluid=X_fluid,**kwargs)
 
@@ -3604,7 +3609,11 @@ class DixonWater(Model):
 		if XH2O < 1e-14:
 			return 0
 		else:
-			return root_scalar(self.XOH_root,bracket=(1e-14,1),args=(XH2O)).root
+			try:
+				return root_scalar(self.XOH_root,bracket=(XH2O,1-XH2O-1e-15),args=(XH2O)).root
+			except:
+				return root_scalar(self.XOH_root,bracket=(1e-15,XH2O),args=(XH2O)).root
+			# return root_scalar(self.XOH_root,bracket=(1e-14,1-1e-15),args=(XH2O)).root
 
 	def XOH_root(self,XOH,XH2O):
 		"""
@@ -3624,11 +3633,33 @@ class DixonWater(Model):
 			The difference between the RHS and LHS of Eq (4) of Dixon (1997) for the
 			guessed value of XOH.
 		"""
+
+		# A = 9.143
+		# B = -3.295
+		# C = -6.019
+		# D = -0.572
+		#
+		# XO = 1-XH2O
+		#
+		# term = XOH**2/((XH2O-0.5*XOH)*(XO-0.5*XOH))
+		# lhs = - np.log(term)
+		#
+		# rhs = A + B*(XOH-1) + 2*C*(XO-XOH) + 2*D*(XH2O-XOH)
+
+		# if XOH < 0:
+		# 	return np.nan
+
 		A = 0.403
 		B = 15.333
 		C = 10.894
 
-		lhs = - np.log(XOH**2.0/(XH2O*(1.0-XH2O)))
+		term = XOH**2.0/(XH2O*(1.0-XOH-XH2O))
+		# term = XOH**2.0/(XH2O*(1.0-XH2O))
+
+		if term > 0:
+			lhs = - np.log(term)
+		else:
+			return np.nan
 		rhs = A + B*XOH + C*XH2O
 
 		return rhs - lhs
