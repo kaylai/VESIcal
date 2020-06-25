@@ -7074,7 +7074,10 @@ class calculate_saturation_pressure(Calculate):
 
 	def check_calibration_range(self,sample,**kwargs):
 		parameters = kwargs
-		parameters['pressure'] = self.result
+		if isinstance(self.result, dict): #handles cases where verbose=True
+			parameters['pressure'] = next(iter(self.result.values()))
+		else:
+			parameters['pressure'] = self.result
 		parameters.update(dict(sample))
 		s = self.model.check_calibration_range(parameters)
 		return s
