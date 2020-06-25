@@ -974,6 +974,7 @@ class ExcelFile(object):
 							warnings.append(calc.calib_check)
 						except:
 							H2Ovals.append(0)
+							warnings.append('Calculation Failed #001')
 					if 'Carbon' in model:
 						try:
 							calc = calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature,
@@ -982,6 +983,7 @@ class ExcelFile(object):
 							warnings.append(calc.calib_check)
 						except:
 							CO2vals.append(0)
+							warnings.append('Calculation Failed #002')
 				if 'Water' in model:
 					dissolved_data["H2O_liq_VESIcal"] = H2Ovals
 				if 'Carbon' in model:
@@ -2725,6 +2727,251 @@ class fugacity_ZD09_co2(FugacityModel):
 				 (a[7]+a[8]/Tm**2+a[9]/Tm**3)/Vm**4)*0.08314*Tm/Pm - Vm
 				)
 
+class fugacity_HB_co2(FugacityModel):
+	"""
+	Implementation of the Holloway and Blank (1994) Modified Redlich Kwong EoS for CO2.
+	"""
+	def __init__(self):
+		self.set_calibration_ranges([cr_Between('pressure',[1.0,1e5],'bar','Redlich Kwong EOS'),
+									 cr_GreaterThan('temperature',500,'oC','Redlich Kwong EOS')])
+		self.HBmodel = fugacity_HollowayBlank()
+
+	def fugacity(self,pressure,temperature,**kwargs):
+		return self.HBmodel.fugacity(pressure, temperature, 'CO2')
+
+class fugacity_HollowayBlank(FugacityModel):
+	"""
+	Implementation of the Modified Redlich Kwong presented in Holloway and Blank (1994) Reviews
+	in Mineralogy and Geochemistry vol. 30. Originally written in Quickbasic, translated to
+	Matlab by Chelsea Allison, and translated to python by K. Iacovino for VESIcal.
+
+	Only for CO2.
+	"""
+
+	def __init__(self):
+		self.set_calibration_ranges([cr_Between('pressure',[1.0,1e5],'bar','Modified Redlich Kwong EOS (Holloway and Blank, 1994)'),
+									 cr_GreaterThan('temperature',500,'oC','Modified Redlich Kwong EOS (Holloway and Blank, 1994)')])
+
+
+	def REDKW(self, BP, A2B):
+		"""
+		The RK routine. A routine to calculate compressibility factor and fugacity coefficient
+		with the Redlich-Kwong equation following Edmister (1968). This solution for supercritical
+		fluid.
+
+		Parameters
+		----------
+		BP: float
+			B parameter sum from RKCALC
+
+		A2B: float
+			A parameter sum from RKCALC
+
+		Returns
+		-------
+		float
+			XLNFP (fugacity coefficient?)
+		"""
+		if A2B < 1*10**(-10):
+			A2B = 0.001
+
+		#Define constants
+		TH = 0.333333
+		RR = -A2B*BP**2
+		QQ = BP*(A2B-BP-1)
+		XN = QQ*TH+RR-0.074074
+		XM = QQ-TH
+		XNN = XN*XN/4
+		XMM = XM**3 / 27
+		ARG = XNN+XMM
+
+		if ARG > 0:
+			X = np.sqrt(ARG)
+			F = 1
+			XN2 = -XN/2
+			iXMM = XN2+X
+
+			if iXMM < 0:
+				F = -1
+			XMM = F*((F*iXMM)**TH)
+			F = 1
+			iXNN = XN2 - X
+
+			if iXNN < 0:
+				F = -1
+			XNN = F*((F*iXNN)**TH)
+			Z = XMM+XNN+TH
+			ZBP = Z-BP
+			if ZBP < 0.000001:
+				ZBP = 0.000001
+
+			BPZ = 1+BP/Z
+			FP = Z-1-np.log(ZBP)-A2B*np.log(BPZ)
+
+			if FP < -37 or FP > 37:
+				FP = 0.000001
+
+		if ARG <0:
+			COSPHI = np.sqrt(-XNN/XMM)
+			if XN > 0:
+				COSPHI = -COSPHI
+
+			TANPHI = np.sqrt(1-COSPHI**2)/COSPHI
+			PHI = np.arctan(TANPHI)*TH
+			FAC = 2*np.sqrt(-XM*TH)
+
+			#sort for largest root
+			R1 = np.cos(PHI)
+			R2 = np.cos(PHI+2.0944)
+			R3 = np.cos(PHI+4.18879)
+			RH = R2
+
+			if R1 > R2:
+				RH = R1
+			if R3 > RH:
+				RH = R3
+
+			Z = RH*FAC+TH
+			ZBP = Z-BP
+			if ZBP < 0.000001:
+				ZBP = 0.000001
+			BPZ = 1+BP/Z
+			FP = Z-1-np.log(ZBP)-A2B*np.log(BPZ)
+			if FP < -37 or FP > 37:
+				FP = 0.000001
+		else:
+			FP = 1
+			Z = 1
+		XLNFP = FP
+
+		return XLNFP
+
+	def Saxena(self, TK, pb):
+		"""
+		High pressure corresponding states routines from Saxena and Fei (1987) GCA
+		vol. 51, 783-791.
+
+		Parameters
+		----------
+		TK: float
+			Temperature in K.
+
+		pb: float
+			Pressure in bars.
+
+		Returns
+		-------
+		float
+			XLNF, Natural log of the ratio F(P)/F(4000 bar)
+		"""
+
+		#Define integration limit
+		PO = 4000
+
+		#Critical temperatures and pressures for CO2
+		TR = TK/304.2
+		PR = pb/73.9
+		PC = 73.9
+
+		#Virial coeficients
+		A = 2.0614-2.2351/TR**2 - 0.39411*np.log(TR)
+		B = 0.055125/TR + 0.039344/TR**2
+		C = -1.8935*10**(-6)/TR - 1.1092*10**(-5)/TR**2 - 2.1892*10**(-5)/TR**3
+		D = 5.0527*10**(-11)/TR - 6.3033*10**(-21)/TR**3
+
+		#Calculate molar volume
+		Z = A+B*PR+C*PR**2+D*PR**3
+		V = Z*83.0117*TK/pb
+
+		#integrate from PO (4000 bars) to P to calculate ln fugacity
+		LNF = A*np.log(pb/PO)+(B/PC)*(pb-PO)+(C/(2*PC**2))*(pb**2-PO**2)
+		LNF = LNF+(D/(3*PC**3))*(pb**3-PO**3)
+		XLNF = LNF
+
+		return XLNF
+
+	def RKCALC(self, temperature, pressure):
+		"""
+		Calculation of pure gas MRK properties following Holloway 1981, 1987
+
+		Parameters
+		----------
+		temperature: float
+			Temperature in degrees K.
+
+		pressure: float
+			Pressure in atmospheres.
+
+		Returns
+		-------
+		float
+			Natural log of the fugacity of a pure gas.
+		"""
+
+		#Define constants
+		R = 82.05736
+		RR = 6732.2
+		pb = 1.013*pressure
+		PBLN = np.log(pb)
+		TCEL = temperature-273.15
+		RXT = R*temperature
+		RT = R*temperature**1.5 * 0.000001
+
+		#Calculate T-dependent MRK A parameter CO2
+		ACO2M = 73.03 - 0.0714*TCEL + 2.157*10**(-5)*TCEL**2
+
+		#Define MRK B parameter for CO2
+		BSUM = 29.7
+		ASUM = ACO2M / (BSUM*RT)
+		BSUM = pressure*BSUM/RXT
+		XLNFP = self.REDKW(BSUM, ASUM)
+
+		#Convert to ln(fugacity)
+		PUREG = XLNFP + PBLN
+
+		return PUREG
+
+
+	def fugacity(self, pressure, temperature, species, **kwargs):
+		"""
+		Calculates fugacity.
+
+		Parameters
+		----------
+		temperature: float
+			Temperature in degrees C.
+
+		pressure: float
+			Pressure in bars.
+
+		species: str
+			Choose which species to calculate. Options are 'H2O' and 'CO2'.
+
+		Returns
+		-------
+		float
+			Fugacity coefficient for passed species
+		"""
+		if species != 'CO2':
+			raise InputError("Species must be CO2.")
+
+		#convert temp and press to atmospheres and Kelvin
+		pressureAtmo = pressure/1.013
+		temperatureK = temperature + 273.15
+		PO = 4000/1.013
+
+		#Use the MRK below 4,000 bars, Saxena above 4,000 bars
+		if pressure > 4000:
+			iPUREG = self.RKCALC(temperatureK, PO)
+			XLNF = self.Saxena(temperatureK, pressure)
+			PUREG = iPUREG + XLNF
+		elif pressure <= 4000:
+			PUREG = self.RKCALC(temperatureK, pressureAtmo)
+
+		#Convert from ln(fugacity) to fugacity
+		stdfco2 = np.exp(PUREG)
+		return stdfco2
+
 class fugacity_RK_co2(FugacityModel):
 	"""
 	Implementation of the Redlich Kwong EoS for CO2.
@@ -2761,7 +3008,7 @@ class fugacity_RedlichKwong(FugacityModel):
 									 cr_GreaterThan('temperature',500,'oC','Redlich Kwong EOS')])
 
 
-	def gamma(self, temperature, pressure, species):
+	def gamma(self, pressure, temperature, species):
 		"""
 		Calculates fugacity coefficients.
 
@@ -2862,15 +3109,15 @@ class fugacity_RedlichKwong(FugacityModel):
 
 		return gamma
 
-	def fugacity(self, temperature, pressure, X_fluid=1.0, species='H2O', **kwargs):
+	def fugacity(self, pressure, temperature, X_fluid=1.0, species='H2O', **kwargs):
 		"""
 		Calculates the fugacity of H2O in a mixed H2O-CO2 fluid using the universal relationships:
 		P_i = f_i/gamma_i = (fpure_i * Xfluid_i) / gamma_i
 		See Iacovino (2015) EPSL for further explanation.
 		"""
 
-		gammaH2O = self.gamma(temperature, pressure, 'H2O')
-		gammaCO2 = self.gamma(temperature, pressure, 'CO2')
+		gammaH2O = self.gamma(pressure, temperature, 'H2O')
+		gammaCO2 = self.gamma(pressure, temperature, 'CO2')
 
 		fugacityH2Opure = pressure * gammaH2O
 		fugacityCO2pure = pressure * gammaCO2
@@ -5043,7 +5290,7 @@ class AllisonCarbon(Model):
 	etna, or stromboli. Default is the power-law fit to sunset.
 	"""
 
-	def __init__(self,model_fit='power',model_loc='sunset'):
+	def __init__(self,model_fit='thermodynamic',model_loc='sunset'):
 		"""
 		Initialize the model.
 
@@ -5061,7 +5308,7 @@ class AllisonCarbon(Model):
 			raise InputError("model_loc must be one of 'sunset', 'sfvf', 'erebus', 'vesuvius', 'etna', or 'stromboli'.")
 
 		self.set_volatile_species(['CO2'])
-		self.set_fugacity_model(fugacity_KJ81_co2())
+		self.set_fugacity_model(fugacity_HB_co2())
 		self.set_activity_model(activity_idealsolution())
 		self.set_calibration_ranges([cr_Between('pressure',[0.0,6000.0],'bar','Allison et al. (2019) water'),
 									 cr_EqualTo('temperature',1200,'C','Allison et al. (2019) water')])
@@ -5553,7 +5800,6 @@ class MixedFluid(Model):
 
 		# if 'model' in kwargs and model=='Liu':
 		# 	final_pressure = 1.0
-		# 	print('hello')
 
 		wtptoxides = sample.copy()
 		wtptoxides = normalize_FixedVolatiles(wtptoxides)
