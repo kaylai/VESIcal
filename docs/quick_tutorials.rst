@@ -102,7 +102,34 @@ You'll want to save this ExcelFile object to a variable. Do that like this:
 
 	myfile = ExcelFile('path/to/your/file.xlsx')
 
+If your excel file has multiple sheets, you can specify which sheet to import. Note that you can only import one sheet at a time.
+
+.. code-block:: python
+
+	myfile = ExcelFile('path/to/your/file.xlsx', sheet_name="SameOfYourSheet")
+
+You can also specify the sheet name by it's number (e.g. the 1st, 2nd, 3rd... sheet in the file) as:
+
+.. code-block:: python
+
+	myfile = ExcelFile('path/to/your/file.xlsx', sheet_name=0) #import the first sheet
+	myotherfile = ExcelFile('path/to/your/file.xlsx', sheet_name=4) #import the fifth sheet
+
 ----------
+
+Save Your Calculations to an Excel File
+=======================================
+Once you have performed some calculations and have assigned their outputs to variables, you can write all of your data to an excel file. Let's assume you have imported a file and written it to a variable called `myfile`. You then performed two calculations: `calculate_dissolved_volatiles()` and `calculate_saturation_pressure()`. You've written those outputs to teh variables `dissolved` and `SatP`, respectively. Here's how you would save these data to an excel file. What gets created is a .xlsx file with the first sheet containing your originally input data, the second sheet containing the dissolved data, and the third sheet containing the SatP data.
+
+.. code-block:: python
+
+	myfile.save_excelfile("myoutput.xlsx", calculations=[dissolved, SatP])
+
+Optionally, you can tell VESIcal what to name your new sheets in your new excel file:
+
+.. code-block:: python
+
+	myfile.save_excelfile("myoutput.xlsx", calculations=[dissolved, SatP], sheet_name=["My dissolved data", "My saturation data"])
 
 Normalize and Transform Data
 ============================

@@ -3,8 +3,7 @@ sphinx_rtd_theme
 ipykernel
 nbsphinx
 pandas
-pypandoc
-pandoc
+git+git://github.com/jgm/pandoc#egg=pandoc
 numpy
 matplotlib
 ipynb
