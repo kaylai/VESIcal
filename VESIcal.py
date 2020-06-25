@@ -816,8 +816,9 @@ class ExcelFile(object):
 		Excel File
 			Creates and saves an Excel file with data from each calculation saved to its own sheet.
 		"""
-		if isinstance(calculations, list) and isinstance(sheet_name, list):
-			pass
+		if isinstance(calculations, list):
+			if isinstance(sheet_name, list) or sheet_name is None:
+				pass
 		else:
 			raise InputError("calculations and sheet_name must be type list. If you only have one calculation or sheet_name to pass, make sure they are passed in square brackets []")
 		with pd.ExcelWriter(filename) as writer:
