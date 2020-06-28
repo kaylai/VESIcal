@@ -3856,12 +3856,7 @@ class DixonWater(Model):
 		XH2O = self.molfrac_molecular(pressure=pressure,sample=sample,X_fluid=X_fluid,**kwargs)
 		if XH2O < 1e-14:
 			return 0
-		else:
-			try:
-				return root_scalar(self.XOH_root,bracket=(XH2O,1-XH2O-1e-15),args=(XH2O)).root
-			except:
-				return root_scalar(self.XOH_root,bracket=(1e-15,XH2O),args=(XH2O)).root
-			# return root_scalar(self.XOH_root,bracket=(1e-14,1-1e-15),args=(XH2O)).root
+		return np.exp(root_scalar(self.XOH_root,x0=np.log(0.5),x1=np.log(0.1),args=(XH2O)).root)
 
 	def XOH_root(self,XOH,XH2O):
 		"""
@@ -3882,32 +3877,16 @@ class DixonWater(Model):
 			guessed value of XOH.
 		"""
 
-		# A = 9.143
-		# B = -3.295
-		# C = -6.019
-		# D = -0.572
-		#
-		# XO = 1-XH2O
-		#
-		# term = XOH**2/((XH2O-0.5*XOH)*(XO-0.5*XOH))
-		# lhs = - np.log(term)
-		#
-		# rhs = A + B*(XOH-1) + 2*C*(XO-XOH) + 2*D*(XH2O-XOH)
-
-		# if XOH < 0:
-		# 	return np.nan
-
 		A = 0.403
 		B = 15.333
 		C = 10.894
 
-		term = XOH**2.0/(XH2O*(1.0-XOH-XH2O))
-		# term = XOH**2.0/(XH2O*(1.0-XH2O))
+		XOH = np.exp(XOH)
 
-		if term > 0:
-			lhs = - np.log(term)
-		else:
-			return np.nan
+		term = XOH**2.0/(XH2O*(1.0-XOH-XH2O))
+
+		lhs = - np.log(term)
+
 		rhs = A + B*XOH + C*XH2O
 
 		return rhs - lhs
