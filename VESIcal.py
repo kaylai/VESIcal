@@ -3541,8 +3541,11 @@ class DixonCarbon(Model):
 		if pressure == 0:
 			return 0
 
+		Mr = wtpercentOxides_to_formulaWeight(sample)
+
 		XCO3 = self.molfrac_molecular(pressure=pressure,sample=sample,X_fluid=X_fluid,**kwargs)
-		return (4400 * XCO3) / (36.6 - 44*XCO3)
+		# return (4400 * XCO3) / (36.6 - 44*XCO3)
+		return (4400 * XCO3) / (Mr - 44*XCO3)
 
 
 	def calculate_equilibrium_fluid_comp(self,pressure,sample,**kwargs):
@@ -3616,7 +3619,7 @@ class DixonCarbon(Model):
 		float
 			Mole fraction of CO3(2-) dissolved."""
 
-		DeltaVr = 23 #cm3 mole-1
+		DeltaVr = 23.14 #cm3 mole-1
 		P0 = 1
 		R = 83.15
 		T0 = 1473.15
@@ -3644,7 +3647,7 @@ class DixonCarbon(Model):
 		if sample['SiO2'] > 48.9:
 			return 3.817e-7
 		else:
-			return 8.7e-6 - 1.7e-7*sample['SiO2']
+			return 8.697e-6 - 1.697e-7*sample['SiO2']
 
 	def root_saturation_pressure(self,pressure,sample,kwargs):
 		""" The function called by scipy.root_scalar when finding the saturation pressure using
@@ -3729,8 +3732,11 @@ class DixonWater(Model):
 		XH2O = self.molfrac_molecular(pressure=pressure,sample=sample,X_fluid=X_fluid,**kwargs)
 		XOH = self.XOH(pressure=pressure,sample=sample,X_fluid=X_fluid,**kwargs)
 
+		Mr = wtpercentOxides_to_formulaWeight(sample)
+
 		XB = XH2O + 0.5*XOH
 		return 1801.5*XB/(36.6-18.6*XB)
+		# return 1801.5*XB/(Mr-18.6*XB)
 
 
 	def calculate_equilibrium_fluid_comp(self,pressure,sample,**kwargs):
@@ -3883,7 +3889,7 @@ class DixonWater(Model):
 
 		XOH = np.exp(XOH)
 
-		term = XOH**2.0/(XH2O*(1.0-XOH-XH2O))
+		term = (XOH)**2.0/(XH2O*(1.0-XOH-XH2O))
 
 		lhs = - np.log(term)
 
