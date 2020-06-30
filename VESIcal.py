@@ -1,6 +1,6 @@
 # Python 3.5
-# Script written by Kayla Iacovino (kayla.iacovino@nasa.gov) and Simon Matthews (simonmatthews@jhu.edu)
-# VERSION 0.1 - MAY 2020
+# Script written by Kayla Iacovino (kayla.iacovino@nasa.gov), Simon Matthews (simonmatthews@jhu.edu), and Penny Wieser (pew26@cam.ac.uk)
+# VERSION 0.1 - JUNE 2020
 
 #--------TURN OFF MAGMASAT WARNING--------#
 import warnings
@@ -9,6 +9,7 @@ warnings.filterwarnings("ignore", message="rubicon.objc.ctypes_patch has only be
 #-----------------IMPORTS-----------------#
 import pandas as pd
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 from abc import ABC, abstractmethod
 from scipy.optimize import root_scalar
@@ -16,6 +17,18 @@ from scipy.optimize import root
 from scipy.optimize import minimize
 import sys
 import sympy
+
+#--------------MELTS preamble---------------#
+from thermoengine import equilibrate
+# instantiate thermoengine equilibrate MELTS instance
+melts = equilibrate.MELTSmodel('1.2.0')
+
+# Suppress phases not required in the melts simulation
+phases = melts.get_phase_names()
+
+for phase in phases:
+	melts.set_phase_inclusion_status({phase: False})
+melts.set_phase_inclusion_status({'Fluid': True, 'Liquid': True})
 
 
 #----------DEFINE SOME CONSTANTS-------------#
@@ -85,27 +98,34 @@ msp_fontdict = {'family': 'serif',
 				 'weight': 'normal',
 				 'size': 18,}
 
-def printTable(myDict):
-   """ Pretty print a dictionary (as pandas DataFrame)
+plt.rcParams["font.family"] = 'arial'
+plt.rcParams["mathtext.default"] = "regular"
+plt.rcParams["mathtext.fontset"] = "dejavusans"
+plt.style.use("seaborn-colorblind")
+mpl.rcParams['patch.linewidth'] = 1
+mpl.rcParams['axes.linewidth'] = 1 # set the value globally
 
-   Parameters
-   ----------
-   myDict: dict
+def printTable(myDict):
+	""" Pretty print a dictionary (as pandas DataFrame)
+
+	Parameters
+	----------
+	myDict: dict
 		A dictionary
 
-   Returns
-   -------
-   pandas DataFrame
+	Returns
+	-------
+	pandas DataFrame
 		The input dictionary converted to a pandas DataFrame
-   """
-   try:
-   	oxidesum = sum(myDict[oxide] for oxide in oxides)
-   	myDict.update({"Sum oxides": oxidesum})
-   except:
-   	pass
-   table = pd.DataFrame([v for v in myDict.values()], columns = ['value'],
+	"""
+	try:
+		oxidesum = sum(myDict[oxide] for oxide in oxides)
+		myDict.update({"Sum oxides": oxidesum})
+	except:
+		pass
+	table = pd.DataFrame([v for v in myDict.values()], columns = ['value'],
 						 index = [k for k in myDict.keys()])
-   return table
+	return table
 
 #----------DEFINE SOME UNIVERSAL INFORMATIVE METHODS--------------#
 def get_model_names():
@@ -610,24 +630,17 @@ class ExcelFile(object):
 			pass
 		else:
 			raise InputError("If sheet_name is passed, it must be of type str or int. Currently, VESIcal cannot import more than one sheet at a time.")
-		try:
-			melts
-		except:
-			from thermoengine import equilibrate
-			#--------------MELTS preamble---------------#
-			# instantiate thermoengine equilibrate MELTS instance
-			melts = equilibrate.MELTSmodel('1.2.0')
+		#--------------MELTS preamble---------------#
+		# Suppress phases not required in the melts simulation
+		self.oxides = melts.get_oxide_names()
+		self.phases = melts.get_phase_names()
 
-			# Suppress phases not required in the melts simulation
-			self.oxides = melts.get_oxide_names()
-			self.phases = melts.get_phase_names()
+		# for phase in self.phases:
+		# 	melts.set_phase_inclusion_status({phase: False})
+		# melts.set_phase_inclusion_status({'Fluid': True, 'Liquid': True})
 
-			for phase in self.phases:
-				melts.set_phase_inclusion_status({phase: False})
-			melts.set_phase_inclusion_status({'Fluid': True, 'Liquid': True})
-
-			self.melts = melts
-			#-------------------------------------------#
+		self.melts = melts
+		#-------------------------------------------#
 
 		self.input_type = input_type
 
@@ -916,49 +929,13 @@ class ExcelFile(object):
 		else:
 			raise InputError("X_fluid must be type str or float or int")
 
-		if model != 'MagmaSat':
-			H2Ovals = []
-			CO2vals = []
-			warnings = []
-			errors = []
-			if model in MixedFluidsModels:
-				for index, row in dissolved_data.iterrows():
-					try:
-						if file_has_temp == True:
-							temperature = row[temp_name]
-						if file_has_press == True:
-							pressure = row[press_name]
-						if file_has_X == True:
-							X_fluid = row[X_name]
-						bulk_comp = {oxide:  row[oxide] for oxide in oxides}
-						calc = calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature,
-																		X_fluid=(X_fluid, 1-X_fluid), model=model, silence_warnings=True)
-						H2Ovals.append(calc.result['H2O'])
-						CO2vals.append(calc.result['CO2'])
-						warnings.append(calc.calib_check)
-						errors.append('')
-					except Exception as inst:
-						H2Ovals.append(np.nan)
-						CO2vals.append(np.nan)
-						warnings.append('Calculation Failed.')
-						errors.append(sys.exc_info()[0])
-				dissolved_data["H2O_liq_VESIcal"] = H2Ovals
-				dissolved_data["CO2_liq_VESIcal"] = CO2vals
-
-				if file_has_temp == False:
-					dissolved_data["Temperature_C_VESIcal"] = temperature
-				if file_has_press == False:
-					dissolved_data["Pressure_bars_VESIcal"] = pressure
-				if file_has_X == False:
-					dissolved_data["X_fluid_input_VESIcal"] = X_fluid
-				dissolved_data["Model"] = model
-				dissolved_data["Warnings"] = warnings
-				if record_errors == True:
-					dissolved_data["Errors"] = errors
-
-				return dissolved_data
-			else:
-				for index, row in dissolved_data.iterrows():
+		H2Ovals = []
+		CO2vals = []
+		warnings = []
+		errors = []
+		if model in MixedFluidsModels:
+			for index, row in dissolved_data.iterrows():
+				try:
 					if file_has_temp == True:
 						temperature = row[temp_name]
 					if file_has_press == True:
@@ -966,168 +943,19 @@ class ExcelFile(object):
 					if file_has_X == True:
 						X_fluid = row[X_name]
 					bulk_comp = {oxide:  row[oxide] for oxide in oxides}
-					if 'Water' in model:
-						try:
-							calc = calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature,
-																 X_fluid=X_fluid, model=model, silence_warnings=True)
-							H2Ovals.append(calc.result)
-							warnings.append(calc.calib_check)
-						except:
-							H2Ovals.append(0)
-							warnings.append('Calculation Failed #001')
-					if 'Carbon' in model:
-						try:
-							calc = calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature,
-																 X_fluid=X_fluid, model=model, silence_warnings=True)
-							CO2vals.append(calc.result)
-							warnings.append(calc.calib_check)
-						except:
-							CO2vals.append(0)
-							warnings.append('Calculation Failed #002')
-				if 'Water' in model:
-					dissolved_data["H2O_liq_VESIcal"] = H2Ovals
-				if 'Carbon' in model:
-					dissolved_data["CO2_liq_VESIcal"] = CO2vals
-				if file_has_temp == False:
-					dissolved_data["Temperature_C_VESIcal"] = temperature
-				if file_has_press == False:
-					dissolved_data["Pressure_bars_VESIcal"] = pressure
-				if file_has_X == False:
-					dissolved_data["X_fluid_input_VESIcal"] = X_fluid
-				dissolved_data["Model"] = model
-				dissolved_data["Warnings"] = warnings
-
-				return dissolved_data
-
-		else:
-			liq_comp_H2O = []
-			liq_comp_CO2 = []
-			fluid_comp_H2O = []
-			fluid_comp_CO2 = []
-			fluid_system_wtper = []
-			for index, row in dissolved_data.iterrows():
-				if print_status == True:
-					print("Calculating sample " + str(index))
-
-				bulk_comp = {oxide:  row[oxide] for oxide in oxides}
-
-				if file_has_temp == True:
-					temperature = row[temp_name]
-				if file_has_press == True:
-					pressure = row[press_name]
-				if file_has_X == True:
-					X_fluid = row[X_name]
-
-				pressureMPa = pressure / 10.0
-				bulk_comp = {oxide:  row[oxide] for oxide in oxides}
-
-				if pressure <= 100:
-					H2O_val = 0.0
-					CO2_val = 0.0
-				elif pressure <= 1000:
-					H2O_val = 0.5
-					CO2_val = 0.0
-				else:
-					H2O_val = 1.0
-					CO2_val = 0.0
-				fluid_mass = 0.0
-				while fluid_mass <= 0:
-					if X_fluid == 0:
-						CO2_val += 0.1
-					else:
-						H2O_val += 0.5
-						CO2_val = (H2O_val / X_fluid) - H2O_val
-
-					bulk_comp["H2O"] = H2O_val
-					bulk_comp["CO2"] = CO2_val
-					feasible = melts.set_bulk_composition(bulk_comp)
-					output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
-					(status, temperature, pressureMPa, xmlout) = output[0]
-					fluid_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
-
-				bulk_comp["H2O"] = H2O_val
-				bulk_comp["CO2"] = CO2_val
-				feasible = melts.set_bulk_composition(bulk_comp)
-				output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
-				(status, temperature, pressureMPa, xmlout) = output[0]
-				liquid_comp = melts.get_composition_of_phase(xmlout, phase_name='Liquid', mode='oxide_wt')
-				fluid_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid', mode='component')
-
-				if "Water" in fluid_comp:
-					H2O_fl = fluid_comp["Water"]
-				else:
-					H2O_fl = 0.0
-
-				XH2O_fluid = H2O_fl
-
-				#------Coarse Check------#
-				while XH2O_fluid < X_fluid - 0.1: #too low coarse check
-					H2O_val += 0.2
-					XH2O_fluid = self.get_XH2O_fluid(bulk_comp, temperature, pressure, H2O_val, CO2_val)
-
-				while XH2O_fluid > X_fluid + 0.1: #too high coarse check
-					CO2_val += 0.1
-					XH2O_fluid = self.get_XH2O_fluid(bulk_comp, temperature, pressure, H2O_val, CO2_val)
-
-				#------Refinement 1------#
-				while XH2O_fluid < X_fluid - 0.01: #too low refinement 1
-					H2O_val += 0.05
-					XH2O_fluid = self.get_XH2O_fluid(bulk_comp, temperature, pressure, H2O_val, CO2_val)
-
-				while XH2O_fluid > X_fluid + 0.01: #too high refinement 1
-					CO2_val += 0.01
-					XH2O_fluid = self.get_XH2O_fluid(bulk_comp, temperature, pressure, H2O_val, CO2_val)
-
-				#------Refinement 2------#
-				while XH2O_fluid < X_fluid - 0.001: #too low refinement 2
-					H2O_val += 0.005
-					XH2O_fluid = self.get_XH2O_fluid(bulk_comp, temperature, pressure, H2O_val, CO2_val)
-
-				while XH2O_fluid > X_fluid + 0.001: #too high refinement 2
-					CO2_val += 0.001
-					XH2O_fluid = self.get_XH2O_fluid(bulk_comp, temperature, pressure, H2O_val, CO2_val)
-
-				#------Get calculated values------#
-				bulk_comp["H2O"] = H2O_val
-				bulk_comp["CO2"] = CO2_val
-
-				feasible = melts.set_bulk_composition(bulk_comp)
-				output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
-				(status, temperature, pressureMPa, xmlout) = output[0]
-				fluid_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
-				system_mass = melts.get_mass_of_phase(xmlout, phase_name='System')
-				liquid_comp = melts.get_composition_of_phase(xmlout, phase_name='Liquid', mode='oxide_wt')
-				fluid_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid', mode='component')
-
-				if "H2O" in liquid_comp:
-					liq_comp_H2O.append(liquid_comp["H2O"])
-				else:
-					liq_comp_H2O.append(0)
-
-				if "CO2" in liquid_comp:
-					liq_comp_CO2.append(liquid_comp["CO2"])
-				else:
-					liq_comp_CO2.append(0)
-
-				if "Water" in fluid_comp:
-					fluid_comp_H2O.append(fluid_comp["Water"])
-				else:
-					fluid_comp_H2O.append(0)
-
-				if "Carbon Dioxide" in fluid_comp:
-					fluid_comp_CO2.append(fluid_comp["Carbon Dioxide"])
-				else:
-					fluid_comp_CO2.append(0)
-
-				fluid_system_wtper.append(100.0*fluid_mass/(fluid_mass + system_mass))
-
-				XH2O_fluid = H2O_fl
-
-			dissolved_data["H2O_liq_VESIcal"] = liq_comp_H2O
-			dissolved_data["CO2_liq_VESIcal"] = liq_comp_CO2
-			dissolved_data["XH2O_fl_VESIcal"] = fluid_comp_H2O
-			dissolved_data["XCO2_fl_VESIcal"] = fluid_comp_CO2
-			dissolved_data["FluidProportion_wt_VESIcal"] = fluid_system_wtper
+					calc = calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature,
+																	X_fluid=(X_fluid, 1-X_fluid), model=model, silence_warnings=True)
+					H2Ovals.append(calc.result['H2O'])
+					CO2vals.append(calc.result['CO2'])
+					warnings.append(calc.calib_check)
+					errors.append('')
+				except Exception as inst:
+					H2Ovals.append(np.nan)
+					CO2vals.append(np.nan)
+					warnings.append('Calculation Failed.')
+					errors.append(sys.exc_info()[0])
+			dissolved_data["H2O_liq_VESIcal"] = H2Ovals
+			dissolved_data["CO2_liq_VESIcal"] = CO2vals
 
 			if file_has_temp == False:
 				dissolved_data["Temperature_C_VESIcal"] = temperature
@@ -1135,9 +963,101 @@ class ExcelFile(object):
 				dissolved_data["Pressure_bars_VESIcal"] = pressure
 			if file_has_X == False:
 				dissolved_data["X_fluid_input_VESIcal"] = X_fluid
-			dissolved_data["Model"] = "MagmaSat"
-			if print_status == True:
-				print("Done!")
+			dissolved_data["Model"] = model
+			dissolved_data["Warnings"] = warnings
+			if record_errors == True:
+				dissolved_data["Errors"] = errors
+
+			return dissolved_data
+
+		XH2Ovals = []
+		XCO2vals = []
+		FluidProportionvals = []
+		if model == 'MagmaSat':
+			for index, row in dissolved_data.iterrows():
+				if print_status == True:
+					print("Calculating sample " + str(index))
+				try:
+					if file_has_temp == True:
+						temperature = row[temp_name]
+					if file_has_press == True:
+						pressure = row[press_name]
+					if file_has_X == True:
+						X_fluid = row[X_name]
+					bulk_comp = {oxide:  row[oxide] for oxide in oxides}
+					calc = calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature,
+																	X_fluid=X_fluid, model=model, silence_warnings=True,
+																	verbose=True)
+					H2Ovals.append(calc.result['H2O_liq'])
+					CO2vals.append(calc.result['CO2_liq'])
+					XH2Ovals.append(calc.result['XH2O_fl'])
+					XCO2vals.append(calc.result['XCO2_fl'])
+					FluidProportionvals.append(calc.result['FluidProportion_wt'])
+					warnings.append(calc.calib_check)
+					errors.append('')
+				except Exception as inst:
+					H2Ovals.append(np.nan)
+					CO2vals.append(np.nan)
+					XH2Ovals.append(np.nan)
+					XCO2vals.append(np.nan)
+					FluidProportionvals.append(np.nan)
+					warnings.append('Calculation Failed.')
+					errors.append(sys.exc_info()[0])
+			dissolved_data["H2O_liq_VESIcal"] = H2Ovals
+			dissolved_data["CO2_liq_VESIcal"] = CO2vals
+
+			if file_has_temp == False:
+				dissolved_data["Temperature_C_VESIcal"] = temperature
+			if file_has_press == False:
+				dissolved_data["Pressure_bars_VESIcal"] = pressure
+			if file_has_X == False:
+				dissolved_data["X_fluid_input_VESIcal"] = X_fluid
+			dissolved_data["Model"] = model
+			dissolved_data["Warnings"] = warnings
+			if record_errors == True:
+				dissolved_data["Errors"] = errors
+
+			return dissolved_data
+		else:
+			for index, row in dissolved_data.iterrows():
+				if file_has_temp == True:
+					temperature = row[temp_name]
+				if file_has_press == True:
+					pressure = row[press_name]
+				if file_has_X == True:
+					X_fluid = row[X_name]
+				bulk_comp = {oxide:  row[oxide] for oxide in oxides}
+				if 'Water' in model:
+					try:
+						calc = calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature,
+															 X_fluid=X_fluid, model=model, silence_warnings=True)
+						H2Ovals.append(calc.result)
+						warnings.append(calc.calib_check)
+					except:
+						H2Ovals.append(0)
+						warnings.append('Calculation Failed #001')
+				if 'Carbon' in model:
+					try:
+						calc = calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature,
+															 X_fluid=X_fluid, model=model, silence_warnings=True)
+						CO2vals.append(calc.result)
+						warnings.append(calc.calib_check)
+					except:
+						CO2vals.append(0)
+						warnings.append('Calculation Failed #002')
+
+			if 'Water' in model:
+				dissolved_data["H2O_liq_VESIcal"] = H2Ovals
+			if 'Carbon' in model:
+				dissolved_data["CO2_liq_VESIcal"] = CO2vals
+			if file_has_temp == False:
+				dissolved_data["Temperature_C_VESIcal"] = temperature
+			if file_has_press == False:
+				dissolved_data["Pressure_bars_VESIcal"] = pressure
+			if file_has_X == False:
+				dissolved_data["X_fluid_input_VESIcal"] = X_fluid
+			dissolved_data["Model"] = model
+			dissolved_data["Warnings"] = warnings
 
 			return dissolved_data
 
@@ -1192,120 +1112,149 @@ class ExcelFile(object):
 		else:
 			raise InputError("pressure must be type str or float or int")
 
-		if model != 'MagmaSat':
-			H2Ovals = []
-			CO2vals = []
-			warnings = []
-			if model in MixedFluidsModels or model == "MooreWater":
-				for index, row in fluid_data.iterrows():
-					try:
-						if file_has_temp == True:
-							temperature = row[temp_name]
-						if file_has_press == True:
-							pressure = row[press_name]
-						bulk_comp = {oxide:  row[oxide] for oxide in oxides}
-						calc = calculate_equilibrium_fluid_comp(sample=bulk_comp, pressure=pressure, temperature=temperature, model=model, silence_warnings=True)
-
-						H2Ovals.append(calc.result['H2O'])
-						CO2vals.append(calc.result['CO2'])
-						warnings.append(calc.calib_check)
-					except:
-						H2Ovals.append(np.nan)
-						CO2vals.append(np.nan)
-						warnings.append("Calculation Failed.")
-				fluid_data["XH2O_fl_VESIcal"] = H2Ovals
-				fluid_data["XCO2_fl_VESIcal"] = CO2vals
-				if file_has_temp == False:
-					fluid_data["Temperature_C_VESIcal"] = temperature
-				if file_has_press == False:
-					fluid_data["Pressure_bars_VESIcal"] = pressure
-				fluid_data["Model"] = model
-				fluid_data["Warnings"] = warnings
-
-				return fluid_data
-			else:
-				saturated = []
-				for index, row in fluid_data.iterrows():
-					try:
-						if file_has_temp == True:
-							temperature = row[temp_name]
-						if file_has_press == True:
-							pressure = row[press_name]
-						bulk_comp = {oxide:  row[oxide] for oxide in oxides}
-						calc = calculate_equilibrium_fluid_comp(sample=bulk_comp, pressure=pressure, temperature=temperature, model=model, silence_warnings=True)
-						saturated.append(calc.result)
-						warnings.append(calc.calib_check)
-					except:
-						saturated.append(np.nan)
-						warnings.append("Calculation Failed.")
-				fluid_data["Saturated_VESIcal"] = saturated
-				if file_has_temp == False:
-					fluid_data["Temperature_C_VESIcal"] = temperature
-				if file_has_press == False:
-					fluid_data["Pressure_bars_VESIcal"] = pressure
-				fluid_data["Model"] = model
-				fluid_data["Warnings"] = warnings
-
-				return fluid_data
-		else:
-			fluid_comp_H2O = []
-			fluid_comp_CO2 = []
-			fluid_mass_grams = []
-			fluid_system_wtper = []
-			iterno = 0
+		H2Ovals = []
+		CO2vals = []
+		warnings = []
+		if model in MixedFluidsModels or model == "MooreWater":
 			for index, row in fluid_data.iterrows():
-				if print_status == True:
-					print("Calculating sample " + str(index))
-				bulk_comp = {oxide:  row[oxide] for oxide in oxides}
-				if iterno == 0:
-					bulk_comp_orig = bulk_comp
-				iterno += 1
-				feasible = melts.set_bulk_composition(bulk_comp)
+				try:
+					if file_has_temp == True:
+						temperature = row[temp_name]
+					if file_has_press == True:
+						pressure = row[press_name]
+					bulk_comp = {oxide:  row[oxide] for oxide in oxides}
+					calc = calculate_equilibrium_fluid_comp(sample=bulk_comp, pressure=pressure, temperature=temperature, model=model, silence_warnings=True)
 
-				if file_has_temp == True:
-					temperature = row[temp_name]
-				if file_has_press == True:
-					pressure = row[press_name]
-
-				pressureMPa = pressure / 10.0
-
-				output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
-				(status, temperature, pressureMPa, xmlout) = output[0]
-				fluid_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
-				flsystem_wtper = 100 * fluid_mass / (fluid_mass + melts.get_mass_of_phase(xmlout, phase_name='Liquid'))
-
-				if fluid_mass > 0.0:
-					fluid_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid', mode='component')
-					try:
-						fluid_comp_H2O.append(fluid_comp['Water'])
-					except:
-						fluid_comp_H2O.append(0.0)
-					try:
-						fluid_comp_CO2.append(fluid_comp['Carbon Dioxide'])
-					except:
-						fluid_comp_CO2.append(0.0)
-					fluid_mass_grams.append(fluid_mass)
-					fluid_system_wtper.append(flsystem_wtper)
-				else:
-					fluid_comp_H2O.append(0)
-					fluid_comp_CO2.append(0)
-					fluid_mass_grams.append(0)
-					fluid_system_wtper.append(0)
-
-			fluid_data["XH2O_fl_VESIcal"] = fluid_comp_H2O
-			fluid_data["XCO2_fl_VESIcal"] = fluid_comp_CO2
-			fluid_data["FluidMass_grams_VESIcal"] = fluid_mass_grams
-			fluid_data["FluidProportion_wt_VESIcal"] = fluid_system_wtper
-
+					H2Ovals.append(calc.result['H2O'])
+					CO2vals.append(calc.result['CO2'])
+					warnings.append(calc.calib_check)
+				except:
+					H2Ovals.append(np.nan)
+					CO2vals.append(np.nan)
+					warnings.append("Calculation Failed.")
+			fluid_data["XH2O_fl_VESIcal"] = H2Ovals
+			fluid_data["XCO2_fl_VESIcal"] = CO2vals
 			if file_has_temp == False:
 				fluid_data["Temperature_C_VESIcal"] = temperature
 			if file_has_press == False:
 				fluid_data["Pressure_bars_VESIcal"] = pressure
-			fluid_data["Model"] = "MagmaSat"
+			fluid_data["Model"] = model
+			fluid_data["Warnings"] = warnings
 
-			if print_status == True:
-				print("Done!")
 			return fluid_data
+		elif model == 'MagmaSat':
+			for index, row in fluid_data.iterrows():
+				if print_status == True:
+					print("Calculating sample " + str(index))
+				try:
+					if file_has_temp == True:
+						temperature = row[temp_name]
+					if file_has_press == True:
+						pressure = row[press_name]
+					bulk_comp = {oxide:  row[oxide] for oxide in oxides}
+					calc = calculate_equilibrium_fluid_comp(sample=bulk_comp, pressure=pressure, temperature=temperature, model=model, silence_warnings=True)
+
+					H2Ovals.append(calc.result['H2O'])
+					CO2vals.append(calc.result['CO2'])
+					warnings.append(calc.calib_check)
+				except:
+					H2Ovals.append(np.nan)
+					CO2vals.append(np.nan)
+					warnings.append("Calculation Failed.")
+			fluid_data["XH2O_fl_VESIcal"] = H2Ovals
+			fluid_data["XCO2_fl_VESIcal"] = CO2vals
+			if file_has_temp == False:
+				fluid_data["Temperature_C_VESIcal"] = temperature
+			if file_has_press == False:
+				fluid_data["Pressure_bars_VESIcal"] = pressure
+			fluid_data["Model"] = model
+			fluid_data["Warnings"] = warnings
+
+			return fluid_data
+
+		else:
+			saturated = []
+			for index, row in fluid_data.iterrows():
+				try:
+					if file_has_temp == True:
+						temperature = row[temp_name]
+					if file_has_press == True:
+						pressure = row[press_name]
+					bulk_comp = {oxide:  row[oxide] for oxide in oxides}
+					calc = calculate_equilibrium_fluid_comp(sample=bulk_comp, pressure=pressure, temperature=temperature, model=model, silence_warnings=True)
+					saturated.append(calc.result)
+					warnings.append(calc.calib_check)
+				except:
+					saturated.append(np.nan)
+					warnings.append("Calculation Failed.")
+			fluid_data["Saturated_VESIcal"] = saturated
+			if file_has_temp == False:
+				fluid_data["Temperature_C_VESIcal"] = temperature
+			if file_has_press == False:
+				fluid_data["Pressure_bars_VESIcal"] = pressure
+			fluid_data["Model"] = model
+			fluid_data["Warnings"] = warnings
+
+			return fluid_data
+		# else: #old magmasat
+		# 	fluid_comp_H2O = []
+		# 	fluid_comp_CO2 = []
+		# 	fluid_mass_grams = []
+		# 	fluid_system_wtper = []
+		# 	iterno = 0
+		# 	for index, row in fluid_data.iterrows():
+		# 		if print_status == True:
+		# 			print("Calculating sample " + str(index))
+		# 		bulk_comp = {oxide:  row[oxide] for oxide in oxides}
+		# 		if iterno == 0:
+		# 			bulk_comp_orig = bulk_comp
+		# 		iterno += 1
+		# 		feasible = melts.set_bulk_composition(bulk_comp)
+
+		# 		if file_has_temp == True:
+		# 			temperature = row[temp_name]
+		# 		if file_has_press == True:
+		# 			pressure = row[press_name]
+
+		# 		pressureMPa = pressure / 10.0
+
+		# 		output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
+		# 		(status, temperature, pressureMPa, xmlout) = output[0]
+		# 		fluid_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
+		# 		flsystem_wtper = 100 * fluid_mass / (fluid_mass + melts.get_mass_of_phase(xmlout, phase_name='Liquid'))
+
+		# 		if fluid_mass > 0.0:
+		# 			fluid_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid', mode='component')
+		# 			try:
+		# 				fluid_comp_H2O.append(fluid_comp['Water'])
+		# 			except:
+		# 				fluid_comp_H2O.append(0.0)
+		# 			try:
+		# 				fluid_comp_CO2.append(fluid_comp['Carbon Dioxide'])
+		# 			except:
+		# 				fluid_comp_CO2.append(0.0)
+		# 			fluid_mass_grams.append(fluid_mass)
+		# 			fluid_system_wtper.append(flsystem_wtper)
+		# 		else:
+		# 			fluid_comp_H2O.append(0)
+		# 			fluid_comp_CO2.append(0)
+		# 			fluid_mass_grams.append(0)
+		# 			fluid_system_wtper.append(0)
+
+		# 	fluid_data["XH2O_fl_VESIcal"] = fluid_comp_H2O
+		# 	fluid_data["XCO2_fl_VESIcal"] = fluid_comp_CO2
+		# 	fluid_data["FluidMass_grams_VESIcal"] = fluid_mass_grams
+		# 	fluid_data["FluidProportion_wt_VESIcal"] = fluid_system_wtper
+
+		# 	if file_has_temp == False:
+		# 		fluid_data["Temperature_C_VESIcal"] = temperature
+		# 	if file_has_press == False:
+		# 		fluid_data["Pressure_bars_VESIcal"] = pressure
+		# 	fluid_data["Model"] = "MagmaSat"
+
+		# 	if print_status == True:
+		# 		print("Done!")
+		# 	return fluid_data
 
 	def calculate_saturation_pressure(self, temperature, print_status=True, model='MagmaSat', **kwargs): #TODO fix weird printing
 		"""
@@ -5000,9 +4949,9 @@ class LiuWater(Model):
 
 		equation = ((354.94*(XH2Ofluid*pressureMPa)**(0.5) + 9.623*(XH2Ofluid*pressureMPa)
 						- 1.5223*(XH2Ofluid*pressureMPa)**(1.5)) / temperatureK
-				     	+ 0.0012439*(XH2Ofluid*pressureMPa)**(1.5)
-				     	+ pressureMPa*(1-XH2Ofluid)*(-1.084*10**(-4)*(XH2Ofluid*pressureMPa)**(0.5)
-				     	- 1.362*10**(-5)*(XH2Ofluid*pressureMPa)) - H2Ot)
+						+ 0.0012439*(XH2Ofluid*pressureMPa)**(1.5)
+						+ pressureMPa*(1-XH2Ofluid)*(-1.084*10**(-4)*(XH2Ofluid*pressureMPa)**(0.5)
+						- 1.362*10**(-5)*(XH2Ofluid*pressureMPa)) - H2Ot)
 
 		XH2Ofluid = sympy.solve(equation, XH2Ofluid)[0]
 		if XH2Ofluid > 1:
@@ -5976,26 +5925,18 @@ class MagmaSat(Model):
 	"""
 
 	def __init__(self):
-		from thermoengine import equilibrate
 		self.melts_version = '1.2.0' #just here so users can see which version is being used
 
-		try:
-			melts
-		except NameError:
-			from thermoengine import equilibrate
-			#--------------MELTS preamble---------------#
-			# instantiate thermoengine equilibrate MELTS instance
-			melts = equilibrate.MELTSmodel('1.2.0')
+		#--------------MELTS preamble---------------#
+		# Suppress phases not required in the melts simulation
+		self.oxides = melts.get_oxide_names()
+		self.phases = melts.get_phase_names()
 
-			# Suppress phases not required in the melts simulation
-			self.oxides = melts.get_oxide_names()
-			self.phases = melts.get_phase_names()
-
-			for phase in self.phases:
-				melts.set_phase_inclusion_status({phase: False})
-			melts.set_phase_inclusion_status({'Fluid': True, 'Liquid': True})
-			self.melts = melts
-			#-------------------------------------------#
+		# for phase in self.phases:
+		# 	melts.set_phase_inclusion_status({phase: False})
+		# melts.set_phase_inclusion_status({'Fluid': True, 'Liquid': True})
+		self.melts = melts
+		#-------------------------------------------#
 		self.set_volatile_species(['H2O', 'CO2'])
 		self.set_calibration_ranges([cr_Between('pressure',[0,30000],'bar','MagmaSat'),
 									 cr_Between('temperature',[550,1730],'oC','MagmaSat')])
@@ -7125,6 +7066,231 @@ class calculate_degassing_path(Calculate):
 		s += self.model.check_calibration_range(parameters,report_nonexistance=False)
 		return s
 
+#-------Define custom plotting tools for checking calibrations-------#
+#----------------------------------------------------------#
+#    			  TAS PLOT PYTHON SCRIPT        	       #
+#														   #
+#  COPYRIGHT:  (C) 2015 John A Stevenson / @volcan01010    #
+#                       Joaquin Cortés					   #
+#  WEBSITE: http://all-geo.org/volcan01010				   #
+#----------------------------------------------------------#
+def add_LeMaitre_fields(plot_axes, fontsize=12, color=(0.6, 0.6, 0.6)):
+	"""Add fields for geochemical classifications from LeMaitre et al (2002)
+	to pre-existing axes.  If necessary, the axes object can be retrieved via
+	plt.gca() command. e.g.
+	
+	ax1 = plt.gca()
+	add_LeMaitre_fields(ax1)
+	ax1.plot(silica, total_alkalis, 'o')
+	
+	Fontsize and color options can be used to change from the defaults.
+	
+	It may be necessary to follow the command with plt.draw() to update
+	the plot.
+	
+	Le Maitre RW (2002) Igneous rocks : IUGS classification and glossary of
+		terms : recommendations of the International Union of Geological 
+		Sciences Subcommission on the Systematics of igneous rocks, 2nd ed. 
+		Cambridge University Press, Cambridge
+	"""
+	from collections import namedtuple
+	# Prepare the field information
+	FieldLine = namedtuple('FieldLine', 'x1 y1 x2 y2')
+	lines = (FieldLine(x1=41, y1=0, x2=41, y2=7),
+			 FieldLine(x1=41, y1=7, x2=52.5, y2=14),
+			 FieldLine(x1=45, y1=0, x2=45, y2=5),
+			 FieldLine(x1=41, y1=3, x2=45, y2=3),
+			 FieldLine(x1=45, y1=5, x2=61, y2=13.5),
+			 FieldLine(x1=45, y1=5, x2=52, y2=5),
+			 FieldLine(x1=52, y1=5, x2=69, y2=8),
+			 FieldLine(x1=49.4, y1=7.3, x2=52, y2=5),
+			 FieldLine(x1=52, y1=5, x2=52, y2=0),
+			 FieldLine(x1=48.4, y1=11.5, x2=53, y2=9.3),
+			 FieldLine(x1=53, y1=9.3, x2=57, y2=5.9),
+			 FieldLine(x1=57, y1=5.9, x2=57, y2=0),
+			 FieldLine(x1=52.5, y1=14, x2=57.6, y2=11.7),
+			 FieldLine(x1=57.6, y1=11.7, x2=63, y2=7),
+			 FieldLine(x1=63, y1=7, x2=63, y2=0),
+			 FieldLine(x1=69, y1=12, x2=69, y2=8),
+			 FieldLine(x1=45, y1=9.4, x2=49.4, y2=7.3),
+			 FieldLine(x1=69, y1=8, x2=77, y2=0))
+
+	FieldName = namedtuple('FieldName', 'name x y rotation')
+	names = (FieldName('Picro\nbasalt', 43, 2, 0),
+			 FieldName('Basalt', 48.5, 2, 0),
+			 FieldName('Basaltic\nandesite', 54.5, 2, 0),
+			 FieldName('Andesite', 60, 2, 0),
+			 FieldName('Dacite', 68.5, 2, 0),
+			 FieldName('Rhyolite', 76, 9, 0),
+			 FieldName('Trachyte\n(Q < 20%)\n\nTrachydacite\n(Q > 20%)',
+					   64.5, 11.5, 0),
+			 FieldName('Basaltic\ntrachyandesite', 53, 8, -20),
+			 FieldName('Trachy-\nbasalt', 49, 6.2, 0),
+			 FieldName('Trachyandesite', 57.2, 9, 0),
+			 FieldName('Phonotephrite', 49, 9.6, 0),
+			 FieldName('Tephriphonolite', 53.0, 11.8, 0),
+			 FieldName('Phonolite', 57.5, 13.5, 0),
+			 FieldName('Tephrite\n(Ol < 10%)', 45, 8, 0),
+			 FieldName('Foidite', 44, 11.5, 0),
+			 FieldName('Basanite\n(Ol > 10%)', 43.5, 6.5, 0))
+
+	# Plot the lines and fields
+	for line in lines:
+		plot_axes.plot([line.x1, line.x2], [line.y1, line.y2],
+					   '-', color=color, zorder=0)
+	for name in names:
+		plot_axes.text(name.x, name.y, name.name, color=color, size=fontsize,
+				 horizontalalignment='center', verticalalignment='top',
+				 rotation=name.rotation, zorder=0)
+
+def calib_plot(user_data=None, model='all', plot_type='TAS', save_fig=False, **kwargs):
+	"""
+	Plots user data and calibration set of any or all models on any x-y plot or a total alkalis vs silica (TAS) diagram.
+	TAS diagram boundaries provided by tasplot python module, copyright John A Stevenson.
+
+	Parameters
+	----------
+	user_data: ExcelFile object, pandas DataFrame or pandas Series
+		OPTIONAL. Default value is None, in which case only the model calibration set is plotted.
+		User provided sample data describing the oxide composition of one or more samples. Multiple samples
+		can be passed as an ExcelFile object or pandas DataFrame. A single sample can be passed as a pandas
+		Series.
+
+	model: str or list
+		OPTIONAL. Default value is 'all', in which case all model calibration datasets will be plotted.
+		String of the name of the model calibration dataset to plot (e.g., 'Shishkina'). Multiple models
+		can be plotted by passing them as strings within a list (e.g., ['Shishkina', 'Dixon'])
+
+	plot_type: str
+		OPTIONAL. Default value is 'TAS', which returns a total alkali vs silica (TAS) diagram. Any two oxides can
+		be plotted as an x-y plot by setting plot_type='xy' and specifying x- and y-axis oxides, e.g., x='SiO2', y='Al2O3'
+
+	save_fig: False or str
+		OPTIONAL. Default value is False, in which case the figure will not be saved. If a string is passed,
+		the figure will be saved with the string as the filename. The string must include the file extension.
+
+	Returns
+	-------
+	matplotlib object
+	"""
+	sys.path.insert(0, 'Calibration/')
+	import calibrations
+
+	#Create the figure
+	fig, ax1 = plt.subplots(figsize = (17,8))
+	font = {'family': 'sans-serif',
+				'color':  'black',
+				'weight': 'normal',
+				'size': 20,
+				}
+
+	#TAS figure
+	if plot_type == 'TAS':
+		ax1.set_xlim([35, 100]) # adjust x limits here if you want to focus on a specific part of compostional space
+		ax1.set_ylim([0, 25]) # adjust y limits here
+		plt.xlabel('SiO$_2$, wt%', fontdict=font, labelpad = 15)
+		plt.ylabel('Na$_2$O+K$_2$O, wt%', fontdict=font, labelpad = 15)
+		add_LeMaitre_fields(ax1)
+	elif plot_type == 'xy':
+		if 'x' in kwargs and 'y' in kwargs:
+			x = kwargs['x']
+			y = kwargs['y']
+			plt.xlabel(str(x)+", wt%", fontdict=font, labelpad = 15)
+			plt.ylabel(str(y)+", wt%", fontdict=font, labelpad = 15)
+		else:
+			raise InputError("If plot_type is 'xy', then x and y values must be passed as strings. For example, x='SiO2', y='Al2O3'.")
+
+	#Plot Calibration Data
+	if model == 'all':
+		model = ['MagmaSat',
+				'Shishkina',       
+			   'Dixon',              
+			   'IaconoMarziano',     
+			   'Liu', 
+			   #'EguchiCarbon',       
+			   'AllisonCarbon',       
+			   'MooreWater']	
+
+	if isinstance(model, str):
+		model = [model]
+
+	if isinstance(model, list):
+		for modelname in model:
+			calibdata = calibrations.return_calibration(modelname)
+			if isinstance(calibdata, str):
+				warnings.warn(calibdata)
+			else:
+				if 'CO2' in calibdata.keys():
+					if plot_type == 'TAS':
+						try:
+							plt.scatter(calibdata['CO2']['SiO2'], calibdata['CO2']['Na2O'] + calibdata['CO2']['K2O'],
+										marker='o', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname)+" CO2")
+						except:
+							plt.scatter(calibdata['CO2']['SiO2'], calibdata['CO2']['Na2O+K2O'],
+									marker='o', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname)+" CO2")
+					if plot_type == 'xy':
+						try:
+							plt.scatter(calibdata['CO2'][x], calibdata['CO2'][y],
+									marker='o', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname)+" CO2")
+						except:
+							warnings.warn("The requested oxides were not found in the calibration dataset for " + str(modelname) + ".")
+
+				if 'H2O' in calibdata.keys():
+					if plot_type == 'TAS':
+						try:
+							plt.scatter(calibdata['H2O']['SiO2'], calibdata['H2O']['Na2O'] + calibdata['H2O']['K2O'],
+										marker='s', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname)+" H2O")
+						except:
+							plt.scatter(calibdata['H2O']['SiO2'], calibdata['H2O']['Na2O+K2O'],
+										marker='s', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname)+" H2O")
+					if plot_type == 'xy':
+						try:
+							plt.scatter(calibdata['H2O'][x], calibdata['H2O'][y],
+										marker='s', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname)+" H2O")
+						except:
+							warnings.warn("The requested oxides were not found in the calibration dataset for " + str(modelname) + ".")
+				if 'Mixed' in calibdata.keys():
+					if plot_type == 'TAS':
+						try:
+							plt.scatter(calibdata['Mixed']['SiO2'], calibdata['Mixed']['Na2O'] + calibdata['Mixed']['K2O'],
+										marker='d', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname)+" Mixed")
+						except:
+							plt.scatter(calibdata['Mixed']['SiO2'], calibdata['Mixed']['Na2O+K2O'],
+										marker='d', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname)+" Mixed")
+					if plot_type == 'xy':
+						try:
+							plt.scatter(calibdata['Mixed'][x], calibdata['Mixed'][y],
+										marker='d', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname)+" Mixed")
+						except:
+							warnings.warn("The requested oxides were not found in the calibration dataset for " + str(modelname) + ".")
+	else:
+		raise InputError("model must be of type str or list")
+
+	#Plot user data
+	if user_data is None:
+		pass
+	else:
+		if isinstance(user_data, ExcelFile):
+			user_data = user_data.data
+		if plot_type == 'TAS':
+			try:
+				user_data["TotalAlkalis"] = user_data["Na2O"] + user_data["K2O"]
+			except:
+				InputError("Na2O and K2O data must be in user_data")
+			plt.scatter(user_data['SiO2'], user_data['TotalAlkalis'], 
+						s=150, edgecolors='w', facecolors='red', marker='P', 
+						label = 'User Data')
+		if plot_type == 'xy':
+			plt.scatter(user_data[x], user_data[y],
+						s=150, edgecolors='w', facecolors='red', marker='P', 
+						label = 'User Data')
+
+	plt.legend(bbox_to_anchor=(1.04,1), loc="upper left")
+	fig.tight_layout()
+	if isinstance(save_fig, str):
+		fig.savefig(save_fig)
+
+	return plt.show()
 
 
 def test():
