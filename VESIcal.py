@@ -5018,7 +5018,7 @@ class LiuCarbon(Model):
 
 		return 1 - XCO2fluid
 
-	def calculate_saturation_pressure(self,temperature,sample,X_fluid=1,**kwargs):
+	def calculate_saturation_pressure(self,temperature,sample,X_fluid=0,**kwargs):
 		"""
 		Calculates the pressure at which a an CO2-bearing fluid is saturated. Calls the scipy.root_scalar
 		routine, which makes repeated called to the calculate_dissolved_volatiles method.
