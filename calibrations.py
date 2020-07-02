@@ -316,7 +316,7 @@ def return_calibration(model_name):
 		return {'H2O': df_Iacono_H2O, 'Mixed': df_Iacono_CO2H2O, 'marker':'d', 'facecolor':'magenta'}
 
 	if model_name == 'Liu':
-		return "This model calibration not yet implemented."
+		return "The Liu model calibration is not yet implemented."
 
 	if model_name == 'ShishkinaCarbon':
 		return {'CO2': df_Shishkina_CO2, 'marker':'o', 'facecolor':'darkorange'}
@@ -343,10 +343,10 @@ def return_calibration(model_name):
 		return {'Mixed': df_Moore_H2O, 'marker':'d', 'facecolor':'lime'}
 
 	if model_name == 'LiuCarbon':
-		return "This model calibration not yet implemented."
+        return "The Liu model calibration is not yet implemented."
 
 	if model_name == 'LiuWater':
-		return "This model calibration not yet implemented."
+        return "The Liu model calibration is not yet implemented."
 
 	if model_name == 'MagmaSat':
 		return {'CO2': df_MagmaSat_CO2, 'H2O': df_MagmaSat_H2O, 'Mixed': df_MagmaSat_CO2H2O, 'marker':'d', 'facecolor':'silver'}

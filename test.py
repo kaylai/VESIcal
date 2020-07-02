@@ -28,6 +28,42 @@ wtpt_oxides = pd.Series({'SiO2':47.95,
                          'CO2':0.8,
                          'H2O':4.0})
 
+#Mono Craters, CA from Liu et al (2005)
+mono = pd.Series({'SiO2':77.19,
+                         'TiO2':0.06,
+                         'Al2O3':12.80,
+                         'FeO':0.94,
+                         'MgO':0.03,
+                         'CaO':0.53,
+                         'Na2O':3.98,
+                         'K2O':4.65,
+                         'CO2':0.05,
+                         'H2O':0.26})
+
+mono_incVols = pd.Series({'SiO2':77.19,
+                         'TiO2':0.06,
+                         'Al2O3':12.80,
+                         'FeO':0.94,
+                         'MgO':0.03,
+                         'CaO':0.53,
+                         'Na2O':3.98,
+                         'K2O':4.65,
+                         'CO2':0.55,
+                         'H2O':2.26})
+
+#Experimental sample from Tamic et al. (2001)
+Ech6 = pd.Series({'SiO2':77.04,
+                         'TiO2':0.11,
+                         'Al2O3':12.76,
+                         'FeO':0.68,
+                         'MnO': 0.07,
+                         'MgO':0.08,
+                         'CaO':0.58,
+                         'Na2O':4.07,
+                         'K2O':4.79,
+                         'CO2':0.066,
+                         'H2O':3.84})
+
 
 
 print(m.calculate_dissolved_volatiles(pressure=5000.0,X_fluid=(0.5,0.5),sample=wtpt_oxides,temperature=1473.15,model='Shishkina').result)
