@@ -5979,7 +5979,7 @@ class MagmaSat(Model):
 		s = ''
 		for cr in self.calibration_ranges:
 			if cr.check(parameters) == False:
-				s += cr.string(parameters,report_nonexistance)
+				s += cr.string(parameters,report_nonexistance=False)
 		return s
 
 	def get_calibration_range(self):
