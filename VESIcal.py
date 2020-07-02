@@ -17,6 +17,7 @@ from scipy.optimize import root
 from scipy.optimize import minimize
 import sys
 import sympy
+import anvil_server
 
 #--------------MELTS preamble---------------#
 from thermoengine import equilibrate
@@ -25,7 +26,6 @@ melts = equilibrate.MELTSmodel('1.2.0')
 
 # Suppress phases not required in the melts simulation
 phases = melts.get_phase_names()
-
 for phase in phases:
 	melts.set_phase_inclusion_status({phase: False})
 melts.set_phase_inclusion_status({'Fluid': True, 'Liquid': True})
@@ -630,17 +630,6 @@ class ExcelFile(object):
 			pass
 		else:
 			raise InputError("If sheet_name is passed, it must be of type str or int. Currently, VESIcal cannot import more than one sheet at a time.")
-		#--------------MELTS preamble---------------#
-		# Suppress phases not required in the melts simulation
-		self.oxides = melts.get_oxide_names()
-		self.phases = melts.get_phase_names()
-
-		# for phase in self.phases:
-		# 	melts.set_phase_inclusion_status({phase: False})
-		# melts.set_phase_inclusion_status({'Fluid': True, 'Liquid': True})
-
-		self.melts = melts
-		#-------------------------------------------#
 
 		self.input_type = input_type
 
@@ -695,7 +684,6 @@ class ExcelFile(object):
 		-------
 		pandas DataFrame
 		"""
-		oxides = self.oxides
 		for oxide in oxides:
 			if oxide in self.data.columns:
 				pass
@@ -781,10 +769,6 @@ class ExcelFile(object):
 			Mole fraction of H2O in the H2O-CO2 fluid
 
 		"""
-		melts = self.melts
-		oxides = self.oxides
-		phases = self.phases
-
 		pressureMPa = pressure / 10.0
 
 		bulk_comp = {oxide:  sample[oxide] for oxide in oxides}
@@ -896,8 +880,6 @@ class ExcelFile(object):
 		pandas DataFrame
 			Original data passed plus newly calculated values are returned.
 		"""
-		oxides = self.oxides
-		melts = self.melts
 		data = self.preprocess_sample(self.data)
 		dissolved_data = data.copy()
 
@@ -1096,8 +1078,6 @@ class ExcelFile(object):
 		"""
 		data = self.preprocess_sample(self.data)
 		fluid_data = data.copy()
-		oxides = self.oxides
-		melts = self.melts
 
 		if isinstance(temperature, str):
 			file_has_temp = True
@@ -1228,8 +1208,6 @@ class ExcelFile(object):
 		"""
 		data = self.preprocess_sample(self.data)
 		satp_data = data.copy()
-		oxides = self.oxides
-		melts = self.melts
 
 		if isinstance(temperature, str):
 			file_has_temp = True
@@ -5032,7 +5010,7 @@ class LiuCarbon(Model):
 			Temperature in degrees C.
 
 		X_fluid float
-			OPTIONAL. Default is 1. Mole fraction of H2O in the H2O-CO2 fluid.
+			OPTIONAL. Default is 0. Mole fraction of H2O in the H2O-CO2 fluid.
 
 		Returns
 		-------
@@ -6000,6 +5978,10 @@ class MagmaSat(Model):
 		while fluid_mass <= 0:
 			if X_fluid == 0:
 				CO2_val += 0.1
+			elif X_fluid >= 0.5:
+				H2O_val += 0.2
+				CO2_val = (H2O_val / X_fluid) - H2O_val #NOTE this is setting XH2Owt of the system (not of the fluid) to X_fluid
+				#TODO this is what needs to be higher for higher XH2O. Slows down computation by a second or two
 			else:
 				H2O_val += 0.1
 				CO2_val = (H2O_val / X_fluid) - H2O_val #NOTE this is setting XH2Owt of the system (not of the fluid) to X_fluid
@@ -6297,9 +6279,6 @@ class MagmaSat(Model):
 			and CO2 in the liquid in wt%. Columns in the isopleth dataframe are 'Pressure', 'H2Ofl', and 'CO2fl',
 			corresponding to pressure in bars and H2O and CO2 concentration in the H2O-CO2 fluid, in wt%.
 		"""
-		melts = self.melts
-		phases = self.phases
-		oxides = self.oxides
 		bulk_comp = sample
 
 		if isinstance(pressure_list, list):
@@ -6392,9 +6371,6 @@ class MagmaSat(Model):
 		pandas DataFrame object
 
 		"""
-		melts = self.melts
-		oxides = self.oxides
-		phases = self.phases
 
 		sample = normalize(sample)
 		bulk_comp_orig = sample
