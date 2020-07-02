@@ -1287,26 +1287,100 @@ class CalibrationRange(object):
 	""" The CalibrationRange object allows the range of allowable parameters to be specified and
 	used in checking and reporting of the results.
 	"""
-	def __init__(self,parameter_name,value,unit='',modelname='',parameter_string=None,value_fmt="{:.1f}"):
+	def __init__(self, parameter_name, value, checkfunction=None, units='', model_name='',
+				fail_msg='',fail_dict={}, pass_msg='', pass_dict={}, description_msg='', description_dict={}):
 		self.parameter_name = parameter_name
 		self.value = value
-		self.value_fmt = value_fmt
-		self.model_name = modelname
-		self.unit = unit
-		if parameter_string is not None:
-			self.parameter_string = parameter_string
-		else:
-			self.parameter_string = parameter_name
+		self.checkfunction = checkfunction
+		self.units = units
+		self.model_name = model_name
+		self.fail_msg = (fail_msg, fail_dict)
+		self.pass_msg = (pass_msg, pass_dict)
+		self.description_msg = (description_msg, description_dict)
 
-	@abstractmethod
 	def check(self,parameters):
 		"""Method for checking whether parameters satisfy the calibration range."""
-		return True
+		if self.parameter_name in parameters:
+			return self.checkfunction(self.value,parameters[self.parameter_name])
+		else:
+			return None
 
-	@abstractmethod
-	def string(self,parameters):
+	def string(self,parameters,report_nonexistance=True):
 		"""Returns a string statement of the calibration check"""
-		return 'No string return defined. '
+		if type(parameters) == type(None):
+			msgdict = self.description_msg[1]
+			msgdict['calib_val'] = parameters[self.value]
+			if 'param_name' not in msgdict:
+				msgdict['param_name'] = self.parameter_name
+			if 'units' not in msgdict:
+				msgdict['units'] = self.units
+			if 'model_name' not in msgdict:
+				msgdict['model_name'] = self.model_name
+			return self.description_msg[0].format(**msgdict)
+		else:
+			check = self.check(parameters)
+			if check == True:
+				msgdict = self.pass_msg[1]
+				msgdict['param_val'] = parameters[self.parameter_name]
+				if type(self.value) == float or type(self.value) == int:
+					msgdict['calib_val'] = self.value
+				elif type(self.value) == list or type(self.value) == tuple or type(self.value) == np.ndarray:
+					for i in range(len(self.value)):
+						msgdict['calib_val'+str(i)] = self.value[i]
+				if 'param_name' not in msgdict:
+					msgdict['param_name'] = self.parameter_name
+				if 'units' not in msgdict:
+					msgdict['units'] = self.units
+				if 'model_name' not in msgdict:
+					msgdict['model_name'] = self.model_name
+				return self.pass_msg[0].format(**msgdict)
+			elif check == False:
+				msgdict = self.fail_msg[1]
+				msgdict['param_val'] = parameters[self.parameter_name]
+				if type(self.value) == float or type(self.value) == int:
+					msgdict['calib_val'] = self.value
+				elif type(self.value) == list or type(self.value) == tuple or type(self.value) == np.ndarray:
+					for i in range(len(self.value)):
+						msgdict['calib_val'+str(i)] = self.value[i]
+				if 'param_name' not in msgdict:
+					msgdict['param_name'] = self.parameter_name
+				if 'units' not in msgdict:
+					msgdict['units'] = self.units
+				if 'model_name' not in msgdict:
+					msgdict['model_name'] = self.model_name
+				return self.fail_msg[0].format(**msgdict)
+			else:
+				if report_nonexistance == True:
+					return "A value for {} was not provided.".format(self.parameter_name)
+				else:
+					return ''
+
+# class old_CalibrationRange(object):
+# 	""" The CalibrationRange object allows the range of allowable parameters to be specified and
+# 	used in checking and reporting of the results.
+# 	"""
+# 	def __init__(self,parameter_name,value,unit='',modelname='',explanation_string=None,
+# 				 parameter_string=None,value_fmt="{:.1f}"):
+# 		self.parameter_name = parameter_name
+# 		self.value = value
+# 		self.value_fmt = value_fmt
+# 		self.model_name = modelname
+# 		self.unit = unit
+# 		self.explanation_string = explanation_string
+# 		if parameter_string is not None:
+# 			self.parameter_string = parameter_string
+# 		else:
+# 			self.parameter_string = parameter_name
+#
+# 	@abstractmethod
+# 	def check(self,parameters):
+# 		"""Method for checking whether parameters satisfy the calibration range."""
+# 		return True
+#
+# 	@abstractmethod
+# 	def string(self,parameters):
+# 		"""Returns a string statement of the calibration check"""
+# 		return 'No string return defined. '
 
 class Model(object):
 	"""The model object implements a volatile solubility model. It is composed
@@ -1492,387 +1566,411 @@ class Calculate(object):
 
 #-------------DEFAULT CALIBRATIONRANGE OBJECTS---------------#
 
-class cr_EqualTo(CalibrationRange):
-	"""An instance of the CalibrationRange object for properties calibrated for a
-	single value.
+def crf_EqualTo(calibval,paramval):
+	return calibval == paramval
+crmsg_EqualTo_pass = "The {param_name} ({param_val:.1f} {units}) is equal to {calib_val:.1f} {units} as required by the calibration range of the {model_name} model. "
+crmsg_EqualTo_fail = "The {param_name} is outside the calibration range of the {model_name} model, as {param_val:.1f} {units} is not equal to {calib_val:.1f} {units}. "
+crmsg_EqualTo_description = "The {model_name} model is calibrated for {param_name} equal to {calib_val:.1f} {units}. "
 
-	Parameters
-	----------
-	parameter_name 	str
-		The name of the variable, as implemented in the code, e.g. 'pressure' or
-		'temperature'.
-	value 	float
-		The value the parameter should be equal to.
-	unit 	str
-		The unit of the parameter, for use in printing.
-	modelname 	str
-		The name of the model to use when printing.
-	parameter_string 	str
-		If the parameter should be called something different to parameter_name when
-		printing, it should be defined here. If None the parameter_name will be used.
-	value_fmt 	str
-		The format the value should be printed with in strings, default is {:.1f}
-	"""
-	def check(self,parameters):
-		""" Checks whether the calibration range condition is met. If the parameters
-		variable does not contain the parameter the CalibrationRange object is defined
-		for, None will be returned.
+def crf_GreaterThan(calibval,paramval):
+	return paramval > calibval
+crmsg_GreaterThan_pass = "The {param_name} ({param_val:.1f} {units}) is greater than {calib_val:.1f} {units} as required by the calibration range of the {model_name} model. "
+crmsg_GreaterThan_fail = "The {param_name} is outside the calibration range of the {model_name} model, as {param_val:.1f} {units} is not greater than {calib_val:.1f} {units}. "
+crmsg_GreaterThan_description = "The {model_name} model is calibrated for {param_name} greater than {calib_val:.1f} {units}. "
 
-		Parameters
-		----------
-		parameters 	dict
-			The parameters to check.
+def crf_LessThan(calibval,paramval):
+	return paramval < calibval
+crmsg_LessThan_pass = "The {param_name} ({param_val:.1f} {units}) is less than {calib_val:.1f} {units} as required by the calibration range of the {model_name} model. "
+crmsg_LessThan_fail = "The {param_name} is outside the calibration range of the {model_name} model, as {param_val:.1f} {units} is not less than {calib_val:.1f} {units}. "
+crmsg_LessThan_description = "The {model_name} model is calibrated for {param_name} less than {calib_val:.1f} {units}. "
 
-		Returns
-		-------
-		bool or None
-			Whether the CalibrationRange condition is met, or none if the parameter
-			has not been supplied in the parameters variable.
+def crf_Between(calibval,paramval):
+	return paramval > calibval[0] and paramval < calibval[1]
+crmsg_Between_pass = "The {param_name} ({param_val} {units}) is between {calib_val0} and {calib_val1} {units} as required by the calibration range of the {model_name} model. "
+crmsg_Between_fail = "The {param_name} is outside the calibration range of the {model_name} model, as {param_val} {units} is not between {calib_val0} and {calib_val1} {units}. "
+crmsg_Between_description = "The {model_name} model is calibrated for {param_name} between {calib_val0} and {calib_val1} {units}. "
 
-		"""
-		if self.parameter_name in parameters:
-			if parameters[self.parameter_name] == self.value:
-				return True
-			else:
-				return False
-		else:
-			return None
-
-	def string(self,parameters=None,report_nonexistance=True):
-		"""Constructs a string description of the CalibrationRange object, or a
-		description of how the check passes or fails.
-
-		Parameters
-		----------
-		parameters 	dict or None
-			The parameters to check. If None, a description of the CalibrationRange
-			object will be constructed and returned.
-
-		report_nonexistance		bool
-			If the parameter the CalibrationRange check is defined for is not contained
-			within the parameters variable, report_nonexistance determines whether a
-			string stating this is returned, or whether an empty string is returned.
-
-		Returns
-		-------
-		str
-			A description of the CalibrationRange object if None supplied as a parameter,
-			otherwise a description of how the CalibrationRange check is passed or failed.
-
-		"""
-		if parameters is not None:
-			checkval = self.check(parameters)
-			if checkval is None:
-				if report_nonexistance==True:
-					s = "{} was not provided as a parameter for checking. ".format(self.parameter_string).title()
-			elif checkval == True:
-				s = "The {} (".format(self.parameter_string)
-				s += self.value_fmt.format(parameters[self.parameter_name])
-				s += " {}) is not equal to ".format(self.unit)
-				s += self.value_fmt.format(self.value)
-				s += " {} as required by the calibration range of the {} model. ".format(self.unit,self.model_name)
-				return s
-			else:
-				s = "The {} is outside the calibration range of the {} model, as ".format(self.parameter_string,self.model_name)
-				s += self.value_fmt.format(parameters[self.parameter_name])
-				s += " {} is not equal to ".format(self.unit)
-				s += self.value_fmt.format(self.value)
-				s += ' {}. '.format(self.unit)
-				return s
-		else:
-			s = "The {} model is calibrated for {} ".format(self.parameter_string)
-			s += " equal to "
-			s += self.value_fmt.format(self.value)
-			s += " {}. ".format(self.unit)
-			return s
-
-class cr_GreaterThan(CalibrationRange):
-	"""An instance of the CalibrationRange object for properties calibrated higher than
-	a particular value.
-
-	Parameters
-	----------
-	parameter_name 	str
-		The name of the variable, as implemented in the code, e.g. 'pressure' or
-		'temperature'.
-	value 	float
-		The value the parameter should be equal to.
-	unit 	str
-		The unit of the parameter, for use in printing.
-	modelname 	str
-		The name of the model to use when printing.
-	parameter_string 	str
-		If the parameter should be called something different to parameter_name when
-		printing, it should be defined here. If None the parameter_name will be used.
-	value_fmt 	str
-		The format the value should be printed with in strings, default is {:.1f}
-	"""
-	def check(self,parameters):
-		""" Checks whether the calibration range condition is met. If the parameters
-		variable does not contain the parameter the CalibrationRange object is defined
-		for, None will be returned.
-
-		Parameters
-		----------
-		parameters 	dict
-			The parameters to check.
-
-		Returns
-		-------
-		bool or None
-			Whether the CalibrationRange condition is met, or none if the parameter
-			has not been supplied in the parameters variable.
-
-		"""
-		if self.parameter_name in parameters:
-			if parameters[self.parameter_name] >= self.value:
-				return True
-			else:
-				return False
-		else:
-			return None
-
-	def string(self,parameters=None,report_nonexistance=True):
-		"""Constructs a string description of the CalibrationRange object, or a
-		description of how the check passes or fails.
-
-		Parameters
-		----------
-		parameters 	dict or None
-			The parameters to check. If None, a description of the CalibrationRange
-			object will be constructed and returned.
-
-		report_nonexistance		bool
-			If the parameter the CalibrationRange check is defined for is not contained
-			within the parameters variable, report_nonexistance determines whether a
-			string stating this is returned, or whether an empty string is returned.
-
-		Returns
-		-------
-		str
-			A description of the CalibrationRange object if None supplied as a parameter,
-			otherwise a description of how the CalibrationRange check is passed or failed.
-
-		"""
-		if parameters is not None:
-			checkval = self.check(parameters)
-			if checkval is None:
-				if report_nonexistance==True:
-					s = "{} was not provided as a parameter for checking. ".format(self.parameter_string).title()
-			elif checkval == True:
-				s = "The {} (".format(self.parameter_string)
-				s += self.value_fmt.format(parameters[self.parameter_name])
-				s += " {}) is greater than ".format(self.unit)
-				s += self.value_fmt.format(self.value)
-				s += " {} as required by the calibration range of the {} model. ".format(self.unit,self.model_name)
-				return s
-			else:
-				s = "The {} is outside the calibration range of the {} model, as ".format(self.parameter_string,self.model_name)
-				s += self.value_fmt.format(parameters[self.parameter_name])
-				s += " {} is not greater than ".format(self.unit)
-				s += self.value_fmt.format(self.value)
-				s += ' {}. '.format(self.unit)
-				return s
-		else:
-			s = "The {} model is calibrated for {} ".format(self.parameter_string)
-			s += " greater than "
-			s += self.value_fmt.format(self.value)
-			s += " {}. ".format(self.unit)
-			return s
-
-class cr_LessThan(CalibrationRange):
-	"""An instance of the CalibrationRange object for properties calibrated lower
-	than a particular value.
-
-	Parameters
-	----------
-	parameter_name 	str
-		The name of the variable, as implemented in the code, e.g. 'pressure' or
-		'temperature'.
-	value 	float
-		The value the parameter should be equal to.
-	unit 	str
-		The unit of the parameter, for use in printing.
-	modelname 	str
-		The name of the model to use when printing.
-	parameter_string 	str
-		If the parameter should be called something different to parameter_name when
-		printing, it should be defined here. If None the parameter_name will be used.
-	value_fmt 	str
-		The format the value should be printed with in strings, default is {:.1f}
-	"""
-	def check(self,parameters):
-		""" Checks whether the calibration range condition is met. If the parameters
-		variable does not contain the parameter the CalibrationRange object is defined
-		for, None will be returned.
-
-		Parameters
-		----------
-		parameters 	dict
-			The parameters to check.
-
-		Returns
-		-------
-		bool or None
-			Whether the CalibrationRange condition is met, or none if the parameter
-			has not been supplied in the parameters variable.
-
-		"""
-		if self.parameter_name in parameters:
-			if parameters[self.parameter_name] <= self.value:
-				return True
-			else:
-				return False
-		else:
-			return None
-
-	def string(self,parameters=None,report_nonexistance=True):
-		"""Constructs a string description of the CalibrationRange object, or a
-		description of how the check passes or fails.
-
-		Parameters
-		----------
-		parameters 	dict or None
-			The parameters to check. If None, a description of the CalibrationRange
-			object will be constructed and returned.
-
-		report_nonexistance		bool
-			If the parameter the CalibrationRange check is defined for is not contained
-			within the parameters variable, report_nonexistance determines whether a
-			string stating this is returned, or whether an empty string is returned.
-
-		Returns
-		-------
-		str
-			A description of the CalibrationRange object if None supplied as a parameter,
-			otherwise a description of how the CalibrationRange check is passed or failed.
-
-		"""
-		if parameters is not None:
-			checkval = self.check(parameters)
-			if checkval is None:
-				if report_nonexistance==True:
-					s = "{} was not provided as a parameter for checking. ".format(self.parameter_string).title()
-			elif checkval == True:
-				s = "The {} (".format(self.parameter_string)
-				s += self.value_fmt.format(parameters[self.parameter_name])
-				s += " {}) is less than ".format(self.unit)
-				s += self.value_fmt.format(self.value)
-				s += " {} as required by the calibration range of the {} model. ".format(self.unit,self.model_name)
-				return s
-			else:
-				s = "The {} is outside the calibration range of the {} model, as ".format(self.parameter_string,self.model_name)
-				s += self.value_fmt.format(parameters[self.parameter_name])
-				s += " {} is not less than ".format(self.unit)
-				s += self.value_fmt.format(self.value)
-				s += ' {}. '.format(self.unit)
-				return s
-		else:
-			s = "The {} model is calibrated for {} ".format(self.model_name,self.parameter_string)
-			s += " less than "
-			s += self.value_fmt.format(self.value)
-			s += " {}. ".format(self.unit)
-			return s
-
-class cr_Between(CalibrationRange):
-	"""An instance of the CalibrationRange object for properties calibrated for a
-	between two values
-
-	Parameters
-	----------
-	parameter_name 	str
-		The name of the variable, as implemented in the code, e.g. 'pressure' or
-		'temperature'.
-	value 	list
-		The minimum and maximum values for the parameter.
-	unit 	str
-		The unit of the parameter, for use in printing.
-	modelname 	str
-		The name of the model to use when printing.
-	parameter_string 	str
-		If the parameter should be called something different to parameter_name when
-		printing, it should be defined here. If None the parameter_name will be used.
-	value_fmt 	str
-		The format the value should be printed with in strings, default is {:.1f}
-	"""
-	def check(self,parameters):
-		""" Checks whether the calibration range condition is met. If the parameters
-		variable does not contain the parameter the CalibrationRange object is defined
-		for, None will be returned.
-
-		Parameters
-		----------
-		parameters 	dict
-			The parameters to check.
-
-		Returns
-		-------
-		bool or None
-			Whether the CalibrationRange condition is met, or none if the parameter
-			has not been supplied in the parameters variable.
-
-		"""
-		if self.parameter_name in parameters:
-			if parameters[self.parameter_name] >= self.value[0] and parameters[self.parameter_name] <= self.value[1]:
-				return True
-			else:
-				return False
-		else:
-			return None
-
-	def string(self,parameters=None,report_nonexistance=True):
-		"""Constructs a string description of the CalibrationRange object, or a
-		description of how the check passes or fails.
-
-		Parameters
-		----------
-		parameters 	dict or None
-			The parameters to check. If None, a description of the CalibrationRange
-			object will be constructed and returned.
-
-		report_nonexistance		bool
-			If the parameter the CalibrationRange check is defined for is not contained
-			within the parameters variable, report_nonexistance determines whether a
-			string stating this is returned, or whether an empty string is returned.
-
-		Returns
-		-------
-		str
-			A description of the CalibrationRange object if None supplied as a parameter,
-			otherwise a description of how the CalibrationRange check is passed or failed.
-
-		"""
-		if parameters is not None:
-			checkval = self.check(parameters)
-			if checkval is None:
-				if report_nonexistance==True:
-					s = "{} was not provided as a parameter for checking. ".format(self.parameter_string).title()
-			elif checkval == True:
-				s = "The {} (".format(self.parameter_string)
-				s += self.value_fmt.format(parameters[self.parameter_name])
-				s += " {}) is between ".format(self.unit)
-				s += self.value_fmt.format(self.value[0])
-				s += ' and '
-				s += self.value_fmt.format(self.value[1])
-				s += " {} as required by the calibration range of the {} model. ".format(self.unit,self.model_name)
-				return s
-			else:
-				s = "The {} is outside the calibration range of the {} model, as ".format(self.parameter_string,self.model_name)
-				s += self.value_fmt.format(parameters[self.parameter_name])
-				s += " {} is not between ".format(self.unit)
-				s += self.value_fmt.format(self.value[0])
-				s += ' and '
-				s += self.value_fmt.format(self.value[1])
-				s += ' {}. '.format(self.unit)
-				return s
-		else:
-			s = "The {} model is calibrated for {} ".format(self.model_name,self.parameter_string)
-			s += "between "
-			s += self.value_fmt.format(self.value[0])
-			s += " and "
-			s += self.value_fmt.format(self.value[1])
-			s += " {}. ".format(self.unit)
-			return s
+# class cr_EqualTo(CalibrationRange):
+# 	"""An instance of the CalibrationRange object for properties calibrated for a
+# 	single value.
+#
+# 	Parameters
+# 	----------
+# 	parameter_name 	str
+# 		The name of the variable, as implemented in the code, e.g. 'pressure' or
+# 		'temperature'.
+# 	value 	float
+# 		The value the parameter should be equal to.
+# 	unit 	str
+# 		The unit of the parameter, for use in printing.
+# 	modelname 	str
+# 		The name of the model to use when printing.
+# 	parameter_string 	str
+# 		If the parameter should be called something different to parameter_name when
+# 		printing, it should be defined here. If None the parameter_name will be used.
+# 	value_fmt 	str
+# 		The format the value should be printed with in strings, default is {:.1f}
+# 	"""
+# 	def check(self,parameters):
+# 		""" Checks whether the calibration range condition is met. If the parameters
+# 		variable does not contain the parameter the CalibrationRange object is defined
+# 		for, None will be returned.
+#
+# 		Parameters
+# 		----------
+# 		parameters 	dict
+# 			The parameters to check.
+#
+# 		Returns
+# 		-------
+# 		bool or None
+# 			Whether the CalibrationRange condition is met, or none if the parameter
+# 			has not been supplied in the parameters variable.
+#
+# 		"""
+# 		if self.parameter_name in parameters:
+# 			if parameters[self.parameter_name] == self.value:
+# 				return True
+# 			else:
+# 				return False
+# 		else:
+# 			return None
+#
+# 	def string(self,parameters=None,report_nonexistance=True):
+# 		"""Constructs a string description of the CalibrationRange object, or a
+# 		description of how the check passes or fails.
+#
+# 		Parameters
+# 		----------
+# 		parameters 	dict or None
+# 			The parameters to check. If None, a description of the CalibrationRange
+# 			object will be constructed and returned.
+#
+# 		report_nonexistance		bool
+# 			If the parameter the CalibrationRange check is defined for is not contained
+# 			within the parameters variable, report_nonexistance determines whether a
+# 			string stating this is returned, or whether an empty string is returned.
+#
+# 		Returns
+# 		-------
+# 		str
+# 			A description of the CalibrationRange object if None supplied as a parameter,
+# 			otherwise a description of how the CalibrationRange check is passed or failed.
+#
+# 		"""
+# 		if parameters is not None:
+# 			checkval = self.check(parameters)
+# 			if checkval is None:
+# 				if report_nonexistance==True:
+# 					s = "{} was not provided as a parameter for checking. ".format(self.parameter_string).title()
+# 			elif checkval == True:
+# 				s = "The {} (".format(self.parameter_string)
+# 				s += self.value_fmt.format(parameters[self.parameter_name])
+# 				s += " {}) is equal to ".format(self.unit)
+# 				s += self.value_fmt.format(self.value)
+# 				s += " {} as required by the calibration range of the {} model. ".format(self.unit,self.model_name)
+# 				return s
+# 			else:
+# 				s = "The {} is outside the calibration range of the {} model, as ".format(self.parameter_string,self.model_name)
+# 				s += self.value_fmt.format(parameters[self.parameter_name])
+# 				s += " {} is not equal to ".format(self.unit)
+# 				s += self.value_fmt.format(self.value)
+# 				s += ' {}. '.format(self.unit)
+# 				return s
+# 		else:
+# 			s = "The {} model is calibrated for {} ".format(self.parameter_string)
+# 			s += " equal to "
+# 			s += self.value_fmt.format(self.value)
+# 			s += " {}. ".format(self.unit)
+# 			return s
+#
+# class cr_GreaterThan(CalibrationRange):
+# 	"""An instance of the CalibrationRange object for properties calibrated higher than
+# 	a particular value.
+#
+# 	Parameters
+# 	----------
+# 	parameter_name 	str
+# 		The name of the variable, as implemented in the code, e.g. 'pressure' or
+# 		'temperature'.
+# 	value 	float
+# 		The value the parameter should be equal to.
+# 	unit 	str
+# 		The unit of the parameter, for use in printing.
+# 	modelname 	str
+# 		The name of the model to use when printing.
+# 	parameter_string 	str
+# 		If the parameter should be called something different to parameter_name when
+# 		printing, it should be defined here. If None the parameter_name will be used.
+# 	value_fmt 	str
+# 		The format the value should be printed with in strings, default is {:.1f}
+# 	"""
+# 	def check(self,parameters):
+# 		""" Checks whether the calibration range condition is met. If the parameters
+# 		variable does not contain the parameter the CalibrationRange object is defined
+# 		for, None will be returned.
+#
+# 		Parameters
+# 		----------
+# 		parameters 	dict
+# 			The parameters to check.
+#
+# 		Returns
+# 		-------
+# 		bool or None
+# 			Whether the CalibrationRange condition is met, or none if the parameter
+# 			has not been supplied in the parameters variable.
+#
+# 		"""
+# 		if self.parameter_name in parameters:
+# 			if parameters[self.parameter_name] >= self.value:
+# 				return True
+# 			else:
+# 				return False
+# 		else:
+# 			return None
+#
+# 	def string(self,parameters=None,report_nonexistance=True):
+# 		"""Constructs a string description of the CalibrationRange object, or a
+# 		description of how the check passes or fails.
+#
+# 		Parameters
+# 		----------
+# 		parameters 	dict or None
+# 			The parameters to check. If None, a description of the CalibrationRange
+# 			object will be constructed and returned.
+#
+# 		report_nonexistance		bool
+# 			If the parameter the CalibrationRange check is defined for is not contained
+# 			within the parameters variable, report_nonexistance determines whether a
+# 			string stating this is returned, or whether an empty string is returned.
+#
+# 		Returns
+# 		-------
+# 		str
+# 			A description of the CalibrationRange object if None supplied as a parameter,
+# 			otherwise a description of how the CalibrationRange check is passed or failed.
+#
+# 		"""
+# 		if parameters is not None:
+# 			checkval = self.check(parameters)
+# 			if checkval is None:
+# 				if report_nonexistance==True:
+# 					s = "{} was not provided as a parameter for checking. ".format(self.parameter_string).title()
+# 			elif checkval == True:
+# 				s = "The {} (".format(self.parameter_string)
+# 				s += self.value_fmt.format(parameters[self.parameter_name])
+# 				s += " {}) is greater than ".format(self.unit)
+# 				s += self.value_fmt.format(self.value)
+# 				s += " {} as required by the calibration range of the {} model. ".format(self.unit,self.model_name)
+# 				return s
+# 			else:
+# 				s = "The {} is outside the calibration range of the {} model, as ".format(self.parameter_string,self.model_name)
+# 				s += self.value_fmt.format(parameters[self.parameter_name])
+# 				s += " {} is not greater than ".format(self.unit)
+# 				s += self.value_fmt.format(self.value)
+# 				s += ' {}. '.format(self.unit)
+# 				return s
+# 		else:
+# 			s = "The {} model is calibrated for {} ".format(self.parameter_string)
+# 			s += " greater than "
+# 			s += self.value_fmt.format(self.value)
+# 			s += " {}. ".format(self.unit)
+# 			return s
+#
+# class cr_LessThan(CalibrationRange):
+# 	"""An instance of the CalibrationRange object for properties calibrated lower
+# 	than a particular value.
+#
+# 	Parameters
+# 	----------
+# 	parameter_name 	str
+# 		The name of the variable, as implemented in the code, e.g. 'pressure' or
+# 		'temperature'.
+# 	value 	float
+# 		The value the parameter should be equal to.
+# 	unit 	str
+# 		The unit of the parameter, for use in printing.
+# 	modelname 	str
+# 		The name of the model to use when printing.
+# 	parameter_string 	str
+# 		If the parameter should be called something different to parameter_name when
+# 		printing, it should be defined here. If None the parameter_name will be used.
+# 	value_fmt 	str
+# 		The format the value should be printed with in strings, default is {:.1f}
+# 	"""
+# 	def check(self,parameters):
+# 		""" Checks whether the calibration range condition is met. If the parameters
+# 		variable does not contain the parameter the CalibrationRange object is defined
+# 		for, None will be returned.
+#
+# 		Parameters
+# 		----------
+# 		parameters 	dict
+# 			The parameters to check.
+#
+# 		Returns
+# 		-------
+# 		bool or None
+# 			Whether the CalibrationRange condition is met, or none if the parameter
+# 			has not been supplied in the parameters variable.
+#
+# 		"""
+# 		if self.parameter_name in parameters:
+# 			if parameters[self.parameter_name] <= self.value:
+# 				return True
+# 			else:
+# 				return False
+# 		else:
+# 			return None
+#
+# 	def string(self,parameters=None,report_nonexistance=True):
+# 		"""Constructs a string description of the CalibrationRange object, or a
+# 		description of how the check passes or fails.
+#
+# 		Parameters
+# 		----------
+# 		parameters 	dict or None
+# 			The parameters to check. If None, a description of the CalibrationRange
+# 			object will be constructed and returned.
+#
+# 		report_nonexistance		bool
+# 			If the parameter the CalibrationRange check is defined for is not contained
+# 			within the parameters variable, report_nonexistance determines whether a
+# 			string stating this is returned, or whether an empty string is returned.
+#
+# 		Returns
+# 		-------
+# 		str
+# 			A description of the CalibrationRange object if None supplied as a parameter,
+# 			otherwise a description of how the CalibrationRange check is passed or failed.
+#
+# 		"""
+# 		if parameters is not None:
+# 			checkval = self.check(parameters)
+# 			if checkval is None:
+# 				if report_nonexistance==True:
+# 					s = "{} was not provided as a parameter for checking. ".format(self.parameter_string).title()
+# 			elif checkval == True:
+# 				s = "The {} (".format(self.parameter_string)
+# 				s += self.value_fmt.format(parameters[self.parameter_name])
+# 				s += " {}) is less than ".format(self.unit)
+# 				s += self.value_fmt.format(self.value)
+# 				s += " {} as required by the calibration range of the {} model. ".format(self.unit,self.model_name)
+# 				return s
+# 			else:
+# 				s = "The {} is outside the calibration range of the {} model, as ".format(self.parameter_string,self.model_name)
+# 				s += self.value_fmt.format(parameters[self.parameter_name])
+# 				s += " {} is not less than ".format(self.unit)
+# 				s += self.value_fmt.format(self.value)
+# 				s += ' {}. '.format(self.unit)
+# 				return s
+# 		else:
+# 			s = "The {} model is calibrated for {} ".format(self.model_name,self.parameter_string)
+# 			s += " less than "
+# 			s += self.value_fmt.format(self.value)
+# 			s += " {}. ".format(self.unit)
+# 			return s
+#
+# class cr_Between(CalibrationRange):
+# 	"""An instance of the CalibrationRange object for properties calibrated for a
+# 	between two values
+#
+# 	Parameters
+# 	----------
+# 	parameter_name 	str
+# 		The name of the variable, as implemented in the code, e.g. 'pressure' or
+# 		'temperature'.
+# 	value 	list
+# 		The minimum and maximum values for the parameter.
+# 	unit 	str
+# 		The unit of the parameter, for use in printing.
+# 	modelname 	str
+# 		The name of the model to use when printing.
+# 	parameter_string 	str
+# 		If the parameter should be called something different to parameter_name when
+# 		printing, it should be defined here. If None the parameter_name will be used.
+# 	value_fmt 	str
+# 		The format the value should be printed with in strings, default is {:.1f}
+# 	"""
+# 	def check(self,parameters):
+# 		""" Checks whether the calibration range condition is met. If the parameters
+# 		variable does not contain the parameter the CalibrationRange object is defined
+# 		for, None will be returned.
+#
+# 		Parameters
+# 		----------
+# 		parameters 	dict
+# 			The parameters to check.
+#
+# 		Returns
+# 		-------
+# 		bool or None
+# 			Whether the CalibrationRange condition is met, or none if the parameter
+# 			has not been supplied in the parameters variable.
+#
+# 		"""
+# 		if self.parameter_name in parameters:
+# 			if parameters[self.parameter_name] >= self.value[0] and parameters[self.parameter_name] <= self.value[1]:
+# 				return True
+# 			else:
+# 				return False
+# 		else:
+# 			return None
+#
+# 	def string(self,parameters=None,report_nonexistance=True):
+# 		"""Constructs a string description of the CalibrationRange object, or a
+# 		description of how the check passes or fails.
+#
+# 		Parameters
+# 		----------
+# 		parameters 	dict or None
+# 			The parameters to check. If None, a description of the CalibrationRange
+# 			object will be constructed and returned.
+#
+# 		report_nonexistance		bool
+# 			If the parameter the CalibrationRange check is defined for is not contained
+# 			within the parameters variable, report_nonexistance determines whether a
+# 			string stating this is returned, or whether an empty string is returned.
+#
+# 		Returns
+# 		-------
+# 		str
+# 			A description of the CalibrationRange object if None supplied as a parameter,
+# 			otherwise a description of how the CalibrationRange check is passed or failed.
+#
+# 		"""
+# 		if parameters is not None:
+# 			checkval = self.check(parameters)
+# 			if checkval is None:
+# 				if report_nonexistance==True:
+# 					s = "{} was not provided as a parameter for checking. ".format(self.parameter_string).title()
+# 			elif checkval == True:
+# 				s = "The {} (".format(self.parameter_string)
+# 				s += self.value_fmt.format(parameters[self.parameter_name])
+# 				s += " {}) is between ".format(self.unit)
+# 				s += self.value_fmt.format(self.value[0])
+# 				s += ' and '
+# 				s += self.value_fmt.format(self.value[1])
+# 				s += " {} as required by the calibration range of the {} model. ".format(self.unit,self.model_name)
+# 				return s
+# 			else:
+# 				s = "The {} is outside the calibration range of the {} model, as ".format(self.parameter_string,self.model_name)
+# 				s += self.value_fmt.format(parameters[self.parameter_name])
+# 				s += " {} is not between ".format(self.unit)
+# 				s += self.value_fmt.format(self.value[0])
+# 				s += ' and '
+# 				s += self.value_fmt.format(self.value[1])
+# 				s += ' {}. '.format(self.unit)
+# 				return s
+# 		else:
+# 			s = "The {} model is calibrated for {} ".format(self.model_name,self.parameter_string)
+# 			s += "between "
+# 			s += self.value_fmt.format(self.value[0])
+# 			s += " and "
+# 			s += self.value_fmt.format(self.value[1])
+# 			s += " {}. ".format(self.unit)
+# 			return s
 
 #-------------FUGACITY MODELS--------------------------------#
 
@@ -1904,8 +2002,12 @@ class fugacity_KJ81_co2(FugacityModel):
 	will return the properties of the CO2 component of the mixed fluid.
 	"""
 	def __init__(self):
-		self.set_calibration_ranges([cr_LessThan('pressure',20000.0,'bar','Kerrick and Jacobs (1981) EOS'),
-									 cr_LessThan('temperature',1323,'K','Kerrick and Jacobs (1981) EOS')])
+		self.set_calibration_ranges([CalibrationRange('pressure',20000.0,crf_LessThan,'bar','Kerrick and Jacobs (1981) EOS',
+													  fail_msg=crmsg_LessThan_fail, pass_msg=crmsg_LessThan_pass, description_msg=crmsg_LessThan_description),
+									 CalibrationRange('temperature',1323,crf_LessThan,'K','Kerrick and Jacobs (1981) EOS',
+									 				  fail_msg=crmsg_LessThan_fail, pass_msg=crmsg_LessThan_pass, description_msg=crmsg_LessThan_description)])
+		# self.set_calibration_ranges([cr_LessThan('pressure',20000.0,'bar','Kerrick and Jacobs (1981) EOS'),
+		# 							 cr_LessThan('temperature',1323,'K','Kerrick and Jacobs (1981) EOS')])
 
 	def fugacity(self,pressure,temperature,X_fluid,**kwargs):
 		""" Calculates the fugacity of CO2 in a mixed CO2-H2O fluid. Above 1050C,
@@ -2161,8 +2263,12 @@ class fugacity_KJ81_h2o(FugacityModel):
 	will return the properties of the H2O component of the mixed fluid.
 	"""
 	def __init__(self):
-		self.set_calibration_ranges([cr_LessThan('pressure',20000.0,'bar','Kerrick and Jacobs (1981) EOS'),
-									 cr_LessThan('temperature',1323,'K','Kerrick and Jacobs (1981) EOS')])
+		self.set_calibration_ranges([CalibrationRange('pressure',20000.0,crf_LessThan,'bar','Kerrick and Jacobs (1981) EOS',
+													  fail_msg=crmsg_LessThan_fail, pass_msg=crmsg_LessThan_pass, description_msg=crmsg_LessThan_description),
+									 CalibrationRange('temperature',1323,crf_LessThan,'K','Kerrick and Jacobs (1981) EOS',
+									 				  fail_msg=crmsg_LessThan_fail, pass_msg=crmsg_LessThan_pass, description_msg=crmsg_LessThan_description)])
+		# self.set_calibration_ranges([cr_LessThan('pressure',20000.0,'bar','Kerrick and Jacobs (1981) EOS'),
+		# 							 cr_LessThan('temperature',1323,'K','Kerrick and Jacobs (1981) EOS')])
 
 	def fugacity(self,pressure,temperature,X_fluid,**kwargs):
 		""" Calculates the fugacity of H2O in a mixed CO2-H2O fluid. Above 1050C,
@@ -2418,8 +2524,12 @@ class fugacity_ZD09_co2(FugacityModel):
 	""" Implementation of the Zhang and Duan (2009) fugacity model for pure CO2
 	fluids."""
 	def __init__(self):
-		self.set_calibration_ranges([cr_Between('pressure',[1,1e5],'bar','Zhang and Duan (2009) EOS'),
-									 cr_Between('temperature',[473,2573],'K','Zhang and Duan (2009) EOS')])
+		self.set_calibration_ranges([CalibrationRange('pressure',[1,1e5],crf_Between,'bar','Zhang and Duan (2009) EOS',
+													  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('temperature',[473,2573],crf_Between,'K','Zhang and Duan (2009) EOS',
+									 				  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
+		# self.set_calibration_ranges([cr_Between('pressure',[1,1e5],'bar','Zhang and Duan (2009) EOS'),
+		# 							 cr_Between('temperature',[473,2573],'K','Zhang and Duan (2009) EOS')])
 
 
 	def fugacity(self,pressure,temperature,X_fluid=1.0,**kwargs):
@@ -2528,8 +2638,12 @@ class fugacity_HB_co2(FugacityModel):
 	Implementation of the Holloway and Blank (1994) Modified Redlich Kwong EoS for CO2.
 	"""
 	def __init__(self):
-		self.set_calibration_ranges([cr_Between('pressure',[1.0,1e5],'bar','Redlich Kwong EOS'),
-									 cr_GreaterThan('temperature',500,'oC','Redlich Kwong EOS')])
+		self.set_calibration_ranges([CalibrationRange('pressure',[1,1e5],crf_Between,'bar','Redlich Kwong EOS',
+													  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('temperature',500.0,crf_GreaterThan,'oC','Redlich Kwong EOS',
+									 				  fail_msg=crmsg_GreaterThan_fail, pass_msg=crmsg_GreaterThan_pass, description_msg=crmsg_GreaterThan_description)])
+		# self.set_calibration_ranges([cr_Between('pressure',[1.0,1e5],'bar','Redlich Kwong EOS'),
+		# 							 cr_GreaterThan('temperature',500,'oC','Redlich Kwong EOS')])
 		self.HBmodel = fugacity_HollowayBlank()
 
 	def fugacity(self,pressure,temperature,**kwargs):
@@ -2545,8 +2659,12 @@ class fugacity_HollowayBlank(FugacityModel):
 	"""
 
 	def __init__(self):
-		self.set_calibration_ranges([cr_Between('pressure',[1.0,1e5],'bar','Modified Redlich Kwong EOS (Holloway and Blank, 1994)'),
-									 cr_GreaterThan('temperature',500,'oC','Modified Redlich Kwong EOS (Holloway and Blank, 1994)')])
+		self.set_calibration_ranges([CalibrationRange('pressure',[1,1e5],crf_Between,'bar','MRK EOS (Holloway and Blank, 1994)',
+													  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('temperature',500,crf_GreaterThan,'oC','MRK EOS (Holloway and Blank, 1994)',
+									 				  fail_msg=crmsg_GreaterThan_fail, pass_msg=crmsg_GreaterThan_pass, description_msg=crmsg_GreaterThan_description)])
+		# self.set_calibration_ranges([cr_Between('pressure',[1.0,1e5],'bar','Modified Redlich Kwong EOS (Holloway and Blank, 1994)'),
+		# 							 cr_GreaterThan('temperature',500,'oC','Modified Redlich Kwong EOS (Holloway and Blank, 1994)')])
 
 
 	def REDKW(self, BP, A2B):
@@ -2774,8 +2892,12 @@ class fugacity_RK_co2(FugacityModel):
 	Code derived from http://people.ds.cam.ac.uk/pjb10/thermo/pure.html - Patrick J. Barrie 30 October 2003.
 	"""
 	def __init__(self):
-		self.set_calibration_ranges([cr_Between('pressure',[1.0,1e5],'bar','Redlich Kwong EOS'),
-									 cr_GreaterThan('temperature',500,'oC','Redlich Kwong EOS')])
+		self.set_calibration_ranges([CalibrationRange('pressure',[1,1e5],crf_Between,'bar','Redlich Kwong EOS',
+													  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('temperature',[500],crf_GreaterThan,'oC','Redlich Kwong EOS',
+									 				  fail_msg=crmsg_GreaterThan_fail, pass_msg=crmsg_GreaterThan_pass, description_msg=crmsg_GreaterThan_description)])
+		# self.set_calibration_ranges([cr_Between('pressure',[1.0,1e5],'bar','Redlich Kwong EOS'),
+		# 							 cr_GreaterThan('temperature',500,'oC','Redlich Kwong EOS')])
 		self.RKmodel = fugacity_RedlichKwong()
 
 	def fugacity(self,pressure,temperature,X_fluid,**kwargs):
@@ -2787,8 +2909,12 @@ class fugacity_RK_h2o(FugacityModel):
 	Code derived from http://people.ds.cam.ac.uk/pjb10/thermo/pure.html - Patrick J. Barrie 30 October 2003.
 	"""
 	def __init__(self):
-		self.set_calibration_ranges([cr_Between('pressure',[1.0,1e5],'bar','Redlich Kwong EOS'),
-									 cr_GreaterThan('temperature',500,'oC','Redlich Kwong EOS')])
+		self.set_calibration_ranges([CalibrationRange('pressure',[1,1e5],crf_Between,'bar','Redlich Kwong EOS',
+													  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('temperature',500,crf_GreaterThan,'oC','Redlich Kwong EOS',
+									 				  fail_msg=crmsg_GreaterThan_fail, pass_msg=crmsg_GreaterThan_pass, description_msg=crmsg_GreaterThan_description)])
+		# self.set_calibration_ranges([cr_Between('pressure',[1.0,1e5],'bar','Redlich Kwong EOS'),
+		# 							 cr_GreaterThan('temperature',500,'oC','Redlich Kwong EOS')])
 		self.RKmodel = fugacity_RedlichKwong()
 
 	def fugacity(self,pressure,temperature,X_fluid,**kwargs):
@@ -2800,8 +2926,12 @@ class fugacity_RedlichKwong(FugacityModel):
 	Code derived from http://people.ds.cam.ac.uk/pjb10/thermo/pure.html - Patrick J. Barrie 30 October 2003.
 	"""
 	def __init__(self):
-		self.set_calibration_ranges([cr_Between('pressure',[1.0,1e5],'bar','Redlich Kwong EOS'),
-									 cr_GreaterThan('temperature',500,'oC','Redlich Kwong EOS')])
+		self.set_calibration_ranges([CalibrationRange('pressure',[1,1e5],crf_Between,'bar','Redlich Kwong EOS',
+													  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('temperature',500,crf_GreaterThan,'oC','Redlich Kwong EOS',
+									 				  fail_msg=crmsg_GreaterThan_fail, pass_msg=crmsg_GreaterThan_pass, description_msg=crmsg_GreaterThan_description)])
+		# self.set_calibration_ranges([cr_Between('pressure',[1.0,1e5],'bar','Redlich Kwong EOS'),
+		# 							 cr_GreaterThan('temperature',500,'oC','Redlich Kwong EOS')])
 
 
 	def gamma(self, pressure, temperature, species):
@@ -2965,8 +3095,12 @@ class ShishkinaCarbon(Model):
 		self.set_volatile_species(['CO2'])
 		self.set_fugacity_model(fugacity_idealgas())
 		self.set_activity_model(activity_idealsolution())
-		self.set_calibration_ranges([cr_Between('pressure',[500.0,5000.0],'bar','Shishkina et al. carbon'),
-									 cr_Between('temperature',[1200.0,1250.0],'oC','Shishkina et al. carbon')])
+		self.set_calibration_ranges([CalibrationRange('pressure',[500.0,5000.0],crf_Between,'bar','Shishkina et al. carbon',
+													  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('temperature',[1200.0,1250.0],crf_Between,'oC','Shishkina et al. carbon',
+									 				  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
+		# self.set_calibration_ranges([cr_Between('pressure',[500.0,5000.0],'bar','Shishkina et al. carbon'),
+		# 							 cr_Between('temperature',[1200.0,1250.0],'oC','Shishkina et al. carbon')])
 
 	def preprocess_sample(self,sample):
 		""" Returns sample, unmodified. The Pi* compositional parameter is a ratio of cations,
@@ -3135,8 +3269,12 @@ class ShishkinaWater(Model):
 		self.set_volatile_species(['H2O'])
 		self.set_fugacity_model(fugacity_idealgas())
 		self.set_activity_model(activity_idealsolution())
-		self.set_calibration_ranges([cr_Between('pressure',[500.0,5000.0],'bar','Shishkina et al. water'),
-									 cr_Between('temperature',[1200.0,1250.0],'oC','Shishkina et al. water')])
+		self.set_calibration_ranges([CalibrationRange('pressure',[500.0,5000.0],crf_Between,'bar','Shishkina et al. water',
+													  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('temperature',[1200.0,1250.0],crf_Between,'oC','Shishkina et al. water',
+									 				  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
+		# self.set_calibration_ranges([cr_Between('pressure',[500.0,5000.0],'bar','Shishkina et al. water'),
+		# 							 cr_Between('temperature',[1200.0,1250.0],'oC','Shishkina et al. water')])
 
 	def preprocess_sample(self,sample):
 		""" Returns sample, renormlized so that the major element oxides (excluding volatiles) sum to 100%.
@@ -3289,8 +3427,6 @@ class DixonCarbon(Model):
 		self.set_fugacity_model(fugacity_KJ81_co2())
 		self.set_activity_model(activity_idealsolution())
 		self.set_calibration_ranges([])
-		#self.set_calibration_ranges([cr_Between('pressure',[1000,20000],'bar','DixonCarbon'),
-									 #cr_Between('temperature',[1200,1200],'oC','DixonCarbon')])
 
 	def preprocess_sample(self,sample):
 		""" Returns sample, normalized, keep volatiles unchanged.
@@ -3477,8 +3613,6 @@ class DixonWater(Model):
 		self.set_fugacity_model(fugacity_KJ81_h2o())
 		self.set_activity_model(activity_idealsolution())
 		self.set_calibration_ranges([])
-		#self.set_calibration_ranges([cr_Between('pressure',[201,717],'bar','DixonWater'),
-									 #cr_Between('temperature',[1200,1200],'oC','DixonWater')])
 
 
 	def preprocess_sample(self,sample):
@@ -3738,8 +3872,6 @@ class IaconoMarzianoWater(Model):
 		self.set_activity_model(activity_idealsolution())
 		self.hydrous = hydrous
 		self.set_calibration_ranges([])
-		#self.set_calibration_ranges([cr_Between('pressure',[163,6067],'bar','IaconoMarzianoWater'),
-									 #cr_Between('temperature',[999.85,1250],'oC','IaconoMarzianoWater')])
 
 	def preprocess_sample(self,sample):
 		"""
@@ -4246,8 +4378,12 @@ class EguchiCarbon(Model):
 		self.set_volatile_species(['CO2'])
 		self.set_fugacity_model(fugacity_ZD09_co2())
 		self.set_activity_model(activity_idealsolution())
-		self.set_calibration_ranges([cr_Between('pressure',[500.0,50000.0],'bar','Eguchi & Dasgupta (2018) carbon'),
-									 cr_Between('temperature',[950.0,1600],'C','Eguchi & Dasgupta (2018) carbon')])
+		self.set_calibration_ranges([CalibrationRange('pressure',[500.0,50000.0],crf_Between,'bar','Eguchi & Dasgupta (2018) carbon',
+													  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('temperature',[950.0,1600],crf_Between,'oC','Eguchi & Dasgupta (2018) carbon',
+									 				  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
+		# self.set_calibration_ranges([cr_Between('pressure',[500.0,50000.0],'bar','Eguchi & Dasgupta (2018) carbon'),
+		# 							 cr_Between('temperature',[950.0,1600],'C','Eguchi & Dasgupta (2018) carbon')])
 
 	def preprocess_sample(self,sample,ferric_total=0.15):
 		""" Returns normalized sample composition, with ferric iron. Where a sample
@@ -4509,8 +4645,12 @@ class MooreWater(Model):
 		self.set_volatile_species(['H2O'])
 		self.set_fugacity_model(fugacity_idealgas())
 		self.set_activity_model(activity_idealsolution())
-		self.set_calibration_ranges([cr_Between('pressure',[1.0,3000.0],'bar','Moore et al. (1998) water'),
-									 cr_Between('temperature',[700.0+273.15,1200+273.15],'oC','Moore et al. (1998) water')])
+		self.set_calibration_ranges([CalibrationRange('pressure',[1.0,3000.0],crf_Between,'bar','Moore et al. (1998) water',
+													  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('temperature',[700.0,1200],crf_Between,'oC','Moore et al. (1998) water',
+									 				  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
+		# self.set_calibration_ranges([cr_Between('pressure',[1.0,3000.0],'bar','Moore et al. (1998) water'),
+		# 							 cr_Between('temperature',[700.0+273.15,1200+273.15],'oC','Moore et al. (1998) water')])
 
 
 
@@ -4709,8 +4849,12 @@ class LiuWater(Model):
 		self.set_volatile_species(['H2O'])
 		self.set_fugacity_model(fugacity_idealgas())
 		self.set_activity_model(activity_idealsolution())
-		self.set_calibration_ranges([cr_Between('pressure',[1.0,5000.0],'bar','Liu et al. (2005) water'),
-									 cr_Between('temperature',[700.0,1200],'oC','Liu et al. (2005) water')])
+		self.set_calibration_ranges([CalibrationRange('pressure',[1.0,5000.0],crf_Between,'bar','Liu et al. (2005) water',
+													  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('temperature',[700.0,1200],crf_Between,'oC','Liu et al. (2005) water',
+									 				  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
+		# self.set_calibration_ranges([cr_Between('pressure',[1.0,5000.0],'bar','Liu et al. (2005) water'),
+		# 							 cr_Between('temperature',[700.0,1200],'oC','Liu et al. (2005) water')])
 
 	def preprocess_sample(self, sample):
 		"""
@@ -4887,8 +5031,13 @@ class LiuCarbon(Model):
 		self.set_volatile_species(['CO2'])
 		self.set_fugacity_model(fugacity_idealgas())
 		self.set_activity_model(activity_idealsolution())
-		self.set_calibration_ranges([cr_Between('pressure',[1.0,5000.0],'bar','Liu et al. (2005) carbon'),
-									 cr_Between('temperature',[700.0,1200],'oC','Liu et al. (2005) carbon')])
+		self.set_calibration_ranges([CalibrationRange('pressure',[1.0,5000.0],crf_Between,'bar','Liu et al. (2005) carbon',
+													  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('temperature',[700.0,1200],crf_Between,'oC','Liu et al. (2005) carbon',
+									 				  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
+		# self.set_calibration_ranges([cr_Between('pressure',[1.0,5000.0],'bar','Liu et al. (2005) carbon'),
+		# 							 cr_Between('temperature',[700.0,1200],'oC','Liu et al. (2005) carbon')])
+
 
 	def preprocess_sample(self, sample):
 		"""
@@ -5091,8 +5240,12 @@ class AllisonCarbon(Model):
 		self.set_volatile_species(['CO2'])
 		self.set_fugacity_model(fugacity_HB_co2())
 		self.set_activity_model(activity_idealsolution())
-		self.set_calibration_ranges([cr_Between('pressure',[0.0,6000.0],'bar','Allison et al. (2019) water'),
-									 cr_EqualTo('temperature',1200,'C','Allison et al. (2019) water')])
+		self.set_calibration_ranges([CalibrationRange('pressure',[0.0,6000.0],crf_Between,'bar','Allison et al. (2019) water',
+													  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('temperature',1200,crf_EqualTo,'oC','Allison et al. (2019) water',
+									 				  fail_msg=crmsg_EqualTo_fail, pass_msg=crmsg_EqualTo_pass, description_msg=crmsg_EqualTo_description)])
+		# self.set_calibration_ranges([cr_Between('pressure',[0.0,6000.0],'bar','Allison et al. (2019) water'),
+		# 							 cr_EqualTo('temperature',1200,'C','Allison et al. (2019) water')])
 
 		self.model_fit = model_fit
 		self.model_loc = model_loc
@@ -5775,8 +5928,12 @@ class MagmaSat(Model):
 		self.melts_version = '1.2.0' #just here so users can see which version is being used
 
 		self.set_volatile_species(['H2O', 'CO2'])
-		self.set_calibration_ranges([cr_Between('pressure',[0,30000],'bar','MagmaSat'),
-									 cr_Between('temperature',[550,1730],'oC','MagmaSat')])
+		self.set_calibration_ranges([CalibrationRange('pressure',[0.0,30000.0],crf_Between,'bar','MagmaSat',
+													  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('temperature',[550,1730],crf_Between,'oC','MagmaSat',
+									 				  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
+		# self.set_calibration_ranges([cr_Between('pressure',[0,30000],'bar','MagmaSat'),
+		# 							 cr_Between('temperature',[550,1730],'oC','MagmaSat')])
 
 	def preprocess_sample(self,sample): #TODO test this by passing weird shit to sample
 		"""
@@ -6239,7 +6396,7 @@ class MagmaSat(Model):
 			except:
 				pass
 			return satP
-			
+
 		elif verbose == True:
 			try:
 				warnings.warn(warnmessage)
@@ -6908,19 +7065,19 @@ def add_LeMaitre_fields(plot_axes, fontsize=12, color=(0.6, 0.6, 0.6)):
 	"""Add fields for geochemical classifications from LeMaitre et al (2002)
 	to pre-existing axes.  If necessary, the axes object can be retrieved via
 	plt.gca() command. e.g.
-	
+
 	ax1 = plt.gca()
 	add_LeMaitre_fields(ax1)
 	ax1.plot(silica, total_alkalis, 'o')
-	
+
 	Fontsize and color options can be used to change from the defaults.
-	
+
 	It may be necessary to follow the command with plt.draw() to update
 	the plot.
-	
+
 	Le Maitre RW (2002) Igneous rocks : IUGS classification and glossary of
-		terms : recommendations of the International Union of Geological 
-		Sciences Subcommission on the Systematics of igneous rocks, 2nd ed. 
+		terms : recommendations of the International Union of Geological
+		Sciences Subcommission on the Systematics of igneous rocks, 2nd ed.
 		Cambridge University Press, Cambridge
 	"""
 	from collections import namedtuple
@@ -7033,13 +7190,13 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', save_fig=False, **k
 	#Plot Calibration Data
 	if model == 'all':
 		model = ['MagmaSat',
-				'Shishkina',       
-			   'Dixon',              
-			   'IaconoMarziano',     
-			   'Liu', 
-			   #'EguchiCarbon',       
-			   'AllisonCarbon',       
-			   'MooreWater']	
+				'Shishkina',
+			   'Dixon',
+			   'IaconoMarziano',
+			   'Liu',
+			   #'EguchiCarbon',
+			   'AllisonCarbon',
+			   'MooreWater']
 
 	if isinstance(model, str):
 		model = [model]
@@ -7107,12 +7264,12 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', save_fig=False, **k
 				user_data["TotalAlkalis"] = user_data["Na2O"] + user_data["K2O"]
 			except:
 				InputError("Na2O and K2O data must be in user_data")
-			plt.scatter(user_data['SiO2'], user_data['TotalAlkalis'], 
-						s=150, edgecolors='w', facecolors='red', marker='P', 
+			plt.scatter(user_data['SiO2'], user_data['TotalAlkalis'],
+						s=150, edgecolors='w', facecolors='red', marker='P',
 						label = 'User Data')
 		if plot_type == 'xy':
 			plt.scatter(user_data[x], user_data[y],
-						s=150, edgecolors='w', facecolors='red', marker='P', 
+						s=150, edgecolors='w', facecolors='red', marker='P',
 						label = 'User Data')
 
 	plt.legend(bbox_to_anchor=(1.04,1), loc="upper left")
