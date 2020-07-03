@@ -1586,9 +1586,9 @@ crmsg_LessThan_description = "The {model_name} model is calibrated for {param_na
 
 def crf_Between(calibval,paramval):
 	return paramval > calibval[0] and paramval < calibval[1]
-crmsg_Between_pass = "The {param_name} ({param_val} {units}) is between {calib_val0} and {calib_val1} {units} as required by the calibration range of the {model_name} model. "
-crmsg_Between_fail = "The {param_name} is outside the calibration range of the {model_name} model, as {param_val} {units} is not between {calib_val0} and {calib_val1} {units}. "
-crmsg_Between_description = "The {model_name} model is calibrated for {param_name} between {calib_val0} and {calib_val1} {units}. "
+crmsg_Between_pass = "The {param_name} ({param_val} {units}) is between {calib_val0:.1f} and {calib_val1:.1f} {units} as required by the calibration range of the {model_name} model. "
+crmsg_Between_fail = "The {param_name} is outside the calibration range of the {model_name} model, as {param_val} {units} is not between {calib_val0:.1f} and {calib_val1:.1f} {units}. "
+crmsg_Between_description = "The {model_name} model is calibrated for {param_name} between {calib_val0:.1f} and {calib_val1:.1f} {units}. "
 
 # class cr_EqualTo(CalibrationRange):
 # 	"""An instance of the CalibrationRange object for properties calibrated for a
