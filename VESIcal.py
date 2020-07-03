@@ -17,7 +17,7 @@ from scipy.optimize import root
 from scipy.optimize import minimize
 import sys
 import sympy
-import anvil_server
+# import anvil_server
 
 #--------------MELTS preamble---------------#
 from thermoengine import equilibrate
@@ -1586,9 +1586,9 @@ crmsg_LessThan_description = "The {model_name} model is calibrated for {param_na
 
 def crf_Between(calibval,paramval):
 	return paramval > calibval[0] and paramval < calibval[1]
-crmsg_Between_pass = "The {param_name} ({param_val} {units}) is between {calib_val0:.1f} and {calib_val1:.1f} {units} as required by the calibration range of the {model_name} model. "
-crmsg_Between_fail = "The {param_name} is outside the calibration range of the {model_name} model, as {param_val} {units} is not between {calib_val0:.1f} and {calib_val1:.1f} {units}. "
-crmsg_Between_description = "The {model_name} model is calibrated for {param_name} between {calib_val0:.1f} and {calib_val1:.1f} {units}. "
+crmsg_Between_pass = "The {param_name} ({param_val} {units}) is between {calib_val0} and {calib_val1} {units} as required by the calibration range of the {model_name} model. "
+crmsg_Between_fail = "The {param_name} is outside the calibration range of the {model_name} model, as {param_val} {units} is not between {calib_val0} and {calib_val1} {units}. "
+crmsg_Between_description = "The {model_name} model is calibrated for {param_name} between {calib_val0} and {calib_val1} {units}. "
 
 # class cr_EqualTo(CalibrationRange):
 # 	"""An instance of the CalibrationRange object for properties calibrated for a
@@ -3934,7 +3934,7 @@ class IaconoMarzianoWater(Model):
 				return 0
 			H2O = root_scalar(self.root_dissolved_volatiles,args=(pressure,temperature,sample,X_fluid,kwargs),
 								x0=1.0,x1=2.0).root
-			return H2O/(100+H2O)*100
+			return H2O#/(100+H2O)*100
 		else:
 			a = 0.54
 			b = 1.24
@@ -4033,6 +4033,7 @@ class IaconoMarzianoWater(Model):
 			The differece between the dissolved H2O at the pressure guessed, and the H2O concentration
 			passed in the sample variable.
 		"""
+
 		return sample['H2O'] - self.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,sample=sample,**kwargs)
 
 
@@ -4061,14 +4062,21 @@ class IaconoMarzianoWater(Model):
 			Difference between H2O guessed and the H2O calculated.
 		"""
 
-		a = 0.53
-		b = 2.35
-		B = -3.37
-		C = -0.02
+		# a = 0.53
+		# b = 2.35
+		# B = -3.37
+		# C = -0.02
 
-		sample_h2o = sample.copy()
-		sample_h2o['H2O'] = h2o
-		NBO_O = self.NBO_O(sample=sample_h2o)
+		# Values from the webapp
+		a = 0.52096846
+		b = 2.11575907
+		B = -3.24443335
+		C = -0.02238884
+
+		# sample_h2o = sample.copy()
+		# sample_h2o['H2O'] = h2o
+		# sample_h2o = normalize_FixedVolatiles(sample_h2o)
+		NBO_O = self.NBO_O(sample=sample)
 		fugacity = self.fugacity_model.fugacity(pressure=pressure,X_fluid=X_fluid,temperature=temperature,**kwargs)
 
 		return h2o - np.exp(a*np.log(fugacity) + b*NBO_O + B + C*pressure/temperature)
@@ -4096,6 +4104,7 @@ class IaconoMarzianoWater(Model):
 
 		NBO = 2*(X['K2O']+X['Na2O']+X['CaO']+X['MgO']+X['FeO']-X['Al2O3'])
 		O = 2*X['SiO2']+2*X['TiO2']+3*X['Al2O3']+X['MgO']+X['FeO']+X['CaO']+X['Na2O']+X['K2O']
+
 
 		if self.hydrous == True:
 			if 'H2O' not in sample:
