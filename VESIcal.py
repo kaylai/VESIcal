@@ -17,7 +17,6 @@ from scipy.optimize import root
 from scipy.optimize import minimize
 import sys
 import sympy
-import anvil_server
 
 #--------------MELTS preamble---------------#
 from thermoengine import equilibrate
@@ -6795,26 +6794,27 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', save_fig=False, **k
 	import calibrations
 
 	#Create the figure
-	fig, ax1 = plt.subplots(figsize = (17,8))
 	font = {'family': 'sans-serif',
-				'color':  'black',
 				'weight': 'normal',
 				'size': 20,
 				}
+	mpl.rc('font', **font)
+
+	fig, ax1 = plt.subplots(figsize = (17,8))
 
 	#TAS figure
 	if plot_type == 'TAS':
 		ax1.set_xlim([35, 100]) # adjust x limits here if you want to focus on a specific part of compostional space
 		ax1.set_ylim([0, 25]) # adjust y limits here
-		plt.xlabel('SiO$_2$, wt%', fontdict=font, labelpad = 15)
-		plt.ylabel('Na$_2$O+K$_2$O, wt%', fontdict=font, labelpad = 15)
+		plt.xlabel('SiO$_2$, wt%', labelpad = 15)
+		plt.ylabel('Na$_2$O+K$_2$O, wt%', labelpad = 15)
 		add_LeMaitre_fields(ax1)
 	elif plot_type == 'xy':
 		if 'x' in kwargs and 'y' in kwargs:
 			x = kwargs['x']
 			y = kwargs['y']
-			plt.xlabel(str(x)+", wt%", fontdict=font, labelpad = 15)
-			plt.ylabel(str(y)+", wt%", fontdict=font, labelpad = 15)
+			plt.xlabel(str(x)+", wt%", labelpad = 15)
+			plt.ylabel(str(y)+", wt%", labelpad = 15)
 		else:
 			raise InputError("If plot_type is 'xy', then x and y values must be passed as strings. For example, x='SiO2', y='Al2O3'.")
 
@@ -6896,15 +6896,14 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', save_fig=False, **k
 			except:
 				InputError("Na2O and K2O data must be in user_data")
 			plt.scatter(user_data['SiO2'], user_data['TotalAlkalis'],
-						s=150, edgecolors='w', facecolors='red', marker='P',
+						s=300, edgecolors='w', facecolors='red', marker='P',
 						label = 'User Data')
 		if plot_type == 'xy':
 			plt.scatter(user_data[x], user_data[y],
-						s=150, edgecolors='w', facecolors='red', marker='P',
+						s=300, edgecolors='w', facecolors='red', marker='P',
 						label = 'User Data')
 
-	plt.legend(bbox_to_anchor=(1.04,1), loc="upper left")
-	fig.tight_layout()
+	plt.legend(prop={'size': 14})
 	if isinstance(save_fig, str):
 		fig.savefig(save_fig)
 
