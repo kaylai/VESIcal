@@ -5492,7 +5492,7 @@ class MixedFluid(Model):
 		Xm0 = Xt0/wtt0*wtm0
 		Xm1 = Xt1/wtt1*wtm1
 
-		if self.volatile_species[0] == 'CO2':
+		if self.volatile_species[0] == 'CO2' and Xv0 != Xm0:
 			f = (Xt0-Xm0)/(Xv0-Xm0)
 			return (1-f)*Xm1 + f*(1-Xv0) - Xt1
 		else:
