@@ -5488,21 +5488,16 @@ class MixedFluid(Model):
 		wtt1 = sample[self.volatile_species[1]]
 
 		wtm0, wtm1 = self.calculate_dissolved_volatiles(pressure=pressure,X_fluid=(Xv0,1-Xv0),sample=sample,**kwargs)
-		# sample_mod = sample.copy()
-		# sample_mod[self.volatile_species[0]] = wtm0
-		# sample_mod[self.volatile_species[1]] = wtm1
-		# # sample_mod = normalize_FixedVolatiles(sample_mod)
-		# cations = wtpercentOxides_to_molOxides(sample_mod)
 
 		Xm0 = Xt0/wtt0*wtm0
 		Xm1 = Xt1/wtt1*wtm1
 
-		# Xm0 = cations[self.volatile_species[0]]
-		# Xm1 = cations[self.volatile_species[1]]
-
-		f = (Xt0-Xm0)/(Xv0-Xm0)
-
-		return (1-f)*Xm1 + f*(1-Xv0) - Xt1
+		if self.volatile_species[0] == 'CO2':
+			f = (Xt0-Xm0)/(Xv0-Xm0)
+			return (1-f)*Xm1 + f*(1-Xv0) - Xt1
+		else:
+			f = (Xt1-Xm1)/((1-Xv0)-Xm1)
+			return (1-f)*Xm0 + f*Xv0 - Xt0
 
 	def check_calibration_range(self,parameters,report_nonexistance=True):
 		""" Checks whether the given parameters are within the ranges defined by the
@@ -6439,10 +6434,10 @@ def plot_degassing_paths(degassing_paths, labels=None):
 
 #====== Define some standard model options =======================================================#
 
-default_models = {'Shishkina':                MixedFluid({'CO2':ShishkinaCarbon(),'H2O':ShishkinaWater()}),
-				  'Dixon':                    MixedFluid({'CO2':DixonCarbon(),'H2O':DixonWater()}),
-				  'IaconoMarziano':           MixedFluid({'CO2':IaconoMarzianoCarbon(),'H2O':IaconoMarzianoWater()}),
-				  'Liu':					  MixedFluid({'CO2':LiuCarbon(),'H2O':LiuWater()}),
+default_models = {'Shishkina':                MixedFluid({'H2O':ShishkinaWater(),'CO2':ShishkinaCarbon()}),
+				  'Dixon':                    MixedFluid({'H2O':DixonWater(),'CO2':DixonCarbon()}),
+				  'IaconoMarziano':           MixedFluid({'H2O':IaconoMarzianoWater(),'CO2':IaconoMarzianoCarbon()}),
+				  'Liu':					  MixedFluid({'H2O':LiuWater(),'CO2':LiuCarbon()}),
 				  'ShishkinaCarbon':          ShishkinaCarbon(),
 				  'ShishkinaWater':           ShishkinaWater(),
 				  'DixonCarbon':              DixonCarbon(),
