@@ -916,25 +916,31 @@ class ExcelFile(object):
 		errors = []
 		if model in MixedFluidsModels:
 			for index, row in dissolved_data.iterrows():
-				try:
-					if file_has_temp == True:
-						temperature = row[temp_name]
-					if file_has_press == True:
-						pressure = row[press_name]
-					if file_has_X == True:
-						X_fluid = row[X_name]
-					bulk_comp = {oxide:  row[oxide] for oxide in oxides}
-					calc = calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature,
-																	X_fluid=(X_fluid, 1-X_fluid), model=model, silence_warnings=True)
-					H2Ovals.append(calc.result['H2O'])
-					CO2vals.append(calc.result['CO2'])
-					warnings.append(calc.calib_check)
-					errors.append('')
-				except Exception as inst:
+				if file_has_temp == True:
+					temperature = row[temp_name]
+				if file_has_press == True:
+					pressure = row[press_name]
+				if file_has_X == True:
+					X_fluid = row[X_name]
+				if temperature == 0 or pressure == 0:
+					warnings.append('No temperature and/or pressure data found. Sample skipped.')
 					H2Ovals.append(np.nan)
 					CO2vals.append(np.nan)
-					warnings.append('Calculation Failed.')
 					errors.append(sys.exc_info()[0])
+				else:
+					try:
+						bulk_comp = {oxide:  row[oxide] for oxide in oxides}
+						calc = calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature,
+																		X_fluid=(X_fluid, 1-X_fluid), model=model, silence_warnings=True)
+						H2Ovals.append(calc.result['H2O'])
+						CO2vals.append(calc.result['CO2'])
+						warnings.append(calc.calib_check)
+						errors.append('')
+					except Exception as inst:
+						H2Ovals.append(np.nan)
+						CO2vals.append(np.nan)
+						warnings.append('Calculation Failed.')
+						errors.append(sys.exc_info()[0])
 			dissolved_data["H2O_liq_VESIcal"] = H2Ovals
 			dissolved_data["CO2_liq_VESIcal"] = CO2vals
 
@@ -958,32 +964,41 @@ class ExcelFile(object):
 			for index, row in dissolved_data.iterrows():
 				if print_status == True:
 					print("Calculating sample " + str(index))
-				try:
-					if file_has_temp == True:
-						temperature = row[temp_name]
-					if file_has_press == True:
-						pressure = row[press_name]
-					if file_has_X == True:
-						X_fluid = row[X_name]
-					bulk_comp = {oxide:  row[oxide] for oxide in oxides}
-					calc = calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature,
-																	X_fluid=X_fluid, model=model, silence_warnings=True,
-																	verbose=True)
-					H2Ovals.append(calc.result['H2O_liq'])
-					CO2vals.append(calc.result['CO2_liq'])
-					XH2Ovals.append(calc.result['XH2O_fl'])
-					XCO2vals.append(calc.result['XCO2_fl'])
-					FluidProportionvals.append(calc.result['FluidProportion_wt'])
-					warnings.append(calc.calib_check)
-					errors.append('')
-				except Exception as inst:
+				if file_has_temp == True:
+					temperature = row[temp_name]
+				if file_has_press == True:
+					pressure = row[press_name]
+				if file_has_X == True:
+					X_fluid = row[X_name]
+				if temperature == 0 or pressure == 0:
+					warnings.append('No temperature and/or pressure data found. Sample skipped.')
 					H2Ovals.append(np.nan)
 					CO2vals.append(np.nan)
 					XH2Ovals.append(np.nan)
 					XCO2vals.append(np.nan)
 					FluidProportionvals.append(np.nan)
-					warnings.append('Calculation Failed.')
 					errors.append(sys.exc_info()[0])
+				else:
+					try:
+						bulk_comp = {oxide:  row[oxide] for oxide in oxides}
+						calc = calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature,
+																		X_fluid=X_fluid, model=model, silence_warnings=True,
+																		verbose=True)
+						H2Ovals.append(calc.result['H2O_liq'])
+						CO2vals.append(calc.result['CO2_liq'])
+						XH2Ovals.append(calc.result['XH2O_fl'])
+						XCO2vals.append(calc.result['XCO2_fl'])
+						FluidProportionvals.append(calc.result['FluidProportion_wt'])
+						warnings.append(calc.calib_check)
+						errors.append('')
+					except Exception as inst:
+						H2Ovals.append(np.nan)
+						CO2vals.append(np.nan)
+						XH2Ovals.append(np.nan)
+						XCO2vals.append(np.nan)
+						FluidProportionvals.append(np.nan)
+						warnings.append('Calculation Failed.')
+						errors.append(sys.exc_info()[0])
 			dissolved_data["H2O_liq_VESIcal"] = H2Ovals
 			dissolved_data["CO2_liq_VESIcal"] = CO2vals
 
@@ -1012,23 +1027,31 @@ class ExcelFile(object):
 					X_fluid = row[X_name]
 				bulk_comp = {oxide:  row[oxide] for oxide in oxides}
 				if 'Water' in model:
-					try:
-						calc = calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature,
-															 X_fluid=X_fluid, model=model, silence_warnings=True)
-						H2Ovals.append(calc.result)
-						warnings.append(calc.calib_check)
-					except:
-						H2Ovals.append(0)
-						warnings.append('Calculation Failed #001')
+					if temperature == 0 or pressure == 0:
+						warnings.append('No temperature and/or pressuredata found. Sample skipped.')
+						H2Ovals.append(np.nan)
+					else:
+						try:
+							calc = calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature,
+																 X_fluid=X_fluid, model=model, silence_warnings=True)
+							H2Ovals.append(calc.result)
+							warnings.append(calc.calib_check)
+						except:
+							H2Ovals.append(0)
+							warnings.append('Calculation Failed #001')
 				if 'Carbon' in model:
-					try:
-						calc = calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature,
-															 X_fluid=X_fluid, model=model, silence_warnings=True)
-						CO2vals.append(calc.result)
-						warnings.append(calc.calib_check)
-					except:
-						CO2vals.append(0)
-						warnings.append('Calculation Failed #002')
+					if temperature == 0 or pressure == 0:
+						warnings.append('No temperature and/or pressure data found. Sample skipped.')
+						CO2vals.append(np.nan)
+					else:
+						try:
+							calc = calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature,
+																 X_fluid=X_fluid, model=model, silence_warnings=True)
+							CO2vals.append(calc.result)
+							warnings.append(calc.calib_check)
+						except:
+							CO2vals.append(0)
+							warnings.append('Calculation Failed #002')
 
 			if 'Water' in model:
 				dissolved_data["H2O_liq_VESIcal"] = H2Ovals
@@ -1099,21 +1122,26 @@ class ExcelFile(object):
 		warnings = []
 		if model in MixedFluidsModels or model == "MooreWater":
 			for index, row in fluid_data.iterrows():
-				try:
-					if file_has_temp == True:
-						temperature = row[temp_name]
-					if file_has_press == True:
-						pressure = row[press_name]
-					bulk_comp = {oxide:  row[oxide] for oxide in oxides}
-					calc = calculate_equilibrium_fluid_comp(sample=bulk_comp, pressure=pressure, temperature=temperature, model=model, silence_warnings=True)
-
-					H2Ovals.append(calc.result['H2O'])
-					CO2vals.append(calc.result['CO2'])
-					warnings.append(calc.calib_check)
-				except:
+				if file_has_temp == True:
+					temperature = row[temp_name]
+				if file_has_press == True:
+					pressure = row[press_name]
+				if temperature == 0 or pressure == 0:
+					warnings.append('No temperature and/or pressure data found. Sample skipped.')
 					H2Ovals.append(np.nan)
 					CO2vals.append(np.nan)
-					warnings.append("Calculation Failed.")
+				else:
+					try:		
+						bulk_comp = {oxide:  row[oxide] for oxide in oxides}
+						calc = calculate_equilibrium_fluid_comp(sample=bulk_comp, pressure=pressure, temperature=temperature, model=model, silence_warnings=True)
+
+						H2Ovals.append(calc.result['H2O'])
+						CO2vals.append(calc.result['CO2'])
+						warnings.append(calc.calib_check)
+					except:
+						H2Ovals.append(np.nan)
+						CO2vals.append(np.nan)
+						warnings.append("Calculation Failed.")
 			fluid_data["XH2O_fl_VESIcal"] = H2Ovals
 			fluid_data["XCO2_fl_VESIcal"] = CO2vals
 			if file_has_temp == False:
@@ -1128,21 +1156,26 @@ class ExcelFile(object):
 			for index, row in fluid_data.iterrows():
 				if print_status == True:
 					print("Calculating sample " + str(index))
-				try:
-					if file_has_temp == True:
-						temperature = row[temp_name]
-					if file_has_press == True:
-						pressure = row[press_name]
-					bulk_comp = {oxide:  row[oxide] for oxide in oxides}
-					calc = calculate_equilibrium_fluid_comp(sample=bulk_comp, pressure=pressure, temperature=temperature, model=model, silence_warnings=True)
-
-					H2Ovals.append(calc.result['H2O'])
-					CO2vals.append(calc.result['CO2'])
-					warnings.append(calc.calib_check)
-				except:
+				if file_has_temp == True:
+					temperature = row[temp_name]
+				if file_has_press == True:
+					pressure = row[press_name]
+				if temperature == 0 or pressure == 0:
+					warnings.append('No temperature and/or pressure data found. Sample skipped.')
 					H2Ovals.append(np.nan)
 					CO2vals.append(np.nan)
-					warnings.append("Calculation Failed.")
+				else:
+					try:
+						bulk_comp = {oxide:  row[oxide] for oxide in oxides}
+						calc = calculate_equilibrium_fluid_comp(sample=bulk_comp, pressure=pressure, temperature=temperature, model=model, silence_warnings=True)
+
+						H2Ovals.append(calc.result['H2O'])
+						CO2vals.append(calc.result['CO2'])
+						warnings.append(calc.calib_check)
+					except:
+						H2Ovals.append(np.nan)
+						CO2vals.append(np.nan)
+						warnings.append("Calculation Failed.")
 			fluid_data["XH2O_fl_VESIcal"] = H2Ovals
 			fluid_data["XCO2_fl_VESIcal"] = CO2vals
 			if file_has_temp == False:
@@ -1157,18 +1190,22 @@ class ExcelFile(object):
 		else:
 			saturated = []
 			for index, row in fluid_data.iterrows():
-				try:
-					if file_has_temp == True:
-						temperature = row[temp_name]
-					if file_has_press == True:
-						pressure = row[press_name]
-					bulk_comp = {oxide:  row[oxide] for oxide in oxides}
-					calc = calculate_equilibrium_fluid_comp(sample=bulk_comp, pressure=pressure, temperature=temperature, model=model, silence_warnings=True)
-					saturated.append(calc.result)
-					warnings.append(calc.calib_check)
-				except:
+				if file_has_temp == True:
+					temperature = row[temp_name]
+				if file_has_press == True:
+					pressure = row[press_name]
+				if temperature == 0 or pressure == 0:
+					warnings.append('No temperature and/or pressure data found. Sample skipped.')
 					saturated.append(np.nan)
-					warnings.append("Calculation Failed.")
+				else:
+					try:
+						bulk_comp = {oxide:  row[oxide] for oxide in oxides}
+						calc = calculate_equilibrium_fluid_comp(sample=bulk_comp, pressure=pressure, temperature=temperature, model=model, silence_warnings=True)
+						saturated.append(calc.result)
+						warnings.append(calc.calib_check)
+					except:
+						saturated.append(np.nan)
+						warnings.append("Calculation Failed.")
 			fluid_data["Saturated_VESIcal"] = saturated
 			if file_has_temp == False:
 				fluid_data["Temperature_C_VESIcal"] = temperature
@@ -1220,16 +1257,20 @@ class ExcelFile(object):
 			satP = []
 			warnings = []
 			for index, row in satp_data.iterrows():
-				try:
-					if file_has_temp == True:
+				if file_has_temp == True:
 						temperature = row[temp_name]
-					bulk_comp = {oxide:  row[oxide] for oxide in oxides}
-					calc = calculate_saturation_pressure(sample=bulk_comp, temperature=temperature, model=model, silence_warnings=True)
-					satP.append(calc.result)
-					warnings.append(calc.calib_check)
-				except:
+				if temperature == 0:
+					warnings.append('No temperature data found. Sample skipped.')
 					satP.append(np.nan)
-					warnings.append("Calculation Failed")
+				else:
+					try:
+						bulk_comp = {oxide:  row[oxide] for oxide in oxides}
+						calc = calculate_saturation_pressure(sample=bulk_comp, temperature=temperature, model=model, silence_warnings=True)
+						satP.append(calc.result)
+						warnings.append(calc.calib_check)
+					except:
+						satP.append(np.nan)
+						warnings.append("Calculation Failed")
 			satp_data["SaturationP_bars_VESIcal"] = satP
 			if file_has_temp == False:
 				satp_data["Temperature_C_VESIcal"] = temperature
@@ -1248,24 +1289,32 @@ class ExcelFile(object):
 			for index, row in satp_data.iterrows():
 				if print_status == True:
 					print("Calculating sample " + str(index))
-				try:
-					if file_has_temp == True:
+				if file_has_temp == True:
 						temperature = row[temp_name]
-					bulk_comp = {oxide:  row[oxide] for oxide in oxides}
-					calc = calculate_saturation_pressure(sample=bulk_comp, temperature=temperature, model=model, verbose=True, silence_warnings=True)
-					satP.append(calc.result["SaturationP_bars"])
-					flmass.append(calc.result["FluidMass_grams"])
-					flsystem_wtper.append(calc.result["FluidProportion_wt"])
-					flH2O.append(calc.result["XH2O_fl"])
-					flCO2.append(calc.result["XCO2_fl"])
-					warnings.append(calc.calib_check)
-				except:
+				if temperature == 0:
+					warnings.append('No temperature data found. Sample skipped.')
 					satP.append(np.nan)
 					flmass.append(np.nan)
 					flsystem_wtper.append(np.nan)
 					flH2O.append(np.nan)
 					flCO2.append(np.nan)
-					warnings.append("Calculation Failed")
+				else:
+					try:
+						bulk_comp = {oxide:  row[oxide] for oxide in oxides}
+						calc = calculate_saturation_pressure(sample=bulk_comp, temperature=temperature, model=model, verbose=True, silence_warnings=True)
+						satP.append(calc.result["SaturationP_bars"])
+						flmass.append(calc.result["FluidMass_grams"])
+						flsystem_wtper.append(calc.result["FluidProportion_wt"])
+						flH2O.append(calc.result["XH2O_fl"])
+						flCO2.append(calc.result["XCO2_fl"])
+						warnings.append(calc.calib_check)
+					except:
+						satP.append(np.nan)
+						flmass.append(np.nan)
+						flsystem_wtper.append(np.nan)
+						flH2O.append(np.nan)
+						flCO2.append(np.nan)
+						warnings.append("Calculation Failed")
 
 			satp_data["SaturationP_bars_VESIcal"] = satP
 			if file_has_temp == False:
@@ -1576,19 +1625,19 @@ crmsg_EqualTo_fail = "The {param_name} is outside the calibration range of the {
 crmsg_EqualTo_description = "The {model_name} model is calibrated for {param_name} equal to {calib_val:.1f} {units}. "
 
 def crf_GreaterThan(calibval,paramval):
-	return paramval > calibval
+	return paramval >= calibval
 crmsg_GreaterThan_pass = "The {param_name} ({param_val:.1f} {units}) is greater than {calib_val:.1f} {units} as required by the calibration range of the {model_name} model. "
 crmsg_GreaterThan_fail = "The {param_name} is outside the calibration range of the {model_name} model, as {param_val:.1f} {units} is not greater than {calib_val:.1f} {units}. "
 crmsg_GreaterThan_description = "The {model_name} model is calibrated for {param_name} greater than {calib_val:.1f} {units}. "
 
 def crf_LessThan(calibval,paramval):
-	return paramval < calibval
+	return paramval <= calibval
 crmsg_LessThan_pass = "The {param_name} ({param_val:.1f} {units}) is less than {calib_val:.1f} {units} as required by the calibration range of the {model_name} model. "
 crmsg_LessThan_fail = "The {param_name} is outside the calibration range of the {model_name} model, as {param_val:.1f} {units} is not less than {calib_val:.1f} {units}. "
 crmsg_LessThan_description = "The {model_name} model is calibrated for {param_name} less than {calib_val:.1f} {units}. "
 
 def crf_Between(calibval,paramval):
-	return paramval > calibval[0] and paramval < calibval[1]
+	return paramval >= calibval[0] and paramval <= calibval[1]
 crmsg_Between_pass = "The {param_name} ({param_val} {units}) is between {calib_val0} and {calib_val1} {units} as required by the calibration range of the {model_name} model. "
 crmsg_Between_fail = "The {param_name} is outside the calibration range of the {model_name} model, as {param_val} {units} is not between {calib_val0} and {calib_val1} {units}. "
 crmsg_Between_description = "The {model_name} model is calibrated for {param_name} between {calib_val0} and {calib_val1} {units}. "
@@ -6169,9 +6218,9 @@ class MagmaSat(Model):
 		data = self.calculate_saturation_pressure(sample=sample, temperature=temperature, verbose=True)
 
 		if pressure == 'saturation' or pressure >= data["SaturationP_bars"]:
-			SatP_MPa = data["SaturationP_bars"] / 10.0
+			SatP_MPa = data["SaturationP_bars"] / 10
 		else:
-			SatP_MPa = pressure / 10.0
+			SatP_MPa = pressure / 10
 
 		#If pressure is low, use smaller P steps
 		if SatP_MPa >= 50:
@@ -6179,11 +6228,10 @@ class MagmaSat(Model):
 		elif SatP_MPa < 50:
 			MPa_step = 1
 
-		P_array = np.arange(1.0, SatP_MPa, MPa_step)
-		P_array = -np.sort(-P_array)
+		P_array = np.arange(SatP_MPa, 1, -10)
 		fl_wtper = data["FluidProportion_wt"]
 
-		if fractionate_vapor == 0 or fractionate_vapor == 0.0: #closed-system
+		if fractionate_vapor == 0: #closed-system
 			while fl_wtper <= init_vapor:
 				output = melts.equilibrate_tp(temperature, SatP_MPa)
 				(status, temperature, p, xmlout) = output[0]
@@ -6218,7 +6266,7 @@ class MagmaSat(Model):
 				fl_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
 				fl_wtper = 100 * fl_mass / (fl_mass+liq_mass)
 
-				pressure_list.append(p * 10.0)
+				pressure_list.append(p * 10)
 				try:
 					H2Oliq.append(liq_comp["H2O"])
 				except:
@@ -6261,9 +6309,9 @@ class MagmaSat(Model):
 			CO2fl = []
 			fluid_wtper = []
 			for i in P_array:
-				fl_mass = 0.0
+				fl_mass = 0
 				feasible = melts.set_bulk_composition(bulk_comp)
-				output = melts.equilibrate_tp(temperature, i)
+				output = melts.equilibrate_tp(temperature, i, initialize=True)
 				(status, temperature, p, xmlout) = output[0]
 				liq_comp = melts.get_composition_of_phase(xmlout, phase_name='Liquid')
 				fl_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid', mode='component')
@@ -6272,7 +6320,7 @@ class MagmaSat(Model):
 				fl_wtper = 100 * fl_mass / (fl_mass+liq_mass)
 
 				if fl_mass > 0:
-					pressure.append(p * 10.0)
+					pressure.append(p * 10)
 					try:
 						H2Oliq.append(liq_comp["H2O"])
 					except:
@@ -6299,7 +6347,7 @@ class MagmaSat(Model):
 						bulk_comp["CO2"] = liq_comp["CO2"] + (bulk_comp["CO2"] - liq_comp["CO2"]) * (1-fractionate_vapor)
 					except:
 						bulk_comp["CO2"] = 0
-					bulk_comp = normalize(bulk_comp)
+					#bulk_comp = normalize(bulk_comp)
 
 			feasible = melts.set_bulk_composition(bulk_comp_orig) #this needs to be reset always!
 			open_degassing_df = pd.DataFrame(list(zip(pressure, H2Oliq, CO2liq, H2Ofl, CO2fl, fluid_wtper)),
@@ -6338,7 +6386,7 @@ def plot_isobars_and_isopleths(isobars, isopleths):
 		isobars_lists.append([0.0, 0.0, 0.0, 0.0])
 
 		# draw the figure
-		fig, ax1 = plt.subplots()
+		fig, ax1 = plt.subplots(figsize=(8,8))
 		plt.xlabel('H$_2$O wt%')
 		plt.ylabel('CO$_2$ wt%')
 
@@ -6410,7 +6458,7 @@ def plot_degassing_paths(degassing_paths, labels=None):
 	label_nos = [n for n, df in enumerate(degassing_paths)]
 
 	iterno = 0
-	plt.figure()
+	plt.figure(figsize=(8,8))
 	for path in degassing_paths:
 		if labels == None:
 			iterno += 1
