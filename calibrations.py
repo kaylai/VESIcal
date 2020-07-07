@@ -72,26 +72,26 @@ list_of_modelnames=['df_Eguchi_CO2',
 'df_MagmaSat_CO2H2O']
 
 for i in range(len(list_of_models)):
-    current = list_of_models[i]
-    oxides = ['SiO2', 'TiO2', 'Al2O3', 'Fe2O3', 'Cr2O3', 'FeO', 'MnO', 'MgO', 'NiO', 'CoO', 'CaO', 'Na2O', 'K2O', 'P2O5',
-              'H2O', 'CO2', 'Na2O+K2O']
+	current = list_of_models[i]
+	oxides = ['SiO2', 'TiO2', 'Al2O3', 'Fe2O3', 'Cr2O3', 'FeO', 'MnO', 'MgO', 'NiO', 'CoO', 'CaO', 'Na2O', 'K2O', 'P2O5',
+			  'H2O', 'CO2', 'Na2O+K2O']
 
-    f.write("\n")
-    f.write(str(list_of_modelnames[i])+" = pd.DataFrame({ \n")
-    for oxide in oxides:
-        iterno = 1
-        if oxide in current.columns.values:
-            f.write("'" + (str(oxide)+"': ["))
-            for index, row in current.iterrows():
-                if math.isnan(row[oxide]):
-                    f.write("float('nan')")
-                else:
-                    f.write(str(row[oxide]))
-                if iterno < len(current.index):
-                    f.write(",")
-                iterno += 1
-            f.write("], \n")
-    f.write(" }) \n")
+	f.write("\n")
+	f.write(str(list_of_modelnames[i])+" = pd.DataFrame({ \n")
+	for oxide in oxides:
+		iterno = 1
+		if oxide in current.columns.values:
+			f.write("'" + (str(oxide)+"': ["))
+			for index, row in current.iterrows():
+				if math.isnan(row[oxide]):
+					f.write("float('nan')")
+				else:
+					f.write(str(row[oxide]))
+				if iterno < len(current.index):
+					f.write(",")
+				iterno += 1
+			f.write("], \n")
+	f.write(" }) \n")
 """
 df_Eguchi_CO2 = pd.DataFrame({ 
 'SiO2': [44.10437603256261,44.10437603256261,44.10438088624972,44.104409634992706,44.10440889218369,44.10436830013397,44.1043908020398,44.10439205840465,44.10437458664902,44.104388016125164,44.10447339134081,44.10442257149313,44.10439334203017,44.104402908626135,44.104425065494524,44.10441928699617,49.984948661156025,49.98499547623014,49.985029494522195,49.985031104485095,49.9849724794392,60.38457666364644,60.06856912372693,49.0716670160065,49.071645200314904,49.071672361546916,49.07162501392976,49.071691233246476,49.071655338090046,49.07171166635172,49.07161924790047,49.07160094364064,51.59093897447411,51.5909788127466,51.59095838098362,51.59099133547149,51.59100608163437,51.59095482119933,60.86363920223774,60.862118521429586,60.327879081134796,61.05994103109784,60.228427280402116,60.47698580099399,60.319480827024755,60.925128442593945,60.676923007691116,60.74231466084237,60.81293844084079,53.70694014420282,53.7011529445255,53.700006611804454,53.700006611804454,53.69779064013701,46.009076546324664,46.94337872454186,46.19147403334632,45.5331365691128,46.29926453155094,46.718172953814054,46.33633424705815,46.17411358425308,46.61310804908212,46.02227057679376,39.36064809475989,39.36061937169125,39.36059448345091,39.36063250847917,70.45563962403973,70.60153988170781,70.75487983697325,70.56116686712926,50.70163037927418,49.53836756003234,49.67254110627778,48.92225228928746,48.88581292600512,48.96852346436122,48.45841806843705,46.84110554778804,46.109654468263564,47.945539201443445,45.47202864851899,46.77080053524734,45.70582888892893,76.84189901373412,76.84190833699662,76.84187166776081,76.8418702682207,76.84185768068464,76.84191800075739,76.84189165812349,76.8418501683941,76.84187528983503,76.8418958389256,76.84186241566731,76.84191960932424,76.84191433100298,76.84188441598513,76.84190170839541,76.84191145437651], 
@@ -343,10 +343,10 @@ def return_calibration(model_name):
 		return {'Mixed': df_Moore_H2O, 'marker':'d', 'facecolor':'lime'}
 
 	if model_name == 'LiuCarbon':
-        return "The Liu model calibration is not yet implemented."
+		return "The Liu model calibration is not yet implemented."
 
 	if model_name == 'LiuWater':
-        return "The Liu model calibration is not yet implemented."
+		return "The Liu model calibration is not yet implemented."
 
 	if model_name == 'MagmaSat':
 		return {'CO2': df_MagmaSat_CO2, 'H2O': df_MagmaSat_H2O, 'Mixed': df_MagmaSat_CO2H2O, 'marker':'d', 'facecolor':'silver'}
