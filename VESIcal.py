@@ -5,12 +5,15 @@
 #--------TURN OFF MAGMASAT WARNING--------#
 import warnings
 warnings.filterwarnings("ignore", message="rubicon.objc.ctypes_patch has only been tested ")
+warnings.filterwarnings("ignore", message="The handle")
 
 #-----------------IMPORTS-----------------#
 import pandas as pd
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import matplotlib.font_manager as font_manager
+from cycler import cycler
 from abc import ABC, abstractmethod
 from scipy.optimize import root_scalar
 from scipy.optimize import root
@@ -57,7 +60,7 @@ oxides_to_cations = {'SiO2': 'Si', 'MgO': 'Mg', 'FeO': 'Fe', 'CaO': 'Ca', 'Al2O3
 cations_to_oxides = {'Si': 'SiO2', 'Mg': 'MgO', 'Fe': 'FeO', 'Ca': 'CaO', 'Al': 'Al2O3', 'Na': 'Na2O',
 			 'K': 'K2O', 'Mn': 'MnO', 'Ti': 'TiO2', 'P': 'P2O5', 'Cr': 'Cr2O3',
 			 'Ni': 'NiO', 'Co': 'CoO', 'Fe3': 'Fe2O3', 'H': 'H2O', 'C': 'CO2'}
-MixedFluidsModels = ['Shishkina', 'Dixon', 'IaconoMarziano']
+
 
 
 
@@ -92,17 +95,22 @@ class SaturationError(Error):
 
 
 #----------DEFINE CUSTOM PLOTTING FORMATTING------------#
-msp_fontdict = {'family': 'serif',
-				 'color': 'darkblue',
-				 'weight': 'normal',
-				 'size': 18,}
-
-plt.rcParams["font.family"] = 'arial'
+style = "seaborn-colorblind"
+plt.style.use(style)
 plt.rcParams["mathtext.default"] = "regular"
 plt.rcParams["mathtext.fontset"] = "dejavusans"
-plt.style.use("seaborn-colorblind")
 mpl.rcParams['patch.linewidth'] = 1
-mpl.rcParams['axes.linewidth'] = 1 # set the value globally
+mpl.rcParams['axes.linewidth'] = 1
+plt.rcParams['axes.titlesize'] = 20
+plt.rcParams['axes.labelsize'] = 18
+plt.rcParams['xtick.labelsize'] = 14
+plt.rcParams['ytick.labelsize'] = 14
+plt.rcParams['legend.fontsize'] = 14
+
+#Define color cycler based on plot style set here
+the_rc = plt.style.library[style] #get style formatting set by plt.style.use()
+color_list = the_rc['axes.prop_cycle'].by_key()['color'] #list of colors by hex code
+color_cyler = the_rc['axes.prop_cycle'] #get the cycler
 
 def printTable(myDict):
 	""" Pretty print a dictionary (as pandas DataFrame)
@@ -914,7 +922,7 @@ class ExcelFile(object):
 		CO2vals = []
 		warnings = []
 		errors = []
-		if model in MixedFluidsModels:
+		if model in get_models(models='mixed'):
 			for index, row in dissolved_data.iterrows():
 				if file_has_temp == True:
 					temperature = row[temp_name]
@@ -1120,7 +1128,7 @@ class ExcelFile(object):
 		H2Ovals = []
 		CO2vals = []
 		warnings = []
-		if model in MixedFluidsModels or model == "MooreWater":
+		if model in get_models(models='mixed') or model == "MooreWater":
 			for index, row in fluid_data.iterrows():
 				if file_has_temp == True:
 					temperature = row[temp_name]
@@ -6356,7 +6364,7 @@ class MagmaSat(Model):
 			return open_degassing_df
 
 #-----------MAGMASAT PLOTTING FUNCTIONS-----------#
-def plot_isobars_and_isopleths(isobars, isopleths):
+def plot_isobars_and_isopleths(isobars=None, isopleths=None, labels=None):
 		"""
 		Takes in a dataframe with calculated isobar and isopleth information (e.g., output from calculate_isobars_and_isopleths)
 		and plots data as isobars (lines of constant pressure) and isopleths (lines of constant fluid composition). These lines
@@ -6364,11 +6372,18 @@ def plot_isobars_and_isopleths(isobars, isopleths):
 
 		Parameters
 		----------
-		isobars: pandas DataFrame
-			DataFrame object containing isobar information as calculated by calculate_isobars_and_isopleths.
+		isobars: pandas DataFrame or list
+			DataFrame object containing isobar information as calculated by calculate_isobars_and_isopleths. Or a list
+			of DataFrame objects.
 
-		isopleths: pandas DataFrame
-			DataFrame object containing isopleth information as calculated by calculate_isobars_and_isopleths.
+		isopleths: pandas DataFrame or list
+			DataFrame object containing isopleth information as calculated by calculate_isobars_and_isopleths. Or a list
+			of DataFrame objects.
+
+		labels: list
+		OPTIONAL. Labels for the plot legend. Default is None, in which case each plotted line will be given the generic
+		legend name of "Isobars n", with n referring to the nth isobars passed. The user can pass their own labels
+		as a list of strings.
 
 		Returns
 		-------
@@ -6377,63 +6392,116 @@ def plot_isobars_and_isopleths(isobars, isopleths):
 			constant pressure at which the sample magma composition is saturated, and isopleths, or lines of constant
 			fluid composition at which the sample magma composition is saturated, are plotted.
 		"""
-		P_vals = isobars.Pressure.unique()
-		XH2O_vals = isopleths.XH2O_fl.unique()
-		isobars_lists = isobars.values.tolist()
-		isopleths_lists = isopleths.values.tolist()
+		if isinstance(isobars, list) and isinstance(isopleths, list):
+			if len(isobars) != len(isopleths):
+				raise InputError("If isobars and isopleths are both passed as lists, they must have the same length.")
+			pass
+		if isinstance(isobars, pd.DataFrame):
+			isobars = [isobars]
+		if isinstance(isopleths, pd.DataFrame):
+			isopleths = [isopleths]
+		if isobars is None:
+			isobars = []
+			for i in range(len(isopleths)):
+				isobars.append(pd.DataFrame(columns=['Pressure','H2O_liq','CO2_liq']))
+		if isopleths is None:
+			isopleths = []
+			for i in range(len(isobars)):
+				isopleths.append(pd.DataFrame(columns=['XH2O_fl','H2O_liq','CO2_liq']))
 
-		# add zero values to volatiles list
-		isobars_lists.append([0.0, 0.0, 0.0, 0.0])
+		user_labels = labels
 
-		# draw the figure
-		fig, ax1 = plt.subplots(figsize=(8,8))
+		#if len(isobars) != len(isopleths):
+			#raise InputError("Isobars and isopleths must have the same length if passed as a list.")
+
+		label_nos = [n for n, df in enumerate(isobars)]
+
+		iterno = 0
+		plt.figure(figsize=(12,8))
 		plt.xlabel('H$_2$O wt%')
 		plt.ylabel('CO$_2$ wt%')
+		iterno = 0
 
-		# do some data smoothing
-		for pressure in P_vals:
-			Pxs = [item[1] for item in isobars_lists if item[0] == pressure]
-			Pys = [item[2] for item in isobars_lists if item[0] == pressure]
+		labels = []
+		for i in range(len(isobars)):
+			iterno += 1
+			P_vals = isobars[i].Pressure.unique()
+			XH2O_vals = isopleths[i].XH2O_fl.unique()
+			isobars_lists = isobars[i].values.tolist()
+			isopleths_lists = isopleths[i].values.tolist()
 
-			try:
-				np.seterr(divide='ignore', invalid='ignore') #turn off numpy warning
-				## calcualte polynomial
-				Pz = np.polyfit(Pxs, Pys, 3)
-				Pf = np.poly1d(Pz)
+			# add zero values to volatiles list
+			isobars_lists.append([0.0, 0.0, 0.0, 0.0])
 
-				## calculate new x's and y's
-				Px_new = np.linspace(Pxs[0], Pxs[-1], 50)
-				Py_new = Pf(Px_new)
+			np.seterr(divide='ignore', invalid='ignore') #turn off numpy warning
+			warnings.filterwarnings("ignore", message="Polyfit may be poorly conditioned")
+			# do some data smoothing
+			P_iter = 0
+			for pressure in P_vals:
+				P_iter += 1
+				Pxs = [item[1] for item in isobars_lists if item[0] == pressure]
+				Pys = [item[2] for item in isobars_lists if item[0] == pressure]
 
-				# Plot some stuff
-				ax1.plot(Px_new, Py_new)
-			except:
-				ax1.plot(Pxs, Pys)
+				if len(isobars) > 1:
+					if P_iter == 1:
+						P_list = [int(i) for i in P_vals]
+						if isinstance(user_labels, list):
+							labels.append(str(user_labels[i]) + ' (' + ', '.join(map(str, P_list)) + " bars)")
+						else:
+							labels.append('Isobars ' + str(i+1) + ' (' + ', '.join(map(str, P_list)) + " bars)")
+					else:
+						labels.append('_nolegend_')
 
-		for Xfl in XH2O_vals:
-			Xxs = [item[1] for item in isopleths_lists if item[0] == Xfl]
-			Xys = [item[2] for item in isopleths_lists if item[0] == Xfl]
+				try:
+					np.seterr(divide='ignore', invalid='ignore') #turn off numpy warning
+					## calcualte polynomial
+					Pz = np.polyfit(Pxs, Pys, 3)
+					Pf = np.poly1d(Pz)
 
-			try:
-				## calcualte polynomial
-				Xz = np.polyfit(Xxs, Xys, 2)
-				Xf = np.poly1d(Xz)
+					## calculate new x's and y's
+					Px_new = np.linspace(Pxs[0], Pxs[-1], 50)
+					Py_new = Pf(Px_new)
 
-				## calculate new x's and y's
-				Xx_new = np.linspace(Xxs[0], Xxs[-1], 50)
-				Xy_new = Xf(Xx_new)
+					# Plot some stuff
+					if len(isobars) > 1:
+						plt.plot(Px_new, Py_new, color=color_list[i])
+					else:
+						plt.plot(Px_new, Py_new)
+				except:
+					if len(isobars) > 1:
+						plt.plot(Pxs, Pys, color=color_list[i])
+					else:
+						plt.plot(Pxs, Pys)
 
-				# Plot some stuff
-				ax1.plot(Xx_new, Xy_new, ls='dashed', color='k')
-			except:
-				ax1.plot(Xxs, Xys, ls='dashed', color='k')
+			for Xfl in XH2O_vals:
+				Xxs = [item[1] for item in isopleths_lists if item[0] == Xfl]
+				Xys = [item[2] for item in isopleths_lists if item[0] == Xfl]
 
-		labels = P_vals
-		ax1.legend(labels)
+				if len(isobars) > 1:
+					labels.append('_nolegend_')
+
+				try:
+					np.seterr(divide='ignore', invalid='ignore') #turn off numpy warning
+					## calcualte polynomial
+					Xz = np.polyfit(Xxs, Xys, 2)
+					Xf = np.poly1d(Xz)
+
+					## calculate new x's and y's
+					Xx_new = np.linspace(Xxs[0], Xxs[-1], 50)
+					Xy_new = Xf(Xx_new)
+
+					# Plot some stuff
+					plt.plot(Xx_new, Xy_new, ls='dashed', color='k')
+				except:
+					plt.plot(Xxs, Xys, ls='dashed', color='k')
+			if len(isobars) == 1:
+				labels = [str(P_val) + " bars" for P_val in P_vals]
+		plt.legend(labels)
 
 		np.seterr(divide='warn', invalid='warn') #turn numpy warning back on
+		warnings.filterwarnings("always", message="Polyfit may be poorly conditioned")
 
-		return ax1
+		return plt.show()
 
 def plot_degassing_paths(degassing_paths, labels=None):
 	"""
@@ -6458,7 +6526,7 @@ def plot_degassing_paths(degassing_paths, labels=None):
 	label_nos = [n for n, df in enumerate(degassing_paths)]
 
 	iterno = 0
-	plt.figure(figsize=(8,8))
+	plt.figure(figsize=(12,8))
 	for path in degassing_paths:
 		if labels == None:
 			iterno += 1
@@ -6497,6 +6565,21 @@ default_models = {'Shishkina':                MixedFluid({'H2O':ShishkinaWater()
 				  'LiuWater':				  LiuWater(),
 				  'LiuCarbon':				  LiuCarbon()
 }
+
+def get_models(models='all'):
+	"""
+	Returns model names as a list
+
+	Parameters
+	----------
+	models:	str
+		OPTIONAL. Default value is 'all' in which case all keys in defaule_models are returned.
+		If 'mixed' is passed, only the MixedFluid model names are returned.
+	"""
+	if models == 'all':
+		return list(default_models.keys())
+	if models == 'mixed':
+		return ['Shishkina', 'Dixon', 'IaconoMarziano', 'Liu']
 
 class calculate_dissolved_volatiles(Calculate):
 	""" Calculates the dissolved volatile concentration using a chosen model (default is MagmaSat).
