@@ -308,12 +308,14 @@ def wtpercentOxides_to_molSingleO(oxides):
 
 	return molCations
 
-def wtpercentOxides_to_formulaWeight(sample):
+def wtpercentOxides_to_formulaWeight(sample,exclude_volatiles=False):
 	""" Converts major element oxides in wt% to the formula weight (on a 1 oxygen basis).
 	Parameters
 	----------
 	sample     dict or pandas Series
 		Major element oxides in wt%.
+	exclude_volatiles 	bool
+		If True H2O and CO2 will be excluded from the formula weight calculation.
 
 	Returns
 	-------
@@ -326,7 +328,22 @@ def wtpercentOxides_to_formulaWeight(sample):
 		raise InputError("The composition input must be a pandas Series or dictionary.")
 	else:
 		_sample = sample.copy()
+
 	cations = wtpercentOxides_to_molSingleO(_sample)
+	if type(cations) != dict:
+		cations = dict(cations)
+
+	if exclude_volatiles == True:
+		if 'C' in cations:
+			cations.pop('C')
+		if 'H' in cations:
+			cations.pop('H')
+		newsum = 0
+		for cation in cations:
+			newsum += cations[cation]
+		for cation in cations:
+			cations[cation] = cations[cation]/newsum
+
 	FW = 15.999
 	for cation in list(cations.keys()):
 		FW += cations[cation]*CationMass[cations_to_oxides[cation]]
@@ -4881,7 +4898,7 @@ class AllisonCarbon(Model):
 		pandas Series
 			Normalized major element oxides in wt%.
 		"""
-		return normalize_FixedVolatiles(sample)
+		return normalize_AdditionalVolatiles(sample)
 
 	def calculate_dissolved_volatiles(self,pressure,temperature,sample=None,X_fluid=1.0,**kwargs):
 		"""
@@ -4933,7 +4950,7 @@ class AllisonCarbon(Model):
 			fCO2 = self.fugacity_model.fugacity(pressure=pressure,temperature=temperature,X_fluid=X_fluid,**kwargs)
 			Kf = np.exp(lnK)*fCO2
 			XCO3 = Kf/(1-Kf)
-			FWone = wtpercentOxides_to_formulaWeight(sample)
+			FWone = wtpercentOxides_to_formulaWeight(sample,exclude_volatiles=True)
 			wtCO2 = (44.01*XCO3)/((44.01*XCO3)+(1-XCO3)*FWone)*100
 
 			return wtCO2
