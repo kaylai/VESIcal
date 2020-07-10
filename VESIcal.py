@@ -5168,7 +5168,7 @@ class MixedFluid(Model):
 		if returndict == True:
 			resultsdict = {}
 			for i,v in zip(range(len(self.volatile_species)),self.volatile_species):
-				resultsdict.update({v:result[i]})
+				resultsdict.update({v+'_liq':result[i]})
 			return resultsdict
 		else:
 			return result
@@ -7019,7 +7019,7 @@ COMPLETELY broken the module.")
 			for volatile in model.volatile_species:
 				print("  {:s} solubility at {:.0f} bars and {:.0f} K is {:.3f} wt%".format(volatile,
 																						 test_pressure,test_temperature,
-																						 result.result[volatile]))
+																						 result.result[volatile+'_liq']))
 
 
 
