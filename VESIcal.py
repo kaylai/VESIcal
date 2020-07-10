@@ -17,7 +17,7 @@ from scipy.optimize import root
 from scipy.optimize import minimize
 import sys
 import sympy
-import anvil_server
+# import anvil_server
 
 #--------------MELTS preamble---------------#
 from thermoengine import equilibrate
@@ -2290,6 +2290,161 @@ class fugacity_HB_co2(FugacityModel):
 	def fugacity(self,pressure,temperature,**kwargs):
 		return self.HBmodel.fugacity(pressure, temperature, 'CO2')
 
+class fugacity_MRK_co2(FugacityModel):
+	""" Modified Redlick Kwong fugacity model as used by VolatileCalc. Python implementation by
+	D. J. Rasmussen (github.com/DJRgeoscience/VolatileCalcForPython), based on VB code by Newman &
+	Lowenstern.
+	"""
+	def __init__(self):
+		self.set_calibration_ranges([])
+
+	def fugacity(self,pressure,temperature,X_fluid=1.0,**kwargs):
+		""" Calculates the fugacity of CO2 in a pure or mixed H2O-CO2 fluid (assuming ideal mixing).
+
+		Parameters
+		----------
+		pressure    float
+			Total pressure of the system in bars.
+		temperature     float
+			Temperature in degC
+		X_fluid     float
+			Mole fraction of CO2 in the fluid.
+
+		Returns
+		-------
+		float
+			fugacity of CO2 in bars
+		"""
+		fug = self.MRK(pressure,temperature+273.15)
+		return fug*X_fluid
+
+	def FNA(self,TK):
+		return (166800000 - 193080 * (TK - 273.15) + 186.4 * (TK - 273.15)**2 - 0.071288 * ((TK - 273.15)**3)) * 1.01325
+
+	def FNB(self,TK):
+		return 1.01325 * (73030000 - 71400 * (TK - 273.15) + 21.57 * (TK - 273.15)**2)
+
+	def FNC(self,TK):
+		R = 83.14321
+		return 1.01325 * (np.exp(-11.071 + 5953 / TK - 2746000 / TK**2 + 464600000 / TK**3) * 0.5 * R * R * TK**2.5 / 1.02668 + 40123800)
+
+	def FNF(self,V,TK,A,B,P):
+		R = 83.14321
+		return R * TK / (V - B) - A / ((V * V + B * V) * TK**0.5) - P
+
+	def MRK(self,P,TK): #Redlich-Kwong routine to estimate endmember H2O and CO2 fugacities
+		R = 83.14321
+		B_1 = 14.6
+		B_2 = 29.7
+
+		for X_1 in [0,1]:
+			B = X_1 * B_1 + (1 - X_1) * B_2
+			A = X_1**2 * self.FNA(TK) + 2 * X_1 * (1 - X_1) * self.FNC(TK) + (1 - X_1)**2 * self.FNB(TK)
+			Temp2 = B + 5
+			Q = 1
+			Temp1 = 0
+			while abs(Temp2 - Temp1) >= 0.00001:
+				Temp1 = Temp2
+				F_1 = (self.FNF(Temp1 + 0.01, TK, A, B, P) - self.FNF(Temp1, TK, A, B, P)) / 0.01
+				Temp2 = Temp1 - Q * self.FNF(Temp1, TK, A, B, P) / F_1
+				F_2 = (self.FNF(Temp2 + 0.01, TK, A, B, P) - self.FNF(Temp2, TK, A, B, P)) / 0.01
+				if F_2 * F_1 <= 0:
+					Q = Q / 2.
+				if abs(Temp2 - Temp1) > 0.00001:
+					F_1 = F_2
+			V = Temp2
+			G_1 = np.log(V / (V - B)) + B_1 / (V - B) - 2 * (X_1 * self.FNA(TK) + (1 - X_1) * self.FNC(TK)) * np.log((V + B) / V) / (R * TK**1.5 * B)
+			G_1 = G_1 + (np.log((V + B) / V) - B / (V + B)) * A * B_1 / (R * TK**1.5 * B**2) - np.log(P * V / (R * TK))
+			G_1 = np.exp(G_1)
+			G_2 = np.log(V / (V - B)) + B_2 / (V - B) - 2 * (X_1 * self.FNC(TK) + (1 - X_1) * self.FNB(TK)) * np.log((V + B) / V) / (R * TK**1.5 * B)
+			G_2 = G_2 + (np.log((V + B) / V) - B / (V + B)) * A * B_2 / (R * TK**1.5 * B**2) - np.log(P * V / (R * TK))
+			G_2 = np.exp(G_2)
+			if X_1 == 0:
+				fCO2o = G_2 * P #The fugacity of CO2
+				# return fCO2o
+			if X_1 == 1:
+				fH2Oo = G_1 * P #The fugacity of H2O
+				# return fH2Oo
+		return fCO2o
+
+class fugacity_MRK_h2o(FugacityModel):
+	""" Modified Redlick Kwong fugacity model as used by VolatileCalc. Python implementation by
+	D. J. Rasmussen (github.com/DJRgeoscience/VolatileCalcForPython), based on VB code by Newman &
+	Lowenstern.
+	"""
+	def __init__(self):
+		self.set_calibration_ranges([])
+
+	def fugacity(self,pressure,temperature,X_fluid=1.0,**kwargs):
+		""" Calculates the fugacity of H2O in a pure or mixed H2O-CO2 fluid (assuming ideal mixing).
+
+		Parameters
+		----------
+		pressure    float
+			Total pressure of the system in bars.
+		temperature     float
+			Temperature in degC
+		X_fluid     float
+			Mole fraction of H2O in the fluid.
+
+		Returns
+		-------
+		float
+			fugacity of CO2 in bars
+		"""
+		fug = self.MRK(pressure,temperature+273.15)
+		return fug*X_fluid
+
+	def FNA(self,TK):
+		return (166800000 - 193080 * (TK - 273.15) + 186.4 * (TK - 273.15)**2 - 0.071288 * ((TK - 273.15)**3)) * 1.01325
+
+	def FNB(self,TK):
+		return 1.01325 * (73030000 - 71400 * (TK - 273.15) + 21.57 * (TK - 273.15)**2)
+
+	def FNC(self,TK):
+		R = 83.14321
+		return 1.01325 * (np.exp(-11.071 + 5953 / TK - 2746000 / TK**2 + 464600000 / TK**3) * 0.5 * R * R * TK**2.5 / 1.02668 + 40123800)
+
+	def FNF(self,V,TK,A,B,P):
+		R = 83.14321
+		return R * TK / (V - B) - A / ((V * V + B * V) * TK**0.5) - P
+
+	def MRK(self,P,TK): #Redlich-Kwong routine to estimate endmember H2O and CO2 fugacities
+		R = 83.14321
+		B_1 = 14.6
+		B_2 = 29.7
+
+		# X_1 = 1
+		for X_1 in [0,1]:
+			B = X_1 * B_1 + (1 - X_1) * B_2
+			A = X_1**2 * self.FNA(TK) + 2 * X_1 * (1 - X_1) * self.FNC(TK) + (1 - X_1)**2 * self.FNB(TK)
+			Temp2 = B + 5
+			Q = 1
+			Temp1 = 0
+			while abs(Temp2 - Temp1) >= 0.00001:
+				Temp1 = Temp2
+				F_1 = (self.FNF(Temp1 + 0.01, TK, A, B, P) - self.FNF(Temp1, TK, A, B, P)) / 0.01
+				Temp2 = Temp1 - Q * self.FNF(Temp1, TK, A, B, P) / F_1
+				F_2 = (self.FNF(Temp2 + 0.01, TK, A, B, P) - self.FNF(Temp2, TK, A, B, P)) / 0.01
+				if F_2 * F_1 <= 0:
+					Q = Q / 2.
+				if abs(Temp2 - Temp1) > 0.00001:
+					F_1 = F_2
+			V = Temp2
+			G_1 = np.log(V / (V - B)) + B_1 / (V - B) - 2 * (X_1 * self.FNA(TK) + (1 - X_1) * self.FNC(TK)) * np.log((V + B) / V) / (R * TK**1.5 * B)
+			G_1 = G_1 + (np.log((V + B) / V) - B / (V + B)) * A * B_1 / (R * TK**1.5 * B**2) - np.log(P * V / (R * TK))
+			G_1 = np.exp(G_1)
+			G_2 = np.log(V / (V - B)) + B_2 / (V - B) - 2 * (X_1 * self.FNC(TK) + (1 - X_1) * self.FNB(TK)) * np.log((V + B) / V) / (R * TK**1.5 * B)
+			G_2 = G_2 + (np.log((V + B) / V) - B / (V + B)) * A * B_2 / (R * TK**1.5 * B**2) - np.log(P * V / (R * TK))
+			G_2 = np.exp(G_2)
+			if X_1 == 0:
+				fCO2o = G_2 * P #The fugacity of CO2
+				# return fCO2o
+			if X_1 == 1:
+				fH2Oo = G_1 * P #The fugacity of H2O
+				# return fH2Oo
+		return fH2Oo
+
 class fugacity_HollowayBlank(FugacityModel):
 	"""
 	Implementation of the Modified Redlich Kwong presented in Holloway and Blank (1994) Reviews
@@ -2802,8 +2957,6 @@ class ShishkinaCarbon(Model):
 			The dissolved CO2 concentration in wt%.
 		"""
 
-
-
 		if X_fluid < 0 or X_fluid > 1:
 			raise InputError("X_fluid must have a value between 0 and 1.")
 		if pressure < 0:
@@ -3056,7 +3209,7 @@ class DixonCarbon(Model):
 
 	def __init__(self):
 		self.set_volatile_species(['CO2'])
-		self.set_fugacity_model(fugacity_KJ81_co2())
+		self.set_fugacity_model(fugacity_MRK_co2())
 		self.set_activity_model(activity_idealsolution())
 		self.set_calibration_ranges([])
 		self.set_solubility_dependence(False)
@@ -3243,7 +3396,7 @@ class DixonWater(Model):
 
 	def __init__(self):
 		self.set_volatile_species(['H2O'])
-		self.set_fugacity_model(fugacity_KJ81_h2o())
+		self.set_fugacity_model(fugacity_MRK_h2o())
 		self.set_activity_model(activity_idealsolution())
 		self.set_calibration_ranges([])
 		self.set_solubility_dependence(False)
