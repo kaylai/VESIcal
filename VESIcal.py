@@ -17,7 +17,7 @@ from scipy.optimize import root
 from scipy.optimize import minimize
 import sys
 import sympy
-# import anvil_server
+import anvil_server
 
 #--------------MELTS preamble---------------#
 from thermoengine import equilibrate
