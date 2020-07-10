@@ -948,8 +948,8 @@ class ExcelFile(object):
 					bulk_comp = {oxide:  row[oxide] for oxide in oxides}
 					calc = calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature,
 																	X_fluid=(X_fluid, 1-X_fluid), model=model, silence_warnings=True)
-					H2Ovals.append(calc.result['H2O'])
-					CO2vals.append(calc.result['CO2'])
+					H2Ovals.append(calc.result['H2O_liq'])
+					CO2vals.append(calc.result['CO2_liq'])
 					warnings.append(calc.calib_check)
 					errors.append('')
 				except Exception as inst:
