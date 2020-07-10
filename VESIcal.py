@@ -1563,7 +1563,7 @@ class Calculate(object):
 	have a common workflow- sample is read in, preprocessed, the calculation is performed,
 	the calibration range is checked, and the results stored.
 	"""
-	def __init__(self,sample,model='MagmaSat',silence_warnings=False,**kwargs):
+	def __init__(self,sample,model='MagmaSat',silence_warnings=False,preprocess_sample=True,**kwargs):
 		if model == 'MagmaSat':
 			self.model = MagmaSat()
 		elif type(model) == str:
@@ -1572,7 +1572,8 @@ class Calculate(object):
 			self.model = model
 
 		self.sample = sample.copy()
-		self.sample = self.model.preprocess_sample(self.sample)
+		if preprocess_sample == True:
+			self.sample = self.model.preprocess_sample(self.sample)
 
 		self.result = self.calculate(sample=self.sample,**kwargs)
 		self.calib_check = self.check_calibration_range(sample=self.sample,**kwargs)
@@ -5256,7 +5257,9 @@ class MixedFluid(Model):
 		"""
 		if type(sample) != dict and type(sample) != pd.core.series.Series:
 			raise InputError("sample must be a dict or a pandas Series.")
-		return sample
+		_sample = sample.copy()
+		_sample = self.models[0].preprocess_sample(_sample)
+		return _sample
 
 	def calculate_dissolved_volatiles(self,pressure,X_fluid,returndict=False,**kwargs):
 		"""
@@ -6648,6 +6651,9 @@ class calculate_dissolved_volatiles(Calculate):
 		the string corresponding to the model in the default_models dict.
 	silence_warnings 	bool
 		If set to True, no warnings will be raised automatically when calibration checks fail.
+	preprocess_sample 	bool
+		If True (default), the sample will be preprocessed according to the preprocessing operations within
+		the models. If you obtain unexpected results, try setting to False.
 
 	Returns
 	-------
@@ -6690,6 +6696,9 @@ class calculate_equilibrium_fluid_comp(Calculate):
 		the string corresponding to the model in the default_models dict.
 	silence_warnings 	bool
 		If set to True, no warnings will be raised automatically when calibration checks fail.
+	preprocess_sample 	bool
+		If True (default), the sample will be preprocessed according to the preprocessing operations within
+		the models. If you obtain unexpected results, try setting to False.
 
 	Returns
 	-------
@@ -6739,6 +6748,9 @@ class calculate_isobars_and_isopleths(Calculate):
 		the string corresponding to the model in the default_models dict.
 	silence_warnings 	bool
 		If set to True, no warnings will be raised automatically when calibration checks fail.
+	preprocess_sample 	bool
+		If True (default), the sample will be preprocessed according to the preprocessing operations within
+		the models. If you obtain unexpected results, try setting to False.
 
 	Returns
 	-------
@@ -6786,6 +6798,9 @@ class calculate_saturation_pressure(Calculate):
 		the string corresponding to the model in the default_models dict.
 	silence_warnings 	bool
 		If set to True, no warnings will be raised automatically when calibration checks fail.
+	preprocess_sample 	bool
+		If True (default), the sample will be preprocessed according to the preprocessing operations within
+		the models. If you obtain unexpected results, try setting to False.
 
 	Returns
 	-------
@@ -6835,6 +6850,9 @@ class calculate_degassing_path(Calculate):
 		the string corresponding to the model in the default_models dict.
 	silence_warnings 	bool
 		If set to True, no warnings will be raised automatically when calibration checks fail.
+	preprocess_sample 	bool
+		If True (default), the sample will be preprocessed according to the preprocessing operations within
+		the models. If you obtain unexpected results, try setting to False.
 
 	Returns
 	-------
