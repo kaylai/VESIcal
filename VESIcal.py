@@ -269,7 +269,7 @@ def wtpercentOxides_to_molOxides(oxides):
 	else:
 		raise InputError("The composition input must be a pandas Series or dictionary.")
 
-def wtpercentOxides_to_molSingleO(oxides):
+def wtpercentOxides_to_molSingleO(oxides,exclude_volatiles=False):
 	""" Takes in a pandas Series containing major element oxides in wt%, and constructs
 	the chemical formula, on a single oxygen basis.
 
@@ -293,18 +293,22 @@ def wtpercentOxides_to_molSingleO(oxides):
 	else:
 		raise InputError("The composition input must be a pandas Series or dictionary.")
 
+	total_O = 0.0
 	for ox in oxideslist:
-		cation = oxides_to_cations[ox]
-		molCations[cation] = CationNum[ox]/OxygenNum[ox]*oxides[ox]/oxideMass[ox]
+		if exclude_volatiles == False or (ox != 'H2O' and ox != 'CO2'):
+			cation = oxides_to_cations[ox]
+			molCations[cation] = CationNum[ox]*oxides[ox]/oxideMass[ox]
+			total_O += OxygenNum[ox]*oxides[ox]/oxideMass[ox]
 
 	if type(oxides) == pd.core.series.Series:
 		molCations = pd.Series(molCations)
-		molCations = molCations/molCations.sum()
+		molCations = molCations/total_O
 	else:
-		total = np.sum(list(molCations.values()))
+		# total = np.sum(list(molCations.values()))
 		for ox in oxideslist:
-			cation = oxides_to_cations[ox]
-			molCations[cation] = molCations[cation]/total
+			if exclude_volatiles == False or (ox != 'H2O' and ox != 'CO2'):
+				cation = oxides_to_cations[ox]
+				molCations[cation] = molCations[cation]/total_O
 
 	return molCations
 
@@ -329,20 +333,20 @@ def wtpercentOxides_to_formulaWeight(sample,exclude_volatiles=False):
 	else:
 		_sample = sample.copy()
 
-	cations = wtpercentOxides_to_molSingleO(_sample)
+	cations = wtpercentOxides_to_molSingleO(_sample,exclude_volatiles=exclude_volatiles)
 	if type(cations) != dict:
 		cations = dict(cations)
 
-	if exclude_volatiles == True:
-		if 'C' in cations:
-			cations.pop('C')
-		if 'H' in cations:
-			cations.pop('H')
-		newsum = 0
-		for cation in cations:
-			newsum += cations[cation]
-		for cation in cations:
-			cations[cation] = cations[cation]/newsum
+	# if exclude_volatiles == True:
+	# 	if 'C' in cations:
+	# 		cations.pop('C')
+	# 	if 'H' in cations:
+	# 		cations.pop('H')
+	# 	newsum = 0
+	# 	for cation in cations:
+	# 		newsum += OxygenNum[cations_to_oxides[cation]]
+	# 	for cation in cations:
+	# 		cations[cation] = cations[cation]/newsum
 
 	FW = 15.999
 	for cation in list(cations.keys()):
@@ -1644,7 +1648,7 @@ class fugacity_KJ81_co2(FugacityModel):
 	def __init__(self):
 		self.set_calibration_ranges([CalibrationRange('pressure',20000.0,crf_LessThan,'bar','Kerrick and Jacobs (1981) EOS',
 													  fail_msg=crmsg_LessThan_fail, pass_msg=crmsg_LessThan_pass, description_msg=crmsg_LessThan_description),
-									 CalibrationRange('temperature',1323,crf_LessThan,'K','Kerrick and Jacobs (1981) EOS',
+									 CalibrationRange('temperature',1050,crf_LessThan,'oC','Kerrick and Jacobs (1981) EOS',
 									 				  fail_msg=crmsg_LessThan_fail, pass_msg=crmsg_LessThan_pass, description_msg=crmsg_LessThan_description)])
 
 	def fugacity(self,pressure,temperature,X_fluid,**kwargs):
@@ -1657,7 +1661,7 @@ class fugacity_KJ81_co2(FugacityModel):
 		pressure    float
 			Total pressure of the system in bars.
 		temperature     float
-			Temperature in K
+			Temperature in degC
 		X_fluid     float
 			Mole fraction of CO2 in the fluid.
 
@@ -1668,7 +1672,7 @@ class fugacity_KJ81_co2(FugacityModel):
 		"""
 		if X_fluid == 0:
 			return 0
-		elif temperature >= 1050.0 + 273.15:
+		elif temperature >= 1050.0:
 			return pressure*np.exp(self.lnPhi_mix(pressure,temperature,1.0))*X_fluid
 		else:
 			return pressure*np.exp(self.lnPhi_mix(pressure,temperature,X_fluid))*X_fluid
@@ -1683,7 +1687,7 @@ class fugacity_KJ81_co2(FugacityModel):
 		P   float
 			Total pressure of the system, in bars.
 		T   float
-			Temperature in K
+			Temperature in degC
 		X_fluid     float
 			Mole fraction of CO2 in the fluid
 
@@ -1695,13 +1699,13 @@ class fugacity_KJ81_co2(FugacityModel):
 		if X_fluid != 1.0:
 			# x0 = self.volume(P,T,1.0)*X_fluid + self.volume_h(P,T)*(1-X_fluid)
 			# print(x0)
-			if P >= 20000 and T<800:
+			if P >= 20000 and T<800-273.15:
 				x0 = (X_fluid*25+(1-X_fluid)*15)
 			else:
 				x0 = (X_fluid*35+(1-X_fluid)*15)
 
 		else:
-			if P >= 20000 and T<800:
+			if P >= 20000 and T<800-273.15:
 				x0 = 25
 			else:
 				x0=35
@@ -1719,7 +1723,7 @@ class fugacity_KJ81_co2(FugacityModel):
 		P   float
 			Total system pressure in bars.
 		T   float
-			Temperature in K
+			Temperature in degC
 		X_fluid     float
 			Mole fraction of CO2 in the fluid.
 
@@ -1728,6 +1732,7 @@ class fugacity_KJ81_co2(FugacityModel):
 		float
 			Difference between lhs and rhs of Eq (28) of Kerrick and Jacobs (1981), in bars.
 		"""
+		T = T + 273.15
 		c = {}
 		h = {}
 
@@ -1775,7 +1780,7 @@ class fugacity_KJ81_co2(FugacityModel):
 		P   float
 			Total pressure in bars.
 		T   float
-			Temperature in K.
+			Temperature in degC.
 
 		Returns
 		-------
@@ -1796,7 +1801,7 @@ class fugacity_KJ81_co2(FugacityModel):
 		P   float
 			Total pressure in bars.
 		T   float
-			Temperature in K.
+			Temperature in degC.
 
 		Returns
 		-------
@@ -1804,6 +1809,7 @@ class fugacity_KJ81_co2(FugacityModel):
 			The difference between the lhs and rhs of Eq (14) of Kerrick and Jacobs (1981),
 			in bars.
 		"""
+		T = T + 273.15
 		h = {}
 		h['b'] = 29.0
 		h['c'] = (290.78 - 0.30276*T + 1.4774e-4*T**2)*1e6#3
@@ -1828,7 +1834,7 @@ class fugacity_KJ81_co2(FugacityModel):
 		P   float
 			Total pressure in bars.
 		T   float
-			Temperature in K
+			Temperature in degC
 		X_fluid     float
 			The mole fraction of CO2 in the fluid.
 
@@ -1837,7 +1843,8 @@ class fugacity_KJ81_co2(FugacityModel):
 		float
 			The natural log of the fugacity coefficient for CO2 in a mixed fluid.
 		"""
-		v = self.volume(P,T,X_fluid)
+		T = T + 273.15
+		v = self.volume(P,T-273.15,X_fluid)
 
 		c = {}
 		h = {}
@@ -1903,7 +1910,7 @@ class fugacity_KJ81_h2o(FugacityModel):
 	def __init__(self):
 		self.set_calibration_ranges([CalibrationRange('pressure',20000.0,crf_LessThan,'bar','Kerrick and Jacobs (1981) EOS',
 													  fail_msg=crmsg_LessThan_fail, pass_msg=crmsg_LessThan_pass, description_msg=crmsg_LessThan_description),
-									 CalibrationRange('temperature',1323,crf_LessThan,'K','Kerrick and Jacobs (1981) EOS',
+									 CalibrationRange('temperature',1050,crf_LessThan,'oC','Kerrick and Jacobs (1981) EOS',
 									 				  fail_msg=crmsg_LessThan_fail, pass_msg=crmsg_LessThan_pass, description_msg=crmsg_LessThan_description)])
 
 	def fugacity(self,pressure,temperature,X_fluid,**kwargs):
@@ -1916,7 +1923,7 @@ class fugacity_KJ81_h2o(FugacityModel):
 		pressure    float
 			Total pressure of the system in bars.
 		temperature     float
-			Temperature in K
+			Temperature in degC
 		X_fluid     float
 			Mole fraction of H2O in the fluid.
 
@@ -1927,7 +1934,7 @@ class fugacity_KJ81_h2o(FugacityModel):
 		"""
 		if X_fluid == 0:
 			return 0
-		elif temperature >= 1050+273.15:
+		elif temperature >= 1050:
 			return pressure*np.exp(self.lnPhi_mix(pressure,temperature,1.0))*X_fluid
 		else:
 			return pressure*np.exp(self.lnPhi_mix(pressure,temperature,X_fluid))*X_fluid
@@ -1942,7 +1949,7 @@ class fugacity_KJ81_h2o(FugacityModel):
 		P   float
 			Total pressure of the system, in bars.
 		T   float
-			Temperature in K
+			Temperature in degC
 		X_fluid     float
 			Mole fraction of H2O in the fluid
 
@@ -1954,13 +1961,13 @@ class fugacity_KJ81_h2o(FugacityModel):
 		if X_fluid != 1.0:
 			# x0 = self.volume(P,T,1.0)*X_fluid + self.volume_h(P,T)*(1-X_fluid)
 			# print(x0)
-			if P >= 20000 and T<800:
+			if P >= 20000 and T<800-273.15:
 				x0 = ((1-X_fluid)*25+X_fluid*15)
 			else:
 				x0 = ((1-X_fluid)*35+X_fluid*15)
 
 		else:
-			if P >= 20000 and T<800:
+			if P >= 20000 and T<800-273.15:
 				x0 = 10
 			else:
 				x0=15
@@ -1978,7 +1985,7 @@ class fugacity_KJ81_h2o(FugacityModel):
 		P   float
 			Total system pressure in bars.
 		T   float
-			Temperature in K
+			Temperature in degC
 		X_fluid     float
 			Mole fraction of H2O in the fluid.
 
@@ -1987,6 +1994,7 @@ class fugacity_KJ81_h2o(FugacityModel):
 		float
 			Difference between lhs and rhs of Eq (28) of Kerrick and Jacobs (1981), in bars.
 		"""
+		T = T + 273.15
 		c = {}
 		h = {}
 
@@ -2034,7 +2042,7 @@ class fugacity_KJ81_h2o(FugacityModel):
 		P   float
 			Total pressure in bars.
 		T   float
-			Temperature in K.
+			Temperature in degC.
 
 		Returns
 		-------
@@ -2055,7 +2063,7 @@ class fugacity_KJ81_h2o(FugacityModel):
 		P   float
 			Total pressure in bars.
 		T   float
-			Temperature in K.
+			Temperature in degC.
 
 		Returns
 		-------
@@ -2063,6 +2071,7 @@ class fugacity_KJ81_h2o(FugacityModel):
 			The difference between the lhs and rhs of Eq (14) of Kerrick and Jacobs (1981),
 			in bars.
 		"""
+		T = T + 273.15
 		c = {}
 		c['b'] = 58.0
 		c['c'] = (28.31 + 0.10721*T - 8.81e-6*T**2)*1e6
@@ -2087,7 +2096,7 @@ class fugacity_KJ81_h2o(FugacityModel):
 		P   float
 			Total pressure in bars.
 		T   float
-			Temperature in K
+			Temperature in degC
 		X_fluid     float
 			The mole fraction of H2O in the fluid.
 
@@ -2096,7 +2105,8 @@ class fugacity_KJ81_h2o(FugacityModel):
 		float
 			The natural log of the fugacity coefficient for H2O in a mixed fluid.
 		"""
-		v = self.volume(P,T,X_fluid)
+		T = T + 273.15
+		v = self.volume(P,T-273.15,X_fluid)
 
 		c = {}
 		h = {}
@@ -2162,7 +2172,7 @@ class fugacity_ZD09_co2(FugacityModel):
 	def __init__(self):
 		self.set_calibration_ranges([CalibrationRange('pressure',[1,1e5],crf_Between,'bar','Zhang and Duan (2009) EOS',
 													  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
-									 CalibrationRange('temperature',[473,2573],crf_Between,'K','Zhang and Duan (2009) EOS',
+									 CalibrationRange('temperature',[200,2300],crf_Between,'oC','Zhang and Duan (2009) EOS',
 									 				  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
 
 	def fugacity(self,pressure,temperature,X_fluid=1.0,**kwargs):
@@ -2174,7 +2184,7 @@ class fugacity_ZD09_co2(FugacityModel):
 		pressure     float
 			Pressure in bars
 		temperature     float
-			Temperature in K
+			Temperature in degC
 		X_fluid     float
 			Mole fraction of CO2 in the fluid. Default is 1.0.
 
@@ -2185,7 +2195,7 @@ class fugacity_ZD09_co2(FugacityModel):
 		"""
 
 		P = pressure/10
-		T = temperature
+		T = temperature + 273.15
 
 		a = np.array([0.0,
 					  2.95177298930e-2,
@@ -3096,8 +3106,8 @@ class DixonCarbon(Model):
 		if pressure == 0:
 			return 0
 
-		Mr = wtpercentOxides_to_formulaWeight(sample)
 
+		Mr = wtpercentOxides_to_formulaWeight(sample)
 		XCO3 = self.molfrac_molecular(pressure=pressure,sample=sample,X_fluid=X_fluid,**kwargs)
 		# return (4400 * XCO3) / (36.6 - 44*XCO3)
 		return (4400 * XCO3) / (Mr - 44*XCO3)
@@ -3289,8 +3299,8 @@ class DixonWater(Model):
 		Mr = wtpercentOxides_to_formulaWeight(sample)
 
 		XB = XH2O + 0.5*XOH
-		return 1801.5*XB/(36.6-18.6*XB)
-		# return 1801.5*XB/(Mr-18.6*XB)
+		# return 1801.5*XB/(36.6-18.6*XB)
+		return 1801.5*XB/(Mr-18.6*XB)
 
 
 	def calculate_equilibrium_fluid_comp(self,pressure,sample,**kwargs):
@@ -3566,7 +3576,7 @@ class IaconoMarzianoWater(Model):
 			B = -2.95
 			C = 0.02
 
-			fugacity = self.fugacity_model.fugacity(pressure=pressure,X_fluid=X_fluid,temperature=temperature,**kwargs)
+			fugacity = self.fugacity_model.fugacity(pressure=pressure,X_fluid=X_fluid,temperature=temperature-273.15,**kwargs)
 			if fugacity == 0:
 				return 0
 			NBO_O = self.NBO_O(sample=sample)
@@ -3702,7 +3712,7 @@ class IaconoMarzianoWater(Model):
 		# sample_h2o['H2O'] = h2o
 		# sample_h2o = normalize_FixedVolatiles(sample_h2o)
 		NBO_O = self.NBO_O(sample=sample)
-		fugacity = self.fugacity_model.fugacity(pressure=pressure,X_fluid=X_fluid,temperature=temperature,**kwargs)
+		fugacity = self.fugacity_model.fugacity(pressure=pressure,X_fluid=X_fluid,temperature=temperature-273.15,**kwargs)
 
 		return h2o - np.exp(a*np.log(fugacity) + b*NBO_O + B + C*pressure/temperature)
 
@@ -3828,7 +3838,7 @@ class IaconoMarzianoCarbon(Model):
 				raise InputError("Dissolved H2O must be positive.")
 
 			im_h2o_model = IaconoMarzianoWater()
-			h2o = im_h2o_model.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,
+			h2o = im_h2o_model.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature-273.15,
 														sample=sample,X_fluid=1-X_fluid,**kwargs)
 			sample_h2o = sample.copy()
 			sample_h2o['H2O'] = h2o
@@ -3854,7 +3864,7 @@ class IaconoMarzianoCarbon(Model):
 
 			molarProps = wtpercentOxides_to_molOxides(sample)
 
-		fugacity = self.fugacity_model.fugacity(pressure=pressure,X_fluid=X_fluid,temperature=temperature,**kwargs)
+		fugacity = self.fugacity_model.fugacity(pressure=pressure,X_fluid=X_fluid,temperature=temperature-273.15,**kwargs)
 
 		if fugacity == 0:
 			return 0
@@ -4257,7 +4267,7 @@ class EguchiCarbon(Model):
 		Tet = cations['Si'] + cations['Ti'] + cations['P'] + Al + Fe
 		NBO = 2 - 4*Tet
 
-		lnfCO2 = np.log(self.fugacity_model.fugacity(pressure=pressure,temperature=temperature,X_fluid=X_fluid))
+		lnfCO2 = np.log(self.fugacity_model.fugacity(pressure=pressure,temperature=temperature-273.15,X_fluid=X_fluid))
 
 		lnXi = ((DH/(R*temperature)-(pressure*1e5*DV)/(R*temperature)+DS/R) +
 				(A_CaO*oxides['CaO']+A_Na2O*oxides['Na2O']+A_K2O*oxides['K2O'])/(R*temperature) +
@@ -4947,10 +4957,11 @@ class AllisonCarbon(Model):
 			lnK0 = params[self.model_loc][1]
 
 			lnK = lnK0 - (pressure-P0)*DV/(10*8.3141*temperature)
-			fCO2 = self.fugacity_model.fugacity(pressure=pressure,temperature=temperature,X_fluid=X_fluid,**kwargs)
+			fCO2 = self.fugacity_model.fugacity(pressure=pressure,temperature=temperature-273.15,X_fluid=X_fluid,**kwargs)
 			Kf = np.exp(lnK)*fCO2
 			XCO3 = Kf/(1-Kf)
-			FWone = wtpercentOxides_to_formulaWeight(sample,exclude_volatiles=True)
+			# FWone = wtpercentOxides_to_formulaWeight(sample)#,exclude_volatiles=True)
+			FWone = 36.594
 			wtCO2 = (44.01*XCO3)/((44.01*XCO3)+(1-XCO3)*FWone)*100
 
 			return wtCO2
@@ -4962,7 +4973,7 @@ class AllisonCarbon(Model):
 							'sunset':[4.32,0.728],
 							'erebus':[5.145,0.713]})
 
-			fCO2 = self.fugacity_model.fugacity(pressure=pressure,temperature=temperature,X_fluid=X_fluid,**kwargs)
+			fCO2 = self.fugacity_model.fugacity(pressure=pressure,temperature=temperature-273.15,X_fluid=X_fluid,**kwargs)
 
 			return params[self.model_loc][0]*fCO2**params[self.model_loc][1]/1e4
 
