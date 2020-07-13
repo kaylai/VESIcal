@@ -17,7 +17,7 @@ from scipy.optimize import root
 from scipy.optimize import minimize
 import sys
 import sympy
-import anvil_server
+# import anvil_server
 
 #--------------MELTS preamble---------------#
 from thermoengine import equilibrate
@@ -947,7 +947,8 @@ class ExcelFile(object):
 						X_fluid = row[X_name]
 					bulk_comp = {oxide:  row[oxide] for oxide in oxides}
 					calc = calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature,
-																	X_fluid=(X_fluid, 1-X_fluid), model=model, silence_warnings=True)
+																	X_fluid=(X_fluid, 1-X_fluid), model=model,
+																	silence_warnings=True, **kwargs)
 					H2Ovals.append(calc.result['H2O_liq'])
 					CO2vals.append(calc.result['CO2_liq'])
 					warnings.append(calc.calib_check)
@@ -1127,7 +1128,8 @@ class ExcelFile(object):
 					if file_has_press == True:
 						pressure = row[press_name]
 					bulk_comp = {oxide:  row[oxide] for oxide in oxides}
-					calc = calculate_equilibrium_fluid_comp(sample=bulk_comp, pressure=pressure, temperature=temperature, model=model, silence_warnings=True)
+					calc = calculate_equilibrium_fluid_comp(sample=bulk_comp, pressure=pressure, temperature=temperature,
+															model=model, silence_warnings=True, **kwargs)
 
 					H2Ovals.append(calc.result['H2O'])
 					CO2vals.append(calc.result['CO2'])
@@ -1246,7 +1248,8 @@ class ExcelFile(object):
 					if file_has_temp == True:
 						temperature = row[temp_name]
 					bulk_comp = {oxide:  row[oxide] for oxide in oxides}
-					calc = calculate_saturation_pressure(sample=bulk_comp, temperature=temperature, model=model, silence_warnings=True)
+					calc = calculate_saturation_pressure(sample=bulk_comp, temperature=temperature,
+														 model=model, silence_warnings=True, **kwargs)
 					satP.append(calc.result)
 					warnings.append(calc.calib_check)
 				except:
