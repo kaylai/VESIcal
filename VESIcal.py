@@ -1566,7 +1566,7 @@ class Calculate(object):
 	have a common workflow- sample is read in, preprocessed, the calculation is performed,
 	the calibration range is checked, and the results stored.
 	"""
-	def __init__(self,sample,model='MagmaSat',silence_warnings=False,preprocess_sample=True,**kwargs):
+	def __init__(self,sample,model='MagmaSat',silence_warnings=False,preprocess_sample=False,**kwargs):
 		if model == 'MagmaSat':
 			self.model = MagmaSat()
 		elif type(model) == str:
@@ -1615,9 +1615,9 @@ crmsg_LessThan_description = "The {model_name} model is calibrated for {param_na
 
 def crf_Between(calibval,paramval):
 	return paramval > calibval[0] and paramval < calibval[1]
-crmsg_Between_pass = "The {param_name} ({param_val} {units}) is between {calib_val0} and {calib_val1} {units} as required by the calibration range of the {model_name} model. "
-crmsg_Between_fail = "The {param_name} is outside the calibration range of the {model_name} model, as {param_val} {units} is not between {calib_val0} and {calib_val1} {units}. "
-crmsg_Between_description = "The {model_name} model is calibrated for {param_name} between {calib_val0} and {calib_val1} {units}. "
+crmsg_Between_pass = "The {param_name} ({param_val:.1f} {units}) is between {calib_val0:.1f} and {calib_val1:.1f} {units} as required by the calibration range of the {model_name} model. "
+crmsg_Between_fail = "The {param_name} is outside the calibration range of the {model_name} model, as {param_val:.1f} {units} is not between {calib_val0:.1f} and {calib_val1:.1f} {units}. "
+crmsg_Between_description = "The {model_name} model is calibrated for {param_name} between {calib_val0:.1f} and {calib_val1:.1f} {units}. "
 
 
 #-------------FUGACITY MODELS--------------------------------#
@@ -4736,7 +4736,7 @@ class LiuWater(Model):
 		if is_saturated >= 0:
 			pass
 		else:
-			warnings.warn(str(pressure) + " bars is above the saturation pressure (" + str(satP) + " bars) for this sample. Results from this calculation may be nonsensical.")
+			warnings.warn("{:.1f} bars is above the saturation pressure ({:.1f} bars) for this sample. Results from this calculation may be nonsensical.".format(pressure,satP))
 
 		#Use sympy to solve solubility equation for XH2Ofluid
 		XH2Ofluid = sympy.symbols('XH2Ofluid') #XH2Ofluid is the variable to solve for
