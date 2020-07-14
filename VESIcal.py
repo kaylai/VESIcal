@@ -5022,22 +5022,10 @@ class AllisonCarbon(Model):
 	etna, or stromboli. Default is the power-law fit to sunset.
 	"""
 
-	def __init__(self,model_fit='thermodynamic',model_loc='sunset'):
+	def __init__(self):
 		"""
 		Initialize the model.
-
-		Parameters
-		----------
-		model_fit     str
-			Either 'power' for the power-law fits, or 'thermodynamic' for the
-			thermodynamic fits.
-		model_loc     str
-			One of 'sunset', 'sfvf', 'erebus', 'vesuvius', 'etna', 'stromboli'.
 		"""
-		if model_fit not in ['power','thermodynamic']:
-			raise InputError("model_fit must be one of 'power', or 'thermodynamic'.")
-		if model_loc not in ['sunset','sfvf','erebus','vesuvius','etna','stromboli']:
-			raise InputError("model_loc must be one of 'sunset', 'sfvf', 'erebus', 'vesuvius', 'etna', or 'stromboli'.")
 
 		self.set_volatile_species(['CO2'])
 		self.set_fugacity_model(fugacity_HB_co2())
@@ -5048,8 +5036,6 @@ class AllisonCarbon(Model):
 									 				  fail_msg=crmsg_EqualTo_fail, pass_msg=crmsg_EqualTo_pass, description_msg=crmsg_EqualTo_description)])
 		self.set_solubility_dependence(False)
 
-		self.model_fit = model_fit
-		self.model_loc = model_loc
 
 	def preprocess_sample(self,sample):
 		"""
@@ -5067,7 +5053,8 @@ class AllisonCarbon(Model):
 		"""
 		return normalize_AdditionalVolatiles(sample)
 
-	def calculate_dissolved_volatiles(self,pressure,temperature,sample=None,X_fluid=1.0,**kwargs):
+	def calculate_dissolved_volatiles(self,pressure,temperature,sample=None,X_fluid=1.0,
+									  model_loc='sunset',model_fit='thermodynamic',**kwargs):
 		"""
 		Calclates the dissolved CO2 concentration using (Eqns) 2-7 or 10-11 from Allison et al. (2019).
 
@@ -5082,6 +5069,11 @@ class AllisonCarbon(Model):
 			provided if using the power law fits. Default is None.
 		X_fluid     float
 			The mole fraction of CO2 in the fluid. Default is 1.0.
+		model_fit     str
+			Either 'power' for the power-law fits, or 'thermodynamic' for the
+			thermodynamic fits.
+		model_loc     str
+			One of 'sunset', 'sfvf', 'erebus', 'vesuvius', 'etna', 'stromboli'.
 
 		Returns
 		-------
@@ -5097,10 +5089,16 @@ class AllisonCarbon(Model):
 		if X_fluid < 0 or X_fluid > 1:
 			raise InputError("X_fluid must have a value between 0 and 1.")
 
+		if model_fit not in ['power','thermodynamic']:
+			raise InputError("model_fit must be one of 'power', or 'thermodynamic'.")
+		if model_loc not in ['sunset','sfvf','erebus','vesuvius','etna','stromboli']:
+			raise InputError("model_loc must be one of 'sunset', 'sfvf', 'erebus', 'vesuvius', 'etna', or 'stromboli'.")
+
+
 		if pressure == 0:
 			return 0
 
-		if self.model_fit == 'thermodynamic':
+		if model_fit == 'thermodynamic':
 			if type(sample) != dict and type(sample) != pd.core.series.Series:
 				raise InputError("Thermodynamic fit requires sample to be a dict or a pandas Series.")
 			P0 = 1000 # bar
@@ -5110,8 +5108,8 @@ class AllisonCarbon(Model):
 							'vesuvius':[24.42,-14.04],
 							'etna':[21.59,-14.28],
 							'stromboli':[14.93,-14.68]})
-			DV = params[self.model_loc][0]
-			lnK0 = params[self.model_loc][1]
+			DV = params[model_loc][0]
+			lnK0 = params[model_loc][1]
 
 			lnK = lnK0 - (pressure-P0)*DV/(10*8.3141*temperature)
 			fCO2 = self.fugacity_model.fugacity(pressure=pressure,temperature=temperature-273.15,X_fluid=X_fluid,**kwargs)
@@ -5122,7 +5120,7 @@ class AllisonCarbon(Model):
 			wtCO2 = (44.01*XCO3)/((44.01*XCO3)+(1-XCO3)*FWone)*100
 
 			return wtCO2
-		if self.model_fit == 'power':
+		if model_fit == 'power':
 			params = dict({'stromboli':[1.05,0.883],
 							'etna':[2.831,0.797],
 							'vesuvius':[4.796,0.754],
@@ -5132,7 +5130,7 @@ class AllisonCarbon(Model):
 
 			fCO2 = self.fugacity_model.fugacity(pressure=pressure,temperature=temperature-273.15,X_fluid=X_fluid,**kwargs)
 
-			return params[self.model_loc][0]*fCO2**params[self.model_loc][1]/1e4
+			return params[model_loc][0]*fCO2**params[model_loc][1]/1e4
 
 
 
