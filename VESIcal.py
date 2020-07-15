@@ -3686,7 +3686,8 @@ class IaconoMarzianoWater(Model):
 		else:
 			return normalize_AdditionalVolatiles(sample)
 
-	def calculate_dissolved_volatiles(self,pressure,temperature,sample,X_fluid=1.0,**kwargs):
+	def calculate_dissolved_volatiles(self,pressure,temperature,sample,X_fluid=1.0,
+									  hydrous_coeffs=True,webapp_coeffs=False,**kwargs):
 		"""
 		Calculates the dissolved H2O concentration, using Eq (13) of Iacono-Marziano et al. (2012).
 		If using the hydrous parameterization, it will use the scipy.root_scalar routine to find the
@@ -3702,6 +3703,11 @@ class IaconoMarzianoWater(Model):
 			Major element oxides in wt%.
 		X_fluid      float
 			Mole fraction of H2O in the fluid. Default is 1.0.
+		hydrous_coeffs 	bool
+			Use the hydrous or anhydrous NBO/O paramterisation (True for hydrous). Default is True.
+		webapp_coeffs 	bool
+			If True, use the pre-review hydrous coefficients, as implemented in the IM webapp.
+			Default is False.
 
 		Returns
 		-------
@@ -3721,12 +3727,12 @@ class IaconoMarzianoWater(Model):
 		if pressure == 0:
 			return 0
 
-		if self.hydrous == True:
+		if hydrous_coeffs == True:
 			if X_fluid==0:
 				return 0
-			H2O = root_scalar(self.root_dissolved_volatiles,args=(pressure,temperature,sample,X_fluid,kwargs),
+			H2O = root_scalar(self.root_dissolved_volatiles,args=(pressure,temperature,sample,X_fluid,hydrous_coeffs,kwargs),
 								x0=1.0,x1=2.0).root
-			return H2O#/(100+H2O)*100
+			return H2O
 		else:
 			a = 0.54
 			b = 1.24
@@ -3736,7 +3742,7 @@ class IaconoMarzianoWater(Model):
 			fugacity = self.fugacity_model.fugacity(pressure=pressure,X_fluid=X_fluid,temperature=temperature-273.15,**kwargs)
 			if fugacity == 0:
 				return 0
-			NBO_O = self.NBO_O(sample=sample)
+			NBO_O = self.NBO_O(sample=sample,hydrous_coeffs=False)
 
 			H2O = np.exp(a*np.log(fugacity) + b*NBO_O + B + C*pressure/temperature)
 
@@ -3829,7 +3835,7 @@ class IaconoMarzianoWater(Model):
 		return sample['H2O'] - self.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,sample=sample,**kwargs)
 
 
-	def root_dissolved_volatiles(self,h2o,pressure,temperature,sample,X_fluid,kwargs):
+	def root_dissolved_volatiles(self,h2o,pressure,temperature,sample,X_fluid,webapp_coeffs,kwargs):
 		""" Function called by calculate_dissolved_volatiles method when the hydrous parameterization is
 		being used.
 
@@ -3854,26 +3860,23 @@ class IaconoMarzianoWater(Model):
 			Difference between H2O guessed and the H2O calculated.
 		"""
 
-		# a = 0.53
-		# b = 2.35
-		# B = -3.37
-		# C = -0.02
+		if webapp_coeffs == False:
+			a = 0.53
+			b = 2.35
+			B = -3.37
+			C = -0.02
+		else:
+			a = 0.52096846
+			b = 2.11575907
+			B = -3.24443335
+			C = -0.02238884
 
-		# Values from the webapp
-		a = 0.52096846
-		b = 2.11575907
-		B = -3.24443335
-		C = -0.02238884
-
-		# sample_h2o = sample.copy()
-		# sample_h2o['H2O'] = h2o
-		# sample_h2o = normalize_FixedVolatiles(sample_h2o)
-		NBO_O = self.NBO_O(sample=sample)
+		NBO_O = self.NBO_O(sample=sample,hydrous_coeffs=True)
 		fugacity = self.fugacity_model.fugacity(pressure=pressure,X_fluid=X_fluid,temperature=temperature-273.15,**kwargs)
 
 		return h2o - np.exp(a*np.log(fugacity) + b*NBO_O + B + C*pressure/temperature)
 
-	def NBO_O(self,sample):
+	def NBO_O(self,sample,hydrous_coeffs=True):
 		"""
 		Calculates NBO/O according to Appendix A.1. of Iacono-Marziano et al. (2012). NBO/O
 		is calculated on either a hydrous or anhyrous basis, as set when initialising the
@@ -3898,7 +3901,7 @@ class IaconoMarzianoWater(Model):
 		O = 2*X['SiO2']+2*X['TiO2']+3*X['Al2O3']+X['MgO']+X['FeO']+X['CaO']+X['Na2O']+X['K2O']
 
 
-		if self.hydrous == True:
+		if hydrous_coeffs == True:
 			if 'H2O' not in sample:
 				raise InputError("sample must contain H2O.")
 			NBO = NBO + 2*X['H2O']
@@ -3915,7 +3918,7 @@ class IaconoMarzianoCarbon(Model):
 	bool variable hydrous.
 	"""
 
-	def __init__(self,hydrous=True):
+	def __init__(self):
 		"""
 		Initialise the model.
 
@@ -3928,8 +3931,7 @@ class IaconoMarzianoCarbon(Model):
 		self.set_fugacity_model(fugacity_idealgas())
 		self.set_activity_model(activity_idealsolution())
 		self.set_calibration_ranges([])
-		self.hydrous = hydrous
-		self.set_solubility_dependence(hydrous)
+		self.set_solubility_dependence(True)
 
 	def preprocess_sample(self,sample):
 		"""
@@ -3952,7 +3954,8 @@ class IaconoMarzianoCarbon(Model):
 		else:
 			return normalize_AdditionalVolatiles(sample)
 
-	def calculate_dissolved_volatiles(self,pressure,temperature,sample,X_fluid=1,**kwargs):
+	def calculate_dissolved_volatiles(self,pressure,temperature,sample,X_fluid=1,
+									  hydrous_coeffs=True, **kwargs):
 		"""
 		Calculates the dissolved CO2 concentration, using Eq (12) of Iacono-Marziano et al. (2012).
 		If using the hydrous parameterization, it will use the scipy.root_scalar routine to find the
@@ -3968,6 +3971,8 @@ class IaconoMarzianoCarbon(Model):
 			Major element oxides in wt%.
 		X_fluid      float
 			Mole fraction of H2O in the fluid. Default is 1.0.
+		hydrous_coeffs 	bool
+			Use the hydrous or anhydrous NBO/O paramterisation (True for hydrous). Default is True.
 
 		Returns
 		-------
@@ -3988,7 +3993,7 @@ class IaconoMarzianoCarbon(Model):
 		if pressure == 0:
 			return 0
 
-		if self.hydrous == True:
+		if hydrous_coeffs == True:
 			if 'H2O' not in sample:
 				raise InputError("sample must contain H2O if using the hydrous parameterization.")
 			if sample['H2O'] < 0:
@@ -4006,7 +4011,7 @@ class IaconoMarzianoCarbon(Model):
 			B = -6.0
 			C = 0.12
 
-			NBO_O = self.NBO_O(sample=sample_h2o)
+			NBO_O = self.NBO_O(sample=sample_h2o,hydrous_coeffs=True)
 
 			molarProps = wtpercentOxides_to_molOxides(sample_h2o)
 
@@ -4017,7 +4022,7 @@ class IaconoMarzianoCarbon(Model):
 			B = -5.3
 			C = 0.14
 
-			NBO_O = self.NBO_O(sample=sample)
+			NBO_O = self.NBO_O(sample=sample,hydrous_coeffs=False)
 
 			molarProps = wtpercentOxides_to_molOxides(sample)
 
@@ -4132,7 +4137,7 @@ class IaconoMarzianoCarbon(Model):
 		return sample['CO2'] - self.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,sample=sample,**kwargs)
 
 
-	def NBO_O(self,sample):
+	def NBO_O(self,sample,hydrous_coeffs=True):
 		"""
 		Calculates NBO/O according to Appendix A.1. of Iacono-Marziano et al. (2012). NBO/O
 		is calculated on either a hydrous or anhyrous basis, as set when initialising the
@@ -4158,7 +4163,7 @@ class IaconoMarzianoCarbon(Model):
 		NBO = 2*(X['K2O']+X['Na2O']+X['CaO']+X['MgO']+X['FeO']-X['Al2O3'])
 		O = 2*X['SiO2']+2*X['TiO2']+3*X['Al2O3']+X['MgO']+X['FeO']+X['CaO']+X['Na2O']+X['K2O']
 
-		if self.hydrous == True:
+		if hydrous_coeffs == True:
 			if 'H2O' not in X:
 				raise InputError("sample must contain H2O if using the hydrous parameterization.")
 			NBO = NBO + 2*X['H2O']
