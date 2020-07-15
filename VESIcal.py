@@ -2291,8 +2291,8 @@ class fugacity_HB_co2(FugacityModel):
 									 				  fail_msg=crmsg_GreaterThan_fail, pass_msg=crmsg_GreaterThan_pass, description_msg=crmsg_GreaterThan_description)])
 		self.HBmodel = fugacity_HollowayBlank()
 
-	def fugacity(self,pressure,temperature,**kwargs):
-		return self.HBmodel.fugacity(pressure, temperature, 'CO2')
+	def fugacity(self,pressure,temperature,X_fluid=1.0,**kwargs):
+		return self.HBmodel.fugacity(pressure, temperature, 'CO2')*X_fluid
 
 class fugacity_MRK_co2(FugacityModel):
 	""" Modified Redlick Kwong fugacity model as used by VolatileCalc. Python implementation by
@@ -5030,9 +5030,9 @@ class AllisonCarbon(Model):
 		self.set_volatile_species(['CO2'])
 		self.set_fugacity_model(fugacity_HB_co2())
 		self.set_activity_model(activity_idealsolution())
-		self.set_calibration_ranges([CalibrationRange('pressure',[0.0,6000.0],crf_Between,'bar','Allison et al. (2019) water',
+		self.set_calibration_ranges([CalibrationRange('pressure',[0.0,6000.0],crf_Between,'bar','Allison et al. (2019) carbon',
 													  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
-									 CalibrationRange('temperature',1200,crf_EqualTo,'oC','Allison et al. (2019) water',
+									 CalibrationRange('temperature',1200,crf_EqualTo,'oC','Allison et al. (2019) carbon',
 									 				  fail_msg=crmsg_EqualTo_fail, pass_msg=crmsg_EqualTo_pass, description_msg=crmsg_EqualTo_description)])
 		self.set_solubility_dependence(False)
 
