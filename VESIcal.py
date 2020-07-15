@@ -17,6 +17,7 @@ from scipy.optimize import root
 from scipy.optimize import minimize
 import sys
 import sympy
+from copy import copy
 # import anvil_server
 
 #--------------MELTS preamble---------------#
@@ -1318,9 +1319,9 @@ class CalibrationRange(object):
 		self.checkfunction = checkfunction
 		self.units = units
 		self.model_name = model_name
-		self.fail_msg = (fail_msg, fail_dict)
-		self.pass_msg = (pass_msg, pass_dict)
-		self.description_msg = (description_msg, description_dict)
+		self.fail_msg = (copy(fail_msg), copy(fail_dict))
+		self.pass_msg = (copy(pass_msg), copy(pass_dict))
+		self.description_msg = (copy(description_msg), copy(description_dict))
 
 	def check(self,parameters):
 		"""Method for checking whether parameters satisfy the calibration range."""
@@ -1333,7 +1334,11 @@ class CalibrationRange(object):
 		"""Returns a string statement of the calibration check"""
 		if type(parameters) == type(None):
 			msgdict = self.description_msg[1]
-			msgdict['calib_val'] = parameters[self.value]
+			if type(self.value) == float or type(self.value) == int:
+				msgdict['calib_val'] = self.value
+			elif type(self.value) == list or type(self.value) == tuple or type(self.value) == np.ndarray:
+				for i in range(len(self.value)):
+					msgdict['calib_val'+str(i)] = self.value[i]
 			if 'param_name' not in msgdict:
 				msgdict['param_name'] = self.parameter_name
 			if 'units' not in msgdict:
