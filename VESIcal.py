@@ -666,7 +666,7 @@ class ExcelFile(object):
 		if 'model' in kwargs:
 			warnings.warn("You don't need to pass a model here, so it will be ignored. You can specify a model when performing calculations on your dataset (e.g., calculate_dissolved_volatiles())",RuntimeWarning)
 
-		total_iron_columns = ["FeOt", "FeOtot", "FeOtotal", "FeOstar", "FeO*"]
+		total_iron_columns = ["FeOt", "FeOT", "FeOtot", "FeOtotal", "FeOstar", "FeO*"]
 		for name in total_iron_columns:
 			if name in data.columns:
 				if 'FeO' in data.columns:
@@ -1583,7 +1583,7 @@ class Calculate(object):
 		if preprocess_sample == True:
 			self.sample = self.model.preprocess_sample(self.sample)
 
-		self.result = self.calculate(sample=self.sample,**kwargs)
+		#self.result = self.calculate(sample=self.sample,**kwargs)
 		self.calib_check = self.check_calibration_range(sample=self.sample,**kwargs)
 
 		if self.calib_check is not None and silence_warnings == False:
