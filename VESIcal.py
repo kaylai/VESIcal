@@ -1583,7 +1583,7 @@ class Calculate(object):
 		if preprocess_sample == True:
 			self.sample = self.model.preprocess_sample(self.sample)
 
-		#self.result = self.calculate(sample=self.sample,**kwargs)
+		self.result = self.calculate(sample=self.sample,**kwargs)
 		self.calib_check = self.check_calibration_range(sample=self.sample,**kwargs)
 
 		if self.calib_check is not None and silence_warnings == False:
@@ -5758,8 +5758,6 @@ class MagmaSat(Model):
 													  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
 									 CalibrationRange('temperature',[550,1730],crf_Between,'oC','MagmaSat',
 									 				  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
-		# self.set_calibration_ranges([cr_Between('pressure',[0,30000],'bar','MagmaSat'),
-		# 							 cr_Between('temperature',[550,1730],'oC','MagmaSat')])
 
 	def preprocess_sample(self,sample): #TODO test this by passing weird shit to sample
 		"""
@@ -5775,7 +5773,6 @@ class MagmaSat(Model):
 		dictionary
 			Sample composition in wt% oxides
 		"""
-		#oxides = self.oxides
 		for oxide in oxides:
 			if oxide in sample.keys():
 				pass
