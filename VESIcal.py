@@ -2285,20 +2285,6 @@ class fugacity_ZD09_co2(FugacityModel):
 				 (a[7]+a[8]/Tm**2+a[9]/Tm**3)/Vm**4)*0.08314*Tm/Pm - Vm
 				)
 
-class fugacity_HB_co2(FugacityModel):
-	"""
-	Implementation of the Holloway and Blank (1994) Modified Redlich Kwong EoS for CO2.
-	"""
-	def __init__(self):
-		self.set_calibration_ranges([CalibrationRange('pressure',[1,1e5],crf_Between,'bar','Redlich Kwong EOS',
-													  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
-									 CalibrationRange('temperature',500.0,crf_GreaterThan,'oC','Redlich Kwong EOS',
-									 				  fail_msg=crmsg_GreaterThan_fail, pass_msg=crmsg_GreaterThan_pass, description_msg=crmsg_GreaterThan_description)])
-		self.HBmodel = fugacity_HollowayBlank()
-
-	def fugacity(self,pressure,temperature,X_fluid=1.0,**kwargs):
-		return self.HBmodel.fugacity(pressure, temperature, 'CO2')*X_fluid
-
 class fugacity_MRK_co2(FugacityModel):
 	""" Modified Redlick Kwong fugacity model as used by VolatileCalc. Python implementation by
 	D. J. Rasmussen (github.com/DJRgeoscience/VolatileCalcForPython), based on VB code by Newman &
@@ -2454,13 +2440,42 @@ class fugacity_MRK_h2o(FugacityModel):
 				# return fH2Oo
 		return fH2Oo
 
+class fugacity_HB_co2(FugacityModel):
+	"""
+	Implementation of the Holloway and Blank (1994) Modified Redlich Kwong EoS for CO2.
+	"""
+	def __init__(self):
+		self.set_calibration_ranges([CalibrationRange('pressure',[1,1e5],crf_Between,'bar','Redlich Kwong EOS',
+													  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('temperature',500.0,crf_GreaterThan,'oC','Redlich Kwong EOS',
+									 				  fail_msg=crmsg_GreaterThan_fail, pass_msg=crmsg_GreaterThan_pass, description_msg=crmsg_GreaterThan_description)])
+		self.HBmodel = fugacity_HollowayBlank()
+
+	def fugacity(self,pressure,temperature,X_fluid=1.0,**kwargs):
+		return self.HBmodel.fugacity(pressure=pressure, temperature=temperature, species='CO2')*X_fluid
+
+class fugacity_HB_h2o(FugacityModel):
+	"""
+	Implementation of the Holloway and Blank (1994) Modified Redlich Kwong EoS for H2O.
+	"""
+	def __init__(self):
+		self.set_calibration_ranges([CalibrationRange('pressure',[1,1e5],crf_Between,'bar','Redlich Kwong EOS',
+													  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('temperature',500.0,crf_GreaterThan,'oC','Redlich Kwong EOS',
+									 				  fail_msg=crmsg_GreaterThan_fail, pass_msg=crmsg_GreaterThan_pass, description_msg=crmsg_GreaterThan_description)])
+		self.HBmodel = fugacity_HollowayBlank()
+
+	def fugacity(self,pressure,temperature,X_fluid=1.0,**kwargs):
+		return self.HBmodel.fugacity(pressure=pressure, temperature=temperature, species='H2O')*X_fluid
+
 class fugacity_HollowayBlank(FugacityModel):
 	"""
 	Implementation of the Modified Redlich Kwong presented in Holloway and Blank (1994) Reviews
-	in Mineralogy and Geochemistry vol. 30. Originally written in Quickbasic, translated to
-	Matlab by Chelsea Allison, and translated to python by K. Iacovino for VESIcal.
+	in Mineralogy and Geochemistry vol. 30. Originally written in Quickbasic. CO2 calculations
+	translated to Matlab by Chelsea Allison and translated to python by K. Iacovino for VESIcal.
+	H2O calculations translated to VisualBasic by Gordon M. Moore and translated to python by
+	K. Iacovino for VESIcal.
 
-	Only for CO2.
 	"""
 
 	def __init__(self):
@@ -2468,6 +2483,7 @@ class fugacity_HollowayBlank(FugacityModel):
 													  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
 									 CalibrationRange('temperature',500,crf_GreaterThan,'oC','MRK EOS (Holloway and Blank, 1994)',
 									 				  fail_msg=crmsg_GreaterThan_fail, pass_msg=crmsg_GreaterThan_pass, description_msg=crmsg_GreaterThan_description)])
+
 
 	def REDKW(self, BP, A2B):
 		"""
@@ -2497,14 +2513,14 @@ class fugacity_HollowayBlank(FugacityModel):
 		QQ = BP*(A2B-BP-1)
 		XN = QQ*TH+RR-0.074074
 		XM = QQ-TH
-		XNN = XN*XN/4
-		XMM = XM**3 / 27
+		XNN = XN*XN*0.25
+		XMM = XM**3 / 27.0
 		ARG = XNN+XMM
 
 		if ARG > 0:
 			X = np.sqrt(ARG)
 			F = 1
-			XN2 = -XN/2
+			XN2 = -XN*0.5
 			iXMM = XN2+X
 
 			if iXMM < 0:
@@ -2527,7 +2543,7 @@ class fugacity_HollowayBlank(FugacityModel):
 			if FP < -37 or FP > 37:
 				FP = 0.000001
 
-		if ARG <0:
+		elif ARG <0:
 			COSPHI = np.sqrt(-XNN/XMM)
 			if XN > 0:
 				COSPHI = -COSPHI
@@ -2606,7 +2622,7 @@ class fugacity_HollowayBlank(FugacityModel):
 
 		return XLNF
 
-	def RKCALC(self, temperature, pressure):
+	def RKCALC(self, temperature, pressure, species):
 		"""
 		Calculation of pure gas MRK properties following Holloway 1981, 1987
 
@@ -2623,7 +2639,6 @@ class fugacity_HollowayBlank(FugacityModel):
 		float
 			Natural log of the fugacity of a pure gas.
 		"""
-
 		#Define constants
 		R = 82.05736
 		RR = 6732.2
@@ -2631,20 +2646,31 @@ class fugacity_HollowayBlank(FugacityModel):
 		PBLN = np.log(pb)
 		TCEL = temperature-273.15
 		RXT = R*temperature
-		RT = R*temperature**1.5 * 0.000001
+		RT = R*temperature**1.5 * 10**(-6)
 
-		#Calculate T-dependent MRK A parameter CO2
-		ACO2M = 73.03 - 0.0714*TCEL + 2.157*10**(-5)*TCEL**2
+		if species == 'CO2':
+			#Calculate T-dependent MRK A parameter CO2
+			ACO2M = 73.03 - 0.0714*TCEL + 2.157*10**(-5)*TCEL**2
 
-		#Define MRK B parameter for CO2
-		BSUM = 29.7
-		ASUM = ACO2M / (BSUM*RT)
+			#Define MRK B parameter for CO2
+			BSUM = 29.7
+
+			ASUM = ACO2M / (BSUM*RT)
+
+		elif species == 'H2O':
+			#Calculate T-dependent MRK A parameter H2O
+			AH2OM = 115.98 - np.double(0.0016295)*temperature - 1.4984*10**(-5)*temperature**2
+
+			#Define MRK B parameter for H2O
+			BSUM = 14.5
+
+			ASUM = AH2OM / (BSUM*RT)
+
 		BSUM = pressure*BSUM/RXT
 		XLNFP = self.REDKW(BSUM, ASUM)
 
 		#Convert to ln(fugacity)
 		PUREG = XLNFP + PBLN
-
 		return PUREG
 
 
@@ -2668,8 +2694,6 @@ class fugacity_HollowayBlank(FugacityModel):
 		float
 			Fugacity coefficient for passed species
 		"""
-		if species != 'CO2':
-			raise InputError("Species must be CO2.")
 
 		#convert temp and press to atmospheres and Kelvin
 		pressureAtmo = pressure/1.013
@@ -2677,16 +2701,16 @@ class fugacity_HollowayBlank(FugacityModel):
 		PO = 4000/1.013
 
 		#Use the MRK below 4,000 bars, Saxena above 4,000 bars
-		if pressure > 4000:
-			iPUREG = self.RKCALC(temperatureK, PO)
+		if pressure > 4000 and species=='CO2':
+			iPUREG = self.RKCALC(temperatureK, PO, species)
 			XLNF = self.Saxena(temperatureK, pressure)
 			PUREG = iPUREG + XLNF
-		elif pressure <= 4000:
-			PUREG = self.RKCALC(temperatureK, pressureAtmo)
+		else:
+			PUREG = self.RKCALC(temperatureK, pressureAtmo, species)
 
 		#Convert from ln(fugacity) to fugacity
-		stdfco2 = np.exp(PUREG)
-		return stdfco2
+		stdf = np.exp(PUREG)
+		return stdf
 
 class fugacity_RK_co2(FugacityModel):
 	"""
@@ -4454,7 +4478,8 @@ class MooreWater(Model):
 		Initialize the model.
 		"""
 		self.set_volatile_species(['H2O'])
-		self.set_fugacity_model(fugacity_idealgas())
+		#self.set_fugacity_model(fugacity_MRK_h2o())
+		self.set_fugacity_model(fugacity_HB_h2o())
 		self.set_activity_model(activity_idealsolution())
 		self.set_solubility_dependence(False)
 		self.set_calibration_ranges([CalibrationRange('pressure',[1.0,3000.0],crf_Between,'bar','Moore et al. (1998) water',
@@ -4502,6 +4527,7 @@ class MooreWater(Model):
 		float
 			Calculated dissolved H2O concentration in wt%.
 		"""
+
 		_sample = sample.copy()
 		_sample['H2O'] = 0.0
 		_sample['CO2'] = 0.0
@@ -4619,7 +4645,7 @@ class MooreWater(Model):
 
 		try:
 			satP = root_scalar(self.root_saturation_pressure,args=(temperature,_sample,X_fluid,kwargs),
-								x0=1000.0,x1=2000.0).root
+								x0=100.0,x1=2000.0).root
 		except:
 			warnings.warn("Saturation pressure not found.",RuntimeWarning)
 			satP = np.nan
