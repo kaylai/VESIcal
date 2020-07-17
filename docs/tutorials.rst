@@ -3,13 +3,11 @@ Verbose Tutorials
 =================
 The most indepth way to learn how to use VESIcal is to read the manuscript, which is a jupyter notebook that explains class and model structures, all required and optional inputs, and walks you through examples of all calculations and plotting functions. The next best place to look, particularly if you are looking for shorter examples, which illustrate only one calculation at a time, then this is the place to be. 
 
-Below are links to jupyter notebooks showing example walkthroughs of each calculation. The notebooks can be downloaded from the `github repository <https://github.com/kaylai/VESIcal>`_ and run locally, if you wish.
-
 If you just need a quick reminder on how to perform certain functions, check out our Quick Reference page.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Jupyter Notebook Tutorials:
+   :caption: Tutorials:
 
    ex_import
    ex_normalize

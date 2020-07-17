@@ -85,6 +85,20 @@ fugacity_RedlichKwong(FugacityModel)
 .. autoclass:: VESIcal.fugacity_RedlichKwong
 	:members:
 
+fugacity_HollowayBlank(FugacityModel)
+-------------------------------------
+.. autoclass:: VESIcal.fugacity_HollowayBlank
+	:members:
+
+fugacity_HB_co2(FugacityModel)
+------------------------------------
+.. autoclass:: VESIcal.fugacity_HB_co2
+	:members:
+
+fugacity_HB_h2o(FugacityModel)
+------------------------------------
+.. autoclass:: VESIcal.fugacity_HB_h2o
+	:members:
 
 Activity Models
 ===============
@@ -128,9 +142,14 @@ IaconoMarzianoCarbon(Model)
 .. autoclass:: VESIcal.IaconoMarzianoCarbon
 	:members:
 
-EguchiCarbon(Model)
+LiuWater(Model)
 -------------------
-.. autoclass:: VESIcal.EguchiCarbon
+.. autoclass:: VESIcal.LiuWater
+	:members:
+
+LiuCarbon(Model)
+-------------------
+.. autoclass:: VESIcal.LiuCarbon
 	:members:
 
 MooreWater(Model)
@@ -163,6 +182,10 @@ MagmaSat Plotting Functions
 Plot Isobars and Isopleths
 ++++++++++++++++++++++++++
 .. autofunction:: VESIcal.plot_isobars_and_isopleths
+
+Smooth Isobars and Isopleths
+++++++++++++++++++++++++++++
+.. autofunction:: VESIcal.smooth_isobars_and_isopleths
 
 Plot Degassing Paths
 ++++++++++++++++++++

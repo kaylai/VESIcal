@@ -248,6 +248,12 @@ Then, you can very easily plot your newly calculated isobars and isopleths, like
 
 	plot_isobars_and_isopleths(isobars, isopleths)
 
+You may wish to do some custom plotting of your isobar and isopleth data without relying on our built-in plot function. However, the raw isobars and isopleths output by the calculate method are a bit messy. `plot_isobars_and_isopleths()` has curve smoothing built-in. We have also implemented the same smoothing in a separate method, called `smooth_isobars_and_isopleths()` which takes isobars and/or isopleths as inputs and returns a pandas DataFrame with smoothed data ready for plotting. Use that function like so:
+
+.. code-block:: puython
+
+	smooth_isobars_and_isopleths(isobars=isobars, isopleths=isopleths)
+
 ----------
 
 Calculate and Plot Degassing Paths

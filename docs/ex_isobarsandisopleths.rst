@@ -92,7 +92,22 @@ Plot your data
 
 Custom plotting
 ---------------
-The user may wish to apply custom formatting to the plot, in which case, an example code to plot isobars and isopleths is provided below.
+The user may wish to apply custom formatting to the plot rather than relying on our built-in plotting method. The output from `calculate_isobars_and_isopleths()` can look a bit messy, which is why our `plot_isobars_and_isopleths()` function incorporates curve smoothing so that plots look pretty. In order to facilitate easy custom plotting, we have implemented a second method, `smooth_isobars_and_isopleths()` which takes in isobars and isopleths calulated with VESIcal, performs smoothing on them using numpy, and then returns a pandas DataFrame with isobars and isopleths ready for plotting by the user.
+
+Following the example above, we could get smoothed isobars and/or isopleths with the following:
+
+.. code-block:: python
+
+	smoothed_isobars, smoothed_isopleths = v.smooth_isobars_and_isopleths(isobars, isopleths)
+
+The method can also do isobars only or isopleths only, like:
+
+.. code-block:: python
+
+	smoothed_isobars = v.smooth_isobars_and_isopleths(isobars)
+	smoothed_isopleths = v.smooth_isobars_and_isopleths(isopleths=isopleths)
+
+Below is essentially the same code that our `plot_isobars_and_isopleths()` and `smooth_isobars_and_isopleths()` methods use to perform smoothing with numpy. Executing the code below will produce the same output as a call to `plot_isobars_and_isopleths()`. Feel free to grab this code and edit it to customize to your hearts desire.
 
 .. code-block:: python
 
