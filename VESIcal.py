@@ -4487,7 +4487,6 @@ class MooreWater(Model):
 		Initialize the model.
 		"""
 		self.set_volatile_species(['H2O'])
-		#self.set_fugacity_model(fugacity_MRK_h2o())
 		self.set_fugacity_model(fugacity_HB_h2o())
 		self.set_activity_model(activity_idealsolution())
 		self.set_solubility_dependence(False)
@@ -5973,6 +5972,7 @@ class MagmaSat(Model):
 		dict
 			A dictionary of dissolved volatile concentrations in wt% with keys H2O and CO2.
 		"""
+		sample = self.preprocess_sample(sample)
 		if isinstance(X_fluid, int) or isinstance(X_fluid, float):
 			pass
 		else:
@@ -6126,6 +6126,7 @@ class MagmaSat(Model):
 		dict
 			A dictionary of fluid composition in wt% with keys 'H2O' and 'CO2' is returned. #TODO make list?
 		"""
+		sample = self.preprocess_sample(sample)
 
 		if isinstance(temperature, float) or isinstance(temperature, int):
 			pass
@@ -6186,6 +6187,7 @@ class MagmaSat(Model):
 			If verbose is set to False: Saturation pressure in bars.
 			If verbose is set to True: dict of all calculated values.
 		"""
+		sample = self.preprocess_sample(sample)
 		bulk_comp_orig = sample
 
 		bulk_comp = {oxide:  sample[oxide] for oxide in oxides}
@@ -6298,6 +6300,7 @@ class MagmaSat(Model):
 			and CO2 in the liquid in wt%. Columns in the isopleth dataframe are 'Pressure', 'H2Ofl', and 'CO2fl',
 			corresponding to pressure in bars and H2O and CO2 concentration in the H2O-CO2 fluid, in wt%.
 		"""
+		sample = self.preprocess_sample(sample)
 		bulk_comp = sample
 
 		if isinstance(pressure_list, list):
@@ -6390,7 +6393,7 @@ class MagmaSat(Model):
 		pandas DataFrame object
 
 		"""
-
+		sample = self.preprocess_sample(sample)
 		sample = normalize(sample)
 		bulk_comp_orig = sample
 
