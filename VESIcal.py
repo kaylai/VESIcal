@@ -1624,6 +1624,15 @@ crmsg_Between_pass = "The {param_name} ({param_val:.1f} {units}) is between {cal
 crmsg_Between_fail = "The {param_name} is outside the calibration range of the {model_name} model, as {param_val:.1f} {units} is not between {calib_val0:.1f} and {calib_val1:.1f} {units}. "
 crmsg_Between_description = "The {model_name} model is calibrated for {param_name} between {calib_val0:.1f} and {calib_val1:.1f} {units}. "
 
+def crf_LiuComp(calibval=None,sample={}):
+	SiTest = sample['SiO2'] >= 75.0 and sample['SiO2'] <= 77.0
+	NaTest = sample['Na2O'] >= 3.4 and sample['Na2O'] <= 4.7
+	KTest = sample['K2O'] >= 3.6 and sample['K2O'] <= 5.7
+	AlTest = sample['Al2O3'] >= 12.1 and sample['Al2O3'] <= 13.5
+	return all([SiTest, NaTest, KTest, AlTest])
+crmsg_LiuComp_pass = "The sample appears to be similar in composition to the rhyolites and haplogranites used to calibrate the Liu et al. model."
+crmsg_LiuComp_fail = "As the Liu et al. model incorperates no term for compositional dependence, users must take extreme care when extrapolating this model to compositions which differ significantly from the haplogranites and rhyolites in the calibration dataset. These warnings are simply a guide; we suggest that users carefully compare their major element data to the calibration dataset to check for suitability."
+crmsg_LiuComp_description = "The Liu et al. model is suitable for haplogranites and rhyolites."
 
 #-------------FUGACITY MODELS--------------------------------#
 
@@ -4691,7 +4700,9 @@ class LiuWater(Model):
 		self.set_calibration_ranges([CalibrationRange('pressure',[1.0,5000.0],crf_Between,'bar','Liu et al. (2005) water',
 													  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
 									 CalibrationRange('temperature',[700.0,1200],crf_Between,'oC','Liu et al. (2005) water',
-									 				  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
+									 				  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('sample',None,crf_LiuComp,None,None,
+									 				  fail_msg=crmsg_LiuComp_fail, pass_msg=crmsg_LiuComp_pass, description_msg=crmsg_LiuComp_description)])
 		# self.set_calibration_ranges([cr_Between('pressure',[1.0,5000.0],'bar','Liu et al. (2005) water'),
 		# 							 cr_Between('temperature',[700.0,1200],'oC','Liu et al. (2005) water')])
 
@@ -4874,7 +4885,9 @@ class LiuCarbon(Model):
 		self.set_calibration_ranges([CalibrationRange('pressure',[1.0,5000.0],crf_Between,'bar','Liu et al. (2005) carbon',
 													  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
 									 CalibrationRange('temperature',[700.0,1200],crf_Between,'oC','Liu et al. (2005) carbon',
-									 				  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
+									 				  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
+									CalibrationRange('sample',None,crf_LiuComp,None,None,
+													 fail_msg=crmsg_LiuComp_fail, pass_msg=crmsg_LiuComp_pass, description_msg=crmsg_LiuComp_description)])
 
 
 	def preprocess_sample(self, sample):
