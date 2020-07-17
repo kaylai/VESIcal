@@ -45,6 +45,8 @@ extensions = ['sphinx.ext.autodoc',
 			    'sphinx.ext.githubpages',
 			    'nbsphinx']
 
+autodoc_mock_imports = ["thermoengine"]
+
 napoleon_google_docstring = False
 napoleon_use_param = False
 napoleon_use_ivar = True
