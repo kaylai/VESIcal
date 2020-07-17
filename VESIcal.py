@@ -4919,7 +4919,7 @@ class LiuCarbon(Model):
 			Temperature in degrees C.
 
 		X_fluid float
-			OPTIONAL. Default is 1. Mole fraction of H2O in the H2O-CO2 fluid.
+			OPTIONAL. Default is 1. Mole fraction of CO2 in the H2O-CO2 fluid.
 
 		Returns
 		-------
@@ -4955,7 +4955,7 @@ class LiuCarbon(Model):
 		Returns
 		-------
 		float
-			Calculated equilibrium fluid concentration in XH2Ofluid mole fraction.
+			Calculated equilibrium fluid concentration in XCO2fluid mole fraction.
 		"""
 		temperatureK = temperature + 273.15
 		pressureMPa = pressure / 10.0
@@ -4994,9 +4994,9 @@ class LiuCarbon(Model):
 		if XCO2fluid < 0:
 			XCO2fluid = 0
 
-		return 1 - XCO2fluid
+		return XCO2fluid #1 - XCO2fluid
 
-	def calculate_saturation_pressure(self,temperature,sample,X_fluid=0,**kwargs):
+	def calculate_saturation_pressure(self,temperature,sample,X_fluid=1.0,**kwargs):
 		"""
 		Calculates the pressure at which a an CO2-bearing fluid is saturated. Calls the scipy.root_scalar
 		routine, which makes repeated called to the calculate_dissolved_volatiles method.
@@ -5010,7 +5010,7 @@ class LiuCarbon(Model):
 			Temperature in degrees C.
 
 		X_fluid float
-			OPTIONAL. Default is 0. Mole fraction of H2O in the H2O-CO2 fluid.
+			OPTIONAL. Default is 0. Mole fraction of CO2 in the H2O-CO2 fluid.
 
 		Returns
 		-------
@@ -5033,7 +5033,7 @@ class LiuCarbon(Model):
 
 		try:
 			satP = root_scalar(self.root_saturation_pressure,args=(temperature,_sample,X_fluid,kwargs),
-								x0=10.0,x1=200.0).root
+								x0=10.0,x1=2000.0).root
 		except:
 			warnings.warn("Saturation pressure not found.",RuntimeWarning)
 			satP = np.nan
