@@ -4927,8 +4927,8 @@ class LiuCarbon(Model):
 			Calculated dissolved CO2 concentration in wt%.
 		"""
 		pressureMPa = pressure / 10.0
-		Pw = pressureMPa * X_fluid
-		PCO2 = pressureMPa * (1 - X_fluid)
+		Pw = pressureMPa * (1 - X_fluid)
+		PCO2 = pressureMPa * X_fluid #(1 - X_fluid)
 
 		temperatureK = temperature + 273.15
 
