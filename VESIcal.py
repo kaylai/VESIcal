@@ -6702,6 +6702,7 @@ class calculate_dissolved_volatiles(Calculate):
 
 	def check_calibration_range(self,sample,pressure,**kwargs):
 		parameters = kwargs
+		parameters['sample'] = sample
 		parameters.update(dict(sample))
 		parameters['pressure'] = pressure
 		if len(self.model.volatile_species) == 1:
@@ -6748,6 +6749,7 @@ class calculate_equilibrium_fluid_comp(Calculate):
 	def check_calibration_range(self,sample,pressure,**kwargs):
 		parameters = kwargs
 		parameters.update(dict(sample))
+		parameters['sample'] = sample
 		parameters['pressure'] = pressure
 		if len(self.model.volatile_species) == 1:
 			volspec = self.model.volatile_species
@@ -6808,6 +6810,7 @@ class calculate_isobars_and_isopleths(Calculate):
 	def check_calibration_range(self,sample,pressure_list,**kwargs):
 		parameters = kwargs
 		parameters.update(dict(sample))
+		parameters['sample'] = sample
 		s = ''
 		s += self.model.check_calibration_range(parameters)
 		parameters = {}
@@ -6853,6 +6856,7 @@ class calculate_saturation_pressure(Calculate):
 		else:
 			parameters['pressure'] = self.result
 		parameters.update(dict(sample))
+		parameters['sample'] = sample
 		s = self.model.check_calibration_range(parameters)
 		return s
 
@@ -6909,6 +6913,7 @@ class calculate_degassing_path(Calculate):
 	def check_calibration_range(self,sample,**kwargs):
 		parameters = kwargs
 		parameters.update(sample)
+		parameters['sample'] = sample
 		s = self.model.check_calibration_range(parameters)
 		parameters = {}
 		parameters['pressure'] = np.nanmax(self.result.Pressure_bars)
