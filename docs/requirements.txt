@@ -8,4 +8,4 @@ matplotlib
 ipynb
 scipy
 sympy
-python-mock
+mock
