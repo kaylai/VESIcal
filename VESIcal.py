@@ -6543,40 +6543,33 @@ class MagmaSat(Model):
 			return open_degassing_df
 
 #-----------MAGMASAT PLOTTING FUNCTIONS-----------#
-def plot_isobars_and_isopleths(isobars, isopleths):
-		"""
-		Takes in a dataframe with calculated isobar and isopleth information (e.g., output from calculate_isobars_and_isopleths)
-		and plots data as isobars (lines of constant pressure) and isopleths (lines of constant fluid composition). These lines
-		represent the saturation pressures of the melt composition used to calculate the isobar and isopleth information.
+def smooth_isobars_and_isopleths(isobars=None, isopleths=None):
+	"""
+	Takes in a dataframe with calculated isobar and isopleth information (e.g., output from calculate_isobars_and_isopleths)
+	and smooths the data for plotting.
 
-		Parameters
-		----------
-		isobars: pandas DataFrame
-			DataFrame object containing isobar information as calculated by calculate_isobars_and_isopleths.
+	Parameters
+	----------
+	isobars: pandas DataFrame
+		OPTIONAL. DataFrame object containing isobar information as calculated by calculate_isobars_and_isopleths.
 
-		isopleths: pandas DataFrame
-			DataFrame object containing isopleth information as calculated by calculate_isobars_and_isopleths.
+	isopleths: pandas DataFrame
+		OPTIONAL. DataFrame object containing isopleth information as calculated by calculate_isobars_and_isopleths.
 
-		Returns
-		-------
-		matplotlib object
-			Plot with x-axis as H2O wt% in the melt and y-axis as CO2 wt% in the melt. Isobars, or lines of
-			constant pressure at which the sample magma composition is saturated, and isopleths, or lines of constant
-			fluid composition at which the sample magma composition is saturated, are plotted.
-		"""
+	Returns
+	-------
+	pandas DataFrame
+		DataFrame with x and y values for all isobars and all isopleths. Useful if a user wishes to do custom plotting
+		with isobar and isopleth data rather than using the built-in `plot_isobars_and_isopleths()` function.
+	"""
+
+	if isobars is not None:
 		P_vals = isobars.Pressure.unique()
-		XH2O_vals = isopleths.XH2O_fl.unique()
 		isobars_lists = isobars.values.tolist()
-		isopleths_lists = isopleths.values.tolist()
-
 		# add zero values to volatiles list
 		isobars_lists.append([0.0, 0.0, 0.0, 0.0])
 
-		# draw the figure
-		fig, ax1 = plt.subplots()
-		plt.xlabel('H$_2$O wt%')
-		plt.ylabel('CO$_2$ wt%')
-
+		isobars = {}
 		# do some data smoothing
 		for pressure in P_vals:
 			Pxs = [item[1] for item in isobars_lists if item[0] == pressure]
@@ -6592,11 +6585,18 @@ def plot_isobars_and_isopleths(isobars, isopleths):
 				Px_new = np.linspace(Pxs[0], Pxs[-1], 50)
 				Py_new = Pf(Px_new)
 
-				# Plot some stuff
-				ax1.plot(Px_new, Py_new)
-			except:
-				ax1.plot(Pxs, Pys)
+				# Save x's and y's
+				isobars.update({str(pressure)+"xvals": Px_new})
+				isobars.update({str(pressure)+"yvals": Py_new})
 
+			except:
+				isobars.update({str(pressure)+"xvals": Pxs})
+				isobars.update({str(pressure)+"yvals": Pys})
+
+	if isopleths is not None:
+		XH2O_vals = isopleths.XH2O_fl.unique()
+		isopleths_lists = isopleths.values.tolist()
+		isopleths = {}
 		for Xfl in XH2O_vals:
 			Xxs = [item[1] for item in isopleths_lists if item[0] == Xfl]
 			Xys = [item[2] for item in isopleths_lists if item[0] == Xfl]
@@ -6610,17 +6610,107 @@ def plot_isobars_and_isopleths(isobars, isopleths):
 				Xx_new = np.linspace(Xxs[0], Xxs[-1], 50)
 				Xy_new = Xf(Xx_new)
 
-				# Plot some stuff
-				ax1.plot(Xx_new, Xy_new, ls='dashed', color='k')
+				# Save x's and y's
+				isopleths.update({str(Xfl)+"xvals":Xx_new})
+				isopleths.update({str(Xfl)+"yvals":Xy_new})
 			except:
-				ax1.plot(Xxs, Xys, ls='dashed', color='k')
+				isopleths.update({str(Xfl)+"xvals":Xxs})
+				isopleths.update({str(Xfl)+"yvals":Xys})
 
-		labels = P_vals
-		ax1.legend(labels)
+	np.seterr(divide='warn', invalid='warn') #turn numpy warning back on
 
-		np.seterr(divide='warn', invalid='warn') #turn numpy warning back on
+	if isobars is not None:
+		if isopleths is not None:
+			return pd.DataFrame(isobars), pd.DataFrame(isopleths)
+		else:
+			return pd.DataFrame(isobars)
+	else:
+		if isopleths is not None:
+			isopleth_frame = pd.DataFrame.from_dict(isopleths, orient='index')
+			isopleth_frame = isopleth_frame.transpose()
+			print(isopleth_frame)
+			return pd.DataFrame(isopleth_frame)
 
-		return ax1
+
+def plot_isobars_and_isopleths(isobars, isopleths):
+	"""
+	Takes in a dataframe with calculated isobar and isopleth information (e.g., output from calculate_isobars_and_isopleths)
+	and plots data as isobars (lines of constant pressure) and isopleths (lines of constant fluid composition). These lines
+	represent the saturation pressures of the melt composition used to calculate the isobar and isopleth information.
+
+	Parameters
+	----------
+	isobars: pandas DataFrame
+		DataFrame object containing isobar information as calculated by calculate_isobars_and_isopleths.
+
+	isopleths: pandas DataFrame
+		DataFrame object containing isopleth information as calculated by calculate_isobars_and_isopleths.
+
+	Returns
+	-------
+	matplotlib object
+		Plot with x-axis as H2O wt% in the melt and y-axis as CO2 wt% in the melt. Isobars, or lines of
+		constant pressure at which the sample magma composition is saturated, and isopleths, or lines of constant
+		fluid composition at which the sample magma composition is saturated, are plotted.
+	"""
+	P_vals = isobars.Pressure.unique()
+	XH2O_vals = isopleths.XH2O_fl.unique()
+	isobars_lists = isobars.values.tolist()
+	isopleths_lists = isopleths.values.tolist()
+
+	# add zero values to volatiles list
+	isobars_lists.append([0.0, 0.0, 0.0, 0.0])
+
+	# draw the figure
+	fig, ax1 = plt.subplots()
+	plt.xlabel('H$_2$O wt%')
+	plt.ylabel('CO$_2$ wt%')
+
+	# do some data smoothing
+	for pressure in P_vals:
+		Pxs = [item[1] for item in isobars_lists if item[0] == pressure]
+		Pys = [item[2] for item in isobars_lists if item[0] == pressure]
+
+		try:
+			np.seterr(divide='ignore', invalid='ignore') #turn off numpy warning
+			## calcualte polynomial
+			Pz = np.polyfit(Pxs, Pys, 3)
+			Pf = np.poly1d(Pz)
+
+			## calculate new x's and y's
+			Px_new = np.linspace(Pxs[0], Pxs[-1], 50)
+			Py_new = Pf(Px_new)
+
+			# Plot some stuff
+			ax1.plot(Px_new, Py_new)
+
+		except:
+			ax1.plot(Pxs, Pys)
+
+	for Xfl in XH2O_vals:
+		Xxs = [item[1] for item in isopleths_lists if item[0] == Xfl]
+		Xys = [item[2] for item in isopleths_lists if item[0] == Xfl]
+
+		try:
+			## calcualte polynomial
+			Xz = np.polyfit(Xxs, Xys, 2)
+			Xf = np.poly1d(Xz)
+
+			## calculate new x's and y's
+			Xx_new = np.linspace(Xxs[0], Xxs[-1], 50)
+			Xy_new = Xf(Xx_new)
+
+			# Plot some stuff
+			ax1.plot(Xx_new, Xy_new, ls='dashed', color='k')
+		except:
+			ax1.plot(Xxs, Xys, ls='dashed', color='k')
+
+	labels = P_vals
+	ax1.legend(labels)
+
+	np.seterr(divide='warn', invalid='warn') #turn numpy warning back on
+
+	return ax1
 
 def plot_degassing_paths(degassing_paths, labels=None):
 	"""
