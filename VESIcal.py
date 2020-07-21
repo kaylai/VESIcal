@@ -3915,7 +3915,11 @@ class IaconoMarzianoWater(Model):
 			B = -3.24443335
 			C = -0.02238884
 
-		NBO_O = self.NBO_O(sample=sample,hydrous_coeffs=True)
+		sample_copy = sample.copy()
+
+		sample_copy['H2O'] = h2o
+
+		NBO_O = self.NBO_O(sample=sample_copy,hydrous_coeffs=True)
 		fugacity = self.fugacity_model.fugacity(pressure=pressure,X_fluid=X_fluid,temperature=temperature-273.15,**kwargs)
 
 		return h2o - np.exp(a*np.log(fugacity) + b*NBO_O + B + C*pressure/temperature)
@@ -5492,7 +5496,8 @@ class MixedFluid(Model):
 
 		return satP
 
-	def calculate_isobars_and_isopleths(self,pressure_list,isopleth_list=[0,1],points=101,return_dfs=True,**kwargs):
+	def calculate_isobars_and_isopleths(self,pressure_list,isopleth_list=[0,1],points=51,
+										return_dfs=True,extend_to_zero=True,**kwargs):
 		"""
 		Calculates isobars and isopleths. Isobars can be calculated for any number of pressures. Variables
 		required by each of the pure fluid models must be passed, e.g. sample, temperature, etc.
@@ -5532,6 +5537,7 @@ class MixedFluid(Model):
 		if isopleth_list is None:
 			has_isopleths = False
 
+
 		isobars_df = pd.DataFrame(columns=['Pressure','H2O_liq','CO2_liq'])
 		isobars = []
 		for pressure in pressure_list:
@@ -5542,12 +5548,17 @@ class MixedFluid(Model):
 				isobars_df = isobars_df.append({'Pressure':pressure,'H2O_liq':dissolved[H2O_id,i],'CO2_liq':dissolved[CO2_id,i]},ignore_index=True)
 			isobars.append(dissolved)
 
+
 		if has_isopleths == True:
 			isopleths_df = pd.DataFrame(columns=['XH2O_fl','H2O_liq','CO2_liq'])
 			isopleths = []
 			for isopleth in isopleth_list:
 				dissolved = np.zeros([2,points])
-				pressure = np.linspace(np.nanmin(pressure_list),np.nanmax(pressure_list),points)
+				pmin = np.nanmin(pressure_list)
+				pmax = np.nanmax(pressure_list)
+				if pmin == pmax:
+					pmin = 0.0
+				pressure = np.linspace(pmin,pmax,points)
 				for i in range(points):
 					dissolved[:,i] = self.calculate_dissolved_volatiles(pressure=pressure[i],X_fluid=(isopleth,1-isopleth),**kwargs)
 					isopleths_df = isopleths_df.append({'XH2O_fl':[isopleth,1-isopleth][H2O_id],'H2O_liq':dissolved[H2O_id,i],'CO2_liq':dissolved[CO2_id,i]},ignore_index=True)
@@ -6638,9 +6649,10 @@ def smooth_isobars_and_isopleths(isobars=None, isopleths=None):
 			return pd.DataFrame(isopleth_frame)
 
 def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, custom_CO2=None,
-		 isobar_labels=None, isopleth_labels=None, degassing_path_labels=None, custom_labels=None, **kwargs):
+		 isobar_labels=None, isopleth_labels=None, degassing_path_labels=None, custom_labels=None,
+		 extend_isobars_to_zero=True, **kwargs):
 	"""
-	Custom automatic plotting of model calculations in VESIcal. 
+	Custom automatic plotting of model calculations in VESIcal.
 	Isobars, isopleths, and degassing paths can be plotted. Labels can be specified for each.
 	Any combination of isobars, isopleths, and degassing paths can be plotted.
 
@@ -6669,13 +6681,13 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 		OPTIONAL. Labels for the plot legend. Default is None, in which case each plotted line will be given the generic
 		legend name of "Isobars n", with n referring to the nth isobars passed. Isobar pressure is given in parentheses.
 		The user can pass their own labels as a list of strings. If more than one set of isobars is passed, the labels should
-		refer to each set of isobars, not each pressure. 
+		refer to each set of isobars, not each pressure.
 
 	isopleth_labels: list
 		OPTIONAL. Labels for the plot legend. Default is None, in which case each plotted isopleth will be given the generic
 		legend name of "Isopleth n", with n referring to the nth isopleths passed. Isopleth XH2O values are given in
-		parentheses. The user can pass their own labels as a list of strings. If more than one set of isopleths is passed, 
-		the labels should refer to each set of isopleths, not each XH2O value. 
+		parentheses. The user can pass their own labels as a list of strings. If more than one set of isopleths is passed,
+		the labels should refer to each set of isopleths, not each XH2O value.
 
 	degassing_path_labels: list
 		OPTIONAL. Labels for the plot legend. Default is None, in which case each plotted line will be given the generic
@@ -6683,9 +6695,12 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 		as a list of strings.
 
 	custom_labels: list
-		OPTIONAL. Labels for the plot legend. Default is None, in which case each group of custom points will be given the 
+		OPTIONAL. Labels for the plot legend. Default is None, in which case each group of custom points will be given the
 		generic legend name of "Customn", with n referring to the nth degassing path passed. The user can pass their own labels
 		as a list of strings.
+
+	extend_isobars_to_zero bool
+		If True (default), isobars will be extended to zero, even if there is a finite solubility at zero partial pressure.
 
 	Returns
 	-------
@@ -6753,6 +6768,50 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 					## calculate new x's and y's
 					Px_new = np.linspace(Pxs[0], Pxs[-1], 50)
 					Py_new = Pf(Px_new)
+
+					if extend_isobars_to_zero == True and Px_new[0]*Py_new[0] != 0.0:
+						if Px_new[0] > Py_new[0]:
+							Px_newer = np.zeros(np.shape(Px_new)[0]+1)
+							Px_newer[0] = 0
+							Px_newer[1:] = Px_new
+							Px_new = Px_newer
+
+							Py_newer = np.zeros(np.shape(Py_new)[0]+1)
+							Py_newer[0] = Py_new[0]
+							Py_newer[1:] = Py_new
+							Py_new = Py_newer
+						else:
+							Px_newer = np.zeros(np.shape(Px_new)[0]+1)
+							Px_newer[0] = Px_new[0]
+							Px_newer[1:] = Px_new
+							Px_new = Px_newer
+
+							Py_newer = np.zeros(np.shape(Py_new)[0]+1)
+							Py_newer[0] = 0
+							Py_newer[1:] = Py_new
+							Py_new = Py_newer
+
+					if extend_isobars_to_zero == True and Px_new[-1]*Py_new[-1] != 0.0:
+						if Px_new[-1] < Py_new[-1]:
+							Px_newer = np.zeros(np.shape(Px_new)[0]+1)
+							Px_newer[-1] = 0
+							Px_newer[:-1] = Px_new
+							Px_new = Px_newer
+
+							Py_newer = np.zeros(np.shape(Py_new)[0]+1)
+							Py_newer[-1] = Py_new[-1]
+							Py_newer[:-1] = Py_new
+							Py_new = Py_newer
+						else:
+							Px_newer = np.zeros(np.shape(Px_new)[0]+1)
+							Px_newer[-1] = Px_new[-1]
+							Px_newer[:-1] = Px_new
+							Px_new = Px_newer
+
+							Py_newer = np.zeros(np.shape(Py_new)[0]+1)
+							Py_newer[-1] = 0
+							Py_newer[:-1] = Py_new
+							Py_new = Py_newer
 
 					# Plot some stuff
 					if len(isobars) > 1:
