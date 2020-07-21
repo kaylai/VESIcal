@@ -5537,6 +5537,7 @@ class MixedFluid(Model):
 		if isopleth_list is None:
 			has_isopleths = False
 
+
 		isobars_df = pd.DataFrame(columns=['Pressure','H2O_liq','CO2_liq'])
 		isobars = []
 		for pressure in pressure_list:
@@ -5553,7 +5554,11 @@ class MixedFluid(Model):
 			isopleths = []
 			for isopleth in isopleth_list:
 				dissolved = np.zeros([2,points])
-				pressure = np.linspace(np.nanmin(pressure_list),np.nanmax(pressure_list),points)
+				pmin = np.nanmin(pressure_list)
+				pmax = np.nanmax(pressure_list)
+				if pmin == pmax:
+					pmin = 0.0
+				pressure = np.linspace(pmin,pmax,points)
 				for i in range(points):
 					dissolved[:,i] = self.calculate_dissolved_volatiles(pressure=pressure[i],X_fluid=(isopleth,1-isopleth),**kwargs)
 					isopleths_df = isopleths_df.append({'XH2O_fl':[isopleth,1-isopleth][H2O_id],'H2O_liq':dissolved[H2O_id,i],'CO2_liq':dissolved[CO2_id,i]},ignore_index=True)
