@@ -3915,7 +3915,11 @@ class IaconoMarzianoWater(Model):
 			B = -3.24443335
 			C = -0.02238884
 
-		NBO_O = self.NBO_O(sample=sample,hydrous_coeffs=True)
+		sample_copy = sample.copy()
+
+		sample_copy['H2O'] = h2o
+
+		NBO_O = self.NBO_O(sample=sample_copy,hydrous_coeffs=True)
 		fugacity = self.fugacity_model.fugacity(pressure=pressure,X_fluid=X_fluid,temperature=temperature-273.15,**kwargs)
 
 		return h2o - np.exp(a*np.log(fugacity) + b*NBO_O + B + C*pressure/temperature)
@@ -6640,7 +6644,7 @@ def smooth_isobars_and_isopleths(isobars=None, isopleths=None):
 def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, custom_CO2=None,
 		 isobar_labels=None, isopleth_labels=None, degassing_path_labels=None, custom_labels=None, **kwargs):
 	"""
-	Custom automatic plotting of model calculations in VESIcal. 
+	Custom automatic plotting of model calculations in VESIcal.
 	Isobars, isopleths, and degassing paths can be plotted. Labels can be specified for each.
 	Any combination of isobars, isopleths, and degassing paths can be plotted.
 
@@ -6669,13 +6673,13 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 		OPTIONAL. Labels for the plot legend. Default is None, in which case each plotted line will be given the generic
 		legend name of "Isobars n", with n referring to the nth isobars passed. Isobar pressure is given in parentheses.
 		The user can pass their own labels as a list of strings. If more than one set of isobars is passed, the labels should
-		refer to each set of isobars, not each pressure. 
+		refer to each set of isobars, not each pressure.
 
 	isopleth_labels: list
 		OPTIONAL. Labels for the plot legend. Default is None, in which case each plotted isopleth will be given the generic
 		legend name of "Isopleth n", with n referring to the nth isopleths passed. Isopleth XH2O values are given in
-		parentheses. The user can pass their own labels as a list of strings. If more than one set of isopleths is passed, 
-		the labels should refer to each set of isopleths, not each XH2O value. 
+		parentheses. The user can pass their own labels as a list of strings. If more than one set of isopleths is passed,
+		the labels should refer to each set of isopleths, not each XH2O value.
 
 	degassing_path_labels: list
 		OPTIONAL. Labels for the plot legend. Default is None, in which case each plotted line will be given the generic
@@ -6683,7 +6687,7 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 		as a list of strings.
 
 	custom_labels: list
-		OPTIONAL. Labels for the plot legend. Default is None, in which case each group of custom points will be given the 
+		OPTIONAL. Labels for the plot legend. Default is None, in which case each group of custom points will be given the
 		generic legend name of "Customn", with n referring to the nth degassing path passed. The user can pass their own labels
 		as a list of strings.
 
