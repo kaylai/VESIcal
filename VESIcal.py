@@ -5496,7 +5496,8 @@ class MixedFluid(Model):
 
 		return satP
 
-	def calculate_isobars_and_isopleths(self,pressure_list,isopleth_list=[0,1],points=101,return_dfs=True,**kwargs):
+	def calculate_isobars_and_isopleths(self,pressure_list,isopleth_list=[0,1],points=51,
+										return_dfs=True,extend_to_zero=True,**kwargs):
 		"""
 		Calculates isobars and isopleths. Isobars can be calculated for any number of pressures. Variables
 		required by each of the pure fluid models must be passed, e.g. sample, temperature, etc.
@@ -5545,6 +5546,7 @@ class MixedFluid(Model):
 				dissolved[:,i] = self.calculate_dissolved_volatiles(pressure=pressure,X_fluid=(Xv0[i],1-Xv0[i]),**kwargs)
 				isobars_df = isobars_df.append({'Pressure':pressure,'H2O_liq':dissolved[H2O_id,i],'CO2_liq':dissolved[CO2_id,i]},ignore_index=True)
 			isobars.append(dissolved)
+
 
 		if has_isopleths == True:
 			isopleths_df = pd.DataFrame(columns=['XH2O_fl','H2O_liq','CO2_liq'])
@@ -6642,7 +6644,8 @@ def smooth_isobars_and_isopleths(isobars=None, isopleths=None):
 			return pd.DataFrame(isopleth_frame)
 
 def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, custom_CO2=None,
-		 isobar_labels=None, isopleth_labels=None, degassing_path_labels=None, custom_labels=None, **kwargs):
+		 isobar_labels=None, isopleth_labels=None, degassing_path_labels=None, custom_labels=None,
+		 extend_isobars_to_zero=True, **kwargs):
 	"""
 	Custom automatic plotting of model calculations in VESIcal.
 	Isobars, isopleths, and degassing paths can be plotted. Labels can be specified for each.
@@ -6690,6 +6693,9 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 		OPTIONAL. Labels for the plot legend. Default is None, in which case each group of custom points will be given the
 		generic legend name of "Customn", with n referring to the nth degassing path passed. The user can pass their own labels
 		as a list of strings.
+
+	extend_isobars_to_zero bool
+		If True (default), isobars will be extended to zero, even if there is a finite solubility at zero partial pressure.
 
 	Returns
 	-------
@@ -6757,6 +6763,50 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 					## calculate new x's and y's
 					Px_new = np.linspace(Pxs[0], Pxs[-1], 50)
 					Py_new = Pf(Px_new)
+
+					if extend_isobars_to_zero == True and Px_new[0]*Py_new[0] != 0.0:
+						if Px_new[0] > Py_new[0]:
+							Px_newer = np.zeros(np.shape(Px_new)[0]+1)
+							Px_newer[0] = 0
+							Px_newer[1:] = Px_new
+							Px_new = Px_newer
+
+							Py_newer = np.zeros(np.shape(Py_new)[0]+1)
+							Py_newer[0] = Py_new[0]
+							Py_newer[1:] = Py_new
+							Py_new = Py_newer
+						else:
+							Px_newer = np.zeros(np.shape(Px_new)[0]+1)
+							Px_newer[0] = Px_new[0]
+							Px_newer[1:] = Px_new
+							Px_new = Px_newer
+
+							Py_newer = np.zeros(np.shape(Py_new)[0]+1)
+							Py_newer[0] = 0
+							Py_newer[1:] = Py_new
+							Py_new = Py_newer
+
+					if extend_isobars_to_zero == True and Px_new[-1]*Py_new[-1] != 0.0:
+						if Px_new[-1] < Py_new[-1]:
+							Px_newer = np.zeros(np.shape(Px_new)[0]+1)
+							Px_newer[-1] = 0
+							Px_newer[:-1] = Px_new
+							Px_new = Px_newer
+
+							Py_newer = np.zeros(np.shape(Py_new)[0]+1)
+							Py_newer[-1] = Py_new[-1]
+							Py_newer[:-1] = Py_new
+							Py_new = Py_newer
+						else:
+							Px_newer = np.zeros(np.shape(Px_new)[0]+1)
+							Px_newer[-1] = Px_new[-1]
+							Px_newer[:-1] = Px_new
+							Px_new = Px_newer
+
+							Py_newer = np.zeros(np.shape(Py_new)[0]+1)
+							Py_newer[-1] = 0
+							Py_newer[:-1] = Py_new
+							Py_new = Py_newer
 
 					# Plot some stuff
 					if len(isobars) > 1:
