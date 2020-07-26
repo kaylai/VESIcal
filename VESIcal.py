@@ -3920,9 +3920,9 @@ class IaconoMarzianoWater(Model):
 		sample_copy['H2O'] = h2o
 
 		NBO_O = self.NBO_O(sample=sample_copy,hydrous_coeffs=True)
-		fugacity = self.fugacity_model.fugacity(pressure=pressure,X_fluid=X_fluid,temperature=temperature-273.15,**kwargs)
+		fugacity = self.fugacity_model.fugacity(pressure=pressure,X_fluid=X_fluid,temperature=temperature,**kwargs)
 
-		return h2o - np.exp(a*np.log(fugacity) + b*NBO_O + B + C*pressure/temperature)
+		return h2o - np.exp(a*np.log(fugacity) + b*NBO_O + B + C*pressure/(temperature+273.15))
 
 	def NBO_O(self,sample,hydrous_coeffs=True):
 		"""
