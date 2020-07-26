@@ -1075,7 +1075,7 @@ class ExcelFile(object):
 
 			return dissolved_data
 
-	def calculate_equilibrium_fluid_comp(self, temperature, pressure, print_status=False, model='MagmaSat', **kwargs):
+	def calculate_equilibrium_fluid_comp(self, temperature, pressure=None, print_status=False, model='MagmaSat', **kwargs):
 	#TODO make molfrac the default
 		"""
 		Returns H2O and CO2 concentrations in wt% or mole fraction in a fluid in equilibrium with the given sample(s) at the given P/T condition.
@@ -1119,7 +1119,7 @@ class ExcelFile(object):
 		if isinstance(pressure, str):
 			file_has_press = True
 			press_name = pressure
-		elif isinstance(pressure, float) or isinstance(pressure, int):
+		elif isinstance(pressure, float) or isinstance(pressure, int) or type(pressure) == type(None):
 			file_has_press = False
 		else:
 			raise InputError("pressure must be type str or float or int")
@@ -7204,8 +7204,8 @@ class calculate_equilibrium_fluid_comp(Calculate):
 	----------
 	sample:     dict or pandas Series
 		The major element oxides in wt%.
-	pressure:   float
-		Total pressure in bars.
+	pressure:   float or None
+		Total pressure in bars. If None, the saturation pressure will be used.
 	model:  string or Model object
 		Model to be used. If using one of the default models, this can be
 		the string corresponding to the model in the default_models dict.
@@ -7222,11 +7222,16 @@ class calculate_equilibrium_fluid_comp(Calculate):
 		of each volatile species, in order (CO2, then H2O, if using a mixed-fluid default
 		model).
 	"""
-	def calculate(self,sample,pressure,**kwargs):
+	def calculate(self,sample,pressure=None,**kwargs):
+		if type(pressure) == type(None):
+			pressure = float(self.model.calculate_saturation_pressure(sample=sample,verbose=False,**kwargs))
+
 		fluid_comp = self.model.calculate_equilibrium_fluid_comp(pressure=pressure,sample=sample,**kwargs)
 		return fluid_comp
 
-	def check_calibration_range(self,sample,pressure,**kwargs):
+	def check_calibration_range(self,sample,pressure=None,**kwargs):
+		if type(pressure) == type(None):
+			pressure = self.model.calculate_saturation_pressure(sample=sample,**kwargs)
 		parameters = kwargs
 		parameters.update(dict(sample))
 		parameters['sample'] = sample
