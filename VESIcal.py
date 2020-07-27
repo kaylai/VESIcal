@@ -670,15 +670,19 @@ class ExcelFile(object):
 			raise InputError(
 				"Imported file must contain a column of sample names. If this column is not titled 'Label' (the default value), you must pass the column name to arg label. For example: ExcelFile('myfile.xslx', label='SampleNames')") #TODO test
 		if 'model' in kwargs:
-			warnings.warn("You don't need to pass a model here, so it will be ignored. You can specify a model when performing calculations on your dataset (e.g., calculate_dissolved_volatiles())",RuntimeWarning)
+			warnings.warn("You don't need to pass a model here, so it will be ignored. You can specify a model when performing calculations on your dataset (e.g., calculate_dissolved_volatiles())",RuntimeWarning,stacklevel=2)
 
 		total_iron_columns = ["FeOt", "FeOT", "FeOtot", "FeOtotal", "FeOstar", "FeO*"]
 		for name in total_iron_columns:
 			if name in data.columns:
 				if 'FeO' in data.columns:
-					warnings.warn("Both " + str(name) + " and FeO columns were passed. " + str(name) + " column will be ignored.",RuntimeWarning)
+					for row in data.itertuples():
+						if data.at[row.Index, "FeO"] == 0 and data.at[row.Index, name] > 0:
+							warnings.warn("Sample " + str(row.Index) + ": " + str(name) + " value of " + str(data.at[row.Index, name]) + " used as FeO. Fe2O3 set to 0.0.",RuntimeWarning,stacklevel=2)
+							data.at[row.Index, "Fe2O3"] = 0.0
+							data.at[row.Index, "FeO"] = data.at[row.Index, name]
 				else:
-					warnings.warn("Total iron column " + str(name) + " detected. This column will be treated as FeO. If Fe2O3 data are not given, Fe2O3 will be 0.0.",RuntimeWarning)
+					warnings.warn("Total iron column " + str(name) + " detected. This column will be treated as FeO. If Fe2O3 data are not given, Fe2O3 will be 0.0. In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",RuntimeWarning,stacklevel=2)
 					data['FeO'] = data[name]
 
 		for oxide in oxides:
@@ -3068,7 +3072,7 @@ class ShishkinaCarbon(Model):
 		try:
 			satP = root_scalar(self.root_saturation_pressure,bracket=[1e-15,1e5],args=(sample,kwargs)).root
 		except:
-			warnings.warn("Saturation pressure not found.",RuntimeWarning)
+			warnings.warn("Saturation pressure not found.",RuntimeWarning,stacklevel=2)
 			satP = np.nan
 		return satP
 
@@ -3221,7 +3225,7 @@ class ShishkinaWater(Model):
 		try:
 			satP = root_scalar(self.root_saturation_pressure,bracket=[1e-15,1e5],args=(sample,kwargs)).root
 		except:
-			warnings.warn("Saturation pressure not found.",RuntimeWarning)
+			warnings.warn("Saturation pressure not found.",RuntimeWarning,stacklevel=2)
 			satP = np.nan
 		return satP
 
@@ -3363,7 +3367,7 @@ class DixonCarbon(Model):
 		try:
 			satP = root_scalar(self.root_saturation_pressure,x0=100.0,x1=1000.0,args=(sample,kwargs)).root
 		except:
-			warnings.warn("Saturation pressure not found.",RuntimeWarning)
+			warnings.warn("Saturation pressure not found.",RuntimeWarning,stacklevel=2)
 			satP = np.nan
 		return np.real(satP)
 
@@ -3550,7 +3554,7 @@ class DixonWater(Model):
 		try:
 			satP = root_scalar(self.root_saturation_pressure,x0=100.0,x1=1000.0,args=(sample,kwargs)).root
 		except:
-			warnings.warn("Saturation pressure not found.",RuntimeWarning)
+			warnings.warn("Saturation pressure not found.",RuntimeWarning,stacklevel=2)
 			satP = np.nan
 		return np.real(satP)
 
@@ -3849,7 +3853,7 @@ class IaconoMarzianoWater(Model):
 			satP = root_scalar(self.root_saturation_pressure,args=(temperature,sample,kwargs),
 								bracket=[1e-15,1e5]).root
 		except:
-			warnings.warn("Saturation pressure not found.",RuntimeWarning)
+			warnings.warn("Saturation pressure not found.",RuntimeWarning,stacklevel=2)
 			satP = np.nan
 		return satP
 
@@ -4155,7 +4159,7 @@ class IaconoMarzianoCarbon(Model):
 			satP = root_scalar(self.root_saturation_pressure,args=(temperature,sample,kwargs),
 								bracket=[1e-15,1e5]).root
 		except:
-			warnings.warn("Saturation pressure not found.",RuntimeWarning)
+			warnings.warn("Saturation pressure not found.",RuntimeWarning,stacklevel=2)
 			satP = np.nan
 		return satP
 
@@ -4370,7 +4374,7 @@ class EguchiCarbon(Model):
 			satP = root_scalar(self.root_saturation_pressure,x0=1000.0,x1=2000.0,
 								args=(temperature,sample,X_fluid,kwargs)).root
 		except:
-			warnings.warn("Saturation pressure not found.",RuntimeWarning)
+			warnings.warn("Saturation pressure not found.",RuntimeWarning,stacklevel=2)
 			satP = np.nan
 		return satP
 
@@ -4665,7 +4669,7 @@ class MooreWater(Model):
 			satP = root_scalar(self.root_saturation_pressure,args=(temperature,_sample,X_fluid,kwargs),
 								x0=100.0,x1=2000.0).root
 		except:
-			warnings.warn("Saturation pressure not found.",RuntimeWarning)
+			warnings.warn("Saturation pressure not found.",RuntimeWarning,stacklevel=2)
 			satP = np.nan
 		return np.real(satP)
 
@@ -4850,7 +4854,7 @@ class LiuWater(Model):
 			satP = root_scalar(self.root_saturation_pressure,args=(temperature,_sample,X_fluid,kwargs),
 								x0=10.0,x1=200.0).root
 		except:
-			warnings.warn("Saturation pressure not found.",RuntimeWarning)
+			warnings.warn("Saturation pressure not found.",RuntimeWarning,stacklevel=2)
 			satP = np.nan
 		return np.real(satP)
 
@@ -5044,7 +5048,7 @@ class LiuCarbon(Model):
 			satP = root_scalar(self.root_saturation_pressure,args=(temperature,_sample,X_fluid,kwargs),
 								x0=10.0,x1=2000.0).root
 		except:
-			warnings.warn("Saturation pressure not found.",RuntimeWarning)
+			warnings.warn("Saturation pressure not found.",RuntimeWarning,stacklevel=2)
 			satP = np.nan
 		return np.real(satP)
 
@@ -5253,7 +5257,7 @@ class AllisonCarbon(Model):
 			satP = root_scalar(self.root_saturation_pressure,args=(temperature,sample,X_fluid,kwargs),
 								x0=1000.0,x1=2000.0).root
 		except:
-			warnings.warn("Saturation pressure not found.",RuntimeWarning)
+			warnings.warn("Saturation pressure not found.",RuntimeWarning,stacklevel=2)
 			satP = np.nan
 		return satP
 
@@ -5491,7 +5495,7 @@ class MixedFluid(Model):
 			try:
 				satP = root(self.root_saturation_pressure,x0=[x0,0.5],args=(volatile_concs,sample,kwargs)).x[0]
 			except:
-				warnings.warn("Saturation pressure not found.",RuntimeWarning)
+				warnings.warn("Saturation pressure not found.",RuntimeWarning,stacklevel=2)
 				satP = np.nan
 
 		return satP
