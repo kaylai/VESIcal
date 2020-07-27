@@ -67,11 +67,12 @@ Once isobars and isopleths are calculated, they can be plotted in an H2O versus 
 
 *Only single-sample calculations.* 
 
-.. code-block python::
+.. code-block:: python
 	
-	def plot_isobars_and_isopleths(self, isobars, isopleths)
+	plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, custom_CO2=None,
+		 isobar_labels=None, isopleth_labels=None, degassing_path_labels=None, custom_labels=None, **kwargs)
 
-**Required inputs:**
+**Required inputs for plotting isobars and isopleths:**
 
 :py:meth:`isobars`: Pandas DataFrame object containing isobar information as calculated by calculate_isobars_and_isopleths.
 
@@ -85,7 +86,7 @@ Plot your data
 
 .. code-block:: python
 
-	v.plot_isobars_and_isopleths(isobars, isopleths)
+	v.plot(isobars=isobars, isopleths=isopleths)
 
 .. image:: img/ex_isobarsandisopleths_img1.png
    :width: 600
@@ -107,7 +108,7 @@ The method can also do isobars only or isopleths only, like:
 	smoothed_isobars = v.smooth_isobars_and_isopleths(isobars)
 	smoothed_isopleths = v.smooth_isobars_and_isopleths(isopleths=isopleths)
 
-Below is essentially the same code that our `plot_isobars_and_isopleths()` and `smooth_isobars_and_isopleths()` methods use to perform smoothing with numpy. Executing the code below will produce the same output as a call to `plot_isobars_and_isopleths()`. Feel free to grab this code and edit it to customize to your hearts desire.
+Below is essentially the same code that our `plot()` and `smooth_isobars_and_isopleths()` methods use to perform smoothing with numpy. Executing the code below will produce the same output as a call to `plot()`. Feel free to grab this code and edit it to customize to your hearts desire.
 
 .. code-block:: python
 
