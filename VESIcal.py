@@ -2,7 +2,7 @@
 # Script written by Kayla Iacovino (kayla.iacovino@nasa.gov), Simon Matthews (simonmatthews@jhu.edu), and Penny Wieser (pew26@cam.ac.uk)
 # VERSION 0.1 - JUNE 2020
 
-#--------TURN OFF MAGMASAT WARNING--------#
+#--------------TURN OFF WARNINGS-------------#
 import warnings
 warnings.filterwarnings("ignore", message="rubicon.objc.ctypes_patch has only been tested ")
 warnings.filterwarnings("ignore", message="The handle")
@@ -584,8 +584,9 @@ def normalize_AdditionalVolatiles(sample):
 
 			Normalized major element oxides.
 	"""
+
 	def single_AdditionalVolatiles(sample):
-		normalized = pd.Series({})
+		normalized = pd.Series({},dtype='float64')
 		for ox in list(_sample.index):
 			if ox != 'H2O' and ox != 'CO2':
 				normalized[ox] = _sample[ox]
@@ -6322,6 +6323,7 @@ class MagmaSat(Model):
 			and CO2 in the liquid in wt%. Columns in the isopleth dataframe are 'Pressure', 'H2Ofl', and 'CO2fl',
 			corresponding to pressure in bars and H2O and CO2 concentration in the H2O-CO2 fluid, in wt%.
 		"""
+
 		sample = self.preprocess_sample(sample)
 		bulk_comp = {oxide:  sample[oxide] for oxide in oxides}
 
@@ -6590,6 +6592,8 @@ def smooth_isobars_and_isopleths(isobars=None, isopleths=None):
 		DataFrame with x and y values for all isobars and all isopleths. Useful if a user wishes to do custom plotting
 		with isobar and isopleth data rather than using the built-in `plot_isobars_and_isopleths()` function.
 	"""
+	np.seterr(divide='ignore', invalid='ignore') #turn off numpy warning
+	warnings.filterwarnings("ignore", message="Polyfit may be poorly conditioned")
 
 	if isobars is not None:
 		P_vals = isobars.Pressure.unique()
@@ -6606,7 +6610,6 @@ def smooth_isobars_and_isopleths(isobars=None, isopleths=None):
 			Pys = [item[2] for item in isobars_lists if item[0] == pressure]
 
 			try:
-				np.seterr(divide='ignore', invalid='ignore') #turn off numpy warning
 				## calcualte polynomial
 				Pz = np.polyfit(Pxs, Pys, 3)
 				Pf = np.poly1d(Pz)
@@ -6684,6 +6687,7 @@ def smooth_isobars_and_isopleths(isobars=None, isopleths=None):
 							  "CO2_liq": isopleths_CO2_liq})
 
 	np.seterr(divide='warn', invalid='warn') #turn numpy warning back on
+	warnings.filterwarnings("always", message="Polyfit may be poorly conditioned")
 
 	if isobars is not None:
 		if isopleths is not None:
@@ -6765,6 +6769,9 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 		paths, or the concentration of dissolved H2O and CO2 in a melt equilibrated along a path of decreasing
 		pressure, is plotted if passed.
 	"""
+	np.seterr(divide='ignore', invalid='ignore') #turn off numpy warning
+	warnings.filterwarnings("ignore", message="Polyfit may be poorly conditioned")
+
 	if custom_H2O is not None:
 		if custom_CO2 is None:
 			raise InputError("If x data is passed, y data must also be passed.")
@@ -6792,10 +6799,7 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 			isobars_lists = isobars[i].values.tolist()
 
 			# add zero values to volatiles list
-			isobars_lists.append([0.0, 0.0, 0.0, 0.0])
-
-			np.seterr(divide='ignore', invalid='ignore') #turn off numpy warning
-			warnings.filterwarnings("ignore", message="Polyfit may be poorly conditioned")
+			isobars_lists.append([0.0, 0.0, 0.0, 0.0])			
 
 			P_iter = 0
 			for pressure in P_vals:
@@ -6815,7 +6819,6 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 				if smooth_isobars == True:
 				# do some data smoothing
 					try:
-						np.seterr(divide='ignore', invalid='ignore') #turn off numpy warning
 						## calcualte polynomial
 						Pz = np.polyfit(Pxs, Pys, 3)
 						Pf = np.poly1d(Pz)
@@ -6895,9 +6898,6 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 		for i in range(len(isopleths)):
 			XH2O_vals = isopleths[i].XH2O_fl.unique()
 			isopleths_lists = isopleths[i].values.tolist()
-
-			np.seterr(divide='ignore', invalid='ignore') #turn off numpy warning
-			warnings.filterwarnings("ignore", message="Polyfit may be poorly conditioned")
 			
 			H_iter = 0
 			for Xfl in XH2O_vals:
@@ -6917,7 +6917,6 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 				if smooth_isopleths == True:
 				# do some data smoothing
 					try:
-						np.seterr(divide='ignore', invalid='ignore') #turn off numpy warning
 						## calcualte polynomial
 						Xz = np.polyfit(Xxs, Xys, 2)
 						Xf = np.poly1d(Xz)
