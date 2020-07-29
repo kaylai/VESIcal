@@ -3279,7 +3279,7 @@ class DixonCarbon(Model):
 		pandas Series or dict
 			The major element oxides in wt%.
 		"""
-		return normalize_FixedVolatiles(sample)
+		return normalize_AdditionalVolatiles(sample)
 
 	def calculate_dissolved_volatiles(self,pressure,sample,X_fluid=1.0,**kwargs):
 		"""Calculates the dissolved CO2 concentration using Eqn (3) of Dixon (1997).
@@ -3312,7 +3312,7 @@ class DixonCarbon(Model):
 			return 0
 
 
-		Mr = wtpercentOxides_to_formulaWeight(sample)
+		Mr = wtpercentOxides_to_formulaWeight(sample,exclude_volatiles=True)
 		XCO3 = self.molfrac_molecular(pressure=pressure,sample=sample,X_fluid=X_fluid,**kwargs)
 		# return (4400 * XCO3) / (36.6 - 44*XCO3)
 		return (4400 * XCO3) / (Mr - 44*XCO3)
@@ -3467,7 +3467,7 @@ class DixonWater(Model):
 		pandas Series or dict
 			The major element oxides in wt%.
 		"""
-		return normalize_FixedVolatiles(sample)
+		return normalize_AdditionalVolatiles(sample)
 
 	def calculate_dissolved_volatiles(self,pressure,sample,X_fluid=1.0,**kwargs):
 		"""Calculates the dissolved H2O concentration using Eqns (5) and (6) of Dixon (1997).
@@ -3501,7 +3501,7 @@ class DixonWater(Model):
 		XH2O = self.molfrac_molecular(pressure=pressure,sample=sample,X_fluid=X_fluid,**kwargs)
 		XOH = self.XOH(pressure=pressure,sample=sample,X_fluid=X_fluid,**kwargs)
 
-		Mr = wtpercentOxides_to_formulaWeight(sample)
+		Mr = wtpercentOxides_to_formulaWeight(sample,exclude_volatiles=True)
 
 		XB = XH2O + 0.5*XOH
 		# return 1801.5*XB/(36.6-18.6*XB)
@@ -7355,7 +7355,9 @@ class calculate_isobars_and_isopleths(Calculate):
 	def calculate(self,sample,pressure_list,isopleth_list=[0,1],points=101,**kwargs):
 		check = getattr(self.model, "calculate_isobars_and_isopleths", None)
 		if callable(check):
-			isobars, isopleths = self.model.calculate_isobars_and_isopleths(sample=sample,pressure_list=pressure_list,isopleth_list=isopleth_list,points=points,**kwargs)
+			samplenorm = sample.copy()
+			samplenorm = normalize_AdditionalVolatiles(samplenorm)
+			isobars, isopleths = self.model.calculate_isobars_and_isopleths(sample=samplenorm,pressure_list=pressure_list,isopleth_list=isopleth_list,points=points,**kwargs)
 			return isobars, isopleths
 		else:
 			raise InputError("This model does not have a calculate_isobars_and_isopleths method built in, most likely because it is a pure fluid model.")
