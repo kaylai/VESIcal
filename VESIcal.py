@@ -109,7 +109,7 @@ plt.rcParams['legend.fontsize'] = 14
 
 #Define color cycler based on plot style set here
 the_rc = plt.style.library[style] #get style formatting set by plt.style.use()
-color_list = the_rc['axes.prop_cycle'].by_key()['color'] #list of colors by hex code
+color_list = the_rc['axes.prop_cycle'].by_key()['color'] * 10 #list of colors by hex code
 color_cyler = the_rc['axes.prop_cycle'] #get the cycler
 
 def printTable(myDict):
@@ -6290,7 +6290,8 @@ class MagmaSat(Model):
 			return {"SaturationP_bars": satP, "FluidMass_grams": flmass, "FluidProportion_wt": flsystem_wtper,
 	 				"XH2O_fl": flH2O, "XCO2_fl": flCO2}
 
-	def calculate_isobars_and_isopleths(self, sample, temperature, pressure_list, isopleth_list=None, print_status=False, **kwargs):
+	def calculate_isobars_and_isopleths(self, sample, temperature, pressure_list, isopleth_list, 
+										smooth_isobars=True, smooth_isopleths=True, print_status=False, **kwargs):
 		"""
 		Calculates isobars and isopleths at a constant temperature for a given sample. Isobars can be calculated
 		for any number of pressures.
@@ -6322,17 +6323,14 @@ class MagmaSat(Model):
 			corresponding to pressure in bars and H2O and CO2 concentration in the H2O-CO2 fluid, in wt%.
 		"""
 		sample = self.preprocess_sample(sample)
-		bulk_comp = sample
+		bulk_comp = {oxide:  sample[oxide] for oxide in oxides}
 
 		if isinstance(pressure_list, list):
 			P_vals = pressure_list
 		else:
 			raise InputError("pressure_list must be of type list")
 
-		if isopleth_list is None:
-			has_isopleths = False
-			iso_vals = [0, 0.25, 0.5, 0.75, 1]
-		elif isinstance(isopleth_list, list):
+		if isinstance(isopleth_list, list):
 			iso_vals = isopleth_list
 			has_isopleths = True
 			if 0 not in iso_vals:
@@ -6357,7 +6355,7 @@ class MagmaSat(Model):
 			for X in iso_vals:
 				if print_status == True and has_isopleths == True:
 					print("Calculating isopleth at " + str(X))
-				saturated_vols = self.calculate_dissolved_volatiles(sample=sample, temperature=temperature, pressure=i, H2O_guess=guess, X_fluid=X)
+				saturated_vols = self.calculate_dissolved_volatiles(sample=bulk_comp, temperature=temperature, pressure=i, H2O_guess=guess, X_fluid=X)
 
 				isobar_data.append([i, saturated_vols['H2O'], saturated_vols['CO2']])
 				isopleth_data.append([X, saturated_vols['H2O'], saturated_vols['CO2']])
@@ -6372,10 +6370,19 @@ class MagmaSat(Model):
 
 		feasible = melts.set_bulk_composition(self.bulk_comp_orig) #reset
 
-		if has_isopleths == True:
-			return isobars_df, isopleths_df
-		if has_isopleths == False:
-			return isobars_df, None #TODO should this just return isobars_df? Currently this requires two items to unpack, I think?
+		if smooth_isobars == True:
+			isobars_smoothed = smooth_isobars_and_isopleths(isobars=isobars_df)
+			res_isobars = isobars_smoothed.copy()
+		else:
+			res_isobars = isobars_df.copy()
+
+		if smooth_isopleths == True:
+			isopleths_smoothed = smooth_isobars_and_isopleths(isopleths=isopleths_df)
+			res_isopleths = isopleths_smoothed.copy()
+		else:
+			res_isopleths = isopleths_df.copy()
+
+		return res_isobars, res_isopleths
 
 	def calculate_degassing_path(self, sample, temperature, pressure='saturation', fractionate_vapor=0.0, init_vapor=0.0, **kwargs):
 		"""
@@ -6590,7 +6597,9 @@ def smooth_isobars_and_isopleths(isobars=None, isopleths=None):
 		# add zero values to volatiles list
 		isobars_lists.append([0.0, 0.0, 0.0, 0.0])
 
-		isobars = {}
+		isobars_pressure = []
+		isobars_H2O_liq = []
+		isobars_CO2_liq = []
 		# do some data smoothing
 		for pressure in P_vals:
 			Pxs = [item[1] for item in isobars_lists if item[0] == pressure]
@@ -6607,17 +6616,36 @@ def smooth_isobars_and_isopleths(isobars=None, isopleths=None):
 				Py_new = Pf(Px_new)
 
 				# Save x's and y's
-				isobars.update({str(pressure)+"xvals": Px_new})
-				isobars.update({str(pressure)+"yvals": Py_new})
+				Px_new_list = list(Px_new)
+				isobars_H2O_liq += Px_new_list
+
+				Py_new_list = list(Py_new)
+				isobars_CO2_liq += Py_new_list
+
+				pressure_vals_for_list = [pressure]*len(Px_new)
+				isobars_pressure += pressure_vals_for_list
 
 			except:
-				isobars.update({str(pressure)+"xvals": Pxs})
-				isobars.update({str(pressure)+"yvals": Pys})
+				Px_list = list(Pxs)
+				isobars_H2O_liq += Px_list
+
+				Py_list = list(Pys)
+				isobars_CO2_liq += Py_list
+				
+				pressure_vals_for_list = [pressure]*len(Pxs)
+				isobars_pressure += pressure_vals_for_list
+
+		isobar_df = pd.DataFrame({"Pressure": isobars_pressure,
+							  "H2O_liq": isobars_H2O_liq,
+							  "CO2_liq": isobars_CO2_liq})
 
 	if isopleths is not None:
 		XH2O_vals = isopleths.XH2O_fl.unique()
 		isopleths_lists = isopleths.values.tolist()
-		isopleths = {}
+		
+		isopleths_XH2O_fl = []
+		isopleths_H2O_liq = []
+		isopleths_CO2_liq = []
 		for Xfl in XH2O_vals:
 			Xxs = [item[1] for item in isopleths_lists if item[0] == Xfl]
 			Xys = [item[2] for item in isopleths_lists if item[0] == Xfl]
@@ -6632,29 +6660,43 @@ def smooth_isobars_and_isopleths(isobars=None, isopleths=None):
 				Xy_new = Xf(Xx_new)
 
 				# Save x's and y's
-				isopleths.update({str(Xfl)+"xvals":Xx_new})
-				isopleths.update({str(Xfl)+"yvals":Xy_new})
+				Xx_new_list = list(Xx_new)
+				isopleths_H2O_liq += Xx_new_list
+
+				Xy_new_list = list(Xy_new)
+				isopleths_CO2_liq += Xy_new_list
+
+				XH2Ofl_vals_for_list = [Xfl]*len(Xx_new)
+				isopleths_XH2O_fl += XH2Ofl_vals_for_list
+
 			except:
-				isopleths.update({str(Xfl)+"xvals":Xxs})
-				isopleths.update({str(Xfl)+"yvals":Xys})
+				Xx_list = list(Xxs)
+				isopleths_H2O_liq += Xx_list
+
+				Xy_list = list(Xys)
+				isopleths_CO2_liq += Xy_list
+
+				XH2Ofl_vals_for_list = [Xfl]*len(Xxs)
+				isopleths_XH2O_fl += XH2Ofl_vals_for_list
+
+		isopleth_df = pd.DataFrame({"XH2O_fl": isopleths_XH2O_fl,
+							  "H2O_liq": isopleths_H2O_liq,
+							  "CO2_liq": isopleths_CO2_liq})
 
 	np.seterr(divide='warn', invalid='warn') #turn numpy warning back on
 
 	if isobars is not None:
 		if isopleths is not None:
-			return pd.DataFrame(isobars), pd.DataFrame(isopleths)
+			return isobar_df, isopleth_df
 		else:
-			return pd.DataFrame(isobars)
+			return isobar_df
 	else:
 		if isopleths is not None:
-			isopleth_frame = pd.DataFrame.from_dict(isopleths, orient='index')
-			isopleth_frame = isopleth_frame.transpose()
-			print(isopleth_frame)
-			return pd.DataFrame(isopleth_frame)
+			return isopleth_df
 
 def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, custom_CO2=None,
 		 isobar_labels=None, isopleth_labels=None, degassing_path_labels=None, custom_labels=None,
-		 extend_isobars_to_zero=True, **kwargs):
+		 extend_isobars_to_zero=True, smooth_isobars=False, smooth_isopleths=False, **kwargs):
 	"""
 	Custom automatic plotting of model calculations in VESIcal.
 	Isobars, isopleths, and degassing paths can be plotted. Labels can be specified for each.
@@ -6703,8 +6745,16 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 		generic legend name of "Customn", with n referring to the nth degassing path passed. The user can pass their own labels
 		as a list of strings.
 
-	extend_isobars_to_zero bool
-		If True (default), isobars will be extended to zero, even if there is a finite solubility at zero partial pressure.
+	extend_isobars_to_zero: bool
+		OPTIONAL. If True (default), isobars will be extended to zero, even if there is a finite solubility at zero partial pressure.
+
+	smooth_isobars: bool
+		OPTIONAL. Default is False. If set to True, isobar data will be fit to a polynomial and plotted. If False, the raw input data
+		will be plotted.
+
+	smooth_isobars: bool
+		OPTIONAL. Default is False. If set to True, isopleth data will be fit to a polynomial and plotted. If False, the raw input data
+		will be plotted.
 
 	Returns
 	-------
@@ -6746,7 +6796,7 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 
 			np.seterr(divide='ignore', invalid='ignore') #turn off numpy warning
 			warnings.filterwarnings("ignore", message="Polyfit may be poorly conditioned")
-			# do some data smoothing
+
 			P_iter = 0
 			for pressure in P_vals:
 				P_iter += 1
@@ -6762,67 +6812,74 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 							labels.append('Isobars ' + str(i+1) + ' (' + ', '.join(map(str, P_list)) + " bars)")
 					else:
 						labels.append('_nolegend_')
+				if smooth_isobars == True:
+				# do some data smoothing
+					try:
+						np.seterr(divide='ignore', invalid='ignore') #turn off numpy warning
+						## calcualte polynomial
+						Pz = np.polyfit(Pxs, Pys, 3)
+						Pf = np.poly1d(Pz)
 
-				try:
-					np.seterr(divide='ignore', invalid='ignore') #turn off numpy warning
-					## calcualte polynomial
-					Pz = np.polyfit(Pxs, Pys, 3)
-					Pf = np.poly1d(Pz)
+						## calculate new x's and y's
+						Px_new = np.linspace(Pxs[0], Pxs[-1], 50)
+						Py_new = Pf(Px_new)
 
-					## calculate new x's and y's
-					Px_new = np.linspace(Pxs[0], Pxs[-1], 50)
-					Py_new = Pf(Px_new)
+						if extend_isobars_to_zero == True and Px_new[0]*Py_new[0] != 0.0:
+							if Px_new[0] > Py_new[0]:
+								Px_newer = np.zeros(np.shape(Px_new)[0]+1)
+								Px_newer[0] = 0
+								Px_newer[1:] = Px_new
+								Px_new = Px_newer
 
-					if extend_isobars_to_zero == True and Px_new[0]*Py_new[0] != 0.0:
-						if Px_new[0] > Py_new[0]:
-							Px_newer = np.zeros(np.shape(Px_new)[0]+1)
-							Px_newer[0] = 0
-							Px_newer[1:] = Px_new
-							Px_new = Px_newer
+								Py_newer = np.zeros(np.shape(Py_new)[0]+1)
+								Py_newer[0] = Py_new[0]
+								Py_newer[1:] = Py_new
+								Py_new = Py_newer
+							else:
+								Px_newer = np.zeros(np.shape(Px_new)[0]+1)
+								Px_newer[0] = Px_new[0]
+								Px_newer[1:] = Px_new
+								Px_new = Px_newer
 
-							Py_newer = np.zeros(np.shape(Py_new)[0]+1)
-							Py_newer[0] = Py_new[0]
-							Py_newer[1:] = Py_new
-							Py_new = Py_newer
+								Py_newer = np.zeros(np.shape(Py_new)[0]+1)
+								Py_newer[0] = 0
+								Py_newer[1:] = Py_new
+								Py_new = Py_newer
+
+						if extend_isobars_to_zero == True and Px_new[-1]*Py_new[-1] != 0.0:
+							if Px_new[-1] < Py_new[-1]:
+								Px_newer = np.zeros(np.shape(Px_new)[0]+1)
+								Px_newer[-1] = 0
+								Px_newer[:-1] = Px_new
+								Px_new = Px_newer
+
+								Py_newer = np.zeros(np.shape(Py_new)[0]+1)
+								Py_newer[-1] = Py_new[-1]
+								Py_newer[:-1] = Py_new
+								Py_new = Py_newer
+							else:
+								Px_newer = np.zeros(np.shape(Px_new)[0]+1)
+								Px_newer[-1] = Px_new[-1]
+								Px_newer[:-1] = Px_new
+								Px_new = Px_newer
+
+								Py_newer = np.zeros(np.shape(Py_new)[0]+1)
+								Py_newer[-1] = 0
+								Py_newer[:-1] = Py_new
+								Py_new = Py_newer
+
+						# Plot some stuff
+						if len(isobars) > 1:
+							plt.plot(Px_new, Py_new, color=color_list[i])
 						else:
-							Px_newer = np.zeros(np.shape(Px_new)[0]+1)
-							Px_newer[0] = Px_new[0]
-							Px_newer[1:] = Px_new
-							Px_new = Px_newer
-
-							Py_newer = np.zeros(np.shape(Py_new)[0]+1)
-							Py_newer[0] = 0
-							Py_newer[1:] = Py_new
-							Py_new = Py_newer
-
-					if extend_isobars_to_zero == True and Px_new[-1]*Py_new[-1] != 0.0:
-						if Px_new[-1] < Py_new[-1]:
-							Px_newer = np.zeros(np.shape(Px_new)[0]+1)
-							Px_newer[-1] = 0
-							Px_newer[:-1] = Px_new
-							Px_new = Px_newer
-
-							Py_newer = np.zeros(np.shape(Py_new)[0]+1)
-							Py_newer[-1] = Py_new[-1]
-							Py_newer[:-1] = Py_new
-							Py_new = Py_newer
+							plt.plot(Px_new, Py_new)
+					except:
+						if len(isobars) > 1:
+							plt.plot(Pxs, Pys, color=color_list[i])
 						else:
-							Px_newer = np.zeros(np.shape(Px_new)[0]+1)
-							Px_newer[-1] = Px_new[-1]
-							Px_newer[:-1] = Px_new
-							Px_new = Px_newer
+							plt.plot(Pxs, Pys)
 
-							Py_newer = np.zeros(np.shape(Py_new)[0]+1)
-							Py_newer[-1] = 0
-							Py_newer[:-1] = Py_new
-							Py_new = Py_newer
-
-					# Plot some stuff
-					if len(isobars) > 1:
-						plt.plot(Px_new, Py_new, color=color_list[i])
-					else:
-						plt.plot(Px_new, Py_new)
-				except:
+				elif smooth_isobars == False:
 					if len(isobars) > 1:
 						plt.plot(Pxs, Pys, color=color_list[i])
 					else:
@@ -6841,7 +6898,7 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 
 			np.seterr(divide='ignore', invalid='ignore') #turn off numpy warning
 			warnings.filterwarnings("ignore", message="Polyfit may be poorly conditioned")
-			# do some data smoothing
+			
 			H_iter = 0
 			for Xfl in XH2O_vals:
 				H_iter += 1
@@ -6857,25 +6914,32 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 							labels.append('Isopleths ' + str(i+1) + ' (' + ', '.join(map(str, H_list)) + " XH2Ofluid)")
 					else:
 						labels.append('_nolegend_')
+				if smooth_isopleths == True:
+				# do some data smoothing
+					try:
+						np.seterr(divide='ignore', invalid='ignore') #turn off numpy warning
+						## calcualte polynomial
+						Xz = np.polyfit(Xxs, Xys, 2)
+						Xf = np.poly1d(Xz)
 
-				try:
-					np.seterr(divide='ignore', invalid='ignore') #turn off numpy warning
-					## calcualte polynomial
-					Xz = np.polyfit(Xxs, Xys, 2)
-					Xf = np.poly1d(Xz)
+						## calculate new x's and y's
+						Xx_new = np.linspace(Xxs[0], Xxs[-1], 50)
+						Xy_new = Xf(Xx_new)
 
-					## calculate new x's and y's
-					Xx_new = np.linspace(Xxs[0], Xxs[-1], 50)
-					Xy_new = Xf(Xx_new)
+						# Plot some stuff
+						if len(isopleths) == 1:
+							plt.plot(Xx_new, Xy_new, ls='dashed', color='k')
+						else:
+							plt.plot(Xx_new, Xy_new, ls='dashed', color=color_list[i])
+					except:
+						if len(isopleths) == 1:
+							plt.plot(Xxs, Xys, ls='dashed', color='k')
+						else:
+							plt.plot(Xxs, Xys, ls='dashed', color=color_list[i])
 
-					# Plot some stuff
+				elif smooth_isopleths == False:
 					if len(isopleths) == 1:
-						plt.plot(Xx_new, Xy_new, ls='dashed', color='k')
-					else:
-						plt.plot(Xx_new, Xy_new, ls='dashed', color=color_list[i])
-				except:
-					if len(isopleths) == 1:
-						plt.plot(Xxs, Xys, ls='dashed', color='k')
+							plt.plot(Xxs, Xys, ls='dashed', color='k')
 					else:
 						plt.plot(Xxs, Xys, ls='dashed', color=color_list[i])
 
