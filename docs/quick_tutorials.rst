@@ -246,7 +246,7 @@ Then, you can very easily plot your newly calculated isobars and isopleths, like
 
 .. code-block:: python
 
-	plot_isobars_and_isopleths(isobars, isopleths)
+	plot(isobars=isobars, isopleths=isopleths)
 
 You may wish to do some custom plotting of your isobar and isopleth data without relying on our built-in plot function. However, the raw isobars and isopleths output by the calculate method are a bit messy. `plot_isobars_and_isopleths()` has curve smoothing built-in. We have also implemented the same smoothing in a separate method, called `smooth_isobars_and_isopleths()` which takes isobars and/or isopleths as inputs and returns a pandas DataFrame with smoothed data ready for plotting. Use that function like so:
 
@@ -303,8 +303,8 @@ You can then easily plot your newly calculated degassing paths like so:
 
 .. code-block:: python
 
-	plot_degassing_paths([degass_closed, degass_init, degass_open, degass_partly_open],
-                       labels=["Closed System", "2% Initial Fluid", "Open System", "Partly Open System"])
+	plot(degassing_paths=[degass_closed, degass_init, degass_open, degass_partly_open],
+            degassing_path_labels=["Closed System", "2% Initial Fluid", "Open System", "Partly Open System"])
 
 
 
