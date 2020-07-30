@@ -443,6 +443,32 @@ def fluid_wt_to_molfrac(data, H2O_colname='H2O_fl_wt', CO2_colname='CO2_fl_wt'):
 
 	return convData
 
+def get_oxides(sample):
+	"""
+	Returns a sample composition with only compositional oxide data, removing any extranneous data.
+	Useful when passing a self-defined sample (e.g. dict or pandas Series) to a some VESIcal function.
+
+	Parameters
+	----------
+	sample: pandas Series, dictionary
+		A sample composition plus other sample information
+
+	Returns
+	-------
+	Sample passed as > Returned as
+			pandas Series > pandas Series
+			dictionary > dictionary
+
+				Sample composition with extranneous information removed.
+	"""
+
+	clean = {oxide:  sample[oxide] for oxide in oxides}
+
+	if isinstance(sample, dict):
+		return clean
+	if isinstance(sample, pd.core.series.Series):
+		return pd.Series(clean)
+
 #----------DEFINE SOME NORMALIZATION METHODS-----------#
 
 def normalize(sample):
@@ -586,7 +612,7 @@ def normalize_AdditionalVolatiles(sample):
 	"""
 
 	def single_AdditionalVolatiles(sample):
-		normalized = pd.Series({},dtype='float64')
+		normalized = pd.Series({})
 		for ox in list(_sample.index):
 			if ox != 'H2O' and ox != 'CO2':
 				normalized[ox] = _sample[ox]
@@ -6998,190 +7024,6 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 	warnings.filterwarnings("always", message="Polyfit may be poorly conditioned")
 
 	return plt.show()
-
-
-
-# def plot_isobars_and_isopleths(isobars=None, isopleths=None, labels=None):
-# 		"""
-# 		Takes in a dataframe with calculated isobar and isopleth information (e.g., output from calculate_isobars_and_isopleths)
-# 		and plots data as isobars (lines of constant pressure) and isopleths (lines of constant fluid composition). These lines
-# 		represent the saturation pressures of the melt composition used to calculate the isobar and isopleth information.
-# 		Parameters
-# 		----------
-# 		isobars: pandas DataFrame or list
-# 			DataFrame object containing isobar information as calculated by calculate_isobars_and_isopleths. Or a list
-# 			of DataFrame objects.
-# 		isopleths: pandas DataFrame or list
-# 			DataFrame object containing isopleth information as calculated by calculate_isobars_and_isopleths. Or a list
-# 			of DataFrame objects.
-# 		labels: list
-# 		OPTIONAL. Labels for the plot legend. Default is None, in which case each plotted line will be given the generic
-# 		legend name of "Isobars n", with n referring to the nth isobars passed. The user can pass their own labels
-# 		as a list of strings.
-
-# 		Returns
-# 		-------
-# 		matplotlib object
-# 			Plot with x-axis as H2O wt% in the melt and y-axis as CO2 wt% in the melt. Isobars, or lines of
-# 			constant pressure at which the sample magma composition is saturated, and isopleths, or lines of constant
-# 			fluid composition at which the sample magma composition is saturated, are plotted.
-# 		"""
-# 		if isinstance(isobars, list) and isinstance(isopleths, list):
-# 			if len(isobars) != len(isopleths):
-# 				raise InputError("If isobars and isopleths are both passed as lists, they must have the same length.")
-# 			pass
-# 		if isinstance(isobars, pd.DataFrame):
-# 			isobars = [isobars]
-# 		if isinstance(isopleths, pd.DataFrame):
-# 			isopleths = [isopleths]
-# 		if isobars is None:
-# 			isobars = []
-# 			for i in range(len(isopleths)):
-# 				isobars.append(pd.DataFrame(columns=['Pressure','H2O_liq','CO2_liq']))
-# 		if isopleths is None:
-# 			isopleths = []
-# 			for i in range(len(isobars)):
-# 				isopleths.append(pd.DataFrame(columns=['XH2O_fl','H2O_liq','CO2_liq']))
-
-# 		user_labels = labels
-
-# 		#if len(isobars) != len(isopleths):
-# 			#raise InputError("Isobars and isopleths must have the same length if passed as a list.")
-
-# 		label_nos = [n for n, df in enumerate(isobars)]
-
-# 		iterno = 0
-# 		plt.figure(figsize=(12,8))
-# 		plt.xlabel('H$_2$O wt%')
-# 		plt.ylabel('CO$_2$ wt%')
-# 		iterno = 0
-
-# 		labels = []
-# 		for i in range(len(isobars)):
-# 			iterno += 1
-# 			P_vals = isobars[i].Pressure.unique()
-# 			XH2O_vals = isopleths[i].XH2O_fl.unique()
-# 			isobars_lists = isobars[i].values.tolist()
-# 			isopleths_lists = isopleths[i].values.tolist()
-
-# 			# add zero values to volatiles list
-# 			isobars_lists.append([0.0, 0.0, 0.0, 0.0])
-
-# 			np.seterr(divide='ignore', invalid='ignore') #turn off numpy warning
-# 			warnings.filterwarnings("ignore", message="Polyfit may be poorly conditioned")
-# 			# do some data smoothing
-# 			P_iter = 0
-# 			for pressure in P_vals:
-# 				P_iter += 1
-# 				Pxs = [item[1] for item in isobars_lists if item[0] == pressure]
-# 				Pys = [item[2] for item in isobars_lists if item[0] == pressure]
-
-# 				if len(isobars) > 1:
-# 					if P_iter == 1:
-# 						P_list = [int(i) for i in P_vals]
-# 						if isinstance(user_labels, list):
-# 							labels.append(str(user_labels[i]) + ' (' + ', '.join(map(str, P_list)) + " bars)")
-# 						else:
-# 							labels.append('Isobars ' + str(i+1) + ' (' + ', '.join(map(str, P_list)) + " bars)")
-# 					else:
-# 						labels.append('_nolegend_')
-
-# 				try:
-# 					np.seterr(divide='ignore', invalid='ignore') #turn off numpy warning
-# 					## calcualte polynomial
-# 					Pz = np.polyfit(Pxs, Pys, 3)
-# 					Pf = np.poly1d(Pz)
-
-# 					## calculate new x's and y's
-# 					Px_new = np.linspace(Pxs[0], Pxs[-1], 50)
-# 					Py_new = Pf(Px_new)
-
-# 					# Plot some stuff
-# 					if len(isobars) > 1:
-# 						plt.plot(Px_new, Py_new, color=color_list[i])
-# 					else:
-# 						plt.plot(Px_new, Py_new)
-# 				except:
-# 					if len(isobars) > 1:
-# 						plt.plot(Pxs, Pys, color=color_list[i])
-# 					else:
-# 						plt.plot(Pxs, Pys)
-
-# 			for Xfl in XH2O_vals:
-# 				Xxs = [item[1] for item in isopleths_lists if item[0] == Xfl]
-# 				Xys = [item[2] for item in isopleths_lists if item[0] == Xfl]
-
-# 				if len(isobars) > 1:
-# 					labels.append('_nolegend_')
-
-# 				try:
-# 					np.seterr(divide='ignore', invalid='ignore') #turn off numpy warning
-# 					## calcualte polynomial
-# 					Xz = np.polyfit(Xxs, Xys, 2)
-# 					Xf = np.poly1d(Xz)
-
-# 					## calculate new x's and y's
-# 					Xx_new = np.linspace(Xxs[0], Xxs[-1], 50)
-# 					Xy_new = Xf(Xx_new)
-
-# 					# Plot some stuff
-# 					plt.plot(Xx_new, Xy_new, ls='dashed', color='k')
-# 				except:
-# 					plt.plot(Xxs, Xys, ls='dashed', color='k')
-# 			if len(isobars) == 1:
-# 				labels = [str(P_val) + " bars" for P_val in P_vals]
-# 		plt.legend(labels)
-# 		plt.xlim(left=0)
-# 		plt.ylim(bottom=0)
-
-# 		np.seterr(divide='warn', invalid='warn') #turn numpy warning back on
-# 		warnings.filterwarnings("always", message="Polyfit may be poorly conditioned")
-
-# 		return plt.show()
-
-# def plot_degassing_paths(degassing_paths, labels=None):
-# 	"""
-# 	Takes in a list of dataframes with calculated degassing paths (e.g., output from calculate_degassing_path) and plots
-# 	the data in one plot.
-
-# 	Parameters
-# 	----------
-# 	degassing_paths: list
-# 		List of DataFrames with degassing information as generated by calculate_degassing_path().
-
-# 	labels: list
-# 		OPTIONAL. Labels for the plot legend. Default is None, in which case each plotted line will be given the generic
-# 		legend name of "Pathn", with n referring to the nth degassing path passed. The user can pass their own labels
-# 		as a list of strings.
-
-# 	Returns
-# 	-------
-# 	Matplotlib object
-# 	"""
-
-# 	label_nos = [n for n, df in enumerate(degassing_paths)]
-
-# 	iterno = 0
-# 	plt.figure()
-# 	for path in degassing_paths:
-# 		if labels == None:
-# 			iterno += 1
-# 			plt.plot(path["H2O_liq"], path["CO2_liq"], '-', label='Path%s' %iterno)
-# 		else:
-# 			plt.plot(path["H2O_liq"], path["CO2_liq"], '-', label=labels[iterno])
-# 			iterno += 1
-
-# 	plt.gca().set_prop_cycle(None)
-# 	for path in degassing_paths:
-# 		plt.plot(path["H2O_liq"].max(), path["CO2_liq"].max(), 'o')
-
-# 	plt.legend()
-# 	plt.xlabel("H$_2$O wt%")
-# 	plt.ylabel("CO$_2$ wt%")
-
-# 	return plt.show()
-
-
 
 #====== Define some standard model options =======================================================#
 
