@@ -106,6 +106,7 @@ plt.rcParams['axes.labelsize'] = 18
 plt.rcParams['xtick.labelsize'] = 14
 plt.rcParams['ytick.labelsize'] = 14
 plt.rcParams['legend.fontsize'] = 14
+mpl.rcParams['lines.markersize'] = 10
 
 #Define color cycler based on plot style set here
 the_rc = plt.style.library[style] #get style formatting set by plt.style.use()
@@ -612,7 +613,7 @@ def normalize_AdditionalVolatiles(sample):
 	"""
 
 	def single_AdditionalVolatiles(sample):
-		normalized = pd.Series({})
+		normalized = pd.Series({}, dtype=float)
 		for ox in list(_sample.index):
 			if ox != 'H2O' and ox != 'CO2':
 				normalized[ox] = _sample[ox]
@@ -6726,6 +6727,7 @@ def smooth_isobars_and_isopleths(isobars=None, isopleths=None):
 
 def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, custom_CO2=None,
 		 isobar_labels=None, isopleth_labels=None, degassing_path_labels=None, custom_labels=None,
+		 custom_colors="VESIcal", custom_symbols=None, markersize=10,
 		 extend_isobars_to_zero=True, smooth_isobars=False, smooth_isopleths=False, **kwargs):
 	"""
 	Custom automatic plotting of model calculations in VESIcal.
@@ -6775,6 +6777,20 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 		generic legend name of "Customn", with n referring to the nth degassing path passed. The user can pass their own labels
 		as a list of strings.
 
+	custom_colors: list
+		OPTIONAL. Default value is "VESIcal", which uses VESIcal's color ramp. A list of color values readable by matplotlib
+		can be passed here if custom symbol colors are desired. The length of this list must match that of custom_H2O and 
+		custom_CO2.
+
+	custom_symbols: list
+		OPTIONAL. Default value is None, in which case data are plotted as filled circles.. A list of symbol tyles readable 
+		by matplotlib can be passed here if custom symbol types are desired. The length of this list must match that of 
+		custom_H2O and custom_CO2.
+
+	markersize: int
+		OPTIONAL. Default value is 10. Same as markersize kwarg in matplotlib. Any numeric value passed here will set the 
+		marker size for (custom_H2O, custom_CO2) points.
+
 	extend_isobars_to_zero: bool
 		OPTIONAL. If True (default), isobars will be extended to zero, even if there is a finite solubility at zero partial pressure.
 
@@ -6809,6 +6825,13 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 	if custom_CO2 is not None:
 		if custom_H2O is None:
 			raise InputError("If y data is passed, x data must also be passed.")
+
+	if custom_colors == "VESIcal":
+		use_colors = color_list
+	elif isinstance(custom_colors, list):
+		use_colors = custom_colors
+	else:
+		raise InputError("Argument custom_colors must be type list. Just passing one item? Try putting square brackets, [], around it.")
 
 	plt.figure(figsize=(12,8))
 	plt.xlabel('H$_2$O wt%')
@@ -7005,18 +7028,23 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 		if isinstance(custom_CO2, pd.DataFrame):
 			custom_CO2 = [custom_CO2]
 
+		if custom_symbols == None:
+			use_marker = ['o'] * len(custom_H2O)
+		else:
+			use_marker = custom_symbols
+
 		iterno = 0
 		for i in range(len(custom_H2O)):
 			if custom_labels == None:
 				iterno +=1
 				labels.append('Custom%s' %iterno)
-				plt.plot(custom_H2O[i], custom_CO2[i], 'o', color=color_list[i])
+				plt.plot(custom_H2O[i], custom_CO2[i], use_marker[i], color=use_colors[i], markersize=markersize)
 			else:
 				labels.append(custom_labels[iterno])
-				plt.plot(custom_H2O[i], custom_CO2[i], 'o', color=color_list[i])
+				plt.plot(custom_H2O[i], custom_CO2[i], use_marker[i], color=use_colors[i], markersize=markersize)
 				iterno += 1
 
-	plt.legend(labels)
+	plt.legend(labels, bbox_to_anchor=(1.01,1), loc='upper left')
 	plt.xlim(left=0)
 	plt.ylim(bottom=0)
 
