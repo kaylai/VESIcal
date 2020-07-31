@@ -6844,7 +6844,7 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 		OPTIONAL. Default is False. If set to True, isobar data will be fit to a polynomial and plotted. If False, the raw input data
 		will be plotted.
 
-	smooth_isobars: bool
+	smooth_isopleths: bool
 		OPTIONAL. Default is False. If set to True, isopleth data will be fit to a polynomial and plotted. If False, the raw input data
 		will be plotted.
 
@@ -7052,16 +7052,16 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 			degassing_paths = [degassing_paths]
 
 		degassing_colors = color_list.copy()
-		degassing_colors.reverse()
+		#degassing_colors.reverse()
 		iterno = 0
 		for i in range(len(degassing_paths)):
 			if degassing_path_labels == None:
 				iterno += 1
 				labels.append('Path%s' %iterno)
-				plt.plot(degassing_paths[i]["H2O_liq"], degassing_paths[i]["CO2_liq"], '-', color=degassing_colors[i])
+				plt.plot(degassing_paths[i]["H2O_liq"], degassing_paths[i]["CO2_liq"], ls='dotted', color=degassing_colors[i])
 			else:
 				labels.append(degassing_path_labels[iterno])
-				plt.plot(degassing_paths[i]["H2O_liq"], degassing_paths[i]["CO2_liq"], '-', color=degassing_colors[i])
+				plt.plot(degassing_paths[i]["H2O_liq"], degassing_paths[i]["CO2_liq"], ls='dotted', color=degassing_colors[i])
 				iterno += 1
 
 		for i in range(len(degassing_paths)):
