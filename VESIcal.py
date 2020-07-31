@@ -6535,20 +6535,34 @@ class MagmaSat(Model):
 		pandas DataFrame object
 
 		"""
-		sample = self.preprocess_sample(sample)
-		sample = normalize(sample)
-		bulk_comp_orig = sample
+		#MELTS needs to be reloaded here. If an unfeasible composition gets set inside of MELTS, which can
+		#happen when running open-system degassing path calcs, the following calls to MELTS will fail. This
+		#prevents that from happening.
+		melts = equilibrate.MELTSmodel('1.2.0')
 
-		bulk_comp = {oxide:  sample[oxide] for oxide in oxides}
+		# Suppress phases not required in the melts simulation
+		phases = melts.get_phase_names()
+		for phase in phases:
+			melts.set_phase_inclusion_status({phase: False})
+		melts.set_phase_inclusion_status({'Fluid': True, 'Liquid': True})
+
+
+		_sample = sample.copy()
+		bulk_comp_orig = sample.copy()
+		_sample = self.preprocess_sample(_sample)
+		_sample = normalize(_sample)
+
+		bulk_comp = {oxide:  _sample[oxide] for oxide in oxides}
 		feasible = melts.set_bulk_composition(bulk_comp)
 
 		# Get saturation pressure
-		data = self.calculate_saturation_pressure(sample=sample, temperature=temperature, verbose=True)
+		data = self.calculate_saturation_pressure(sample=_sample, temperature=temperature, verbose=True)
 
 		if pressure == 'saturation' or pressure >= data["SaturationP_bars"]:
 			SatP_MPa = data["SaturationP_bars"] / 10.0
 		else:
 			SatP_MPa = pressure / 10.0
+
 
 		#If pressure is low, use smaller P steps
 		if SatP_MPa >= 50:
@@ -6560,42 +6574,43 @@ class MagmaSat(Model):
 		P_array = -np.sort(-P_array)
 		fl_wtper = data["FluidProportion_wt"]
 
-		if fractionate_vapor == 0 or fractionate_vapor == 0.0: #closed-system
-			while fl_wtper <= init_vapor:
-				output = melts.equilibrate_tp(temperature, SatP_MPa)
-				(status, temperature, p, xmlout) = output[0]
-				fl_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
-				liq_mass = melts.get_mass_of_phase(xmlout, phase_name='Liquid')
-				fl_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid')
-				fl_wtper = 100 * fl_mass / (fl_mass+liq_mass)
-				try:
-					bulk_comp["H2O"] += fl_comp["H2O"]*0.0005
-				except:
-					bulk_comp["H2O"] = bulk_comp["H2O"] * 1.1
-				try:
-					bulk_comp["CO2"] += fl_comp["CO2"]*0.0005
-				except:
-					bulk_comp["CO2"] = bulk_comp["CO2"] * 1.1
-				bulk_comp = normalize(bulk_comp)
-				feasible = melts.set_bulk_composition(bulk_comp)
+		while fl_wtper <= init_vapor:
+			output = melts.equilibrate_tp(temperature, SatP_MPa, initialize=True)
+			(status, temperature, p, xmlout) = output[0]
+			fl_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
+			liq_mass = melts.get_mass_of_phase(xmlout, phase_name='Liquid')
+			fl_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid')
+			fl_wtper = 100 * fl_mass / (fl_mass+liq_mass)
+			try:
+				bulk_comp["H2O"] += fl_comp["H2O"]*0.0005
+			except:
+				bulk_comp["H2O"] = bulk_comp["H2O"] * 1.1
+			try:
+				bulk_comp["CO2"] += fl_comp["CO2"]*0.0005
+			except:
+				bulk_comp["CO2"] = bulk_comp["CO2"] * 1.1
+			bulk_comp = normalize(bulk_comp)
+			feasible = melts.set_bulk_composition(bulk_comp)
 
-			output = melts.equilibrate_tp(temperature, P_array)
+		pressure = []
+		H2Oliq = []
+		CO2liq = []
+		H2Ofl = []
+		CO2fl = []
+		fluid_wtper = []
+		for i in P_array:
+			fl_mass = 0.0
+			feasible = melts.set_bulk_composition(bulk_comp)
+			output = melts.equilibrate_tp(temperature, i, initialize=True)
+			(status, temperature, p, xmlout) = output[0]
+			liq_comp = melts.get_composition_of_phase(xmlout, phase_name='Liquid')
+			fl_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid', mode='component')
+			liq_mass = melts.get_mass_of_phase(xmlout, phase_name='Liquid')
+			fl_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
+			fl_wtper = 100 * fl_mass / (fl_mass+liq_mass)
 
-			pressure_list = []
-			H2Oliq = []
-			CO2liq = []
-			H2Ofl = []
-			CO2fl = []
-			fluid_wtper = []
-			for i in range(len(output)):
-				(status, temperature, p, xmlout) = output[i]
-				liq_comp = melts.get_composition_of_phase(xmlout, phase_name='Liquid')
-				fl_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid')
-				liq_mass = melts.get_mass_of_phase(xmlout, phase_name='Liquid')
-				fl_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
-				fl_wtper = 100 * fl_mass / (fl_mass+liq_mass)
-
-				pressure_list.append(p * 10.0)
+			if fl_mass > 0:
+				pressure.append(p * 10.0)
 				try:
 					H2Oliq.append(liq_comp["H2O"])
 				except:
@@ -6605,84 +6620,30 @@ class MagmaSat(Model):
 				except:
 					CO2liq.append(0)
 				try:
-					H2Ofl.append(fl_comp["H2O"])
+					H2Ofl.append(fl_comp["Water"])
 				except:
 					H2Ofl.append(0)
 				try:
-					CO2fl.append(fl_comp["CO2"])
+					CO2fl.append(fl_comp["Carbon Dioxide"])
 				except:
 					CO2fl.append(0)
 				fluid_wtper.append(fl_wtper)
 
 				try:
-					bulk_comp["H2O"] = liq_comp["H2O"]
+					bulk_comp["H2O"] = liq_comp["H2O"] + (bulk_comp["H2O"] - liq_comp["H2O"]) * (1.0-fractionate_vapor)
 				except:
 					bulk_comp["H2O"] = 0
 				try:
-					bulk_comp["CO2"] = liq_comp["CO2"]
+					bulk_comp["CO2"] = liq_comp["CO2"] + (bulk_comp["CO2"] - liq_comp["CO2"]) * (1.0-fractionate_vapor)
 				except:
 					bulk_comp["CO2"] = 0
-				fluid_wtper.append(fl_wtper)
+			bulk_comp = normalize(bulk_comp)
+		
+		feasible = melts.set_bulk_composition(bulk_comp_orig) #this needs to be reset always!
+		open_degassing_df = pd.DataFrame(list(zip(pressure, H2Oliq, CO2liq, H2Ofl, CO2fl, fluid_wtper)),
+									columns =['Pressure_bars', 'H2O_liq', 'CO2_liq', 'XH2O_fl', 'XCO2_fl', 'FluidProportion_wt'])
 
-			feasible = melts.set_bulk_composition(bulk_comp_orig)
-			fl_wtper = data["FluidProportion_wt"]
-			exsolved_degassing_df = pd.DataFrame(list(zip(pressure_list, H2Oliq, CO2liq, H2Ofl, CO2fl, fluid_wtper)),
-										columns =['Pressure_bars', 'H2O_liq', 'CO2_liq', 'H2O_fl', 'CO2_fl', 'FluidProportion_wt'])
-
-			return exsolved_degassing_df
-		else:
-			pressure = []
-			H2Oliq = []
-			CO2liq = []
-			H2Ofl = []
-			CO2fl = []
-			fluid_wtper = []
-			for i in P_array:
-				fl_mass = 0.0
-				feasible = melts.set_bulk_composition(bulk_comp)
-				output = melts.equilibrate_tp(temperature, i)
-				(status, temperature, p, xmlout) = output[0]
-				liq_comp = melts.get_composition_of_phase(xmlout, phase_name='Liquid')
-				fl_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid', mode='component')
-				liq_mass = melts.get_mass_of_phase(xmlout, phase_name='Liquid')
-				fl_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
-				fl_wtper = 100 * fl_mass / (fl_mass+liq_mass)
-
-				if fl_mass > 0:
-					pressure.append(p * 10.0)
-					try:
-						H2Oliq.append(liq_comp["H2O"])
-					except:
-						H2Oliq.append(0)
-					try:
-						CO2liq.append(liq_comp["CO2"])
-					except:
-						CO2liq.append(0)
-					try:
-						H2Ofl.append(fl_comp["Water"])
-					except:
-						H2Ofl.append(0)
-					try:
-						CO2fl.append(fl_comp["Carbon Dioxide"])
-					except:
-						CO2fl.append(0)
-					fluid_wtper.append(fl_wtper)
-
-					try:
-						bulk_comp["H2O"] = liq_comp["H2O"] + (bulk_comp["H2O"] - liq_comp["H2O"]) * (1-fractionate_vapor)
-					except:
-						bulk_comp["H2O"] = 0
-					try:
-						bulk_comp["CO2"] = liq_comp["CO2"] + (bulk_comp["CO2"] - liq_comp["CO2"]) * (1-fractionate_vapor)
-					except:
-						bulk_comp["CO2"] = 0
-					bulk_comp = normalize(bulk_comp)
-
-			feasible = melts.set_bulk_composition(bulk_comp_orig) #this needs to be reset always!
-			open_degassing_df = pd.DataFrame(list(zip(pressure, H2Oliq, CO2liq, H2Ofl, CO2fl, fluid_wtper)),
-										columns =['Pressure_bars', 'H2O_liq', 'CO2_liq', 'XH2O_fl', 'XCO2_fl', 'FluidProportion_wt'])
-
-			return open_degassing_df
+		return open_degassing_df
 
 #-----------MAGMASAT PLOTTING FUNCTIONS-----------#
 def smooth_isobars_and_isopleths(isobars=None, isopleths=None):
