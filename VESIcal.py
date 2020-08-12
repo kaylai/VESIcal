@@ -1721,7 +1721,7 @@ class Calculate(object):
 	def check_calibration_range(self):
 		""" """
 
-#-------------DEFAULT CALIBRATIONRANGE OBJECTS---------------#
+#-------------DEFAULT CALIBRATIONRANGE OBJECTS---------------#FIND CALIBRATION RANGES
 
 def crf_EqualTo(calibval,paramval):
 	return calibval == paramval
@@ -1729,32 +1729,102 @@ crmsg_EqualTo_pass = "The {param_name} ({param_val:.1f} {units}) is equal to {ca
 crmsg_EqualTo_fail = "The {param_name} is outside the calibration range of the {model_name} model, as {param_val:.1f} {units} is not equal to {calib_val:.1f} {units}. "
 crmsg_EqualTo_description = "The {model_name} model is calibrated for {param_name} equal to {calib_val:.1f} {units}. "
 
+
 def crf_GreaterThan(calibval,paramval):
-	return paramval > calibval
+	return paramval >= calibval
 crmsg_GreaterThan_pass = "The {param_name} ({param_val:.1f} {units}) is greater than {calib_val:.1f} {units} as required by the calibration range of the {model_name} model. "
-crmsg_GreaterThan_fail = "The {param_name} is outside the calibration range of the {model_name} model, as {param_val:.1f} {units} is not greater than {calib_val:.1f} {units}. "
+crmsg_GreaterThan_fail = "The {param_name} is outside the calibration range of the {model_name} model, as {param_val:.1f} {units} is less than {calib_val:.1f} {units}. "
 crmsg_GreaterThan_description = "The {model_name} model is calibrated for {param_name} greater than {calib_val:.1f} {units}. "
+# Warnings for specific models
+crmsg_GreaterThan_fail_ShWaterSi = "{param_name} exceeds the lower limit of {calib_val:.1f} {units} based on the minimum concentration (-5%) in the calibration dataset for the {model_name} model. " # This check warns users if SiO2<40 in the water model
+Dix_40_fail="{param_name} is less than 40 wt%, which is the calibration limit of the Dixon (1997, Pi-SiO2 simpl.) Model. VESIcal has performed calculations assuming SiO2=40wt% for this sample. " 
+
 
 def crf_LessThan(calibval,paramval):
-	return paramval < calibval
+	return paramval <= calibval
 crmsg_LessThan_pass = "The {param_name} ({param_val:.1f} {units}) is less than {calib_val:.1f} {units} as required by the calibration range of the {model_name} model. "
-crmsg_LessThan_fail = "The {param_name} is outside the calibration range of the {model_name} model, as {param_val:.1f} {units} is not less than {calib_val:.1f} {units}. "
+crmsg_LessThan_fail = "The {param_name} is outside the calibration range of the {model_name} model, as {param_val:.1f} {units} is greater than {calib_val:.1f} {units}. "
 crmsg_LessThan_description = "The {model_name} model is calibrated for {param_name} less than {calib_val:.1f} {units}. "
+# Warnings for specific model
+crmsg_LessThan_fail_ShWaterSi = "{param_name} exceeds the upper limit of {calib_val:.1f} {units} suggested by Shishkina et al. for their H2O model. " # This check warns users if SiO2>65 wt% , the upper limit suggested by Shishkina et al. (2014)
+Dix_1000bar_fail="{param_name} exceeds 1000 bar, which Iacono-Marziano et al. (2012) suggest as an upper calibration limit of the Dixon (1997, Pi-SiO2 simpl.) Model, "
+Dix_2000bar_fail="as well as the upper calibration limit of 2000 bar suggested by Lesne et al. (2011), "
+Dix_5000bar_fail="and the upper calibration limit of 5000 bar suggested by Newman and Lowenstern, (2002). "
+Dix_49_fail="{param_name} exceeds 49 wt%, which is the calibration limit of the Dixon (1997, Pi-SiO2 simpl.) Model. VESIcal has performed calculations assuming SiO2=49wt% for this sample. "
+
 
 def crf_Between(calibval,paramval):
-	return paramval > calibval[0] and paramval < calibval[1]
+	return paramval >= calibval[0] and paramval <= calibval[1]
 crmsg_Between_pass = "The {param_name} ({param_val:.1f} {units}) is between {calib_val0:.1f} and {calib_val1:.1f} {units} as required by the calibration range of the {model_name} model. "
 crmsg_Between_fail = "The {param_name} is outside the calibration range of the {model_name} model, as {param_val:.1f} {units} is not between {calib_val0:.1f} and {calib_val1:.1f} {units}. "
 crmsg_Between_description = "The {model_name} model is calibrated for {param_name} between {calib_val0:.1f} and {calib_val1:.1f} {units}. "
+# Different wording for compositional checks (loosing "the")
+crmsg_BC_pass = "{param_name} ({param_val:.1f} {units}) is between {calib_val0:.1f} and {calib_val1:.1f} {units} as required by the calibration range of the {model_name} model. "
+crmsg_BC_fail = "{param_name} is outside the calibration range of the {model_name} model, as {param_val:.1f} {units} is not between {calib_val0:.1f} and {calib_val1:.1f} {units}. "
+# Warnings for specific model
+crmsg_BC_fail_ShT1 = "The {param_name} is outside the calibration range suggested by the authors for {model_name}, as {param_val:.1f} {units} is not between {calib_val0:.1f} and {calib_val1:.1f} {units}. Note, the authors recomend that this model is optimally calibrated between 1150-1250C. " # Warning for Shishkina temperature
+crmsg_BC_fail_ShC1="{param_name} is outside the calibration range of the {model_name} model, as {param_val:.1f} {units} is not between {calib_val0:.1f} and {calib_val1:.1f} {units} (estimated from the max and minimum SiO2 concentrations +-5%)." # Warning for Shishkina SiO2
+crmsg_BC_DixonT="{param_name} lies more than 200C away from the temperature the Dixon (1997, Pi-SiO2 simpl.) model was calibrated for (the range suggested by Newman and Lowenstern, 2002; VolatileCalc). " # Warning for Dixon temperature
+crmsg_BC_IMT="{param_name} is outside the broad range of {calib_val0:.1f} and {calib_val1:.1f} {units} suggested by Iacono-Marziano (they note that this model is preferably used at 1200-1300C). " # Warning for Iacono-Marziano temperature
+crmsg_BC_IMP="{param_name} is outside the broad range of {calib_val0:.1f} and {calib_val1:.1f} {units} suggested by Iacono-Marziano (and most calibration experiments were conducted at <5000 bars).  " # Warning for Iacono-Marziano pressure
 
-def crf_LiuComp(calibval=None,sample={}):
-	SiTest = sample['SiO2'] >= 75.0 and sample['SiO2'] <= 77.0
-	NaTest = sample['Na2O'] >= 3.4 and sample['Na2O'] <= 4.7
-	KTest = sample['K2O'] >= 3.6 and sample['K2O'] <= 5.7
-	AlTest = sample['Al2O3'] >= 12.1 and sample['Al2O3'] <= 13.5
+# Defining compositional ranges for Liu - based on the Max value of the calibration dataset +-5% of that value
+LiuWater_SiO2Max=82
+LiuWater_SiO2Min=71
+LiuWater_TiO2Max=0.21
+LiuWater_TiO2Min=0
+LiuWater_Al2O3Max=14.2
+LiuWater_Al2O3Min=11.5
+LiuWater_FeOMax=1.5
+LiuWater_FeOMin=0
+LiuWater_MgOMax=0.18
+LiuWater_MgOMin=0
+LiuWater_CaOMax=1.2
+LiuWater_CaOMin=0
+LiuWater_Na2OMax=4.9
+LiuWater_Na2OMin=3.2
+LiuWater_K2OMax=6.0
+LiuWater_K2OMin=3.4
+def crf_LiuWaterComp(calibval=None,sample={}):
+	SiTest = sample['SiO2'] >= LiuWater_SiO2Max and sample['SiO2'] <= LiuWater_SiO2Min
+	TiTest = sample['TiO2'] >= LiuWater_TiO2Max and sample['TiO2'] <= LiuWater_TiO2Min
+	AlTest = sample['Al2O3'] >= LiuWater_Al2O3Min and sample['Al2O3'] <= LiuWater_Al2O3Max    
+	FeTest = sample['FeO'] >= LiuWater_FeOMin and sample['FeO'] <= LiuWater_FeOMax
+	MgTest = sample['MgO'] >= LiuWater_MgOMin and sample['MgO'] <= LiuWater_MgOMax
+	CaTest = sample['CaO'] >= LiuWater_CaOMin and sample['CaO'] <= LiuWater_CaOMax
+	NaTest = sample['Na2O'] >= LiuWater_Na2OMin and sample['Na2O'] <= LiuWater_Na2OMax
+	KTest = sample['K2O'] >= LiuWater_K2OMin and sample['K2O'] <= LiuWater_K2OMax
+	return all([SiTest, NaTest, KTest, AlTest])
+
+LiuCarbon_SiO2Max=82
+LiuCarbon_SiO2Min=73
+LiuCarbon_TiO2Max=0.12
+LiuCarbon_TiO2Min=0.07
+LiuCarbon_Al2O3Max=13.7
+LiuCarbon_Al2O3Min=11.9
+LiuCarbon_FeOMax=1.1
+LiuCarbon_FeOMin=0.36
+LiuCarbon_MgOMax=0.08
+LiuCarbon_MgOMin=0.05
+LiuCarbon_CaOMax=0.6
+LiuCarbon_CaOMin=0.23
+LiuCarbon_Na2OMax=4.4
+LiuCarbon_Na2OMin=3.9
+LiuCarbon_K2OMax=5.0
+LiuCarbon_K2OMin=4.0
+
+def crf_LiuCarbonComp(calibval=None,sample={}):
+	SiTest = sample['SiO2'] >= LiuCarbon_SiO2Max and sample['SiO2'] <= LiuCarbon_SiO2Min
+	TiTest = sample['TiO2'] >= LiuCarbon_TiO2Max and sample['TiO2'] <= LiuCarbon_TiO2Min
+	AlTest = sample['Al2O3'] >= LiuCarbon_Al2O3Min and sample['Al2O3'] <= LiuCarbon_Al2O3Max    
+	FeTest = sample['FeO'] >= LiuCarbon_FeOMin and sample['FeO'] <= LiuCarbon_FeOMax
+	MgTest = sample['MgO'] >= LiuCarbon_MgOMin and sample['MgO'] <= LiuCarbon_MgOMax
+	CaTest = sample['CaO'] >= LiuCarbon_CaOMin and sample['CaO'] <= LiuCarbon_CaOMax
+	NaTest = sample['Na2O'] >= LiuCarbon_Na2OMin and sample['Na2O'] <= LiuCarbon_Na2OMax
+	KTest = sample['K2O'] >= LiuCarbon_K2OMin and sample['K2O'] <= LiuCarbon_K2OMax
 	return all([SiTest, NaTest, KTest, AlTest])
 crmsg_LiuComp_pass = "The sample appears to be similar in composition to the rhyolites and haplogranites used to calibrate the Liu et al. model."
-crmsg_LiuComp_fail = "As the Liu et al. model incorperates no term for compositional dependence, users must take extreme care when extrapolating this model to compositions which differ significantly from the haplogranites and rhyolites in the calibration dataset. These warnings are simply a guide; we suggest that users carefully compare their major element data to the calibration dataset to check for suitability."
+crmsg_LiuComp_fail = " These calibration limits were selected based on the minimum and maximum values of these oxides (+-5%) in the calibration dataset. As the Liu et al. model incorperates no term for compositional dependence, users must take extreme care when extrapolating this model to compositions which differ significantly from the haplogranites and rhyolites in the calibration dataset. These warnings are simply a guide; we suggest that users carefully compare their major element data to the calibration dataset to check for suitability "
 crmsg_LiuComp_description = "The Liu et al. model is suitable for haplogranites and rhyolites."
 
 #-------------FUGACITY MODELS--------------------------------#
@@ -3052,8 +3122,11 @@ class ShishkinaCarbon(Model):
 		self.set_solubility_dependence(False)
 		self.set_calibration_ranges([CalibrationRange('pressure',[500.0,5000.0],crf_Between,'bar','Shishkina et al. carbon',
 													  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
-									 CalibrationRange('temperature',[1200.0,1250.0],crf_Between,'oC','Shishkina et al. carbon',
-									 				  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
+									 CalibrationRange('temperature',[1200.0,1300.0],crf_Between,'oC','Shishkina et al. carbon',
+									 				  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('SiO2',[40,57],crf_Between,'wt%','Shishkina et al. carbon',
+									 				  fail_msg=crmsg_BC_fail_ShC1, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
+                                     
 
 	def preprocess_sample(self,sample):
 		""" Returns sample, unmodified. The Pi* compositional parameter is a ratio of cations,
@@ -3223,9 +3296,17 @@ class ShishkinaWater(Model):
 		self.set_solubility_dependence(False)
 		self.set_calibration_ranges([CalibrationRange('pressure',[500.0,5000.0],crf_Between,'bar','Shishkina et al. water',
 													  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
-									 CalibrationRange('temperature',[1200.0,1250.0],crf_Between,'oC','Shishkina et al. water',
-									 				  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
+									CalibrationRange('temperature',[1050,1400],crf_Between,'oC','Shishkina et al. water',
+									 				  fail_msg=crmsg_BC_fail_ShT1, pass_msg=crmsg_Between_pass,
+									 				  description_msg=crmsg_Between_description),
+									CalibrationRange('SiO2',65,crf_LessThan,'wt%','Shishkina et al. water',
+									 				  fail_msg=crmsg_LessThan_fail_ShWaterSi, pass_msg=crmsg_LessThan_pass, 
+									 				  description_msg=crmsg_LessThan_description),
+									CalibrationRange('SiO2',40,crf_GreaterThan,'wt%','Shishkina et al. water',
+									 				  fail_msg=crmsg_GreaterThan_fail_ShWaterSi, pass_msg=crmsg_GreaterThan_pass, 
+									 				  description_msg=crmsg_GreaterThan_description)])
 
+ 
 	def preprocess_sample(self,sample):
 		""" Returns sample, renormlized so that the major element oxides (excluding volatiles) sum to 100%.
 		Normalization must be done this way as the compositional dependence of the solubility takes the
@@ -3563,7 +3644,17 @@ class DixonWater(Model):
 		self.set_volatile_species(['H2O'])
 		self.set_fugacity_model(fugacity_MRK_h2o())
 		self.set_activity_model(activity_idealsolution())
-		self.set_calibration_ranges([])
+		self.set_calibration_ranges([CalibrationRange('pressure',1000,crf_LessThan,'bar','Dixon (1997, Pi-SiO2 simpl.) Water',
+													  fail_msg=Dix_1000bar_fail, pass_msg=crmsg_LessThan_pass, description_msg=crmsg_LessThan_description),
+									 CalibrationRange('pressure',2000,crf_LessThan,'bar','Dixon (1997, Pi-SiO2 simpl.) Water',
+													  fail_msg=Dix_2000bar_fail, pass_msg=crmsg_LessThan_pass, description_msg=crmsg_LessThan_description),                             									 CalibrationRange('pressure',5000,crf_LessThan,'bar','Dixon (1997, Pi-SiO2 simpl.) Water',
+													  fail_msg=Dix_5000bar_fail, pass_msg=crmsg_LessThan_pass, description_msg=crmsg_LessThan_description),
+									 CalibrationRange('SiO2',49,crf_LessThan,'wt%','Dixon (1997, Pi-SiO2 simpl.) Water',
+													  fail_msg=Dix_49_fail, pass_msg=crmsg_LessThan_pass, description_msg=crmsg_LessThan_description),
+									 CalibrationRange('SiO2',40,crf_GreaterThan,'wt%','Dixon (1997, Pi-SiO2 simpl.) Water',
+													  fail_msg=Dix_40_fail, pass_msg=crmsg_GreaterThan_pass, description_msg=crmsg_GreaterThan_description),      
+									 CalibrationRange('temperature',[1000,1400],crf_Between,'oC','Dixon (1997, Pi-SiO2 simpl.) Water',
+									 				  fail_msg=crmsg_BC_DixonT, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
 		self.set_solubility_dependence(False)
 
 
@@ -3823,7 +3914,10 @@ class IaconoMarzianoWater(Model):
 		self.set_fugacity_model(fugacity_idealgas())
 		self.set_activity_model(activity_idealsolution())
 		self.hydrous = hydrous
-		self.set_calibration_ranges([])
+		self.set_calibration_ranges([CalibrationRange('temperature',[1000,1400],crf_Between,'oC','IaconoMarzianoWater',
+									 				  fail_msg=crmsg_BC_IMT, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('pressure',[100,10000],crf_Between,'bars','IaconoMarzianoWater',
+									 				  fail_msg=crmsg_BC_IMP, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
 		self.set_solubility_dependence(False) #Not dependent on CO2 conc, H2O dependence dealt with within model.
 
 	def preprocess_sample(self,sample):
@@ -4095,7 +4189,10 @@ class IaconoMarzianoCarbon(Model):
 		self.set_volatile_species(['CO2'])
 		self.set_fugacity_model(fugacity_idealgas())
 		self.set_activity_model(activity_idealsolution())
-		self.set_calibration_ranges([])
+		self.set_calibration_ranges([CalibrationRange('temperature',[1000,1400],crf_Between,'oC','IaconoMarzianoCarbon',
+									 				  fail_msg=crmsg_BC_IMT, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('pressure',[100,10000],crf_Between,'bars','IaconoMarzianoCarbon',
+									 				  fail_msg=crmsg_BC_IMP, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
 		self.set_solubility_dependence(True)
 
 	def preprocess_sample(self,sample):
@@ -4617,13 +4714,10 @@ class MooreWater(Model):
 		self.set_fugacity_model(fugacity_HB_h2o())
 		self.set_activity_model(activity_idealsolution())
 		self.set_solubility_dependence(False)
-		self.set_calibration_ranges([CalibrationRange('pressure',[1.0,3000.0],crf_Between,'bar','Moore et al. (1998) water',
-													  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
+		self.set_calibration_ranges([CalibrationRange('pressure',3000.0,crf_LessThan,'bar','Moore et al. (1998) water',
+													  fail_msg=crmsg_LessThan_fail, pass_msg=crmsg_LessThan_pass, description_msg=crmsg_LessThan_description),
 									 CalibrationRange('temperature',[700.0,1200],crf_Between,'oC','Moore et al. (1998) water',
 									 				  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
-		# self.set_calibration_ranges([cr_Between('pressure',[1.0,3000.0],'bar','Moore et al. (1998) water'),
-		# 							 cr_Between('temperature',[700.0+273.15,1200+273.15],'oC','Moore et al. (1998) water')])
-
 
 
 	def preprocess_sample(self, sample):
@@ -4823,14 +4917,29 @@ class LiuWater(Model):
 		self.set_fugacity_model(fugacity_idealgas())
 		self.set_activity_model(activity_idealsolution())
 		self.set_solubility_dependence(False)
-		self.set_calibration_ranges([CalibrationRange('pressure',[1.0,5000.0],crf_Between,'bar','Liu et al. (2005) water',
+		self.set_calibration_ranges([CalibrationRange('pressure',[0,5000.0],crf_Between,'bar','Liu et al. (2005) water',
 													  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
 									 CalibrationRange('temperature',[700.0,1200],crf_Between,'oC','Liu et al. (2005) water',
 									 				  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
-									 CalibrationRange('sample',None,crf_LiuComp,None,None,
+									 CalibrationRange('SiO2',[LiuWater_SiO2Min,LiuWater_SiO2Max],crf_Between,'wt%','Liu et al. (2005) water',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('TiO2',[LiuWater_TiO2Min,LiuWater_TiO2Max],crf_Between,'wt%','Liu et al. (2005) water',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('Al2O3',[LiuWater_Al2O3Min,LiuWater_Al2O3Max],crf_Between,'wt%','Liu et al. (2005) water',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('FeO',[LiuWater_FeOMin,LiuWater_FeOMax],crf_Between,'wt%','Liu et al. (2005) water',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('MgO',[LiuWater_MgOMin,LiuWater_MgOMax],crf_Between,'wt%','Liu et al. (2005) water',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('CaO',[LiuWater_CaOMin,LiuWater_CaOMax],crf_Between,'wt%','Liu et al. (2005) water',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('Na2O',[LiuWater_Na2OMin,LiuWater_Na2OMax],crf_Between,'wt%','Liu et al. (2005) water',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('K2O',[LiuWater_K2OMin,LiuWater_K2OMax],crf_Between,'wt%','Liu et al. (2005) water',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('sample',None,crf_LiuWaterComp,None,None,
 									 				  fail_msg=crmsg_LiuComp_fail, pass_msg=crmsg_LiuComp_pass, description_msg=crmsg_LiuComp_description)])
-		# self.set_calibration_ranges([cr_Between('pressure',[1.0,5000.0],'bar','Liu et al. (2005) water'),
-		# 							 cr_Between('temperature',[700.0,1200],'oC','Liu et al. (2005) water')])
+        
 
 	def preprocess_sample(self, sample):
 		"""
@@ -5008,12 +5117,29 @@ class LiuCarbon(Model):
 		self.set_fugacity_model(fugacity_idealgas())
 		self.set_activity_model(activity_idealsolution())
 		self.set_solubility_dependence(False)
-		self.set_calibration_ranges([CalibrationRange('pressure',[1.0,5000.0],crf_Between,'bar','Liu et al. (2005) carbon',
+		self.set_calibration_ranges([CalibrationRange('pressure',[0,5000.0],crf_Between,'bar','Liu et al. (2005) Carbon',
 													  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
-									 CalibrationRange('temperature',[700.0,1200],crf_Between,'oC','Liu et al. (2005) carbon',
+									 CalibrationRange('temperature',[700.0,1200],crf_Between,'oC','Liu et al. (2005) Carbon',
 									 				  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
-									CalibrationRange('sample',None,crf_LiuComp,None,None,
-													 fail_msg=crmsg_LiuComp_fail, pass_msg=crmsg_LiuComp_pass, description_msg=crmsg_LiuComp_description)])
+									 CalibrationRange('SiO2',[LiuCarbon_SiO2Min,LiuCarbon_SiO2Max],crf_Between,'wt%','Liu et al. (2005) Carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('TiO2',[LiuCarbon_TiO2Min,LiuCarbon_TiO2Max],crf_Between,'wt%','Liu et al. (2005) Carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('Al2O3',[LiuCarbon_Al2O3Min,LiuCarbon_Al2O3Max],crf_Between,'wt%','Liu et al. (2005) Carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('FeO',[LiuCarbon_FeOMin,LiuCarbon_FeOMax],crf_Between,'wt%','Liu et al. (2005) Carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('MgO',[LiuCarbon_MgOMin,LiuCarbon_MgOMax],crf_Between,'wt%','Liu et al. (2005) Carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('CaO',[LiuCarbon_CaOMin,LiuCarbon_CaOMax],crf_Between,'wt%','Liu et al. (2005) Carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('Na2O',[LiuCarbon_Na2OMin,LiuCarbon_Na2OMax],crf_Between,'wt%','Liu et al. (2005) Carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('K2O',[LiuCarbon_K2OMin,LiuCarbon_K2OMax],crf_Between,'wt%','Liu et al. (2005) Carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('sample',None,crf_LiuCarbonComp,None,None,
+									 				  fail_msg=crmsg_LiuComp_fail, pass_msg=crmsg_LiuComp_pass, description_msg=crmsg_LiuComp_description)])
+
 
 
 	def preprocess_sample(self, sample):
@@ -5926,9 +6052,9 @@ class MagmaSat(Model):
 		self.melts_version = '1.2.0' #just here so users can see which version is being used
 
 		self.set_volatile_species(['H2O', 'CO2'])
-		self.set_calibration_ranges([CalibrationRange('pressure',[0.0,30000.0],crf_Between,'bar','MagmaSat',
+		self.set_calibration_ranges([CalibrationRange('pressure',[0.0,20000.0],crf_Between,'bar','MagmaSat',
 													  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
-									 CalibrationRange('temperature',[550,1730],crf_Between,'oC','MagmaSat',
+									 CalibrationRange('temperature',[800,1400],crf_Between,'oC','MagmaSat',
 									 				  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
 
 	def preprocess_sample(self,sample): #TODO test this by passing weird shit to sample
