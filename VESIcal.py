@@ -681,14 +681,14 @@ class ExcelFile(object):
 	kwargs
 	------
 		dataframe: pandas DataFrame
-				OPTIONAL. Default is None in which case this argument is ignored. This argument is used when the user wishes to turn 
-				a pandas DataFrame into an ExcelFile object, for example when user data is already in python rather than being imported 
+				OPTIONAL. Default is None in which case this argument is ignored. This argument is used when the user wishes to turn
+				a pandas DataFrame into an ExcelFile object, for example when user data is already in python rather than being imported
 				from an Excel file.
 	"""
 
 	def __init__(self, filename, sheet_name=0, input_type='wtpercent', label='Label', **kwargs):
 		"""Return an ExcelFile object whoes parameters are defined here."""
-		
+
 		if isinstance(sheet_name, str) or isinstance(sheet_name, int):
 			pass
 		else:
@@ -697,7 +697,7 @@ class ExcelFile(object):
 		self.input_type = input_type
 
 		if 'dataframe' in kwargs:
-			data = kwargs['dataframe'] 
+			data = kwargs['dataframe']
 			data = data.rename_axis('Label')
 		else:
 			data = pd.read_excel(filename, sheet_name=sheet_name)
@@ -706,10 +706,10 @@ class ExcelFile(object):
 				data = data.set_index(label)
 			except:
 				raise InputError("Imported file must contain a column of sample names. If this column is not titled 'Label' (the default value), you must pass the column name to arg label. For example: ExcelFile('myfile.xslx', label='SampleNames')")
-		
+
 		data = data.fillna(0)
 
-				
+
 		if 'model' in kwargs:
 			w.warn("You don't need to pass a model here, so it will be ignored. You can specify a model when performing calculations on your dataset (e.g., calculate_dissolved_volatiles())",RuntimeWarning,stacklevel=2)
 
@@ -996,7 +996,7 @@ class ExcelFile(object):
 
 					if file_has_press == True:
 						pressure = row[press_name]
-		
+
 					if file_has_X == True:
 						X_fluid = row[X_name]
 
@@ -1737,7 +1737,7 @@ crmsg_GreaterThan_fail = "The {param_name} is outside the calibration range of t
 crmsg_GreaterThan_description = "The {model_name} model is calibrated for {param_name} greater than {calib_val:.1f} {units}. "
 # Warnings for specific models
 crmsg_GreaterThan_fail_ShWaterSi = "{param_name} exceeds the lower limit of {calib_val:.1f} {units} based on the minimum concentration (-5%) in the calibration dataset for the {model_name} model. " # This check warns users if SiO2<40 in the water model
-Dix_40_fail="{param_name} is less than 40 wt%, which is the calibration limit of the Dixon (1997, Pi-SiO2 simpl.) Model. VESIcal has performed calculations assuming SiO2=40wt% for this sample. " 
+Dix_40_fail="{param_name} is less than 40 wt%, which is the calibration limit of the Dixon (1997, Pi-SiO2 simpl.) Model. VESIcal has performed calculations assuming SiO2=40wt% for this sample. "
 
 
 def crf_LessThan(calibval,paramval):
@@ -1788,7 +1788,7 @@ LiuWater_K2OMin=3.4
 def crf_LiuWaterComp(calibval=None,sample={}):
 	SiTest = sample['SiO2'] >= LiuWater_SiO2Max and sample['SiO2'] <= LiuWater_SiO2Min
 	TiTest = sample['TiO2'] >= LiuWater_TiO2Max and sample['TiO2'] <= LiuWater_TiO2Min
-	AlTest = sample['Al2O3'] >= LiuWater_Al2O3Min and sample['Al2O3'] <= LiuWater_Al2O3Max    
+	AlTest = sample['Al2O3'] >= LiuWater_Al2O3Min and sample['Al2O3'] <= LiuWater_Al2O3Max
 	FeTest = sample['FeO'] >= LiuWater_FeOMin and sample['FeO'] <= LiuWater_FeOMax
 	MgTest = sample['MgO'] >= LiuWater_MgOMin and sample['MgO'] <= LiuWater_MgOMax
 	CaTest = sample['CaO'] >= LiuWater_CaOMin and sample['CaO'] <= LiuWater_CaOMax
@@ -1816,7 +1816,7 @@ LiuCarbon_K2OMin=4.0
 def crf_LiuCarbonComp(calibval=None,sample={}):
 	SiTest = sample['SiO2'] >= LiuCarbon_SiO2Max and sample['SiO2'] <= LiuCarbon_SiO2Min
 	TiTest = sample['TiO2'] >= LiuCarbon_TiO2Max and sample['TiO2'] <= LiuCarbon_TiO2Min
-	AlTest = sample['Al2O3'] >= LiuCarbon_Al2O3Min and sample['Al2O3'] <= LiuCarbon_Al2O3Max    
+	AlTest = sample['Al2O3'] >= LiuCarbon_Al2O3Min and sample['Al2O3'] <= LiuCarbon_Al2O3Max
 	FeTest = sample['FeO'] >= LiuCarbon_FeOMin and sample['FeO'] <= LiuCarbon_FeOMax
 	MgTest = sample['MgO'] >= LiuCarbon_MgOMin and sample['MgO'] <= LiuCarbon_MgOMax
 	CaTest = sample['CaO'] >= LiuCarbon_CaOMin and sample['CaO'] <= LiuCarbon_CaOMax
@@ -3126,7 +3126,7 @@ class ShishkinaCarbon(Model):
 									 				  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
 									 CalibrationRange('SiO2',[40,57],crf_Between,'wt%','Shishkina et al. carbon',
 									 				  fail_msg=crmsg_BC_fail_ShC1, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
-                                     
+
 
 	def preprocess_sample(self,sample):
 		""" Returns sample, unmodified. The Pi* compositional parameter is a ratio of cations,
@@ -3300,13 +3300,13 @@ class ShishkinaWater(Model):
 									 				  fail_msg=crmsg_BC_fail_ShT1, pass_msg=crmsg_Between_pass,
 									 				  description_msg=crmsg_Between_description),
 									CalibrationRange('SiO2',65,crf_LessThan,'wt%','Shishkina et al. water',
-									 				  fail_msg=crmsg_LessThan_fail_ShWaterSi, pass_msg=crmsg_LessThan_pass, 
+									 				  fail_msg=crmsg_LessThan_fail_ShWaterSi, pass_msg=crmsg_LessThan_pass,
 									 				  description_msg=crmsg_LessThan_description),
 									CalibrationRange('SiO2',40,crf_GreaterThan,'wt%','Shishkina et al. water',
-									 				  fail_msg=crmsg_GreaterThan_fail_ShWaterSi, pass_msg=crmsg_GreaterThan_pass, 
+									 				  fail_msg=crmsg_GreaterThan_fail_ShWaterSi, pass_msg=crmsg_GreaterThan_pass,
 									 				  description_msg=crmsg_GreaterThan_description)])
 
- 
+
 	def preprocess_sample(self,sample):
 		""" Returns sample, renormlized so that the major element oxides (excluding volatiles) sum to 100%.
 		Normalization must be done this way as the compositional dependence of the solubility takes the
@@ -3652,7 +3652,7 @@ class DixonWater(Model):
 									 CalibrationRange('SiO2',49,crf_LessThan,'wt%','Dixon (1997, Pi-SiO2 simpl.) Water',
 													  fail_msg=Dix_49_fail, pass_msg=crmsg_LessThan_pass, description_msg=crmsg_LessThan_description),
 									 CalibrationRange('SiO2',40,crf_GreaterThan,'wt%','Dixon (1997, Pi-SiO2 simpl.) Water',
-													  fail_msg=Dix_40_fail, pass_msg=crmsg_GreaterThan_pass, description_msg=crmsg_GreaterThan_description),      
+													  fail_msg=Dix_40_fail, pass_msg=crmsg_GreaterThan_pass, description_msg=crmsg_GreaterThan_description),
 									 CalibrationRange('temperature',[1000,1400],crf_Between,'oC','Dixon (1997, Pi-SiO2 simpl.) Water',
 									 				  fail_msg=crmsg_BC_DixonT, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
 		self.set_solubility_dependence(False)
@@ -4939,7 +4939,7 @@ class LiuWater(Model):
 													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
 									 CalibrationRange('sample',None,crf_LiuWaterComp,None,None,
 									 				  fail_msg=crmsg_LiuComp_fail, pass_msg=crmsg_LiuComp_pass, description_msg=crmsg_LiuComp_description)])
-        
+
 
 	def preprocess_sample(self, sample):
 		"""
@@ -6529,7 +6529,7 @@ class MagmaSat(Model):
 			return {"SaturationP_bars": satP, "FluidMass_grams": flmass, "FluidProportion_wt": flsystem_wtper,
 	 				"XH2O_fl": flH2O, "XCO2_fl": flCO2}
 
-	def calculate_isobars_and_isopleths(self, sample, temperature, pressure_list, isopleth_list, 
+	def calculate_isobars_and_isopleths(self, sample, temperature, pressure_list, isopleth_list,
 										smooth_isobars=True, smooth_isopleths=True, print_status=False, **kwargs):
 		"""
 		Calculates isobars and isopleths at a constant temperature for a given sample. Isobars can be calculated
@@ -6764,7 +6764,7 @@ class MagmaSat(Model):
 				except:
 					bulk_comp["CO2"] = 0
 			bulk_comp = normalize(bulk_comp)
-		
+
 		feasible = melts.set_bulk_composition(bulk_comp_orig) #this needs to be reset always!
 		open_degassing_df = pd.DataFrame(list(zip(pressure, H2Oliq, CO2liq, H2Ofl, CO2fl, fluid_wtper)),
 									columns =['Pressure_bars', 'H2O_liq', 'CO2_liq', 'XH2O_fl', 'XCO2_fl', 'FluidProportion_wt'])
@@ -6833,7 +6833,7 @@ def smooth_isobars_and_isopleths(isobars=None, isopleths=None):
 
 				Py_list = list(Pys)
 				isobars_CO2_liq += Py_list
-				
+
 				pressure_vals_for_list = [pressure]*len(Pxs)
 				isobars_pressure += pressure_vals_for_list
 
@@ -6844,7 +6844,7 @@ def smooth_isobars_and_isopleths(isobars=None, isopleths=None):
 	if isopleths is not None:
 		XH2O_vals = isopleths.XH2O_fl.unique()
 		isopleths_lists = isopleths.values.tolist()
-		
+
 		isopleths_XH2O_fl = []
 		isopleths_H2O_liq = []
 		isopleths_CO2_liq = []
@@ -6951,16 +6951,16 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 
 	custom_colors: list
 		OPTIONAL. Default value is "VESIcal", which uses VESIcal's color ramp. A list of color values readable by matplotlib
-		can be passed here if custom symbol colors are desired. The length of this list must match that of custom_H2O and 
+		can be passed here if custom symbol colors are desired. The length of this list must match that of custom_H2O and
 		custom_CO2.
 
 	custom_symbols: list
-		OPTIONAL. Default value is None, in which case data are plotted as filled circles.. A list of symbol tyles readable 
-		by matplotlib can be passed here if custom symbol types are desired. The length of this list must match that of 
+		OPTIONAL. Default value is None, in which case data are plotted as filled circles.. A list of symbol tyles readable
+		by matplotlib can be passed here if custom symbol types are desired. The length of this list must match that of
 		custom_H2O and custom_CO2.
 
 	markersize: int
-		OPTIONAL. Default value is 10. Same as markersize kwarg in matplotlib. Any numeric value passed here will set the 
+		OPTIONAL. Default value is 10. Same as markersize kwarg in matplotlib. Any numeric value passed here will set the
 		marker size for (custom_H2O, custom_CO2) points.
 
 	extend_isobars_to_zero: bool
@@ -7020,7 +7020,7 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 			isobars_lists = isobars[i].values.tolist()
 
 			# add zero values to volatiles list
-			isobars_lists.append([0.0, 0.0, 0.0, 0.0])			
+			isobars_lists.append([0.0, 0.0, 0.0, 0.0])
 
 			P_iter = 0
 			for pressure in P_vals:
@@ -7119,7 +7119,7 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 		for i in range(len(isopleths)):
 			XH2O_vals = isopleths[i].XH2O_fl.unique()
 			isopleths_lists = isopleths[i].values.tolist()
-			
+
 			H_iter = 0
 			for Xfl in XH2O_vals:
 				H_iter += 1
@@ -7243,6 +7243,13 @@ default_models = {'Shishkina':                MixedFluid({'H2O':ShishkinaWater()
 				  'LiuWater':				  LiuWater(),
 				  'LiuCarbon':				  LiuCarbon()
 }
+
+# Return homogenised calibration range checks for mixed fluid models:
+default_models['Liu'].models[1].set_calibration_ranges([])
+_crs_to_update = default_models['Liu'].models[0].calibration_ranges
+for _cr in _crs_to_update:
+	_cr.model_name = 'Liu et al. (2005)'
+default_models['Liu'].models[0].set_calibration_ranges(_crs_to_update)
 
 def get_models(models='all'):
 	"""
