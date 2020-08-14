@@ -1827,6 +1827,7 @@ crmsg_LiuComp_pass = "The sample appears to be similar in composition to the rhy
 crmsg_LiuComp_fail = " These calibration limits were selected based on the minimum and maximum values of these oxides (+-5%) in the calibration dataset. As the Liu et al. model incorperates no term for compositional dependence, users must take extreme care when extrapolating this model to compositions which differ significantly from the haplogranites and rhyolites in the calibration dataset. These warnings are simply a guide; we suggest that users carefully compare their major element data to the calibration dataset to check for suitability "
 crmsg_LiuComp_description = "The Liu et al. model is suitable for haplogranites and rhyolites."
 
+
 #-------------FUGACITY MODELS--------------------------------#
 
 class fugacity_idealgas(FugacityModel):
@@ -5323,19 +5324,30 @@ class AllisonCarbon(Model):
 	etna, or stromboli. Default is the power-law fit to sunset.
 	"""
 
-	def __init__(self):
+	def __init__(self,model_loc='sunset',model_fit='thermodynamic'):
 		"""
 		Initialize the model.
+
+		Parameters
+		----------
+		model_fit     str
+			Either 'power' for the power-law fits, or 'thermodynamic' for the
+			thermodynamic fits.
+		model_loc     str
+			One of 'sunset', 'sfvf', 'erebus', 'vesuvius', 'etna', 'stromboli'.
 		"""
 
 		self.set_volatile_species(['CO2'])
 		self.set_fugacity_model(fugacity_HB_co2())
 		self.set_activity_model(activity_idealsolution())
-		self.set_calibration_ranges([CalibrationRange('pressure',[0.0,6000.0],crf_Between,'bar','Allison et al. (2019) carbon',
-													  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
+		self.set_calibration_ranges([
+									 # CalibrationRange('pressure',[0.0,6000.0],crf_Between,'bar','Allison et al. (2019) carbon',
+										# 			  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
 									 CalibrationRange('temperature',1200,crf_EqualTo,'oC','Allison et al. (2019) carbon',
 									 				  fail_msg=crmsg_EqualTo_fail, pass_msg=crmsg_EqualTo_pass, description_msg=crmsg_EqualTo_description)])
 		self.set_solubility_dependence(False)
+		self.model_loc = model_loc
+		self.model_fit = model_fit
 
 
 	def preprocess_sample(self,sample):
@@ -5354,8 +5366,7 @@ class AllisonCarbon(Model):
 		"""
 		return normalize_AdditionalVolatiles(sample)
 
-	def calculate_dissolved_volatiles(self,pressure,temperature,sample=None,X_fluid=1.0,
-									  model_loc='sunset',model_fit='thermodynamic',**kwargs):
+	def calculate_dissolved_volatiles(self,pressure,temperature,sample=None,X_fluid=1.0,**kwargs):
 		"""
 		Calclates the dissolved CO2 concentration using (Eqns) 2-7 or 10-11 from Allison et al. (2019).
 
@@ -5370,11 +5381,6 @@ class AllisonCarbon(Model):
 			provided if using the power law fits. Default is None.
 		X_fluid     float
 			The mole fraction of CO2 in the fluid. Default is 1.0.
-		model_fit     str
-			Either 'power' for the power-law fits, or 'thermodynamic' for the
-			thermodynamic fits.
-		model_loc     str
-			One of 'sunset', 'sfvf', 'erebus', 'vesuvius', 'etna', 'stromboli'.
 
 		Returns
 		-------
@@ -5390,16 +5396,16 @@ class AllisonCarbon(Model):
 		if X_fluid < 0 or X_fluid > 1:
 			raise InputError("X_fluid must have a value between 0 and 1.")
 
-		if model_fit not in ['power','thermodynamic']:
+		if self.model_fit not in ['power','thermodynamic']:
 			raise InputError("model_fit must be one of 'power', or 'thermodynamic'.")
-		if model_loc not in ['sunset','sfvf','erebus','vesuvius','etna','stromboli']:
+		if self.model_loc not in ['sunset','sfvf','erebus','vesuvius','etna','stromboli']:
 			raise InputError("model_loc must be one of 'sunset', 'sfvf', 'erebus', 'vesuvius', 'etna', or 'stromboli'.")
 
 
 		if pressure == 0:
 			return 0
 
-		if model_fit == 'thermodynamic':
+		if self.model_fit == 'thermodynamic':
 			if type(sample) != dict and type(sample) != pd.core.series.Series:
 				raise InputError("Thermodynamic fit requires sample to be a dict or a pandas Series.")
 			P0 = 1000 # bar
@@ -5409,8 +5415,8 @@ class AllisonCarbon(Model):
 							'vesuvius':[24.42,-14.04],
 							'etna':[21.59,-14.28],
 							'stromboli':[14.93,-14.68]})
-			DV = params[model_loc][0]
-			lnK0 = params[model_loc][1]
+			DV = params[self.model_loc][0]
+			lnK0 = params[self.model_loc][1]
 
 			lnK = lnK0 - (pressure-P0)*DV/(10*8.3141*temperature)
 			fCO2 = self.fugacity_model.fugacity(pressure=pressure,temperature=temperature-273.15,X_fluid=X_fluid,**kwargs)
@@ -5421,7 +5427,7 @@ class AllisonCarbon(Model):
 			wtCO2 = (44.01*XCO3)/((44.01*XCO3)+(1-XCO3)*FWone)*100
 
 			return wtCO2
-		if model_fit == 'power':
+		if self.model_fit == 'power':
 			params = dict({'stromboli':[1.05,0.883],
 							'etna':[2.831,0.797],
 							'vesuvius':[4.796,0.754],
@@ -5431,7 +5437,7 @@ class AllisonCarbon(Model):
 
 			fCO2 = self.fugacity_model.fugacity(pressure=pressure,temperature=temperature-273.15,X_fluid=X_fluid,**kwargs)
 
-			return params[model_loc][0]*fCO2**params[model_loc][1]/1e4
+			return params[self.model_loc][0]*fCO2**params[self.model_loc][1]/1e4
 
 
 
@@ -7238,7 +7244,12 @@ default_models = {'Shishkina':                MixedFluid({'H2O':ShishkinaWater()
 				  'IaconoMarzianoCarbon':     IaconoMarzianoCarbon(),
 				  'IaconoMarzianoWater':      IaconoMarzianoWater(),
 				  #'EguchiCarbon':             EguchiCarbon(),
-				  'AllisonCarbon':            AllisonCarbon(),
+				  'AllisonCarbon_sunset':     AllisonCarbon(model_loc='sunset'),
+				  'AllisonCarbon_sfvf':       AllisonCarbon(model_loc='sfvf'),
+				  'AllisonCarbon_erebus':     AllisonCarbon(model_loc='erebus'),
+				  'AllisonCarbon_vesuvius':   AllisonCarbon(model_loc='vesuvius'),
+				  'AllisonCarbon_etna':       AllisonCarbon(model_loc='etna'),
+				  'AllisonCarbon_stromboli':  AllisonCarbon(model_loc='stromboli'),
 				  'MooreWater':               MooreWater(),
 				  'LiuWater':				  LiuWater(),
 				  'LiuCarbon':				  LiuCarbon()
@@ -7250,6 +7261,27 @@ _crs_to_update = default_models['Liu'].models[0].calibration_ranges
 for _cr in _crs_to_update:
 	_cr.model_name = 'Liu et al. (2005)'
 default_models['Liu'].models[0].set_calibration_ranges(_crs_to_update)
+
+# Set individual Allison Model CRs
+_crs_to_update = default_models['AllisonCarbon_sunset'].calibration_ranges
+default_models['AllisonCarbon_sunset'].set_calibration_ranges(_crs_to_update+
+				 [CalibrationRange('pressure',[4071.0,6098.0],crf_Between,'bar','Allison et al. (2019) sunset carbon',
+					 			  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
+default_models['AllisonCarbon_sfvf'].set_calibration_ranges(_crs_to_update+
+				 [CalibrationRange('pressure',[4133.0,6141.0],crf_Between,'bar','Allison et al. (2019) sfvf carbon',
+					 			  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
+default_models['AllisonCarbon_erebus'].set_calibration_ranges(_crs_to_update+
+				 [CalibrationRange('pressure',[4078.0,6175.0],crf_Between,'bar','Allison et al. (2019) erebus carbon',
+					 			  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
+default_models['AllisonCarbon_vesuvius'].set_calibration_ranges(_crs_to_update+
+				 [CalibrationRange('pressure',[269.0,6221.0],crf_Between,'bar','Allison et al. (2019) vesuvius carbon',
+					 			  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
+default_models['AllisonCarbon_etna'].set_calibration_ranges(_crs_to_update+
+				 [CalibrationRange('pressure',[485.0,6199.0],crf_Between,'bar','Allison et al. (2019) etna carbon',
+					 			  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
+default_models['AllisonCarbon_stromboli'].set_calibration_ranges(_crs_to_update+
+				 [CalibrationRange('pressure',[524.0,6080.0],crf_Between,'bar','Allison et al. (2019) stromboli carbon',
+					 			  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
 
 def get_models(models='all'):
 	"""
