@@ -5366,7 +5366,7 @@ class AllisonCarbon(Model):
 		"""
 		return normalize_AdditionalVolatiles(sample)
 
-	def calculate_dissolved_volatiles(self,pressure,temperature,sample=None,X_fluid=1.0,**kwargs):
+	def calculate_dissolved_volatiles(self,pressure,sample=None,X_fluid=1.0,**kwargs):
 		"""
 		Calclates the dissolved CO2 concentration using (Eqns) 2-7 or 10-11 from Allison et al. (2019).
 
@@ -5387,10 +5387,9 @@ class AllisonCarbon(Model):
 		float
 			Dissolved CO2 concentration in wt%.
 		"""
+		temperature = 1200 #temp in degrees C
 		temperature = temperature + 273.15 #translate T from C to K
 
-		if temperature <= 0.0:
-			raise InputError("Temperature must be greater than 0K.")
 		if pressure < 0.0:
 			raise InputError("Pressure must be positive.")
 		if X_fluid < 0 or X_fluid > 1:
@@ -5441,7 +5440,7 @@ class AllisonCarbon(Model):
 
 
 
-	def calculate_equilibrium_fluid_comp(self,pressure,temperature,sample,**kwargs):
+	def calculate_equilibrium_fluid_comp(self,pressure,sample,**kwargs):
 		""" Returns 1.0 if a pure CO2 fluid is saturated.
 		Returns 0.0 if a pure CO2 fluid is undersaturated.
 
@@ -5460,13 +5459,13 @@ class AllisonCarbon(Model):
 			1.0 if CO2-fluid saturated, 0.0 otherwise.
 		"""
 
-		satP = self.calculate_saturation_pressure(temperature=temperature,sample=sample,X_fluid=1.0,**kwargs)
+		satP = self.calculate_saturation_pressure(temperature=1200,sample=sample,X_fluid=1.0,**kwargs)
 		if pressure < satP:
 			return 1.0
 		else:
 			return 0.0
 
-	def calculate_saturation_pressure(self,temperature,sample,X_fluid=1.0,**kwargs):
+	def calculate_saturation_pressure(self,sample,X_fluid=1.0,**kwargs):
 		"""
 		Calculates the pressure at which a pure CO2 fluid is saturated, for the given sample
 		composition and CO2 concentration. Calls the scipy.root_scalar routine, which makes
@@ -5487,8 +5486,8 @@ class AllisonCarbon(Model):
 			Calculated saturation pressure in bars.
 		"""
 
-		if temperature <= 0.0:
-			raise InputError("Temperature must be greater than 0K.")
+		temperature = 1200 #temp in degrees C
+
 		if X_fluid < 0 or X_fluid > 1:
 			raise InputError("X_fluid must have a value between 0 and 1.")
 		if type(sample) != dict and type(sample) != pd.core.series.Series:
@@ -5506,7 +5505,7 @@ class AllisonCarbon(Model):
 			satP = np.nan
 		return satP
 
-	def root_saturation_pressure(self,pressure,temperature,sample,X_fluid,kwargs):
+	def root_saturation_pressure(self,pressure,sample,X_fluid,kwargs):
 		""" Function called by scipy.root_scalar when finding the saturation pressure using
 		calculate_saturation_pressure.
 
@@ -5528,7 +5527,7 @@ class AllisonCarbon(Model):
 			The differece between the dissolved CO2 at the pressure guessed, and the CO2 concentration
 			passed in the sample variable.
 		"""
-		return sample['CO2'] - self.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,sample=sample,X_fluid=X_fluid,**kwargs)
+		return sample['CO2'] - self.calculate_dissolved_volatiles(pressure=pressure,temperature=1200,sample=sample,X_fluid=X_fluid,**kwargs)
 
 
 
