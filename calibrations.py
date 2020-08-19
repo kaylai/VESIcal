@@ -282,7 +282,7 @@ def return_calibration_type(model_name):
 		return {'CO2': True, 'H2O': False, 'Mixed': False}
 
 	if model_name == 'MooreWater':
-		return {'CO2': False, 'H2O': False, 'Mixed': False}
+		return {'CO2': False, 'H2O': True, 'Mixed': False}
 
 	if model_name == 'LiuCarbon':
 		return {'CO2': True, 'H2O': False, 'Mixed': False}
@@ -340,7 +340,7 @@ def return_calibration(model_name):
 		return {'CO2': df_Allison_CO2, 'marker':'o', 'facecolor':'yellow'}
 
 	if model_name == 'MooreWater':
-		return {'Mixed': df_Moore_H2O, 'marker':'d', 'facecolor':'lime'}
+		return {'H2O': df_Moore_H2O, 'marker':'s', 'facecolor':'lime'}
 
 	if model_name == 'LiuCarbon':
 		return "The Liu model calibration is not yet implemented."
