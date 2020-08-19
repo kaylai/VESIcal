@@ -7640,7 +7640,7 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, save_fig
 
 	Parameters
 	----------
-	user_data: ExcelFile object, pandas DataFrame or pandas Series
+	user_data: ExcelFile object, pandas DataFrame, pandas Series, or dict
 		OPTIONAL. Default value is None, in which case only the model calibration set is plotted.
 		User provided sample data describing the oxide composition of one or more samples. Multiple samples
 		can be passed as an ExcelFile object or pandas DataFrame. A single sample can be passed as a pandas
@@ -7680,11 +7680,19 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, save_fig
 		user_ymin = 0
 		user_ymax = 25
 	elif zoom == 'user_data':
-		print("Not implemented yet.")
-		user_xmin = 35
-		user_xmax = 100
-		user_ymin = 0
-		user_ymax = 25
+		if isinstance(user_data, ExcelFile) or isinstance(user_data, pd.DataFrame):
+			print("'user_data' type zoom for more than one sample is not implemented yet.")
+			user_xmin = 35
+			user_xmax = 100
+			user_ymin = 0
+			user_ymax = 25
+		elif isinstance(user_data, pd.core.series.Series) or isinstance(user_data, dict):
+			user_xmin = user_data['SiO2'] - 5
+			user_xmax = user_data['SiO2'] + 5
+			user_ymin = user_data['Na2O'] + user_data['K2O'] - 2
+			if user_ymin <0:
+				user_ymin = 0
+			user_ymax = user_data['Na2O'] + user_data['K2O'] + 2
 	elif isinstance(zoom, list):
 		user_xmin, user_xmax = zoom[0]
 		user_ymin, user_ymax = zoom[1]
@@ -7790,15 +7798,17 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, save_fig
 		if isinstance(user_data, ExcelFile):
 			user_data = user_data.data
 		if plot_type == 'TAS':
+			_sample = user_data.copy()
 			try:
-				user_data["TotalAlkalis"] = user_data["Na2O"] + user_data["K2O"]
+				_sample["TotalAlkalis"] = _sample["Na2O"] + _sample["K2O"]
 			except:
 				InputError("Na2O and K2O data must be in user_data")
-			plt.scatter(user_data['SiO2'], user_data['TotalAlkalis'],
+			plt.scatter(_sample['SiO2'], _sample['TotalAlkalis'],
 						s=150, edgecolors='w', facecolors='red', marker='P',
 						label = 'User Data')
 		if plot_type == 'xy':
-			plt.scatter(user_data[x], user_data[y],
+			_sample = user_data.copy()
+			plt.scatter(_sample[x], _sample[y],
 						s=150, edgecolors='w', facecolors='red', marker='P',
 						label = 'User Data')
 
