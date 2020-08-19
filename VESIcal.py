@@ -7648,8 +7648,9 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, save_fig
 
 	model: str or list
 		OPTIONAL. Default value is 'all', in which case all model calibration datasets will be plotted.
+		'Mixed' can be used to plot all mixed fluid models.
 		String of the name of the model calibration dataset to plot (e.g., 'Shishkina'). Multiple models
-		can be plotted by passing them as strings within a list (e.g., ['Shishkina', 'Dixon'])
+		can be plotted by passing them as strings within a list (e.g., ['Shishkina', 'Dixon']).
 
 	plot_type: str
 		OPTIONAL. Default value is 'TAS', which returns a total alkali vs silica (TAS) diagram. Any two oxides can
@@ -7735,6 +7736,12 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, save_fig
 			   #'EguchiCarbon',
 			   'AllisonCarbon',
 			   'MooreWater']
+	if model == 'mixed':
+		model = ['MagmaSat',
+				 'Shishkina',
+				 'Dixon',
+				 'IaconoMarziano',
+				 'Liu']
 
 	if isinstance(model, str):
 		model = [model]
