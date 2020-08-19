@@ -64,7 +64,25 @@ Ech6 = pd.Series({'SiO2':77.04,
                          'CO2':0.066,
                          'H2O':3.84})
 
+#MORB from MagmaSat paper
+morb = pd.Series({'SiO2': 47.4, 
+                    'TiO2': 1.01, 
+                    'Al2O3': 17.64, 
+                    'Cr2O3': 0.425, 
+                    'Fe2O3': 0.89, 
+                    'FeO': 7.18, 
+                    'MgO': 7.63, 
+                    'CaO': 12.44, 
+                    'Na2O': 2.65, 
+                    'K2O': 0.03, 
+                    'P2O5': 0.08})
 
+
+isobars, isopleths = v.calculate_isobars_and_isopleths(sample=wtpt_oxides, temperature=1200, pressure_list=[1000,2000], isopleth_list=[.25,.75]).result
+
+isobars_smoothed = v.smooth_isobars_and_isopleths(isobars)
+
+isopleths_smoothed = v.smooth_isobars_and_isopleths(isopleths=isopleths)
 
 print(m.calculate_dissolved_volatiles(pressure=5000.0,X_fluid=(0.5,0.5),sample=wtpt_oxides,temperature=1473.15,model='Shishkina').result)
 print(m.calculate_dissolved_volatiles(pressure=5000.0,X_fluid=(0.5,0.5),sample=wtpt_oxides,temperature=1473.15,model='Shishkina').calib_check)
