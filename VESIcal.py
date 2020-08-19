@@ -6535,13 +6535,8 @@ class MagmaSat(Model):
 			return {"SaturationP_bars": satP, "FluidMass_grams": flmass, "FluidProportion_wt": flsystem_wtper,
 	 				"XH2O_fl": flH2O, "XCO2_fl": flCO2}
 
-<<<<<<< Updated upstream
-	def calculate_isobars_and_isopleths(self, sample, temperature, pressure_list, isopleth_list,
-										smooth_isobars=True, smooth_isopleths=True, print_status=False, **kwargs):
-=======
 	def calculate_isobars_and_isopleths(self, sample, temperature, pressure_list, isopleth_list, 
 										smooth_isobars=True, smooth_isopleths=True, print_status=True, **kwargs):
->>>>>>> Stashed changes
 		"""
 		Calculates isobars and isopleths at a constant temperature for a given sample. Isobars can be calculated
 		for any number of pressures.
