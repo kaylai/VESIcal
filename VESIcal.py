@@ -58,7 +58,7 @@ CationMass = {'SiO2': 28.085, 'MgO': 24.305, 'FeO': 55.845, 'CaO': 40.078, 'Al2O
 			 'NiO': 58.693, 'CoO': 28.01, 'Fe2O3': 55.845, 'H2O': 2, 'CO2': 12.01}
 oxides_to_cations = {'SiO2': 'Si', 'MgO': 'Mg', 'FeO': 'Fe', 'CaO': 'Ca', 'Al2O3': 'Al', 'Na2O': 'Na',
 			 'K2O': 'K', 'MnO': 'Mn', 'TiO2': 'Ti', 'P2O5': 'P', 'Cr2O3': 'Cr',
-			 'NiO': 'Ni', 'CoO': 'Co', 'Fe2O3': 'Fe3', 'H2O': 'H', 'CO2': 'C'}
+			 'NiO': 'Ni', 'CoO': 'Co', 'Fe2O3': 'Fe3', 'H2O': 'H', 'CO2': 'C', 'F': 'F'}
 cations_to_oxides = {'Si': 'SiO2', 'Mg': 'MgO', 'Fe': 'FeO', 'Ca': 'CaO', 'Al': 'Al2O3', 'Na': 'Na2O',
 			 'K': 'K2O', 'Mn': 'MnO', 'Ti': 'TiO2', 'P': 'P2O5', 'Cr': 'Cr2O3',
 			 'Ni': 'NiO', 'Co': 'CoO', 'Fe3': 'Fe2O3', 'H': 'H2O', 'C': 'CO2'}
@@ -6535,8 +6535,13 @@ class MagmaSat(Model):
 			return {"SaturationP_bars": satP, "FluidMass_grams": flmass, "FluidProportion_wt": flsystem_wtper,
 	 				"XH2O_fl": flH2O, "XCO2_fl": flCO2}
 
+<<<<<<< Updated upstream
 	def calculate_isobars_and_isopleths(self, sample, temperature, pressure_list, isopleth_list,
 										smooth_isobars=True, smooth_isopleths=True, print_status=False, **kwargs):
+=======
+	def calculate_isobars_and_isopleths(self, sample, temperature, pressure_list, isopleth_list, 
+										smooth_isobars=True, smooth_isopleths=True, print_status=True, **kwargs):
+>>>>>>> Stashed changes
 		"""
 		Calculates isobars and isopleths at a constant temperature for a given sample. Isobars can be calculated
 		for any number of pressures.
@@ -6557,7 +6562,7 @@ class MagmaSat(Model):
 			List of all fluid compositions in mole fraction H2O (XH2Ofluid) at which to calcualte isopleths. Values can range from 0-1.
 
 		print_status: bool
-			OPTIONAL: Default is False. If set to True, progress of the calculations will be printed to the terminal.
+			OPTIONAL: Default is True. If set to True, progress of the calculations will be printed to the terminal.
 
 		Returns
 		-------
@@ -7634,7 +7639,7 @@ def add_LeMaitre_fields(plot_axes, fontsize=12, color=(0.6, 0.6, 0.6)):
 				 horizontalalignment='center', verticalalignment='top',
 				 rotation=name.rotation, zorder=0)
 
-def calib_plot(user_data=None, model='all', plot_type='TAS', save_fig=False, **kwargs):
+def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, save_fig=False, **kwargs):
 	"""
 	Plots user data and calibration set of any or all models on any x-y plot or a total alkalis vs silica (TAS) diagram.
 	TAS diagram boundaries provided by tasplot python module, copyright John A Stevenson.
@@ -7656,6 +7661,13 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', save_fig=False, **k
 		OPTIONAL. Default value is 'TAS', which returns a total alkali vs silica (TAS) diagram. Any two oxides can
 		be plotted as an x-y plot by setting plot_type='xy' and specifying x- and y-axis oxides, e.g., x='SiO2', y='Al2O3'
 
+	zoom: str or list
+		OPTIONAL. Default value is None in which case axes will be set to the default of 35<x<100 wt% and 0<y<25 wt% for 
+		TAS type plots and the best values to show the data for xy type plots. Can pass "user_data" to plot the figure 
+		where the x and y axes are scaled down to zoom in and only show the region surrounding the user_data. A list of 
+		tuples may be passed to manually specify x and y limits. Pass in data as  [(x_min, x_max), (y_min, y_max)]. 
+		For example, the default limits here would be passed in as [(35,100), (0,25)].
+
 	save_fig: False or str
 		OPTIONAL. Default value is False, in which case the figure will not be saved. If a string is passed,
 		the figure will be saved with the string as the filename. The string must include the file extension.
@@ -7667,6 +7679,22 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', save_fig=False, **k
 	sys.path.insert(0, 'Calibration/')
 	import calibrations
 
+	#Get x and y axis limits, if user passed them
+	if zoom == None:
+		user_xmin = 35
+		user_xmax = 100
+		user_ymin = 0
+		user_ymax = 25
+	elif zoom == 'user_data':
+		print("Not implemented yet.")
+		user_xmin = 35
+		user_xmax = 100
+		user_ymin = 0
+		user_ymax = 25
+	elif isinstance(zoom, list):
+		user_xmin, user_xmax = zoom[0]
+		user_ymin, user_ymax = zoom[1]
+
 	#Create the figure
 	fig, ax1 = plt.subplots(figsize = (17,8))
 	font = {'family': 'sans-serif',
@@ -7677,15 +7705,19 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', save_fig=False, **k
 
 	#TAS figure
 	if plot_type == 'TAS':
-		ax1.set_xlim([35, 100]) # adjust x limits here if you want to focus on a specific part of compostional space
-		ax1.set_ylim([0, 25]) # adjust y limits here
+		ax1.set_xlim([user_xmin, user_xmax]) # adjust x limits here if you want to focus on a specific part of compostional space
+		ax1.set_ylim([user_ymin, user_ymax]) # adjust y limits here
 		plt.xlabel('SiO$_2$, wt%', fontdict=font, labelpad = 15)
 		plt.ylabel('Na$_2$O+K$_2$O, wt%', fontdict=font, labelpad = 15)
-		add_LeMaitre_fields(ax1)
+		if zoom == None:
+			add_LeMaitre_fields(ax1)
 	elif plot_type == 'xy':
 		if 'x' in kwargs and 'y' in kwargs:
 			x = kwargs['x']
 			y = kwargs['y']
+			if zoom != None:
+				ax1.set_xlim([user_xmin, user_xmax]) 
+				ax1.set_ylim([user_ymin, user_ymax]) 
 			plt.xlabel(str(x)+", wt%", fontdict=font, labelpad = 15)
 			plt.ylabel(str(y)+", wt%", fontdict=font, labelpad = 15)
 		else:
