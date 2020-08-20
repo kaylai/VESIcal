@@ -231,6 +231,28 @@ df_MagmaSat_CO2H2O = pd.DataFrame({
 'Na2O+K2O': [4.69413543359195,4.70850392378619,4.59915832440254,4.36799694295323,4.2592532459515,4.25863591017517,4.45820513327044,4.87325540909607,5.42680496634285,5.51923556545487,5.42711363423102,7.54545505054745,8.42103781552031,8.97282796580453,9.40295666796718,9.41863699668614,9.41860612989732,8.67693892820631,8.40214734076441,9.54997518310179,4.92875389538874,4.92866129502229,5.25317927924813,3.18013487552041,3.16502558239456,3.16530338349392,3.12232138006647,2.93881832055036,2.92341579293076,2.53846063620155,2.76847994646463,2.81448689519613,5.35684538948948,5.95567652593057,5.87867932122696,5.40157136648508,6.22775183595659,6.25824822330763,8.27687447835126,8.86092042294908], 
  }) 
 
+df_Liu_H2O = pd.DataFrame({ 
+'SiO2': [77.19,75.03,76.47,77.24,76.62,0.38,77.5,77.7,77.04,76.14,77.3,77.71,77.38], 
+'TiO2': [0.06,0.2,0.07,0.07,0.03,0.02,0.0,0.07,0.11,'No Data',0.06,0.12,0.17], 
+'Al2O3': [12.8,13.42,12.44,12.67,13.53,0.15,12.5,13.0,12.76,13.53,13.0,12.13,12.33], 
+'FeO': [0.94,1.46,1.02,0.55,0.02,0.05,1.0,0.38,0.68,'No Data',0.75,0.66,1.26], 
+'MgO': [0.03,0.13,0.03,0.05,0.01,0.01,0.0,0.05,0.08,'No Data',0.05,0.17,0.17], 
+'CaO': [0.53,0.62,0.53,0.51,0.01,0.03,0.5,0.52,0.58,'No Data',0.52,0.54,1.11], 
+'Na2O': [3.98,4.24,4.18,4.3,4.57,0.26,3.6,4.08,4.07,4.65,4.12,3.42,3.39], 
+'K2O': [4.65,4.99,4.61,4.13,5.19,0.12,4.8,4.19,4.79,5.67,4.16,5.22,3.58]
+ }) 
+
+df_Liu_CO2 = pd.DataFrame({ 
+'SiO2': [76.45,77.7,77.04], 
+'TiO2': [0.08,0.07,0.11], 
+'Al2O3': [12.56,13.0,12.76], 
+'FeO': [1.02,0.38,0.68], 
+'MgO': [0.06,0.05,0.08], 
+'CaO': [0.25,0.52,0.58], 
+'Na2O': [4.21,4.08,4.07], 
+'K2O': [4.78,4.19,4.79]
+ }) 
+
 def return_calibration_type(model_name):
 	"""
 	Returns metadata for the calibration dataset for specified model
@@ -316,7 +338,7 @@ def return_calibration(model_name):
 		return {'H2O': df_Iacono_H2O, 'Mixed': df_Iacono_CO2H2O, 'marker':'d', 'facecolor':'magenta'}
 
 	if model_name == 'Liu':
-		return "The Liu model calibration is not yet implemented."
+		return {'CO2': df_Liu_CO2, 'H2O': df_Liu_H2O, 'marker':'d', 'facecolor':'deepskyblue'}
 
 	if model_name == 'ShishkinaCarbon':
 		return {'CO2': df_Shishkina_CO2, 'marker':'o', 'facecolor':'darkorange'}
@@ -343,10 +365,10 @@ def return_calibration(model_name):
 		return {'H2O': df_Moore_H2O, 'marker':'s', 'facecolor':'lime'}
 
 	if model_name == 'LiuCarbon':
-		return "The Liu model calibration is not yet implemented."
+		return {'CO2': df_Liu_CO2, 'marker':'o', 'facecolor':'deepskyblue'}
 
 	if model_name == 'LiuWater':
-		return "The Liu model calibration is not yet implemented."
+		return {'H2O': df_Liu_H2O, 'marker':'s', 'facecolor':'deepskyblue'}
 
 	if model_name == 'MagmaSat':
 		return {'CO2': df_MagmaSat_CO2, 'H2O': df_MagmaSat_H2O, 'Mixed': df_MagmaSat_CO2H2O, 'marker':'d', 'facecolor':'silver'}
