@@ -6907,6 +6907,7 @@ def smooth_isobars_and_isopleths(isobars=None, isopleths=None):
 		if isopleths is not None:
 			return isopleth_df
 
+
 def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, custom_CO2=None,
 		 isobar_labels=None, isopleth_labels=None, degassing_path_labels=None, custom_labels=None,
 		 custom_colors="VESIcal", custom_symbols=None, markersize=10,
@@ -7016,8 +7017,12 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 		raise InputError("Argument custom_colors must be type list. Just passing one item? Try putting square brackets, [], around it.")
 
 	plt.figure(figsize=(12,8))
-	plt.xlabel('H$_2$O wt%')
-	plt.ylabel('CO$_2$ wt%')
+	if 'custom_x' in kwargs:
+		plt.xlabel(kwargs['xlabel'])
+		plt.ylabel(kwargs['ylabel'])
+	else:
+		plt.xlabel('H$_2$O wt%')
+		plt.ylabel('CO$_2$ wt%')
 
 	labels = []
 
@@ -7269,14 +7274,90 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 				plt.plot(custom_H2O[i], custom_CO2[i], use_marker[i], color=use_colors[i], markersize=markersize)
 				iterno += 1
 
+	if 'custom_x' in kwargs:
+			custom_x = kwargs['custom_x']
+			custom_y = kwargs['custom_y']
+			xlabel = kwargs['xlabel']
+			ylabel = kwargs['ylabel']
+
+			if isinstance(custom_x, pd.core.series.Series):
+				custom_x = [list(custom_x.values)]
+			if isinstance(custom_y, pd.core.series.Series):
+				custom_y = [list(custom_y.values)]
+
+			if custom_symbols == None:
+				use_marker = ['o'] * len(custom_x)
+			else:
+				use_marker = custom_symbols
+
+			iterno = 0
+			for i in range(len(custom_x)):
+				if custom_labels == None:
+					iterno +=1
+					labels.append('Custom%s' %iterno)
+					plt.plot(custom_x[i], custom_y[i], use_marker[i], color=use_colors[i], markersize=markersize)
+				else:
+					labels.append(custom_labels[iterno])
+					plt.plot(custom_x[i], custom_y[i], use_marker[i], color=use_colors[i], markersize=markersize)
+					iterno += 1
+
+
 	plt.legend(labels, bbox_to_anchor=(1.01,1), loc='upper left')
-	plt.xlim(left=0)
-	plt.ylim(bottom=0)
+
+	if 'custom_x' not in kwargs:
+		plt.xlim(left=0)
+		plt.ylim(bottom=0)
 
 	np.seterr(divide='warn', invalid='warn') #turn numpy warning back on
 	w.filterwarnings("always", message="Polyfit may be poorly conditioned")
 
 	return plt.show()
+
+def scatterplot(custom_x, custom_y, xlabel=None, ylabel=None, **kwargs):
+	"""
+	Custom x-y plotting using VESIcal's built-in plot() function, built on Matplotlib's plot and scatter functions.
+
+	Parameters
+	----------
+	custom_x: list
+		List of groups of x-values to plot as points or lines
+
+	custom_y: list
+		List of groups of y-values to plot as points or lines
+
+	xlabel: str
+		OPTIONAL. What to display along the x-axis.
+
+	ylabel: str
+		OPTIONAL. What to display along the y-axis.
+
+	kwargs
+	------
+	Can take in any key word agruments that can be passed to plot().
+
+	Returns
+	-------
+	matplotlib object
+		X-y plot with custom x and y axis values and labels.
+	"""
+
+	if isinstance(custom_x, list) and isinstance(custom_y, list):
+		if len(custom_x) != len(custom_y):
+			raise InputError("X and y lists must be same length")
+
+	if xlabel is not None:
+		if isinstance(xlabel, str):
+			pass
+		else:
+			raise InputError("xlabel must be string")
+
+	if ylabel is not None:
+		if isinstance(ylabel, str):
+			pass
+		else:
+			raise InputError("ylabel must be string")
+
+	return plot(custom_x=custom_x, custom_y=custom_y, xlabel=xlabel, ylabel=ylabel, **kwargs)
 
 #====== Define some standard model options =======================================================#
 
