@@ -7109,6 +7109,49 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 							plt.plot(Pxs, Pys)
 
 				elif smooth_isobars == False:
+					if extend_isobars_to_zero == True and Pxs[0]*Pys[0] != 0.0:
+						if Pxs[0] > Pys[0]:
+							Px_newer = np.zeros(np.shape(Pxs)[0]+1)
+							Px_newer[0] = 0
+							Px_newer[1:] = Pxs
+							Pxs = Px_newer
+
+							Py_newer = np.zeros(np.shape(Pys)[0]+1)
+							Py_newer[0] = Pys[0]
+							Py_newer[1:] = Pys
+							Pys = Py_newer
+						else:
+							Px_newer = np.zeros(np.shape(Pxs)[0]+1)
+							Px_newer[0] = Pxs[0]
+							Px_newer[1:] = Pxs
+							Pxs = Px_newer
+
+							Py_newer = np.zeros(np.shape(Pys)[0]+1)
+							Py_newer[0] = 0
+							Py_newer[1:] = Pys
+							Pys = Py_newer
+
+					if extend_isobars_to_zero == True and Pxs[-1]*Pys[-1] != 0.0:
+						if Pxs[-1] < Pys[-1]:
+							Px_newer = np.zeros(np.shape(Pxs)[0]+1)
+							Px_newer[-1] = 0
+							Px_newer[:-1] = Pxs
+							Pxs = Px_newer
+
+							Py_newer = np.zeros(np.shape(Pys)[0]+1)
+							Py_newer[-1] = Pys[-1]
+							Py_newer[:-1] = Pys
+							Pys = Py_newer
+						else:
+							Px_newer = np.zeros(np.shape(Pxs)[0]+1)
+							Px_newer[-1] = Pxs[-1]
+							Px_newer[:-1] = Pxs
+							Pxs = Px_newer
+
+							Py_newer = np.zeros(np.shape(Pys)[0]+1)
+							Py_newer[-1] = 0
+							Py_newer[:-1] = Pys
+							Pys = Py_newer
 					if len(isobars) > 1:
 						plt.plot(Pxs, Pys, color=color_list[i])
 					else:
