@@ -1356,6 +1356,7 @@ class ExcelFile(object):
 		if model != 'MagmaSat':
 			satP = []
 			warnings = []
+			piStar = []
 			for index, row in satp_data.iterrows():
 				try:
 					if file_has_temp == True:
@@ -1365,6 +1366,8 @@ class ExcelFile(object):
 														 model=model, silence_warnings=True, **kwargs)
 					satP.append(calc.result)
 					warnings.append(calc.calib_check)
+					if model == 'Shishkina':
+						piStar.append(default_models['Shishkina'].models[1].PiStar(bulk_comp))
 				except:
 					satP.append(np.nan)
 					warnings.append("Calculation Failed")
@@ -1373,6 +1376,8 @@ class ExcelFile(object):
 				satp_data["Temperature_C_VESIcal"] = temperature
 			satp_data["Model"] = model
 			satp_data["Warnings"] = warnings
+			if len(piStar)>0:
+				satp_data['PiStar_VESIcal'] = piStar
 
 			return satp_data
 
@@ -6534,7 +6539,7 @@ class MagmaSat(Model):
 			return {"SaturationP_bars": satP, "FluidMass_grams": flmass, "FluidProportion_wt": flsystem_wtper,
 	 				"XH2O_fl": flH2O, "XCO2_fl": flCO2}
 
-	def calculate_isobars_and_isopleths(self, sample, temperature, pressure_list, isopleth_list, 
+	def calculate_isobars_and_isopleths(self, sample, temperature, pressure_list, isopleth_list,
 										smooth_isobars=True, smooth_isopleths=True, print_status=True, **kwargs):
 		"""
 		Calculates isobars and isopleths at a constant temperature for a given sample. Isobars can be calculated
@@ -7700,10 +7705,10 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, save_fig
 		be plotted as an x-y plot by setting plot_type='xy' and specifying x- and y-axis oxides, e.g., x='SiO2', y='Al2O3'
 
 	zoom: str or list
-		OPTIONAL. Default value is None in which case axes will be set to the default of 35<x<100 wt% and 0<y<25 wt% for 
-		TAS type plots and the best values to show the data for xy type plots. Can pass "user_data" to plot the figure 
-		where the x and y axes are scaled down to zoom in and only show the region surrounding the user_data. A list of 
-		tuples may be passed to manually specify x and y limits. Pass in data as  [(x_min, x_max), (y_min, y_max)]. 
+		OPTIONAL. Default value is None in which case axes will be set to the default of 35<x<100 wt% and 0<y<25 wt% for
+		TAS type plots and the best values to show the data for xy type plots. Can pass "user_data" to plot the figure
+		where the x and y axes are scaled down to zoom in and only show the region surrounding the user_data. A list of
+		tuples may be passed to manually specify x and y limits. Pass in data as  [(x_min, x_max), (y_min, y_max)].
 		For example, the default limits here would be passed in as [(35,100), (0,25)].
 
 	save_fig: False or str
@@ -7762,8 +7767,8 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, save_fig
 			x = kwargs['x']
 			y = kwargs['y']
 			if zoom != None:
-				ax1.set_xlim([user_xmin, user_xmax]) 
-				ax1.set_ylim([user_ymin, user_ymax]) 
+				ax1.set_xlim([user_xmin, user_xmax])
+				ax1.set_ylim([user_ymin, user_ymax])
 			plt.xlabel(str(x)+", wt%", fontdict=font, labelpad = 15)
 			plt.ylabel(str(y)+", wt%", fontdict=font, labelpad = 15)
 		else:
