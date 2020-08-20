@@ -179,17 +179,11 @@ MagmaSat(Model)
 MagmaSat Plotting Functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Plot Isobars and Isopleths
-++++++++++++++++++++++++++
-.. autofunction:: VESIcal.plot_isobars_and_isopleths
+.. autofunction:: VESIcal.plot
 
-Smooth Isobars and Isopleths
-++++++++++++++++++++++++++++
+.. autofunction:: VESIcal.scatterplot
+
 .. autofunction:: VESIcal.smooth_isobars_and_isopleths
-
-Plot Degassing Paths
-++++++++++++++++++++
-.. autofunction:: VESIcal.plot_degassing_paths
 
 
 
