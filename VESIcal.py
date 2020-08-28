@@ -1731,47 +1731,50 @@ class Calculate(object):
 def crf_EqualTo(calibval,paramval):
 	return calibval == paramval
 crmsg_EqualTo_pass = "The {param_name} ({param_val:.1f} {units}) is equal to {calib_val:.1f} {units} as required by the calibration range of the {model_name} model. "
-crmsg_EqualTo_fail = "The {param_name} is outside the calibration range of the {model_name} model, as {param_val:.1f} {units} is not equal to {calib_val:.1f} {units}. "
+crmsg_EqualTo_fail ="{param_name} ({param_val:.1f} {units}) is outside the calibration range of the {model_name} model ({calib_val:.1f} {units}). "
 crmsg_EqualTo_description = "The {model_name} model is calibrated for {param_name} equal to {calib_val:.1f} {units}. "
-
+crmsg_EqualTo_fail_AllisonTemp="All calculations for {model_name} are performed at 1200 C (inputted Temp={param_val:.1f} {units}). Allison et al. (2019) suggest the results are likely applicable between 1000-1400°C). "
 
 def crf_GreaterThan(calibval,paramval):
 	return paramval >= calibval
 crmsg_GreaterThan_pass = "The {param_name} ({param_val:.1f} {units}) is greater than {calib_val:.1f} {units} as required by the calibration range of the {model_name} model. "
-crmsg_GreaterThan_fail = "The {param_name} is outside the calibration range of the {model_name} model, as {param_val:.1f} {units} is less than {calib_val:.1f} {units}. "
+crmsg_GreaterThan_fail = "The {param_name} is outside the calibration range of {model_name} ({param_val:.1f}<{calib_val:.1f} {units}. "
 crmsg_GreaterThan_description = "The {model_name} model is calibrated for {param_name} greater than {calib_val:.1f} {units}. "
 # Warnings for specific models
-crmsg_GreaterThan_fail_ShWaterSi = "{param_name} exceeds the lower limit of {calib_val:.1f} {units} based on the minimum concentration (-5%) in the calibration dataset for the {model_name} model. " # This check warns users if SiO2<40 in the water model
-Dix_40_fail="{param_name} is less than 40 wt%, which is the calibration limit of the Dixon (1997, Pi-SiO2 simpl.) Model. VESIcal has performed calculations assuming SiO2=40wt% for this sample. "
+crmsg_GreaterThan_fail_ShWaterSi = "{param_name}{units} exceeds the lower calibration limit of {model_name} ({calib_val:.1f} {units}, based on the minimum concentration minus 5% in the calibration dataset). " # This check warns users if SiO2<40 in the water model
+Dix_40_fail="{param_name} ({param_val:.1f} {units})<40 wt%, which is the lower calibration limit of the Dixon (1997, Pi-SiO2 simpl.) Model. VESIcal has performed calculations assuming SiO2=40wt%. "
+crmsg_GreaterThan_fail_Allison="{param_name} ({param_val:.1f} {units}) is less than the lowest P experiment in the calibration dataset ({calib_val:.1f} {units}). "
 
 
 def crf_LessThan(calibval,paramval):
 	return paramval <= calibval
 crmsg_LessThan_pass = "The {param_name} ({param_val:.1f} {units}) is less than {calib_val:.1f} {units} as required by the calibration range of the {model_name} model. "
-crmsg_LessThan_fail = "The {param_name} is outside the calibration range of the {model_name} model, as {param_val:.1f} {units} is greater than {calib_val:.1f} {units}. "
+crmsg_LessThan_fail =  "The {param_name} is outside the calibration range of {model_name} ({param_val:.1f}>{calib_val:.1f} {units}. "
 crmsg_LessThan_description = "The {model_name} model is calibrated for {param_name} less than {calib_val:.1f} {units}. "
 # Warnings for specific model
-crmsg_LessThan_fail_ShWaterSi = "{param_name} exceeds the upper limit of {calib_val:.1f} {units} suggested by Shishkina et al. for their H2O model. " # This check warns users if SiO2>65 wt% , the upper limit suggested by Shishkina et al. (2014)
+crmsg_LessThan_fail_ShWaterSi = "{param_name} ({param_val:.1f} {units}) exceeds the upper limit of {calib_val:.1f} {units} suggested by Shishkina et al. for their H2O model. " # This check warns users if SiO2>65 wt% , the upper limit suggested by Shishkina et al. (2014)
 Dix_1000bar_fail="{param_name} exceeds 1000 bar, which Iacono-Marziano et al. (2012) suggest as an upper calibration limit of the Dixon (1997, Pi-SiO2 simpl.) Model, "
 Dix_2000bar_fail="as well as the upper calibration limit of 2000 bar suggested by Lesne et al. (2011), "
 Dix_5000bar_fail="and the upper calibration limit of 5000 bar suggested by Newman and Lowenstern, (2002). "
-Dix_49_fail="{param_name} exceeds 49 wt%, which is the calibration limit of the Dixon (1997, Pi-SiO2 simpl.) Model. VESIcal has performed calculations assuming SiO2=49wt% for this sample. "
-
+Dix_49_fail="{param_name} ({param_val:.1f} {units})>49 wt%, which is the calibration limit of the Dixon (1997, Pi-SiO2 simpl.) Model. VESIcal has performed calculations assuming SiO2=49wt% for this sample. "
+crmsg_LessThan_fail_Allison="{param_name} ({param_val:.1f} {units}) exceeds the upper limit of {calib_val:.1f} {units} suggested by Allison et al. (2019) - Their spreadsheet would return 7000 bar for this input. "
+crmsg_LessThan_fail_AllisonH2O="{param_name} ({param_val:.1f} {units}) is > {param_val:.1f} {units}: this model does not account for the effect of H$_2$O on volatile solubility. VESIcal allows you to combine Allison Carbon with a variety of H$_2$O models.  "
 
 def crf_Between(calibval,paramval):
 	return paramval >= calibval[0] and paramval <= calibval[1]
 crmsg_Between_pass = "The {param_name} ({param_val:.1f} {units}) is between {calib_val0:.1f} and {calib_val1:.1f} {units} as required by the calibration range of the {model_name} model. "
-crmsg_Between_fail = "The {param_name} is outside the calibration range of the {model_name} model, as {param_val:.1f} {units} is not between {calib_val0:.1f} and {calib_val1:.1f} {units}. "
+crmsg_Between_fail = "{param_name} ({param_val:.1f} {units}) is outside the calibration range of the {model_name} model ({calib_val0:.1f}-{calib_val1:.1f} {units}). "
 crmsg_Between_description = "The {model_name} model is calibrated for {param_name} between {calib_val0:.1f} and {calib_val1:.1f} {units}. "
 # Different wording for compositional checks (loosing "the")
 crmsg_BC_pass = "{param_name} ({param_val:.1f} {units}) is between {calib_val0:.1f} and {calib_val1:.1f} {units} as required by the calibration range of the {model_name} model. "
-crmsg_BC_fail = "{param_name} is outside the calibration range of the {model_name} model, as {param_val:.1f} {units} is not between {calib_val0:.1f} and {calib_val1:.1f} {units}. "
+crmsg_BC_fail = "{param_name} ({param_val:.1f} {units}) is outside the calibration range ({calib_val0:.1f}-{calib_val1:.1f} {units}). "
 # Warnings for specific model
-crmsg_BC_fail_ShT1 = "The {param_name} is outside the calibration range suggested by the authors for {model_name}, as {param_val:.1f} {units} is not between {calib_val0:.1f} and {calib_val1:.1f} {units}. Note, the authors recomend that this model is optimally calibrated between 1150-1250C. " # Warning for Shishkina temperature
-crmsg_BC_fail_ShC1="{param_name} is outside the calibration range of the {model_name} model, as {param_val:.1f} {units} is not between {calib_val0:.1f} and {calib_val1:.1f} {units} (estimated from the max and minimum SiO2 concentrations +-5%)." # Warning for Shishkina SiO2
-crmsg_BC_DixonT="{param_name} lies more than 200C away from the temperature the Dixon (1997, Pi-SiO2 simpl.) model was calibrated for (the range suggested by Newman and Lowenstern, 2002; VolatileCalc). " # Warning for Dixon temperature
-crmsg_BC_IMT="{param_name} is outside the broad range of {calib_val0:.1f} and {calib_val1:.1f} {units} suggested by Iacono-Marziano (they note that this model is preferably used at 1200-1300C). " # Warning for Iacono-Marziano temperature
-crmsg_BC_IMP="{param_name} is outside the broad range of {calib_val0:.1f} and {calib_val1:.1f} {units} suggested by Iacono-Marziano (and most calibration experiments were conducted at <5000 bars).  " # Warning for Iacono-Marziano pressure
+crmsg_BC_fail_ShT1 = "{param_name} ({param_val:.1f} {units}) is outside the calibration range of {model_name} ({calib_val0:.1f}-{calib_val1:.1f} {units}). Note, the authors recomend that this model is optimally calibrated between 1150-1250C. " # Warning for Shishkina temperature
+crmsg_BC_fail_ShC1="{param_name} ({param_val:.1f} {units}) is outside the calibration range of {model_name} (calculated from the max and minimum concentrations in the calibration dataset +-5%; {calib_val0:.1f}-{calib_val1:.1f} {units})." # Warning for Shishkina SiO2
+crmsg_BC_DixonT="{param_name} ({param_val:.1f} {units}) lies more than 200°C away from the temperature the Dixon (1997, Pi-SiO2 simpl.) model was calibrated for (the range suggested by Newman and Lowenstern, 2002; VolatileCalc). " # Warning for Dixon temperature
+crmsg_BC_IMT="{param_name} ({param_val:.1f} {units}) is outside the broad range suggested by Iacono-Marziano ({calib_val0:.1f}-{calib_val1:.1f} {units}, although they note that this model is best calibrated at 1200-1300C). " # Warning for Iacono-Marziano temperature
+crmsg_BC_IMP="{param_name} ({param_val:.1f} {units}) is outside the broad range suggested by Iacono-Marziano ({calib_val0:.1f}-{calib_val1:.1f} {units}, although most  calibration experiments were conducted at <5000 bars).  " # Warning for Iacono-Marziano pressure
+crmsg_Between_AllisonTemp="{param_name} ({param_val:.1f} {units} is outside the recomended temperature range for {model name} (1000-1400°C). "
 
 # Defining compositional ranges for Liu - based on the Max value of the calibration dataset +-5% of that value
 LiuWater_SiO2Max=82
@@ -1799,7 +1802,7 @@ def crf_LiuWaterComp(calibval=None,sample={}):
 	CaTest = sample['CaO'] >= LiuWater_CaOMin and sample['CaO'] <= LiuWater_CaOMax
 	NaTest = sample['Na2O'] >= LiuWater_Na2OMin and sample['Na2O'] <= LiuWater_Na2OMax
 	KTest = sample['K2O'] >= LiuWater_K2OMin and sample['K2O'] <= LiuWater_K2OMax
-	return all([SiTest, NaTest, KTest, AlTest])
+	return all([SiTest, TiTest, AlTest, FeTest, MgTest, CaTest, NaTest, KTest])
 
 LiuCarbon_SiO2Max=82
 LiuCarbon_SiO2Min=73
@@ -1819,18 +1822,181 @@ LiuCarbon_K2OMax=5.0
 LiuCarbon_K2OMin=4.0
 
 def crf_LiuCarbonComp(calibval=None,sample={}):
-	SiTest = sample['SiO2'] >= LiuCarbon_SiO2Max and sample['SiO2'] <= LiuCarbon_SiO2Min
-	TiTest = sample['TiO2'] >= LiuCarbon_TiO2Max and sample['TiO2'] <= LiuCarbon_TiO2Min
+	SiTest = sample['SiO2'] >= LiuCarbon_SiO2Min and sample['SiO2'] <= LiuCarbon_SiO2Max
+	TiTest = sample['TiO2'] >= LiuCarbon_TiO2Min and sample['TiO2'] <= LiuCarbon_TiO2Max
 	AlTest = sample['Al2O3'] >= LiuCarbon_Al2O3Min and sample['Al2O3'] <= LiuCarbon_Al2O3Max
 	FeTest = sample['FeO'] >= LiuCarbon_FeOMin and sample['FeO'] <= LiuCarbon_FeOMax
 	MgTest = sample['MgO'] >= LiuCarbon_MgOMin and sample['MgO'] <= LiuCarbon_MgOMax
 	CaTest = sample['CaO'] >= LiuCarbon_CaOMin and sample['CaO'] <= LiuCarbon_CaOMax
 	NaTest = sample['Na2O'] >= LiuCarbon_Na2OMin and sample['Na2O'] <= LiuCarbon_Na2OMax
 	KTest = sample['K2O'] >= LiuCarbon_K2OMin and sample['K2O'] <= LiuCarbon_K2OMax
-	return all([SiTest, NaTest, KTest, AlTest])
+	return all([SiTest, TiTest, AlTest, FeTest, MgTest, CaTest, NaTest, KTest])
+
+#Max and min of combined dataset, as neither dataset is entirely complete due to publications which are hard to track down.
+Liu_SiO2Min=min([LiuWater_SiO2Min, LiuCarbon_SiO2Min])
+Liu_SiO2Max=max([LiuWater_SiO2Max, LiuCarbon_SiO2Max])
+Liu_TiO2Min=min([LiuWater_TiO2Min, LiuCarbon_TiO2Min])
+Liu_TiO2Max=max([LiuWater_TiO2Max, LiuCarbon_TiO2Max])
+Liu_Al2O3Min=min([LiuWater_Al2O3Min, LiuCarbon_Al2O3Min])
+Liu_Al2O3Max=max([LiuWater_Al2O3Max, LiuCarbon_Al2O3Max])
+Liu_FeOMin=min([LiuWater_FeOMin, LiuCarbon_FeOMin])
+Liu_FeOMax=max([LiuWater_FeOMax, LiuCarbon_FeOMax])
+Liu_MgOMin=min([LiuWater_MgOMin, LiuCarbon_MgOMin])
+Liu_MgOMax=max([LiuWater_MgOMax, LiuCarbon_MgOMax])
+Liu_CaOMin=min([LiuWater_CaOMin, LiuCarbon_CaOMin])
+Liu_CaOMax=max([LiuWater_CaOMax, LiuCarbon_CaOMax])
+Liu_Na2OMin=min([LiuWater_Na2OMin, LiuCarbon_Na2OMin])
+Liu_Na2OMax=max([LiuWater_Na2OMax, LiuCarbon_Na2OMax])
+Liu_K2OMin=min([LiuWater_K2OMin, LiuCarbon_K2OMin])
+Liu_K2OMax=max([LiuWater_K2OMax, LiuCarbon_K2OMax])
+
+
+def crf_LiuComp(calibval=None,sample={}):
+	SiTest = sample['SiO2'] >= Liu_SiO2Min and sample['SiO2'] <= Liu_SiO2Max
+	TiTest = sample['TiO2'] >= Liu_TiO2Min and sample['TiO2'] <= Liu_TiO2Max
+	AlTest = sample['Al2O3'] >= Liu_Al2O3Min and sample['Al2O3'] <= Liu_Al2O3Max
+	FeTest = sample['FeO'] >= Liu_FeOMin and sample['FeO'] <= Liu_FeOMax
+	MgTest = sample['MgO'] >= Liu_MgOMin and sample['MgO'] <= Liu_MgOMax
+	CaTest = sample['CaO'] >= Liu_CaOMin and sample['CaO'] <= Liu_CaOMax
+	NaTest = sample['Na2O'] >= Liu_Na2OMin and sample['Na2O'] <= Liu_Na2OMax
+	KTest = sample['K2O'] >= Liu_K2OMin and sample['K2O'] <= Liu_K2OMax
+	return all([SiTest, TiTest, AlTest, FeTest, MgTest, CaTest, NaTest, KTest])
+
 crmsg_LiuComp_pass = "The sample appears to be similar in composition to the rhyolites and haplogranites used to calibrate the Liu et al. model."
-crmsg_LiuComp_fail = " These calibration limits were selected based on the minimum and maximum values of these oxides (+-5%) in the calibration dataset. As the Liu et al. model incorperates no term for compositional dependence, users must take extreme care when extrapolating this model to compositions which differ significantly from the haplogranites and rhyolites in the calibration dataset. These warnings are simply a guide; we suggest that users carefully compare their major element data to the calibration dataset to check for suitability "
+crmsg_LiuWaterComp_fail = " These calibration limits were selected based on the minimum and maximum values of these oxides (+-5%) in the Water calibration dataset. As the Liu et al. model incorperates no term for compositional dependence, users must take extreme care when extrapolating this model to compositions which differ significantly from the haplogranites and rhyolites in the calibration dataset. These warnings are simply a guide; we suggest that users carefully compare their major element data to the calibration dataset to check for suitability "
+crmsg_LiuCarbonComp_fail = " These calibration limits were selected based on the minimum and maximum values of these oxides (+-5%) in the Carbon calibration dataset. As the Liu et al. model incorperates no term for compositional dependence, users must take extreme care when extrapolating this model to compositions which differ significantly from the haplogranites and rhyolites in the calibration dataset. These warnings are simply a guide; we suggest that users carefully compare their major element data to the calibration dataset to check for suitability "
+crmsg_LiuComp_fail = " These calibration limits were selected based on the minimum and maximum values of these oxides (+-5%) in the combined Water and Carbon calibration dataset. As the Liu et al. model incorperates no term for compositional dependence, users must take extreme care when extrapolating this model to compositions which differ significantly from the haplogranites and rhyolites in the calibration dataset. These warnings are simply a guide; we suggest that users carefully compare their major element data to the calibration dataset to check for suitability "
 crmsg_LiuComp_description = "The Liu et al. model is suitable for haplogranites and rhyolites."
+
+# ALLISON COMPOSITIONAL LIMITS -DEFINED AS MIN AND MAX OF CALIBRATION DATASET (-5% AND +5% RESPECTIVELY)
+Allison_SiO2_sfvf=[50.0, 55.97]
+Allison_TiO2_sfvf=[1.08, 1.25]
+Allison_Al2O3_sfvf=[15.76, 18.15]
+Allison_FeO_sfvf=[7.07, 8.06]
+Allison_MgO_sfvf=[5.89, 7.09]
+Allison_CaO_sfvf=[8.80, 9.91]
+Allison_Na2O_sfvf=[3.05, 3.53]
+Allison_K2O_sfvf=[1.25, 1.49]
+
+def crf_AllisonComp_sfvf(calibval=None,sample={}):
+	SiTest = sample['SiO2'] >= Allison_SiO2_sfvf[0] and sample['SiO2'] <= Allison_SiO2_sfvf[1]
+	TiTest = sample['TiO2'] >= Allison_TiO2_sfvf[0] and sample['TiO2'] <= Allison_TiO2_sfvf[1]
+	AlTest = sample['Al2O3'] >= Allison_Al2O3_sfvf[0] and sample['Al2O3'] <= Allison_Al2O3_sfvf[1]
+	FeTest = sample['FeO'] >= Allison_FeO_sfvf[0] and sample['FeO'] <= Allison_FeO_sfvf[1]
+	MgTest = sample['MgO'] >= Allison_MgO_sfvf[0] and sample['MgO'] <= Allison_MgO_sfvf[1]
+	CaTest = sample['CaO'] >= Allison_CaO_sfvf[0] and sample['CaO'] <= Allison_CaO_sfvf[1]
+	NaTest = sample['Na2O'] >= Allison_Na2O_sfvf[0] and sample['Na2O'] <= Allison_Na2O_sfvf[1]
+	KTest = sample['K2O'] >= Allison_K2O_sfvf[0] and sample['K2O'] <= Allison_K2O_sfvf[1]
+	return all([SiTest, TiTest, AlTest, FeTest, MgTest, CaTest, NaTest, KTest])
+
+
+Allison_SiO2_sunset=[45.72, 50.62]
+Allison_TiO2_sunset=[1.75, 1.96]
+Allison_Al2O3_sunset=[15.62, 17.45]
+Allison_FeO_sunset=[9.13, 10.42]
+Allison_MgO_sunset=[8.13, 9.19]
+Allison_CaO_sunset=[9.56, 10.59]
+Allison_Na2O_sunset=[3.29, 3.64]
+Allison_K2O_sunset=[0.77, 0.86]
+
+def crf_AllisonComp_sunset(calibval=None,sample={}):
+	SiTest = sample['SiO2'] >= Allison_SiO2_sunset[0] and sample['SiO2'] <= Allison_SiO2_sunset[1]
+	TiTest = sample['TiO2'] >= Allison_TiO2_sunset[0] and sample['TiO2'] <= Allison_TiO2_sunset[1]
+	AlTest = sample['Al2O3'] >= Allison_Al2O3_sunset[0] and sample['Al2O3'] <= Allison_Al2O3_sunset[1]
+	FeTest = sample['FeO'] >= Allison_FeO_sunset[0] and sample['FeO'] <= Allison_FeO_sunset[1]
+	MgTest = sample['MgO'] >= Allison_MgO_sunset[0] and sample['MgO'] <= Allison_MgO_sunset[1]
+	CaTest = sample['CaO'] >= Allison_CaO_sunset[0] and sample['CaO'] <= Allison_CaO_sunset[1]
+	NaTest = sample['Na2O'] >= Allison_Na2O_sunset[0] and sample['Na2O'] <= Allison_Na2O_sunset[1]
+	KTest = sample['K2O'] >= Allison_K2O_sunset[0] and sample['K2O'] <= Allison_K2O_sunset[1]
+	return all([SiTest, TiTest, AlTest, FeTest, MgTest, CaTest, NaTest, KTest])
+
+Allison_SiO2_erebus=[45.96, 51.04]
+Allison_TiO2_erebus=[2.67, 3.00]
+Allison_Al2O3_erebus=[18.31, 20.63]
+Allison_FeO_erebus=[7.46, 9.37]
+Allison_MgO_erebus=[3.03, 3.43]
+Allison_CaO_erebus=[6.58, 7.42]
+Allison_Na2O_erebus=[5.8, 6.49]
+Allison_K2O_erebus=[2.75, 3.13]
+
+def crf_AllisonComp_erebus(calibval=None,sample={}):
+	SiTest = sample['SiO2'] >= Allison_SiO2_erebus[0] and sample['SiO2'] <= Allison_SiO2_erebus[1]
+	TiTest = sample['TiO2'] >= Allison_TiO2_erebus[0] and sample['TiO2'] <= Allison_TiO2_erebus[1]
+	AlTest = sample['Al2O3'] >= Allison_Al2O3_erebus[0] and sample['Al2O3'] <= Allison_Al2O3_erebus[1]
+	FeTest = sample['FeO'] >= Allison_FeO_erebus[0] and sample['FeO'] <= Allison_FeO_erebus[1]
+	MgTest = sample['MgO'] >= Allison_MgO_erebus[0] and sample['MgO'] <= Allison_MgO_erebus[1]
+	CaTest = sample['CaO'] >= Allison_CaO_erebus[0] and sample['CaO'] <= Allison_CaO_erebus[1]
+	NaTest = sample['Na2O'] >= Allison_Na2O_erebus[0] and sample['Na2O'] <= Allison_Na2O_erebus[1]
+	KTest = sample['K2O'] >= Allison_K2O_erebus[0] and sample['K2O'] <= Allison_K2O_erebus[1]
+	return all([SiTest, TiTest, AlTest, FeTest, MgTest, CaTest, NaTest, KTest])
+
+Allison_SiO2_vesuvius=[46.65, 53.29]
+Allison_TiO2_vesuvius=[0.93, 1.13]
+Allison_Al2O3_vesuvius=[13.75, 16.28]
+Allison_FeO_vesuvius=[4.98, 7.48]
+Allison_MgO_vesuvius=[6.41, 7.76]
+Allison_CaO_vesuvius=[11.12, 14.16]
+Allison_Na2O_vesuvius=[1.74, 2.07]
+Allison_K2O_vesuvius=[5.48, 6.35]
+
+def crf_AllisonComp_vesuvius(calibval=None,sample={}):
+	SiTest = sample['SiO2'] >= Allison_SiO2_vesuvius[0] and sample['SiO2'] <= Allison_SiO2_vesuvius[1]
+	TiTest = sample['TiO2'] >= Allison_TiO2_vesuvius[0] and sample['TiO2'] <= Allison_TiO2_vesuvius[1]
+	AlTest = sample['Al2O3'] >= Allison_Al2O3_vesuvius[0] and sample['Al2O3'] <= Allison_Al2O3_vesuvius[1]
+	FeTest = sample['FeO'] >= Allison_FeO_vesuvius[0] and sample['FeO'] <= Allison_FeO_vesuvius[1]
+	MgTest = sample['MgO'] >= Allison_MgO_vesuvius[0] and sample['MgO'] <= Allison_MgO_vesuvius[1]
+	CaTest = sample['CaO'] >= Allison_CaO_vesuvius[0] and sample['CaO'] <= Allison_CaO_vesuvius[1]
+	NaTest = sample['Na2O'] >= Allison_Na2O_vesuvius[0] and sample['Na2O'] <= Allison_Na2O_vesuvius[1]
+	KTest = sample['K2O'] >= Allison_K2O_vesuvius[0] and sample['K2O'] <= Allison_K2O_vesuvius[1]
+	return all([SiTest, TiTest, AlTest, FeTest, MgTest, CaTest, NaTest, KTest])
+
+
+Allison_SiO2_etna=[46.03, 52.97]
+Allison_TiO2_etna=[1.61, 1.89]
+Allison_Al2O3_etna=[15.87, 18.24]
+Allison_FeO_etna=[6.75, 10.21]
+Allison_MgO_etna=[5.9, 7]
+Allison_CaO_etna=[9.38, 11.99]
+Allison_Na2O_etna=[3.4, 3.94]
+Allison_K2O_etna=[1.69, 2.25]
+
+def crf_AllisonComp_etna(calibval=None,sample={}):
+	SiTest = sample['SiO2'] >= Allison_SiO2_etna[0] and sample['SiO2'] <= Allison_SiO2_etna[1]
+	TiTest = sample['TiO2'] >= Allison_TiO2_etna[0] and sample['TiO2'] <= Allison_TiO2_etna[1]
+	AlTest = sample['Al2O3'] >= Allison_Al2O3_etna[0] and sample['Al2O3'] <= Allison_Al2O3_etna[1]
+	FeTest = sample['FeO'] >= Allison_FeO_etna[0] and sample['FeO'] <= Allison_FeO_etna[1]
+	MgTest = sample['MgO'] >= Allison_MgO_etna[0] and sample['MgO'] <= Allison_MgO_etna[1]
+	CaTest = sample['CaO'] >= Allison_CaO_etna[0] and sample['CaO'] <= Allison_CaO_etna[1]
+	NaTest = sample['Na2O'] >= Allison_Na2O_etna[0] and sample['Na2O'] <= Allison_Na2O_etna[1]
+	KTest = sample['K2O'] >= Allison_K2O_etna[0] and sample['K2O'] <= Allison_K2O_etna[1]
+	return all([SiTest, TiTest, AlTest, FeTest, MgTest, CaTest, NaTest, KTest])
+
+Allison_SiO2_stromboli=[47.23, 55.15]
+Allison_TiO2_stromboli=[0.74, 0.94]
+Allison_Al2O3_stromboli=[14.87, 17.73]
+Allison_FeO_stromboli=[5.08, 7.51]
+Allison_MgO_stromboli=[7.52, 9.26]
+Allison_CaO_stromboli=[11.99, 13.46]
+Allison_Na2O_stromboli=[2.29, 2.67]
+Allison_K2O_stromboli=[1.79, 2.17]
+
+def crf_AllisonComp_stromboli(calibval=None,sample={}):
+	SiTest = sample['SiO2'] >= Allison_SiO2_stromboli[0] and sample['SiO2'] <= Allison_SiO2_stromboli[1]
+	TiTest = sample['TiO2'] >= Allison_TiO2_stromboli[0] and sample['TiO2'] <= Allison_TiO2_stromboli[1]
+	AlTest = sample['Al2O3'] >= Allison_Al2O3_stromboli[0] and sample['Al2O3'] <= Allison_Al2O3_stromboli[1]
+	FeTest = sample['FeO'] >= Allison_FeO_stromboli[0] and sample['FeO'] <= Allison_FeO_stromboli[1]
+	MgTest = sample['MgO'] >= Allison_MgO_stromboli[0] and sample['MgO'] <= Allison_MgO_stromboli[1]
+	CaTest = sample['CaO'] >= Allison_CaO_stromboli[0] and sample['CaO'] <= Allison_CaO_stromboli[1]
+	NaTest = sample['Na2O'] >= Allison_Na2O_stromboli[0] and sample['Na2O'] <= Allison_Na2O_stromboli[1]
+	KTest = sample['K2O'] >= Allison_K2O_stromboli[0] and sample['K2O'] <= Allison_K2O_stromboli[1]
+	return all([SiTest, TiTest, AlTest, FeTest, MgTest, CaTest, NaTest, KTest])
+
+
+
+
+crmsg_AllisonComp_pass = "The sample appears to be similar in composition to the compositional dataset for the selected Carbon model of Allison et al. (2019)."
+crmsg_AllisonComp_fail = " These calibration limits were selected based on the minimum and maximum values of these oxides (+-5%) in the calibration dataset. As the Allison et al. model incorperates no term for compositional dependence, users must take extreme care when extrapolating this model to compositions which differ significantly from the calibration dataset. These warnings are simply a guide; we suggest that users carefully compare their major element data to the calibration dataset to check for suitability "
+crmsg_AllisonComp_description = "The Allison et al. (2019) Carbon model is defined for 6 different alkali compositions."
 
 
 #-------------FUGACITY MODELS--------------------------------#
@@ -4944,7 +5110,7 @@ class LiuWater(Model):
 									 CalibrationRange('K2O',[LiuWater_K2OMin,LiuWater_K2OMax],crf_Between,'wt%','Liu et al. (2005) water',
 													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
 									 CalibrationRange('sample',None,crf_LiuWaterComp,None,None,
-									 				  fail_msg=crmsg_LiuComp_fail, pass_msg=crmsg_LiuComp_pass, description_msg=crmsg_LiuComp_description)])
+									 				  fail_msg=crmsg_LiuWaterComp_fail, pass_msg=crmsg_LiuComp_pass, description_msg=crmsg_LiuComp_description)])
 
 
 	def preprocess_sample(self, sample):
@@ -5144,7 +5310,7 @@ class LiuCarbon(Model):
 									 CalibrationRange('K2O',[LiuCarbon_K2OMin,LiuCarbon_K2OMax],crf_Between,'wt%','Liu et al. (2005) Carbon',
 													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
 									 CalibrationRange('sample',None,crf_LiuCarbonComp,None,None,
-									 				  fail_msg=crmsg_LiuComp_fail, pass_msg=crmsg_LiuComp_pass, description_msg=crmsg_LiuComp_description)])
+									 				  fail_msg=crmsg_LiuCarbonComp_fail, pass_msg=crmsg_LiuComp_pass, description_msg=crmsg_LiuComp_description)])
 
 
 
@@ -5345,11 +5511,10 @@ class AllisonCarbon(Model):
 		self.set_volatile_species(['CO2'])
 		self.set_fugacity_model(fugacity_HB_co2())
 		self.set_activity_model(activity_idealsolution())
-		self.set_calibration_ranges([
-									 # CalibrationRange('pressure',[0.0,6000.0],crf_Between,'bar','Allison et al. (2019) carbon',
-										# 			  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
-									 CalibrationRange('temperature',1200,crf_EqualTo,'oC','Allison et al. (2019) carbon',
-									 				  fail_msg=crmsg_EqualTo_fail, pass_msg=crmsg_EqualTo_pass, description_msg=crmsg_EqualTo_description)])
+		self.set_calibration_ranges([CalibrationRange('temperature',1200,crf_EqualTo,'oC','Allison et al. (2019) carbon',
+						 							  fail_msg=crmsg_EqualTo_fail_AllisonTemp, pass_msg=crmsg_EqualTo_pass, description_msg=crmsg_EqualTo_description),
+									 CalibrationRange('temperature',[1000,1400],crf_Between,'bar','Allison et al. (2019) carbon',
+						 							   fail_msg=crmsg_Between_AllisonTemp, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
 		self.set_solubility_dependence(False)
 		self.model_loc = model_loc
 		self.model_fit = model_fit
@@ -7385,31 +7550,199 @@ default_models = {'Shishkina':                MixedFluid({'H2O':ShishkinaWater()
 
 # Return homogenised calibration range checks for mixed fluid models:
 default_models['Liu'].models[1].set_calibration_ranges([])
+
 _crs_to_update = default_models['Liu'].models[0].calibration_ranges
 for _cr in _crs_to_update:
 	_cr.model_name = 'Liu et al. (2005)'
-default_models['Liu'].models[0].set_calibration_ranges(_crs_to_update)
+default_models['Liu'].models[0].set_calibration_ranges([CalibrationRange('pressure',[0,5000.0],crf_Between,'bar','Liu et al. (2005)',
+													  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('temperature',[700.0,1200],crf_Between,'oC','Liu et al. (2005)',
+									 				  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('SiO2',[Liu_SiO2Min,Liu_SiO2Max],crf_Between,'wt%','Liu et al. (2005)',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('TiO2',[Liu_TiO2Min,Liu_TiO2Max],crf_Between,'wt%','Liu et al. (2005)',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('Al2O3',[Liu_Al2O3Min,Liu_Al2O3Max],crf_Between,'wt%','Liu et al. (2005)',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('FeO',[Liu_FeOMin,Liu_FeOMax],crf_Between,'wt%','Liu et al. (2005)',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('MgO',[Liu_MgOMin,Liu_MgOMax],crf_Between,'wt%','Liu et al. (2005)',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('CaO',[Liu_CaOMin,Liu_CaOMax],crf_Between,'wt%','Liu et al. (2005)',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('Na2O',[Liu_Na2OMin,Liu_Na2OMax],crf_Between,'wt%','Liu et al. (2005)',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('K2O',[Liu_K2OMin,Liu_K2OMax],crf_Between,'wt%','Liu et al. (2005)',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+									 CalibrationRange('sample',None,crf_LiuComp,None,None,
+									 				  fail_msg=crmsg_LiuComp_fail, pass_msg=crmsg_LiuComp_pass, description_msg=crmsg_LiuComp_description)])
 
-# Set individual Allison Model CRs
+
+
+
 _crs_to_update = default_models['AllisonCarbon_sunset'].calibration_ranges
 default_models['AllisonCarbon_sunset'].set_calibration_ranges(_crs_to_update+
-				 [CalibrationRange('pressure',[4071.0,6098.0],crf_Between,'bar','Allison et al. (2019) sunset carbon',
-					 			  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
+				 [CalibrationRange('pressure',7000,crf_LessThan,'bar','Allison et al. (2019) sunset carbon',
+													  fail_msg=crmsg_LessThan_fail_Allison, pass_msg=crmsg_LessThan_pass),
+				 CalibrationRange('pressure',4071,crf_GreaterThan,'bar','Allison et al. (2019) sunset carbon',
+													  fail_msg=crmsg_GreaterThan_fail_Allison, pass_msg=crmsg_GreaterThan_pass),
+				 CalibrationRange('H2O',0.5,crf_LessThan,'wt%','Allison et al. (2019) sunset carbon',
+													  fail_msg=crmsg_LessThan_fail_AllisonH2O, pass_msg=crmsg_LessThan_pass),
+				 CalibrationRange('SiO2',[Allison_SiO2_sunset[0],Allison_SiO2_sunset[1]],crf_Between,'wt%','Allison et al. (2019) sunset carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('TiO2',[Allison_TiO2_sunset[0],Allison_TiO2_sunset[1]],crf_Between,'wt%','Allison et al. (2019) sunset carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('Al2O3',[Allison_Al2O3_sunset[0],Allison_Al2O3_sunset[1]],crf_Between,'wt%','Allison et al. (2019) sunset carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('FeO',[Allison_FeO_sunset[0],Allison_FeO_sunset[1]],crf_Between,'wt%','Allison et al. (2019) sunset carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('MgO',[Allison_MgO_sunset[0],Allison_MgO_sunset[1]],crf_Between,'wt%','Allison et al. (2019) sunset carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('CaO',[Allison_CaO_sunset[0],Allison_CaO_sunset[1]],crf_Between,'wt%','Allison et al. (2019) sunset carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('Na2O',[Allison_Na2O_sunset[0],Allison_Na2O_sunset[1]],crf_Between,'wt%','Allison et al. (2019) sunset carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('K2O',[Allison_K2O_sunset[0],Allison_K2O_sunset[1]],crf_Between,'wt%','Allison et al. (2019) sunset carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				CalibrationRange('sample',None,crf_AllisonComp_sunset,None,None,
+									 				  fail_msg=crmsg_AllisonComp_fail, pass_msg=crmsg_AllisonComp_pass)])
+
+
+_crs_to_update = default_models['AllisonCarbon_sfvf'].calibration_ranges
 default_models['AllisonCarbon_sfvf'].set_calibration_ranges(_crs_to_update+
-				 [CalibrationRange('pressure',[4133.0,6141.0],crf_Between,'bar','Allison et al. (2019) sfvf carbon',
-					 			  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
+				 [CalibrationRange('pressure',7000,crf_LessThan,'bar','Allison et al. (2019) sfvf carbon',
+													  fail_msg=crmsg_LessThan_fail_Allison, pass_msg=crmsg_LessThan_pass),
+				 CalibrationRange('pressure',4133,crf_GreaterThan,'bar','Allison et al. (2019) sfvf carbon',
+													  fail_msg=crmsg_GreaterThan_fail_Allison, pass_msg=crmsg_GreaterThan_pass),
+				 CalibrationRange('H2O',0.5,crf_LessThan,'wt%','Allison et al. (2019) sfvf carbon',
+													  fail_msg=crmsg_LessThan_fail_AllisonH2O, pass_msg=crmsg_LessThan_pass),
+				 CalibrationRange('SiO2',[Allison_SiO2_sfvf[0],Allison_SiO2_sfvf[1]],crf_Between,'wt%','Allison et al. (2019) sfvf carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('TiO2',[Allison_TiO2_sfvf[0],Allison_TiO2_sfvf[1]],crf_Between,'wt%','Allison et al. (2019) sfvf carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('Al2O3',[Allison_Al2O3_sfvf[0],Allison_Al2O3_sfvf[1]],crf_Between,'wt%','Allison et al. (2019) sfvf carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('FeO',[Allison_FeO_sfvf[0],Allison_FeO_sfvf[1]],crf_Between,'wt%','Allison et al. (2019) sfvf carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('MgO',[Allison_MgO_sfvf[0],Allison_MgO_sfvf[1]],crf_Between,'wt%','Allison et al. (2019) sfvf carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('CaO',[Allison_CaO_sfvf[0],Allison_CaO_sfvf[1]],crf_Between,'wt%','Allison et al. (2019) sfvf carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('Na2O',[Allison_Na2O_sfvf[0],Allison_Na2O_sfvf[1]],crf_Between,'wt%','Allison et al. (2019) sfvf carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('K2O',[Allison_K2O_sfvf[0],Allison_K2O_sfvf[1]],crf_Between,'wt%','Allison et al. (2019) sfvf carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				CalibrationRange('sample',None,crf_AllisonComp_sfvf,None,None,
+									 				  fail_msg=crmsg_AllisonComp_fail, pass_msg=crmsg_AllisonComp_pass)])
+
+_crs_to_update = default_models['AllisonCarbon_erebus'].calibration_ranges
 default_models['AllisonCarbon_erebus'].set_calibration_ranges(_crs_to_update+
-				 [CalibrationRange('pressure',[4078.0,6175.0],crf_Between,'bar','Allison et al. (2019) erebus carbon',
-					 			  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
-default_models['AllisonCarbon_vesuvius'].set_calibration_ranges(_crs_to_update+
-				 [CalibrationRange('pressure',[269.0,6221.0],crf_Between,'bar','Allison et al. (2019) vesuvius carbon',
-					 			  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
+				 [CalibrationRange('pressure',7000,crf_LessThan,'bar','Allison et al. (2019) erebus carbon',
+													  fail_msg=crmsg_LessThan_fail_Allison, pass_msg=crmsg_LessThan_pass),
+				 CalibrationRange('pressure',4078,crf_GreaterThan,'bar','Allison et al. (2019) erebus carbon',
+													  fail_msg=crmsg_GreaterThan_fail_Allison, pass_msg=crmsg_GreaterThan_pass),
+				 CalibrationRange('H2O',0.5,crf_LessThan,'wt%','Allison et al. (2019) erebus carbon',
+													  fail_msg=crmsg_LessThan_fail_AllisonH2O, pass_msg=crmsg_LessThan_pass),
+				 CalibrationRange('SiO2',[Allison_SiO2_erebus[0],Allison_SiO2_erebus[1]],crf_Between,'wt%','Allison et al. (2019) erebus carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('TiO2',[Allison_TiO2_erebus[0],Allison_TiO2_erebus[1]],crf_Between,'wt%','Allison et al. (2019) erebus carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('Al2O3',[Allison_Al2O3_erebus[0],Allison_Al2O3_erebus[1]],crf_Between,'wt%','Allison et al. (2019) erebus carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('FeO',[Allison_FeO_erebus[0],Allison_FeO_erebus[1]],crf_Between,'wt%','Allison et al. (2019) erebus carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('MgO',[Allison_MgO_erebus[0],Allison_MgO_erebus[1]],crf_Between,'wt%','Allison et al. (2019) erebus carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('CaO',[Allison_CaO_erebus[0],Allison_CaO_erebus[1]],crf_Between,'wt%','Allison et al. (2019) erebus carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('Na2O',[Allison_Na2O_erebus[0],Allison_Na2O_erebus[1]],crf_Between,'wt%','Allison et al. (2019) erebus carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('K2O',[Allison_K2O_erebus[0],Allison_K2O_erebus[1]],crf_Between,'wt%','Allison et al. (2019) erebus carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				CalibrationRange('sample',None,crf_AllisonComp_erebus,None,None,
+									 				  fail_msg=crmsg_AllisonComp_fail, pass_msg=crmsg_AllisonComp_pass)])
+
+
+_crs_to_update = default_models['AllisonCarbon_etna'].calibration_ranges
 default_models['AllisonCarbon_etna'].set_calibration_ranges(_crs_to_update+
-				 [CalibrationRange('pressure',[485.0,6199.0],crf_Between,'bar','Allison et al. (2019) etna carbon',
-					 			  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
+				 [CalibrationRange('pressure',7000,crf_LessThan,'bar','Allison et al. (2019) etna carbon',
+													  fail_msg=crmsg_LessThan_fail_Allison, pass_msg=crmsg_LessThan_pass),
+				 CalibrationRange('pressure',485,crf_GreaterThan,'bar','Allison et al. (2019) etna carbon',
+													  fail_msg=crmsg_GreaterThan_fail_Allison, pass_msg=crmsg_GreaterThan_pass),
+				 CalibrationRange('H2O',0.5,crf_LessThan,'wt%','Allison et al. (2019) etna carbon',
+													  fail_msg=crmsg_LessThan_fail_AllisonH2O, pass_msg=crmsg_LessThan_pass),
+				 CalibrationRange('SiO2',[Allison_SiO2_etna[0],Allison_SiO2_etna[1]],crf_Between,'wt%','Allison et al. (2019) etna carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('TiO2',[Allison_TiO2_etna[0],Allison_TiO2_etna[1]],crf_Between,'wt%','Allison et al. (2019) etna carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('Al2O3',[Allison_Al2O3_etna[0],Allison_Al2O3_etna[1]],crf_Between,'wt%','Allison et al. (2019) etna carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('FeO',[Allison_FeO_etna[0],Allison_FeO_etna[1]],crf_Between,'wt%','Allison et al. (2019) etna carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('MgO',[Allison_MgO_etna[0],Allison_MgO_etna[1]],crf_Between,'wt%','Allison et al. (2019) etna carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('CaO',[Allison_CaO_etna[0],Allison_CaO_etna[1]],crf_Between,'wt%','Allison et al. (2019) etna carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('Na2O',[Allison_Na2O_etna[0],Allison_Na2O_etna[1]],crf_Between,'wt%','Allison et al. (2019) etna carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('K2O',[Allison_K2O_etna[0],Allison_K2O_etna[1]],crf_Between,'wt%','Allison et al. (2019) etna carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				CalibrationRange('sample',None,crf_AllisonComp_etna,None,None,
+									 				  fail_msg=crmsg_AllisonComp_fail, pass_msg=crmsg_AllisonComp_pass)])
+
+_crs_to_update = default_models['AllisonCarbon_vesuvius'].calibration_ranges
+default_models['AllisonCarbon_vesuvius'].set_calibration_ranges(_crs_to_update+
+				 [CalibrationRange('pressure',7000,crf_LessThan,'bar','Allison et al. (2019) vesuvius carbon',
+													  fail_msg=crmsg_LessThan_fail_Allison, pass_msg=crmsg_LessThan_pass),
+				 CalibrationRange('pressure',269,crf_GreaterThan,'bar','Allison et al. (2019) vesuvius carbon',
+													  fail_msg=crmsg_GreaterThan_fail_Allison, pass_msg=crmsg_GreaterThan_pass),
+				 CalibrationRange('H2O',0.5,crf_LessThan,'wt%','Allison et al. (2019) vesuvius carbon',
+													  fail_msg=crmsg_LessThan_fail_AllisonH2O, pass_msg=crmsg_LessThan_pass),
+				 CalibrationRange('SiO2',[Allison_SiO2_vesuvius[0],Allison_SiO2_vesuvius[1]],crf_Between,'wt%','Allison et al. (2019) vesuvius carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('TiO2',[Allison_TiO2_vesuvius[0],Allison_TiO2_vesuvius[1]],crf_Between,'wt%','Allison et al. (2019) vesuvius carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('Al2O3',[Allison_Al2O3_vesuvius[0],Allison_Al2O3_vesuvius[1]],crf_Between,'wt%','Allison et al. (2019) vesuvius carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('FeO',[Allison_FeO_vesuvius[0],Allison_FeO_vesuvius[1]],crf_Between,'wt%','Allison et al. (2019) vesuvius carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('MgO',[Allison_MgO_vesuvius[0],Allison_MgO_vesuvius[1]],crf_Between,'wt%','Allison et al. (2019) vesuvius carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('CaO',[Allison_CaO_vesuvius[0],Allison_CaO_vesuvius[1]],crf_Between,'wt%','Allison et al. (2019) vesuvius carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('Na2O',[Allison_Na2O_vesuvius[0],Allison_Na2O_vesuvius[1]],crf_Between,'wt%','Allison et al. (2019) vesuvius carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('K2O',[Allison_K2O_vesuvius[0],Allison_K2O_vesuvius[1]],crf_Between,'wt%','Allison et al. (2019) vesuvius carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				CalibrationRange('sample',None,crf_AllisonComp_vesuvius,None,None,
+									 				  fail_msg=crmsg_AllisonComp_fail, pass_msg=crmsg_AllisonComp_pass)])
+
+_crs_to_update = default_models['AllisonCarbon_stromboli'].calibration_ranges
 default_models['AllisonCarbon_stromboli'].set_calibration_ranges(_crs_to_update+
-				 [CalibrationRange('pressure',[524.0,6080.0],crf_Between,'bar','Allison et al. (2019) stromboli carbon',
-					 			  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
+				 [CalibrationRange('pressure',7000,crf_LessThan,'bar','Allison et al. (2019) stromboli carbon',
+													  fail_msg=crmsg_LessThan_fail_Allison, pass_msg=crmsg_LessThan_pass),
+				 CalibrationRange('pressure',524,crf_GreaterThan,'bar','Allison et al. (2019) stromboli carbon',
+													  fail_msg=crmsg_GreaterThan_fail_Allison, pass_msg=crmsg_GreaterThan_pass),
+				 CalibrationRange('H2O',0.5,crf_LessThan,'wt%','Allison et al. (2019) stromboli carbon',
+													  fail_msg=crmsg_LessThan_fail_AllisonH2O, pass_msg=crmsg_LessThan_pass),
+				 CalibrationRange('SiO2',[Allison_SiO2_stromboli[0],Allison_SiO2_stromboli[1]],crf_Between,'wt%','Allison et al. (2019) stromboli carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('TiO2',[Allison_TiO2_stromboli[0],Allison_TiO2_stromboli[1]],crf_Between,'wt%','Allison et al. (2019) stromboli carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('Al2O3',[Allison_Al2O3_stromboli[0],Allison_Al2O3_stromboli[1]],crf_Between,'wt%','Allison et al. (2019) stromboli carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('FeO',[Allison_FeO_stromboli[0],Allison_FeO_stromboli[1]],crf_Between,'wt%','Allison et al. (2019) stromboli carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('MgO',[Allison_MgO_stromboli[0],Allison_MgO_stromboli[1]],crf_Between,'wt%','Allison et al. (2019) stromboli carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('CaO',[Allison_CaO_stromboli[0],Allison_CaO_stromboli[1]],crf_Between,'wt%','Allison et al. (2019) stromboli carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('Na2O',[Allison_Na2O_stromboli[0],Allison_Na2O_stromboli[1]],crf_Between,'wt%','Allison et al. (2019) stromboli carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				 CalibrationRange('K2O',[Allison_K2O_stromboli[0],Allison_K2O_stromboli[1]],crf_Between,'wt%','Allison et al. (2019) stromboli carbon',
+													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
+				CalibrationRange('sample',None,crf_AllisonComp_stromboli,None,None,
+									 				  fail_msg=crmsg_AllisonComp_fail, pass_msg=crmsg_AllisonComp_pass)])
 
 def get_models(models='all'):
 	"""
