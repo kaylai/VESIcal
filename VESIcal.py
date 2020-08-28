@@ -1774,7 +1774,7 @@ crmsg_BC_fail_ShC1="{param_name} ({param_val:.1f} {units}) is outside the calibr
 crmsg_BC_DixonT="{param_name} ({param_val:.1f} {units}) lies more than 200°C away from the temperature the Dixon (1997, Pi-SiO2 simpl.) model was calibrated for (the range suggested by Newman and Lowenstern, 2002; VolatileCalc). " # Warning for Dixon temperature
 crmsg_BC_IMT="{param_name} ({param_val:.1f} {units}) is outside the broad range suggested by Iacono-Marziano ({calib_val0:.1f}-{calib_val1:.1f} {units}, although they note that this model is best calibrated at 1200-1300C). " # Warning for Iacono-Marziano temperature
 crmsg_BC_IMP="{param_name} ({param_val:.1f} {units}) is outside the broad range suggested by Iacono-Marziano ({calib_val0:.1f}-{calib_val1:.1f} {units}, although most  calibration experiments were conducted at <5000 bars).  " # Warning for Iacono-Marziano pressure
-crmsg_Between_AllisonTemp="{param_name} ({param_val:.1f} {units} is outside the recomended temperature range for {model name} (1000-1400°C). "
+crmsg_Between_AllisonTemp="{param_name} ({param_val:.1f} {units} is outside the recomended temperature range for {model_name} (1000-1400°C). "
 
 # Defining compositional ranges for Liu - based on the Max value of the calibration dataset +-5% of that value
 LiuWater_SiO2Max=82
@@ -5536,7 +5536,7 @@ class AllisonCarbon(Model):
 		"""
 		return normalize_AdditionalVolatiles(sample)
 
-	def calculate_dissolved_volatiles(self,pressure,sample=None,X_fluid=1.0,**kwargs):
+	def calculate_dissolved_volatiles(self,pressure,temperature=1200,sample=None,X_fluid=1.0,**kwargs):
 		"""
 		Calclates the dissolved CO2 concentration using (Eqns) 2-7 or 10-11 from Allison et al. (2019).
 
@@ -5557,7 +5557,7 @@ class AllisonCarbon(Model):
 		float
 			Dissolved CO2 concentration in wt%.
 		"""
-		temperature = 1200 #temp in degrees C
+		# temperature = 1200 #temp in degrees C
 		temperature = temperature + 273.15 #translate T from C to K
 
 		if pressure < 0.0:
@@ -5610,7 +5610,7 @@ class AllisonCarbon(Model):
 
 
 
-	def calculate_equilibrium_fluid_comp(self,pressure,sample,**kwargs):
+	def calculate_equilibrium_fluid_comp(self,pressure,sample,temperature=1200,**kwargs):
 		""" Returns 1.0 if a pure CO2 fluid is saturated.
 		Returns 0.0 if a pure CO2 fluid is undersaturated.
 
@@ -5629,13 +5629,13 @@ class AllisonCarbon(Model):
 			1.0 if CO2-fluid saturated, 0.0 otherwise.
 		"""
 
-		satP = self.calculate_saturation_pressure(temperature=1200,sample=sample,X_fluid=1.0,**kwargs)
+		satP = self.calculate_saturation_pressure(temperature=temperature,sample=sample,X_fluid=1.0,**kwargs)
 		if pressure < satP:
 			return 1.0
 		else:
 			return 0.0
 
-	def calculate_saturation_pressure(self,sample,X_fluid=1.0,**kwargs):
+	def calculate_saturation_pressure(self,sample,temperature=1200,X_fluid=1.0,**kwargs):
 		"""
 		Calculates the pressure at which a pure CO2 fluid is saturated, for the given sample
 		composition and CO2 concentration. Calls the scipy.root_scalar routine, which makes
@@ -5656,7 +5656,7 @@ class AllisonCarbon(Model):
 			Calculated saturation pressure in bars.
 		"""
 
-		temperature = 1200 #temp in degrees C
+		# temperature = 1200 #temp in degrees C
 
 		if X_fluid < 0 or X_fluid > 1:
 			raise InputError("X_fluid must have a value between 0 and 1.")
@@ -5675,7 +5675,7 @@ class AllisonCarbon(Model):
 			satP = np.nan
 		return satP
 
-	def root_saturation_pressure(self,pressure,sample,X_fluid,kwargs):
+	def root_saturation_pressure(self,pressure,temperature,sample,X_fluid,kwargs):
 		""" Function called by scipy.root_scalar when finding the saturation pressure using
 		calculate_saturation_pressure.
 
@@ -5697,7 +5697,7 @@ class AllisonCarbon(Model):
 			The differece between the dissolved CO2 at the pressure guessed, and the CO2 concentration
 			passed in the sample variable.
 		"""
-		return sample['CO2'] - self.calculate_dissolved_volatiles(pressure=pressure,temperature=1200,sample=sample,X_fluid=X_fluid,**kwargs)
+		return sample['CO2'] - self.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,sample=sample,X_fluid=X_fluid,**kwargs)
 
 
 
