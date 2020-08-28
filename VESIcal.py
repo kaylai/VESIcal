@@ -4323,18 +4323,24 @@ class IaconoMarzianoWater(Model):
 		float
 			NBO/O.
 		"""
-		if all(ox in sample for ox in ['K2O','Na2O','CaO','MgO','FeO','Al2O3','SiO2','TiO2','Al2O3']) == False:
-			raise InputError("sample must contain K2O, Na2O, CaO, MgO, FeO, Al2O3, SiO2, TiO2 and Al2O3.")
+		if type(sample) != dict and type(sample) != pd.core.series.Series:
+			raise InputError("sample must be a dict or a pandas Series,")
+		if all(ox in sample for ox in ['K2O','Na2O','CaO','MgO','FeO','Al2O3','SiO2','TiO2']) == False:
+			raise InputError("sample must contain K2O, Na2O, CaO, MgO, FeO, Al2O3, SiO2, and TiO2.")
 
 		X = wtpercentOxides_to_molOxides(sample)
 
-		NBO = 2*(X['K2O']+X['Na2O']+X['CaO']+X['MgO']+X['FeO']-X['Al2O3'])
-		O = 2*X['SiO2']+2*X['TiO2']+3*X['Al2O3']+X['MgO']+X['FeO']+X['CaO']+X['Na2O']+X['K2O']
+		if 'Fe2O3' in X:
+			Fe2O3 = X['Fe2O3']
+		else:
+			Fe2O3 = 0
 
+		NBO = 2*(X['K2O']+X['Na2O']+X['CaO']+X['MgO']+X['FeO']+2*Fe2O3-X['Al2O3'])
+		O = 2*X['SiO2']+2*X['TiO2']+3*X['Al2O3']+X['MgO']+X['FeO']+2*Fe2O3+X['CaO']+X['Na2O']+X['K2O']
 
 		if hydrous_coeffs == True:
-			if 'H2O' not in sample:
-				raise InputError("sample must contain H2O.")
+			if 'H2O' not in X:
+				raise InputError("sample must contain H2O if using the hydrous parameterization.")
 			NBO = NBO + 2*X['H2O']
 			O = O + X['H2O']
 
