@@ -4467,6 +4467,10 @@ class IaconoMarzianoCarbon(Model):
 
 		if all(ox in molarProps for ox in ['Al2O3','CaO','K2O','Na2O','FeO','MgO','Na2O','K2O']) == False:
 			raise InputError("sample must contain Al2O3, CaO, K2O, Na2O, FeO, MgO, Na2O, and K2O.")
+		if 'Fe2O3' in molarProps:
+			Fe2O3 = molarProps['Fe2O3']
+		else:
+			Fe2O3 = 0
 
 		x = list()
 		if 'H2O' in molarProps:
@@ -4474,7 +4478,7 @@ class IaconoMarzianoCarbon(Model):
 		else:
 			x.append(0.0)
 		x.append(molarProps['Al2O3']/(molarProps['CaO']+molarProps['K2O']+molarProps['Na2O']))
-		x.append((molarProps['FeO']+molarProps['MgO']))
+		x.append((molarProps['FeO']+Fe2O3*2+molarProps['MgO']))
 		x.append((molarProps['Na2O']+molarProps['K2O']))
 		x = np.array(x)
 
@@ -4594,8 +4598,13 @@ class IaconoMarzianoCarbon(Model):
 
 		X = wtpercentOxides_to_molOxides(sample)
 
-		NBO = 2*(X['K2O']+X['Na2O']+X['CaO']+X['MgO']+X['FeO']-X['Al2O3'])
-		O = 2*X['SiO2']+2*X['TiO2']+3*X['Al2O3']+X['MgO']+X['FeO']+X['CaO']+X['Na2O']+X['K2O']
+		if 'Fe2O3' in X:
+			Fe2O3 = X['Fe2O3']
+		else:
+			Fe2O3 = 0
+
+		NBO = 2*(X['K2O']+X['Na2O']+X['CaO']+X['MgO']+X['FeO']+2*Fe2O3-X['Al2O3'])
+		O = 2*X['SiO2']+2*X['TiO2']+3*X['Al2O3']+X['MgO']+X['FeO']+2*Fe2O3+X['CaO']+X['Na2O']+X['K2O']
 
 		if hydrous_coeffs == True:
 			if 'H2O' not in X:
