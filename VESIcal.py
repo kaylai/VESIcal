@@ -6723,7 +6723,7 @@ class MagmaSat(Model):
 										smooth_isobars=True, smooth_isopleths=True, print_status=True, **kwargs):
 		"""
 		Calculates isobars and isopleths at a constant temperature for a given sample. Isobars can be calculated
-		for any number of pressures.
+		for any number of pressures. Isobars are calculated using 5 XH2O values (0, 0.25, 0.5, 0.75, 1).
 
 		Parameters
 		----------
@@ -6763,12 +6763,13 @@ class MagmaSat(Model):
 		if isinstance(isopleth_list, list):
 			iso_vals = isopleth_list
 			has_isopleths = True
-			if 0 not in iso_vals:
-				iso_vals[0:0] = [0]
-			if 1 not in iso_vals:
-				iso_vals.append(1)
 		else:
 			raise InputError("isopleth_list must be of type list")
+
+		required_iso_vals = [0, 0.25, 0.5, 0.75, 1]
+		all_iso_vals = iso_vals + required_iso_vals
+		all_iso_vals = list(dict.fromkeys(all_iso_vals)) #remove duplicates
+		all_iso_vals.sort() #sort from smallest to largest
 
 		isobar_data = []
 		isopleth_data = []
@@ -6782,13 +6783,18 @@ class MagmaSat(Model):
 			guess = 0.0
 			if print_status == True:
 				print("Calculating isobar at " + str(i) + " bars")
-			for X in iso_vals:
-				if print_status == True and has_isopleths == True:
-					print("Calculating isopleth at " + str(X))
+			for X in all_iso_vals:
+				if print_status == True:
+					if isopleth_list != None and X in iso_vals:
+						print("Calculating isopleth at XH2Ofluid = " + str(X))
+					if X not in iso_vals:
+						print("Calculating isobar control point at XH2Ofluid = " + str(X))
 				saturated_vols = self.calculate_dissolved_volatiles(sample=bulk_comp, temperature=temperature, pressure=i, H2O_guess=guess, X_fluid=X)
 
-				isobar_data.append([i, saturated_vols['H2O'], saturated_vols['CO2']])
-				isopleth_data.append([X, saturated_vols['H2O'], saturated_vols['CO2']])
+				if X in required_iso_vals:
+					isobar_data.append([i, saturated_vols['H2O'], saturated_vols['CO2']])
+				if X in iso_vals:
+					isopleth_data.append([X, saturated_vols['H2O'], saturated_vols['CO2']])
 
 				guess = saturated_vols['H2O']
 
@@ -7511,9 +7517,8 @@ def scatterplot(custom_x, custom_y, xlabel=None, ylabel=None, **kwargs):
 	ylabel: str
 		OPTIONAL. What to display along the y-axis.
 
-	kwargs
-	------
-	Can take in any key word agruments that can be passed to plot().
+	kwargs:
+		Can take in any key word agruments that can be passed to `plot()`.
 
 	Returns
 	-------
