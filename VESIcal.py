@@ -126,13 +126,14 @@ def printTable(myDict):
 	pandas DataFrame
 		The input dictionary converted to a pandas DataFrame
 	"""
+	_myDict = myDict.copy()
 	try:
-		oxidesum = sum(myDict[oxide] for oxide in oxides)
-		myDict.update({"Sum oxides": oxidesum})
+		oxidesum = sum(_myDict[oxide] for oxide in oxides)
+		_myDict.update({"Sum oxides": oxidesum})
 	except:
 		pass
-	table = pd.DataFrame([v for v in myDict.values()], columns = ['value'],
-						 index = [k for k in myDict.keys()])
+	table = pd.DataFrame([v for v in _myDict.values()], columns = ['value'],
+						 index = [k for k in _myDict.keys()])
 	return table
 
 #----------DEFINE SOME UNIVERSAL INFORMATIVE METHODS--------------#
@@ -864,7 +865,7 @@ class ExcelFile(object):
 
 		return H2O_fl
 
-	def save_excelfile(self, filename, calculations, sheet_name=None): #TODO how to handle if user just wants to normalize data?
+	def save_excelfile(self, filename, calculations, sheet_name=None):
 		"""
 		Saves data calculated by the user in batch processing mode (using the ExcelFile class methods) to an organized
 		excel file, with the original user data plus any calculated data.
@@ -943,7 +944,7 @@ class ExcelFile(object):
 			for most use cases.
 
 		model: string
-			The default value is 'MagmaSat'. Any other model name can be passed here as a string (in single quotes).
+			OPTIONAL: Default is 'MagmaSat'. Any other model name can be passed here.
 
 		record_errors: bool
 			OPTIONAL: If True, any errors arising during the calculation will be recorded as a column.
@@ -1316,7 +1317,7 @@ class ExcelFile(object):
 
 			return fluid_data
 
-	def calculate_saturation_pressure(self, temperature, print_status=True, model='MagmaSat', **kwargs): #TODO fix weird printing
+	def calculate_saturation_pressure(self, temperature, print_status=True, model='MagmaSat', **kwargs):
 		"""
 		Calculates the saturation pressure of multiple sample compositions in the ExcelFile.
 
@@ -6247,7 +6248,7 @@ class MagmaSat(Model):
 									 CalibrationRange('temperature',[800,1400],crf_Between,'oC','MagmaSat',
 									 				  fail_msg=crmsg_Between_fail, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description)])
 
-	def preprocess_sample(self,sample): #TODO test this by passing weird shit to sample
+	def preprocess_sample(self,sample):
 		"""
 		Returns sample with 0.0 values for any oxides not passed.
 
@@ -6261,13 +6262,18 @@ class MagmaSat(Model):
 		dictionary
 			Sample composition in wt% oxides
 		"""
+		_sample = sample.copy()
 		for oxide in oxides:
-			if oxide in sample.keys():
+			if oxide in _sample.keys():
 				pass
 			else:
-				sample[oxide] = 0.0
+				_sample[oxide] = 0.0
+
+		bulk_comp = {oxide:  _sample[oxide] for oxide in oxides}
+
 		self.bulk_comp_orig = sample
-		return sample
+
+		return sample, bulk_comp
 
 	def check_calibration_range(self,parameters,**kwargs):
 		""" Checks whether supplied parameters and calculated results are within the calibration range
@@ -6370,9 +6376,10 @@ class MagmaSat(Model):
 			Mole fraction of H2O in the H2O-CO2 fluid
 
 		"""
+		sample, bulk_comp = self.preprocess_sample(sample)
+
 		pressureMPa = pressure / 10.0
 
-		bulk_comp = {oxide:  sample[oxide] for oxide in oxides}
 		bulk_comp["H2O"] = H2O
 		bulk_comp["CO2"] = CO2
 		feasible = melts.set_bulk_composition(bulk_comp)
@@ -6393,7 +6400,6 @@ class MagmaSat(Model):
 		return H2O_fl
 
 	def calculate_dissolved_volatiles(self, sample, temperature, pressure, X_fluid=1, H2O_guess=0.0, verbose=False, **kwargs):
-	#TODO make better initial guess at higher XH2Ofl
 	#TODO make refinements faster
 		"""
 		Calculates the amount of H2O and CO2 dissolved in a magma at saturation at the given P/T conditions and fluid composition.
@@ -6422,7 +6428,8 @@ class MagmaSat(Model):
 		dict
 			A dictionary of dissolved volatile concentrations in wt% with keys H2O and CO2.
 		"""
-		sample = self.preprocess_sample(sample)
+		sample, bulk_comp = self.preprocess_sample(sample)
+
 		if isinstance(X_fluid, int) or isinstance(X_fluid, float):
 			pass
 		else:
@@ -6435,7 +6442,6 @@ class MagmaSat(Model):
 
 		pressureMPa = pressure / 10.0
 
-		bulk_comp = {oxide:  sample[oxide] for oxide in oxides}
 		if X_fluid != 0 and X_fluid !=1:
 			if X_fluid < 0.001 or X_fluid > 0.999:
 				raise InputError("X_fluid is calculated to a precision of 0.0001 mole fraction. \
@@ -6552,7 +6558,7 @@ class MagmaSat(Model):
 		if verbose == False:
 			return {"CO2": CO2_liq, "H2O": H2O_liq}
 
-	def calculate_equilibrium_fluid_comp(self, sample, temperature, pressure, verbose=False, **kwargs): #TODO fix weird printing
+	def calculate_equilibrium_fluid_comp(self, sample, temperature, pressure, verbose=False, **kwargs):
 		"""
 		Returns H2O and CO2 concentrations in wt% in a fluid in equilibrium with the given sample at the given P/T condition.
 
@@ -6565,7 +6571,7 @@ class MagmaSat(Model):
 			Temperature, in degrees C.
 
 		presure: float or int
-			Pressure, in bars. #TODO check units
+			Pressure, in bars.
 
 		verbose: bool
 			OPTIONAL: Default is False. If set to True, returns H2O and CO2 concentration in the fluid, mass of the fluid in grams,
@@ -6574,9 +6580,9 @@ class MagmaSat(Model):
 		Returns
 		-------
 		dict
-			A dictionary of fluid composition in wt% with keys 'H2O' and 'CO2' is returned. #TODO make list?
+			A dictionary of fluid composition in wt% with keys 'H2O' and 'CO2' is returned.
 		"""
-		sample = self.preprocess_sample(sample)
+		sample, bulk_comp = self.preprocess_sample(sample)
 
 		if isinstance(temperature, float) or isinstance(temperature, int):
 			pass
@@ -6590,7 +6596,6 @@ class MagmaSat(Model):
 
 		pressureMPa = pressure / 10.0
 
-		bulk_comp = {oxide:  sample[oxide] for oxide in oxides}
 		feasible = melts.set_bulk_composition(bulk_comp)
 
 		output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
@@ -6637,10 +6642,9 @@ class MagmaSat(Model):
 			If verbose is set to False: Saturation pressure in bars.
 			If verbose is set to True: dict of all calculated values.
 		"""
-		sample = self.preprocess_sample(sample)
+		sample, bulk_comp = self.preprocess_sample(sample)
 		bulk_comp_orig = sample
 
-		bulk_comp = {oxide:  sample[oxide] for oxide in oxides}
 		feasible = melts.set_bulk_composition(bulk_comp)
 		#Coarse search
 		fluid_mass = 0
@@ -6740,6 +6744,12 @@ class MagmaSat(Model):
 			OPTIONAL: Default value is None in which case only isobars will be calculated.
 			List of all fluid compositions in mole fraction H2O (XH2Ofluid) at which to calcualte isopleths. Values can range from 0-1.
 
+		smooth_isobars: bool
+			OPTIONAL. Default is True. If set to True, polynomials will be fit to the computed isobar points.
+
+		smooth_isopleths: bool
+			OPTIONAL. Default is True. If set to True, polynomials will be fit to the computed isopleth points.
+
 		print_status: bool
 			OPTIONAL: Default is True. If set to True, progress of the calculations will be printed to the terminal.
 
@@ -6752,8 +6762,7 @@ class MagmaSat(Model):
 			corresponding to pressure in bars and H2O and CO2 concentration in the H2O-CO2 fluid, in wt%.
 		"""
 
-		sample = self.preprocess_sample(sample)
-		bulk_comp = {oxide:  sample[oxide] for oxide in oxides}
+		sample, bulk_comp = self.preprocess_sample(sample)
 
 		if isinstance(pressure_list, list):
 			P_vals = pressure_list
@@ -6857,6 +6866,11 @@ class MagmaSat(Model):
 		pandas DataFrame object
 
 		"""
+		sample, bulk_comp = self.preprocess_sample(sample)
+		_sample = sample.copy()
+		bulk_comp_orig = sample.copy()
+		_sample = self.preprocess_sample(_sample)
+
 		#MELTS needs to be reloaded here. If an unfeasible composition gets set inside of MELTS, which can
 		#happen when running open-system degassing path calcs, the following calls to MELTS will fail. This
 		#prevents that from happening.
@@ -6868,13 +6882,7 @@ class MagmaSat(Model):
 			melts.set_phase_inclusion_status({phase: False})
 		melts.set_phase_inclusion_status({'Fluid': True, 'Liquid': True})
 
-
-		_sample = sample.copy()
-		bulk_comp_orig = sample.copy()
-		_sample = self.preprocess_sample(_sample)
-		_sample = normalize(_sample)
-
-		bulk_comp = {oxide:  _sample[oxide] for oxide in oxides}
+		bulk_comp = normalize(bulk_comp)
 		feasible = melts.set_bulk_composition(bulk_comp)
 
 		# Get saturation pressure
