@@ -6260,7 +6260,9 @@ class MagmaSat(Model):
 		Returns
 		-------
 		dictionary
-			Sample composition in wt% oxides
+			_sample: any sample information passed
+			bulk_comp: only sample data referring to VESIcal oxides in wt%
+
 		"""
 		_sample = sample.copy()
 		for oxide in oxides:
@@ -6273,7 +6275,7 @@ class MagmaSat(Model):
 
 		self.bulk_comp_orig = sample
 
-		return sample, bulk_comp
+		return _sample, bulk_comp
 
 	def check_calibration_range(self,parameters,**kwargs):
 		""" Checks whether supplied parameters and calculated results are within the calibration range
@@ -6866,10 +6868,8 @@ class MagmaSat(Model):
 		pandas DataFrame object
 
 		"""
-		sample, bulk_comp = self.preprocess_sample(sample)
-		_sample = sample.copy()
+		_sample, bulk_comp = self.preprocess_sample(sample)
 		bulk_comp_orig = sample.copy()
-		_sample = self.preprocess_sample(_sample)
 
 		#MELTS needs to be reloaded here. If an unfeasible composition gets set inside of MELTS, which can
 		#happen when running open-system degassing path calcs, the following calls to MELTS will fail. This
