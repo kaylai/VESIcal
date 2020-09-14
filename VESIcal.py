@@ -672,7 +672,7 @@ class ExcelFile(object):
 					- 1: 2nd sheet as a DataFrame
 					- "Sheet1": Load sheet with name “Sheet1”
 
-		input_type: str or int
+		input_type: str
 			OPTIONAL. Default is 'wtpercent'. String defining whether the oxide composition is given in wt percent
 			("wtpercent", which is the default), mole percent ("molpercent"), or mole fraction ("molfrac").
 
@@ -706,7 +706,17 @@ class ExcelFile(object):
 			try:
 				data = data.set_index(label)
 			except:
-				raise InputError("Imported file must contain a column of sample names. If this column is not titled 'Label' (the default value), you must pass the column name to arg label. For example: ExcelFile('myfile.xslx', label='SampleNames')")
+				label_found = False
+				for col in data.columns:
+					if col in oxides:
+						pass
+					else:
+						data = data.set_index(col)
+						label_found = True
+						break
+				if label_found == False:
+					data.index.name = 'Label'
+					w.warn("No Label column given, so one was created for you.",RuntimeWarning,stacklevel=2)
 
 		data = data.fillna(0)
 
@@ -6259,7 +6269,7 @@ class MagmaSat(Model):
 
 		Returns
 		-------
-		dictionary
+		tuple of dictionaries
 			_sample: any sample information passed
 			bulk_comp: only sample data referring to VESIcal oxides in wt%
 
