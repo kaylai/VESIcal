@@ -713,10 +713,11 @@ class ExcelFile(object):
 					else:
 						data = data.set_index(col)
 						label_found = True
+						w.warn("No Label column given, so column '" + str(col) + "' was chosen for you. To choose your own, set label='<column-name>'.",RuntimeWarning,stacklevel=2)
 						break
 				if label_found == False:
 					data.index.name = 'Label'
-					w.warn("No Label column given, so one was created for you.",RuntimeWarning,stacklevel=2)
+					w.warn("No Label column given, so one was created for you. To choose your own, set label='<column-name>'.",RuntimeWarning,stacklevel=2)
 
 		data = data.fillna(0)
 
@@ -776,13 +777,13 @@ class ExcelFile(object):
 
 		return sample
 
-	def get_sample_oxide_comp(self, sample, norm='none'):
+	def get_sample_oxide_comp(self, samplename, norm='none'):
 		"""
 		Returns oxide composition of a single sample from a user-imported excel file as a dictionary
 
 		Parameters
 		----------
-		sample: string
+		samplename: string
 			Name of the desired sample
 
 		norm_style: string
@@ -811,8 +812,8 @@ class ExcelFile(object):
 			raise InputError('norm must be either none, standard, fixedvolatiles, or additionalvolatiles.')
 
 		data = self.data
-		my_sample = pd.DataFrame(data.loc[sample])
-		sample_dict = (my_sample.to_dict()[sample])
+		my_sample = pd.DataFrame(data.loc[samplename])
+		sample_dict = (my_sample.to_dict()[samplename])
 		sample_oxides = {}
 		for item, value in sample_dict.items():
 			if item in oxides:
@@ -885,11 +886,11 @@ class ExcelFile(object):
 		filename: string
 			Name of the file. Extension (.xlsx) should be passed along with the name itself, all in quotes (e.g., 'myfile.xlsx').
 
-		calculations: list
-			List of variables containing calculated outputs from any of the core ExcelFile functions: calculate_dissolved_volatiles,
-			calculate_equilibrium_fluid_comp, and calculate_saturation_pressure.
+		calculations: pandas DataFrame or list of pandas DataFrames
+			A single variable or list of variables containing calculated outputs from any of the core ExcelFile functions: 
+			calculate_dissolved_volatiles, calculate_equilibrium_fluid_comp, and calculate_saturation_pressure.
 
-		sheet_name: None or list
+		sheet_name: None, string, or list
 			OPTIONAL. Default value is None. Allows user to set the name of the sheet or sheets written to the Excel file.
 
 		Returns
@@ -901,13 +902,17 @@ class ExcelFile(object):
 			if isinstance(sheet_name, list) or sheet_name is None:
 				pass
 		else:
-			raise InputError("calculations and sheet_name must be type list. If you only have one calculation or sheet_name to pass, make sure they are passed in square brackets []")
+			calculations = [calculations]
 		with pd.ExcelWriter(filename) as writer:
 			self.data.to_excel(writer, 'Original_User_Data')
 			if sheet_name is None:
 				for n, df in enumerate(calculations):
 					df.to_excel(writer, 'Calc%s' % n)
 			elif isinstance(sheet_name, list):
+				pass
+			else:
+				sheet_name = [sheet_name]
+			if isinstance(sheet_name, list):
 				if len(sheet_name) == len(calculations):
 					pass
 				else:
@@ -918,8 +923,6 @@ class ExcelFile(object):
 						calculations[i].to_excel(writer, sheet_name[i])
 					else:
 						raise InputError("if sheet_name is passed, it must be list of strings")
-			else:
-				raise InputError("sheet_name must be type list")
 
 		return print("Saved " + str(filename))
 
@@ -1242,7 +1245,10 @@ class ExcelFile(object):
 
 					H2Ovals.append(calc.result['H2O'])
 					CO2vals.append(calc.result['CO2'])
-					warnings.append(calc.calib_check)
+					if calc.result['H2O'] == 0 and calc.result['CO2'] == 0:
+						warnings.append(calc.calib_check + "Sample not saturated at these conditions")
+					else:
+						warnings.append(calc.calib_check)
 				except:
 					H2Ovals.append(np.nan)
 					CO2vals.append(np.nan)
@@ -1285,7 +1291,10 @@ class ExcelFile(object):
 
 						H2Ovals.append(calc.result['H2O'])
 						CO2vals.append(calc.result['CO2'])
-						warnings.append(calc.calib_check)
+						if calc.result['H2O'] == 0 and calc.result['CO2'] == 0:
+							warnings.append(calc.calib_check + "Sample not saturated at these conditions")
+						else:
+							warnings.append(calc.calib_check)
 					except:
 						H2Ovals.append(np.nan)
 						CO2vals.append(np.nan)
@@ -6309,6 +6318,8 @@ class MagmaSat(Model):
 		for cr in self.calibration_ranges:
 			if cr.check(parameters) == False:
 				s += cr.string(parameters,report_nonexistance=False)
+			if 'notsaturated' in kwargs:
+				s += "Sample not saturated at these conditions."
 		return s
 
 	def get_calibration_range(self):
@@ -6605,6 +6616,21 @@ class MagmaSat(Model):
 			pass
 		else:
 			raise InputError("presure must be type float or int")
+
+		#Check if only single volatile species is passed. If so, can skip calculations.
+		if sample["H2O"] == 0:
+			if sample["CO2"] == 0:
+				if verbose == False:
+					return {'CO2': 0.0, 'H2O': 0.0}
+				if verbose == True:
+					return {'CO2': 0.0, 'H2O': 0.0, 'FluidMass_grams': 0.0, 'FluidProportion_wt': 0.0}
+			else:
+				if verbose == False:
+					return {'CO2': 1.0, 'H2O': 0.0}
+		else:
+			if sample["CO2"] == 0:
+				if verbose == False:
+					return {'CO2': 0.0, 'H2O': 1.0}
 
 		pressureMPa = pressure / 10.0
 
