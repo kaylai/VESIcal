@@ -48,7 +48,7 @@ MagmaSat (i.e., MELTS v.1.2.0) is the default model for all function calls. But,
 
 which returns a list of model names, as strings.
 
-You can then pass any one of those model names to any calculation, both for batch and single-sample calculations. For example:
+You can then pass any one of those model names to any calculation, both for batch and single-sample calculations, where `<your_sample>` is a variable (not a string). For example:
 
 .. code-block:: python
 
@@ -150,7 +150,7 @@ For example:
 
 	normalize(myfile)
 
-Or normalize a single sample:
+Or normalize a single sample,where `<your_sample>` is a variable (not a string):
 
 .. code-block:: python
 
@@ -184,7 +184,7 @@ For an entire dataset, where `myfile` is an ExcelFile object:
 						pressure=<your_pressure>, 
 						X_fluid=<your_X_fluid>)
 
-Or for a single sample:
+Or for a single sample, where `<your_sample>` is a variable (not a string):
 
 .. code-block:: python
 
@@ -204,7 +204,7 @@ For an entire dataset, where `myfile` is an ExcelFile object:
 	myfile.calculate_equilibrium_fluid_comp(temperature=<your_temp>, 
 						pressure=<your_pressure>)
 
-Or for a single sample:
+Or for a single sample, where `<your_sample>` is a variable (not a string):
 
 .. code-block:: python
 
@@ -222,7 +222,7 @@ For an entire dataset, where `myfile` is an ExcelFile object:
 
 	myfile.calculate_saturation_pressure(temperature=<your_temp>)
 
-Or for a single sample:
+Or for a single sample, where `<your_sample>` is a variable (not a string):
 
 .. code-block:: python
 
@@ -233,7 +233,7 @@ Or for a single sample:
 
 Calculate and Plot Isobars and Isopleths
 ========================================
-You can only do this for a single sample. First, calculate the isobars and isopleths like so:
+You can only do this for a single sample. First, calculate the isobars and isopleths like so, where `<your_sample>` is a variable (not a string):
 
 .. code-block:: python
 
@@ -262,7 +262,7 @@ You can only do this for a single sample. First, calculate the degassing path.
 
 Closed-system
 -------------
-This example shows the default degassing path, which is closed system degassing with 0% initial fluid.
+This example shows the default degassing path, which is closed system degassing with 0% initial fluid. Here, `<your_sample>` is a variable (not a string)
 
 .. code-block:: python
 
@@ -271,7 +271,7 @@ This example shows the default degassing path, which is closed system degassing 
 
 Closed-system with initial fluid
 --------------------------------
-You might wish to calculate a degassing path for a closed-system, but where your initial magma already contains some percentage of exsolved fluid. In this case, use the `init_vapor` argument. In this example, we calculate the degassing path with 2% initial fluid:
+You might wish to calculate a degassing path for a closed-system, but where your initial magma already contains some percentage of exsolved fluid. In this case, use the `init_vapor` argument. In this example, we calculate the degassing path with 2% initial fluid, where `<your_sample>` is a variable (not a string):
 
 .. code-block:: python
 
@@ -283,7 +283,7 @@ Open-system
 -----------
 You may with to calculate an open or partially open system degassing path. This is acheived using the `fractionate_vapor` argument. A value of 1.0 is a completely open system, in which 100% of the fluid is removed at each calculation step. A value of 0.2 would represent a partially open system, in which 20% of the fluid is removed at each calculation step. 
 
-A completely open system:
+A completely open system, where `<your_sample>` is a variable (not a string):
 
 .. code-block:: python
 
@@ -291,7 +291,7 @@ A completely open system:
 					temperature=<your_temp>,
 					fractionate_vapor=1.0).result
 
-A partially open system, where 20% of vapor is fractionated at each calculation step:
+A partially open system, where 20% of vapor is fractionated at each calculation step, where `<your_sample>` is a variable (not a string):
 
 .. code-block:: python
 
