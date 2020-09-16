@@ -5957,7 +5957,7 @@ class MixedFluid(Model):
 
 		Parameters
 		----------
-		pressure_list     list
+		pressure_list     list or float
 			List of all pressure values at which to calculate isobars, in bars.
 		isopleth_list     list
 			Default value is None, in which case only isobars will be calculated. List of all
@@ -5985,6 +5985,13 @@ class MixedFluid(Model):
 
 		H2O_id = self.volatile_species.index('H2O')
 		CO2_id = self.volatile_species.index('CO2')
+
+		if isinstance(pressure_list, list):
+			pass
+		elif isinstance(pressure_list, int) or isinstance(pressure_list, float):
+			pressure_list = [pressure_list]
+		else:
+			raise InputError("pressure_list must be a single float (1000.0), int (1000), or list of those [1000, 2000.0, 3000].")
 
 		has_isopleths = True
 		if isopleth_list is None:
@@ -6761,7 +6768,7 @@ class MagmaSat(Model):
 			return {"SaturationP_bars": satP, "FluidMass_grams": flmass, "FluidProportion_wt": flsystem_wtper,
 	 				"XH2O_fl": flH2O, "XCO2_fl": flCO2}
 
-	def calculate_isobars_and_isopleths(self, sample, temperature, pressure_list, isopleth_list,
+	def calculate_isobars_and_isopleths(self, sample, temperature, pressure_list, isopleth_list=None,
 										smooth_isobars=True, smooth_isopleths=True, print_status=True, **kwargs):
 		"""
 		Calculates isobars and isopleths at a constant temperature for a given sample. Isobars can be calculated
@@ -6775,12 +6782,14 @@ class MagmaSat(Model):
 		temperature: float
 			Temperature in degrees C.
 
-		pressure_list: list
-			List of all pressure values at which to calculate isobars, in bars.
+		pressure_list: list or float
+			List of all pressure values at which to calculate isobars, in bars. If only one value is passed
+			it can be as float instead of list.
 
-		isopleth_list: list
+		isopleth_list: list or float
 			OPTIONAL: Default value is None in which case only isobars will be calculated.
 			List of all fluid compositions in mole fraction H2O (XH2Ofluid) at which to calcualte isopleths. Values can range from 0-1.
+			If only one value is passed it can be as float instead of list.
 
 		smooth_isobars: bool
 			OPTIONAL. Default is True. If set to True, polynomials will be fit to the computed isobar points.
@@ -6800,18 +6809,23 @@ class MagmaSat(Model):
 			corresponding to pressure in bars and H2O and CO2 concentration in the H2O-CO2 fluid, in wt%.
 		"""
 
-		sample, bulk_comp = self.preprocess_sample(sample)
-
 		if isinstance(pressure_list, list):
-			P_vals = pressure_list
+			pass
+		elif isinstance(pressure_list, int) or isinstance(pressure_list, float):
+			P_vals = [pressure_list]
 		else:
-			raise InputError("pressure_list must be of type list")
+			raise InputError("pressure_list must be a single float (1000.0), int (1000), or list of those [1000, 2000.0, 3000].")
 
-		if isinstance(isopleth_list, list):
+		if isopleth_list == None:
+			has_isopleths = False
+		elif isinstance(isopleth_list, list):
 			iso_vals = isopleth_list
 			has_isopleths = True
 		else:
-			raise InputError("isopleth_list must be of type list")
+			iso_vals = [isopleth_list]
+			has_isopleths = True
+
+		sample, bulk_comp = self.preprocess_sample(sample)
 
 		required_iso_vals = [0, 0.25, 0.5, 0.75, 1]
 		all_iso_vals = iso_vals + required_iso_vals
@@ -7974,6 +7988,10 @@ class calculate_isobars_and_isopleths(Calculate):
 		s = ''
 		s += self.model.check_calibration_range(parameters)
 		parameters = {}
+		if isinstance(pressure_list, list):
+			pass
+		else:
+			pressure_list = [pressure_list]
 		for pressure in pressure_list:
 			parameters['pressure'] = pressure
 			s += self.model.check_calibration_range(parameters,report_nonexistance=False)
