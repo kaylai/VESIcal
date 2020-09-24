@@ -471,6 +471,10 @@ def get_oxides(sample):
 	if isinstance(sample, pd.core.series.Series):
 		return pd.Series(clean)
 
+def rename_duplicates(df, suffix='-duplicate-'):
+	appendents = (suffix + df.groupby(level=0).cumcount().astype(str).replace('0','')).replace(suffix, '')
+	return df.set_index(df.index + appendents)
+
 #----------DEFINE SOME NORMALIZATION METHODS-----------#
 
 def normalize(sample):
@@ -684,7 +688,7 @@ class ExcelFile(object):
 		dataframe: pandas DataFrame
 				OPTIONAL. Default is None in which case this argument is ignored. This argument is used when the user wishes to turn
 				a pandas DataFrame into an ExcelFile object, for example when user data is already in python rather than being imported
-				from an Excel file.
+				from an Excel file. If using this option, pass None to filename.
 	"""
 
 	def __init__(self, filename, sheet_name=0, input_type='wtpercent', label='Label', **kwargs):
@@ -719,8 +723,8 @@ class ExcelFile(object):
 					data.index.name = 'Label'
 					w.warn("No Label column given, so one was created for you. To choose your own, set label='<column-name>'.",RuntimeWarning,stacklevel=2)
 
-		data = data.fillna(0)
-
+		data = data.fillna(0) #fill in any missing data with 0's
+		data = rename_duplicates(data) #handle any duplicated sample names
 
 		if 'model' in kwargs:
 			w.warn("You don't need to pass a model here, so it will be ignored. You can specify a model when performing calculations on your dataset (e.g., calculate_dissolved_volatiles())",RuntimeWarning,stacklevel=2)
@@ -744,13 +748,10 @@ class ExcelFile(object):
 			else:
 				data[oxide] = 0.0
 
-		# TODO test all input types produce correct values
 		if input_type == "wtpercent":
 			pass
-
 		if input_type == "molpercent":
 			data = mol_to_wtpercent(data)
-
 		if input_type == "molfrac":
 			data = mol_to_wtpercent(data)
 
@@ -8369,6 +8370,71 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, save_fig
 		fig.savefig(save_fig)
 
 	return plt.show()
+
+def test_ExcelFile(filename=None):
+	"""
+	A test routine that takes in an excel file and runs multiple calculations on that file.
+
+	Parameters
+	----------
+	filename: string
+		OPTIONAL. Name with extension of file to be tested. If no file is passed, data will
+		be generated automatially.
+	"""
+	pd.set_option('display.max_rows', None, 'display.max_columns', None)
+
+	print("\n================================\n= MAGMASATPLUS BATCH TESTING ROUTINE =\n================================")
+
+	print("\n This routine will check that key methods run using typical values of variables or given user data. \
+The routine does not check that the results are correct (though this may be obvious from the outputs),\
+nor does it check every possible iteration of methods and input types. It will check that an update hasn't \
+COMPLETELY broken the module.")
+
+	#SET UP THE DATA
+	if filename == None:
+		fakedata = pd.DataFrame({'Label': ['Samp1', 'Samp2', 'Samp3'],
+								'SiO2': [47.95, 69.02, 55.4],
+								'TiO2': [1.67, 0.78, 1.01],
+								'Al2O3': [17.32, 15.2, 10.1],
+								'FeO': [10.24, 4.2, 8.9],
+								'Fe2O3': [0.1, 0.2, 0.5],
+								'MgO': [5.76, 0.3, 3.0],
+								'CaO': [10.93, 12.99, 10.9],
+								'Na2O': [3.45, 5.67, 4.22],
+								'K2O': [1.99, 3.2, 3.2],
+								'P2O5': [0.51, 0.2, 0.5],
+								'MnO': [0.1, 0.15, 0.1],
+								'CO2': [0.8, 0.2, 0.3],
+								'H2O': [4.0, 6.0, 2.0]})
+		fakedata = fakedata.set_index('Label')
+		myfile = ExcelFile(filename=None, dataframe=fakedata)
+	else:
+		myfile = ExcelFile(filename)
+
+	test_temperature = 1000
+	test_pressure = 2000
+	test_X_fluid = 1
+
+	#CALCULTE SATURATION PRESSURE
+	print("\n Saturation Pressures:")
+	print(" =====================")
+	satPs = myfile.calculate_saturation_pressure(temperature=test_temperature)
+	print(satPs)
+
+	#CALCULATE DISSOLVED VOLATILES
+	print("\n Dissolved Volatile Concentrations:")
+	print(" ==================================")
+	dissolved = myfile.calculate_dissolved_volatiles(temperature=test_temperature, pressure=test_pressure, X_fluid=test_X_fluid)
+	print(dissolved)
+
+	#CALCULATE EQUILIBRIUM FLUID COMPOSITIONS
+	print("\n Equilibrium Fluid Compositions:")
+	print(" ===============================")
+	eqfluid = myfile.calculate_equilibrium_fluid_comp(temperature=test_temperature, pressure=test_pressure)
+	print(eqfluid)
+
+	print("\nTesting routine complete.\n")
+
 
 
 def test():
