@@ -473,7 +473,7 @@ def get_oxides(sample):
 
 def rename_duplicates(df, suffix='-duplicate-'):
 	appendents = (suffix + df.groupby(level=0).cumcount().astype(str).replace('0','')).replace(suffix, '')
-	return df.set_index(df.index + appendents)
+	return df.set_index(df.index.astype(str) + appendents)
 
 #----------DEFINE SOME NORMALIZATION METHODS-----------#
 
@@ -723,8 +723,8 @@ class ExcelFile(object):
 					data.index.name = 'Label'
 					w.warn("No Label column given, so one was created for you. To choose your own, set label='<column-name>'.",RuntimeWarning,stacklevel=2)
 
-		data = data.fillna(0) #fill in any missing data with 0's
 		data = rename_duplicates(data) #handle any duplicated sample names
+		data = data.fillna(0) #fill in any missing data with 0's
 
 		if 'model' in kwargs:
 			w.warn("You don't need to pass a model here, so it will be ignored. You can specify a model when performing calculations on your dataset (e.g., calculate_dissolved_volatiles())",RuntimeWarning,stacklevel=2)
