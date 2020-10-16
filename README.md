@@ -3,7 +3,7 @@ A generalized python library for calculating and plotting various things related
 
 ## Installation
 
-First, obtain Python3.x and pandas if you do not already have them. VESIcal can be installed with one line. Open a terminal and type the following:
+First, obtain Python3.x if you do not already have it installed. If you are new to python, we recommend installing it via anaconda3 (https://www.anaconda.com/products/individual). VESIcal can be installed with one line. Open a terminal and type the following:
 ```
 pip install VESIcal
 ```
