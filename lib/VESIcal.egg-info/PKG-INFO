@@ -1,0 +1,17 @@
+Metadata-Version: 2.1
+Name: VESIcal
+Version: 0.1.1
+Summary: A generalized python library for calculating and plotting various things related to mixed volatile (H2O-CO2) solubility in silicate melts.
+Home-page: https://github.com/kaylai/VESIcal
+Author: Kayla Iacovino, Simon Matthews, Penny Wieser
+Author-email: kaylaiacovino@gmail.com
+License: UNKNOWN
+Description: # VESIcal
+        A generalized python library for calculating and plotting various things related to mixed volatile (H2O-CO2) solubility in silicate melts.
+        
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
