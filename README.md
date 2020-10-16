@@ -1,9 +1,12 @@
 # VESIcal
 A generalized python library for calculating and plotting various things related to mixed volatile (H2O-CO2) solubility in silicate melts.
 
+[![Documentation Status](https://readthedocs.org/projects/vesical/badge/?version=latest)](https://vesical.readthedocs.io/en/latest/?badge=latest)
+
 ## Installation
 
 First, obtain Python3.x if you do not already have it installed. If you are new to python, we recommend installing it via anaconda3 (https://www.anaconda.com/products/individual). VESIcal can be installed with one line. Open a terminal and type the following:
+
 ```
 pip install VESIcal
 ```
@@ -32,3 +35,8 @@ Dependencies that should automatically be installed for you are:
 If any warnings related to these libraries appear, try installing them as you did VESIcal: with 'pip install [package]'.
 
 thermoengine is the ENKI implementation of MELTS (MagmaSat), which is the backbone of the entire VESIcal library. VESIcal cannot be run without thermoengine at this time, however a VESIcal-lite that does not include MagmaSat is planned. To install thermoengine, please refer to the ENKI documentation here: https://gitlab.com/ENKI-portal/ThermoEngine.
+
+## Documentation
+Read all of our documentation, inlcuding quickstart guides here: https://vesical.readthedocs.io/en/latest/
+
+Check our our YouTube channel for videos on how to use VESIcal here: https://www.youtube.com/channel/UCpvCCs5KMXzOxXWm0seF8Qw
