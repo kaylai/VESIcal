@@ -6811,7 +6811,7 @@ class MagmaSat(Model):
 		"""
 
 		if isinstance(pressure_list, list):
-			pass
+			P_vals = pressure_list
 		elif isinstance(pressure_list, int) or isinstance(pressure_list, float):
 			P_vals = [pressure_list]
 		else:
