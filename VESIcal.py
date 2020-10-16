@@ -1,6 +1,11 @@
-# Python 3.5
-# Script written by Kayla Iacovino (kayla.iacovino@nasa.gov), Simon Matthews (simonmatthews@jhu.edu), and Penny Wieser (pew26@cam.ac.uk)
-# VERSION 0.1 - JUNE 2020
+"""
+VESIcal
+
+A generalized python library for calculating and plotting various things related to mixed volatile (H2O-CO2) solubility in silicate melts.
+"""
+
+__version__ = "0.1.0"
+__author__ = 'Kayla Iacovino, Simon Matthews, and Penny Wieser'
 
 #--------------TURN OFF WARNINGS-------------#
 import warnings as w
