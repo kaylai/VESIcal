@@ -83,4 +83,8 @@ def download_eqfluid():
 
 	return anvil.media.from_file("./VESIcal_eqfluid.xlsx")
 
+@anvil.server.callable
+def download_example_file():
+	return anvil.media.from_file("./anvil/VESIcal_example_data.xlsx")
+
 anvil.server.wait_forever()
