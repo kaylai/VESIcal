@@ -7621,6 +7621,7 @@ default_models = {'Shishkina':                MixedFluid({'H2O':ShishkinaWater()
 				  'IaconoMarzianoCarbon':     IaconoMarzianoCarbon(),
 				  'IaconoMarzianoWater':      IaconoMarzianoWater(),
 				  #'EguchiCarbon':             EguchiCarbon(),
+				  'AllisonCarbon':			  AllisonCarbon(model_loc='vesuvius'),
 				  'AllisonCarbon_sunset':     AllisonCarbon(model_loc='sunset'),
 				  'AllisonCarbon_sfvf':       AllisonCarbon(model_loc='sfvf'),
 				  'AllisonCarbon_erebus':     AllisonCarbon(model_loc='erebus'),
