@@ -4,7 +4,7 @@ VESIcal
 A generalized python library for calculating and plotting various things related to mixed volatile (H2O-CO2) solubility in silicate melts.
 """
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 __author__ = 'Kayla Iacovino, Simon Matthews, and Penny Wieser'
 
 #--------------TURN OFF WARNINGS-------------#
@@ -7621,6 +7621,7 @@ default_models = {'Shishkina':                MixedFluid({'H2O':ShishkinaWater()
 				  'IaconoMarzianoCarbon':     IaconoMarzianoCarbon(),
 				  'IaconoMarzianoWater':      IaconoMarzianoWater(),
 				  #'EguchiCarbon':             EguchiCarbon(),
+				  'AllisonCarbon':			  AllisonCarbon(model_loc='vesuvius'),
 				  'AllisonCarbon_sunset':     AllisonCarbon(model_loc='sunset'),
 				  'AllisonCarbon_sfvf':       AllisonCarbon(model_loc='sfvf'),
 				  'AllisonCarbon_erebus':     AllisonCarbon(model_loc='erebus'),
@@ -8706,4 +8707,3 @@ logo courtesy Twai (http://www.twitter.com/_twai)
 
 def WhatDoesTheFoxSay():
 	print("https://www.youtube.com/watch?v=jofNR_WkoCE")
-
