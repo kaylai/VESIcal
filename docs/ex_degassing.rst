@@ -5,7 +5,7 @@ Calculating and plotting degassing paths
 
 Calculate degassing paths
 =========================
-A degassing path is a series of volatile concentrations both in the liquid and fluid that a magma will follow during decompression. In the :py:meth:`VESIcal.calculate_degassing_path()` calculation, the saturation pressure is computed, and then the system is equilibrated along a trajectory of decreasing pressure values at steps of 100 bars (or 10 bars if the starting pressure is <500 bars). If so desired, this calculation can be performed for any initial pressure, but the default is the saturation pressure. If a pressure is specified that is above the saturation pressure, the calculation will simlpy proceed from the saturation pressure, since the magma cannot degas until it reaches saturation.
+A degassing path is a series of volatile concentrations both in the liquid and fluid that a magma will follow during decompression. In the :py:meth:`VESIcal.calculate_degassing_path()` calculation, the saturation pressure is computed, and then the system is equilibrated along a trajectory of decreasing pressure values at discrete steps. The default number of steps to calculate is 50, but this can be defined by the user by setting the argument steps to any integer value. If so desired, this calculation can be performed for any initial pressure, but the default is the saturation pressure. If a pressure is specified that is above the saturation pressure, the calculation will simlpy proceed from the saturation pressure, since the magma cannot degas until it reaches saturation.
 
 Completely open-system, completely closed-system or partially open-system degassing paths can be calculated by specifying what proportion of the fluid to fractionate. The fluid fractionation value can range between 0 (closed-system: no fluid is removed, all is retained at each pressure step) and 1 (open-system: all fluid is removed, none is retained at each pressure step). Closed and partially open-system runs allow the user to speficy the initial presence of exsolved fluid that is in equilirium with the melt at the starting pressure.
 
@@ -15,7 +15,7 @@ Completely open-system, completely closed-system or partially open-system degass
 
 .. code-block:: python
 
-	def calculate_degassing_path(self, sample, temperature, pressure='saturation', fractionate_vapor=0.0, init_vapor=0.0).result
+	def calculate_degassing_path(self, sample, temperature, pressure='saturation', fractionate_vapor=0.0, init_vapor=0.0, steps=50).result
 
 **Required inputs:**
 
@@ -30,6 +30,8 @@ Completely open-system, completely closed-system or partially open-system degass
 :py:meth:`fractionate_vapor`: Proportion of vapor removed at each pressure step. Default value is 0.0 (completely closed-system degassing). Specifies the type of calculation performed, either closed system (0.0) or open system (1.0) degassing. If any value between <1.0 is chosen, user can also specify the ‘init_vapor’ argument (see below). A value in between 0 and 1 will remove that proportion of vapor at each step. For example, for a value of 0.2, the calculation will remove 20% of the vapor and retain 80% of the vapor at each pressure step.
 
 :py:meth:`init_vapor`: Default value is 0.0. Specifies the amount of vapor (in wt%) coexisting with the melt before degassing.
+
+:py:meth:`steps`: Default value is 50. Specifies the number of steps in pressure space at which to calcualte dissolved volatiles.
 
 **Calculated outputs:**
 The function returns a pandas DataFrame with columns as: ‘Pressure_bars’, ‘H2O_liq’ and ‘CO2_liq’ (the concentration of H2O and CO2 in the liquid, in wt%), ‘XH2O_fl’ and ‘XCO2_fl’ (the composition of the H2O-CO2 fluid, in mol fraction), and ‘FluidProportion_wt’ (the proportion of fluid in the fluid-melt system, in wt%).
