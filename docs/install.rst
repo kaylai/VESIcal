@@ -32,3 +32,12 @@ Dependencies that should automatically be installed for you are:
 If any warnings related to these libraries appear, try installing them as you did VESIcal: with 'pip install [package]'.
 
 thermoengine is the ENKI implementation of MELTS (MagmaSat), which is the backbone of the entire VESIcal library. VESIcal cannot be run without thermoengine at this time, however a VESIcal-lite that does not include MagmaSat is planned. To install thermoengine, please refer to the ENKI documentation here: `https://gitlab.com/ENKI-portal/ThermoEngine <https://gitlab.com/ENKI-portal/ThermoEngine>`_.
+
+Updating
+========
+
+To upgrade to the most recent version of VESIcal, type the following into terminal:
+
+.. code-block:: python
+
+   pip install VESIcal --upgrade
