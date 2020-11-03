@@ -4,7 +4,7 @@ VESIcal
 A generalized python library for calculating and plotting various things related to mixed volatile (H2O-CO2) solubility in silicate melts.
 """
 
-__version__ = "0.1.2"
+__version__ = "0.1.3"
 __author__ = 'Kayla Iacovino, Simon Matthews, and Penny Wieser'
 
 #--------------TURN OFF WARNINGS-------------#
@@ -6887,7 +6887,7 @@ class MagmaSat(Model):
 
 		return res_isobars, res_isopleths
 
-	def calculate_degassing_path(self, sample, temperature, pressure='saturation', fractionate_vapor=0.0, init_vapor=0.0, **kwargs):
+	def calculate_degassing_path(self, sample, temperature, pressure='saturation', fractionate_vapor=0.0, init_vapor=0.0, steps=50, **kwargs):
 		"""
 		Calculates degassing path for one sample
 
@@ -6919,6 +6919,10 @@ class MagmaSat(Model):
 			OPTIONAL. Default value is 0.0. Specifies the amount of vapor (in wt%) coexisting with the melt before
 			degassing.
 
+		steps: int
+			OPTIONAL. Default value is 50. Specifies the number of steps in pressure space at which dissolved volatile
+			concentrations are calculated.
+
 		Returns
 		-------
 		pandas DataFrame object
@@ -6949,12 +6953,8 @@ class MagmaSat(Model):
 		else:
 			SatP_MPa = pressure / 10.0
 
-
-		#If pressure is low, use smaller P steps
-		if SatP_MPa >= 50:
-			MPa_step = 10
-		elif SatP_MPa < 50:
-			MPa_step = 1
+		#convert number of steps to step size
+		MPa_step = int(SatP_MPa / steps)
 
 		P_array = np.arange(1.0, SatP_MPa, MPa_step)
 		P_array = -np.sort(-P_array)
