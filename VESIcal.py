@@ -8095,7 +8095,7 @@ class calculate_degassing_path(Calculate):
 		check = getattr(self.model, "calculate_degassing_path", None)
 		if callable(check):
 			data = self.model.calculate_degassing_path(sample=sample, pressure=pressure, fractionate_vapor=fractionate_vapor,
-													   final_pressure=final_pressure, steps=steps, **kwargs)
+													   final_pressure=final_pressure, **kwargs)
 			return data
 		else:
 			raise InputError("This model does not have a calculate_isobars_and_isopleths method built in, most likely because it is a pure fluid model.")
