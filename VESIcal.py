@@ -4,7 +4,7 @@ VESIcal
 A generalized python library for calculating and plotting various things related to mixed volatile (H2O-CO2) solubility in silicate melts.
 """
 
-__version__ = "0.1.3"
+__version__ = "0.1.4"
 __author__ = 'Kayla Iacovino, Simon Matthews, and Penny Wieser'
 
 #--------------TURN OFF WARNINGS-------------#

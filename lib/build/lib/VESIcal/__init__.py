@@ -4,7 +4,7 @@ VESIcal
 A generalized python library for calculating and plotting various things related to mixed volatile (H2O-CO2) solubility in silicate melts.
 """
 
-__version__ = "0.1.3"
+__version__ = "0.1.4"
 __author__ = 'Kayla Iacovino, Simon Matthews, and Penny Wieser'
 
 #--------------TURN OFF WARNINGS-------------#
@@ -6954,7 +6954,9 @@ class MagmaSat(Model):
 			SatP_MPa = pressure / 10.0
 
 		#convert number of steps to step size
-		MPa_step = int(SatP_MPa / steps)
+		MPa_step = SatP_MPa / steps
+		if MPa_step < 1:
+			MPa_step = 1
 
 		P_array = np.arange(1.0, SatP_MPa, MPa_step)
 		P_array = -np.sort(-P_array)
@@ -7028,6 +7030,9 @@ class MagmaSat(Model):
 		feasible = melts.set_bulk_composition(bulk_comp_orig) #this needs to be reset always!
 		open_degassing_df = pd.DataFrame(list(zip(pressure, H2Oliq, CO2liq, H2Ofl, CO2fl, fluid_wtper)),
 									columns =['Pressure_bars', 'H2O_liq', 'CO2_liq', 'XH2O_fl', 'XCO2_fl', 'FluidProportion_wt'])
+
+		open_degassing_df = open_degassing_df[open_degassing_df.CO2_liq > 0.000001]
+		open_degassing_df = open_degassing_df[open_degassing_df.H2O_liq > 0.000001]
 
 		return open_degassing_df
 
@@ -8086,11 +8091,11 @@ class calculate_degassing_path(Calculate):
 		the proportions of volatiles in the fluid are in mole fraction.
 	"""
 	def calculate(self,sample,pressure='saturation',fractionate_vapor=0.0,
-				  final_pressure=100.0,steps=101,**kwargs):
+				  final_pressure=100.0,**kwargs):
 		check = getattr(self.model, "calculate_degassing_path", None)
 		if callable(check):
 			data = self.model.calculate_degassing_path(sample=sample, pressure=pressure, fractionate_vapor=fractionate_vapor,
-													   final_pressure=final_pressure, steps=steps, **kwargs)
+													   final_pressure=final_pressure, **kwargs)
 			return data
 		else:
 			raise InputError("This model does not have a calculate_isobars_and_isopleths method built in, most likely because it is a pure fluid model.")
