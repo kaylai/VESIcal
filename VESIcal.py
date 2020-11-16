@@ -7165,7 +7165,7 @@ def smooth_isobars_and_isopleths(isobars=None, isopleths=None):
 
 def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, custom_CO2=None,
 		 isobar_labels=None, isopleth_labels=None, degassing_path_labels=None, custom_labels=None,
-		 custom_colors="VESIcal", custom_symbols=None, markersize=10,
+		 custom_colors="VESIcal", custom_symbols=None, markersize=10, save_fig=False,
 		 extend_isobars_to_zero=True, smooth_isobars=False, smooth_isopleths=False, **kwargs):
 	"""
 	Custom automatic plotting of model calculations in VESIcal.
@@ -7228,6 +7228,10 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 	markersize: int
 		OPTIONAL. Default value is 10. Same as markersize kwarg in matplotlib. Any numeric value passed here will set the
 		marker size for (custom_H2O, custom_CO2) points.
+
+	save_fig: False or str
+		OPTIONAL. Default value is False, in which case the figure will not be saved. If a string is passed,
+		the figure will be saved with the string as the filename. The string must include the file extension.
 
 	extend_isobars_to_zero: bool
 		OPTIONAL. If True (default), isobars will be extended to zero, even if there is a finite solubility at zero partial pressure.
@@ -7565,6 +7569,9 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 
 	np.seterr(divide='warn', invalid='warn') #turn numpy warning back on
 	w.filterwarnings("always", message="Polyfit may be poorly conditioned")
+
+	if isinstance(save_fig, str):
+		plt.savefig(save_fig)
 
 	return plt.show()
 
