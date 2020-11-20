@@ -893,7 +893,7 @@ class ExcelFile(object):
 			Name of the file. Extension (.xlsx) should be passed along with the name itself, all in quotes (e.g., 'myfile.xlsx').
 
 		calculations: pandas DataFrame or list of pandas DataFrames
-			A single variable or list of variables containing calculated outputs from any of the core ExcelFile functions: 
+			A single variable or list of variables containing calculated outputs from any of the core ExcelFile functions:
 			calculate_dissolved_volatiles, calculate_equilibrium_fluid_comp, and calculate_saturation_pressure.
 
 		sheet_name: None, string, or list
@@ -4093,25 +4093,20 @@ class DixonWater(Model):
 
 class IaconoMarzianoWater(Model):
 	"""
-	Implementation of the Iacono-Marziano et al. (2012) water solubility model, as a Model class. Two
+	Implementation of the Iacono-Marziano et al. (2012) water solubility model, as a Model class. Three
 	calibrations are provided- the one incorporating the H2O content as a parameter (hydrous), and the
-	one that does not (anhydrous). Specify which should be used when initialising the model, with the
-	bool variable hydrous.
+	one that does not (anhydrous), in addition to pre-review coefficient values as implemented in the web app.
+	Which model should be used is specified when the methods are called. The default choice is the hydrous model.
 	"""
 
-	def __init__(self,hydrous=True):
+	def __init__(self):
 		"""
 		Initialise the model.
 
-		Parameters
-		----------
-		hydrous     bool
-			Whether to use the hydrous parameterization, or not.
 		"""
 		self.set_volatile_species(['H2O'])
 		self.set_fugacity_model(fugacity_idealgas())
 		self.set_activity_model(activity_idealsolution())
-		self.hydrous = hydrous
 		self.set_calibration_ranges([CalibrationRange('temperature',[1000,1400],crf_Between,'oC','IaconoMarzianoWater',
 									 				  fail_msg=crmsg_BC_IMT, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
 									 CalibrationRange('pressure',[100,10000],crf_Between,'bars','IaconoMarzianoWater',
@@ -4377,18 +4372,14 @@ class IaconoMarzianoCarbon(Model):
 	"""
 	Implementation of the Iacono-Marziano et al. (2012) carbon solubility model, as a Model class. Two
 	calibrations are provided- the one incorporating the H2O content as a parameter (hydrous), and the
-	one that does not (anhydrous). Specify which should be used when initialising the model, with the
-	bool variable hydrous.
+	one that does not (anhydrous), in addition to pre-review coefficient values as implemented in the web app.
+	Which model should be used is specified when the methods are called. The default choice is the hydrous model.
 	"""
 
 	def __init__(self):
 		"""
 		Initialise the model.
 
-		Parameters
-		----------
-		hydrous     bool
-			Whether to use the hydrous parameterization, or not.
 		"""
 		self.set_volatile_species(['CO2'])
 		self.set_fugacity_model(fugacity_idealgas())
