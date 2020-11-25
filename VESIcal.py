@@ -1729,7 +1729,10 @@ class Calculate(object):
 		if model == 'MagmaSat':
 			self.model = MagmaSat()
 		elif type(model) == str:
-			self.model = default_models[model]
+			if model in default_models.keys():
+				self.model = default_models[model]
+			else:
+				raise InputError("The model name given is not recognised. Run the method get_models() to find allowed names.")
 		else:
 			self.model = model
 
