@@ -7863,7 +7863,7 @@ def get_models(models='all'):
 	if models == 'all':
 		return list(default_models.keys())
 	if models == 'mixed':
-		return ['MagmaSat', 'ShishkinaIdealMixing', 'Dixon', 'IaconoMarziano', 'Liu']
+		return ['ShishkinaIdealMixing', 'Dixon', 'IaconoMarziano', 'Liu'] #MagmaSat not included here as it is treated separately
 
 class calculate_dissolved_volatiles(Calculate):
 	""" Calculates the dissolved volatile concentration using a chosen model (default is MagmaSat).
