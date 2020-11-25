@@ -1761,6 +1761,18 @@ crmsg_EqualTo_fail ="{param_name} ({param_val:.1f} {units}) is outside the calib
 crmsg_EqualTo_description = "The {model_name} model is calibrated for {param_name} equal to {calib_val:.1f} {units}. "
 crmsg_EqualTo_fail_AllisonTemp="All calculations for {model_name} are performed at 1200 C (inputted Temp={param_val:.1f} {units}). Allison et al. (2019) suggest the results are likely applicable between 1000-1400°C). "
 
+def crf_MixedFluidWarning(calibval,paramval):
+	if type(paramval) == float or len(paramval) == 1:
+		return paramval == 0 or paramval == 1
+	elif len(paramval) == 2:
+		return list(paramval) == [0,1] or list(paramval) == [1,0]
+	else:
+		return True
+crmsg_MixedFluidWarning_pass = "The pure fluid model is being used. "
+crmsg_MixedFluidWarning_fail ="The {model_name} model should be used to model mixed fluids with caution. The mixed fluid model does not recreate the experimental observations. "
+crmsg_MixedFluidWarning_description = "The {model_name} shoule be used to model mixed fluids with caution. "
+
+
 def crf_GreaterThan(calibval,paramval):
 	return paramval >= calibval
 crmsg_GreaterThan_pass = "The {param_name} ({param_val:.1f} {units}) is greater than {calib_val:.1f} {units} as required by the calibration range of the {model_name} model. "
@@ -7613,7 +7625,7 @@ def scatterplot(custom_x, custom_y, xlabel=None, ylabel=None, **kwargs):
 
 #====== Define some standard model options =======================================================#
 
-default_models = {'Shishkina':                MixedFluid({'H2O':ShishkinaWater(),'CO2':ShishkinaCarbon()}),
+default_models = {'ShishkinaIdealMixing':     MixedFluid({'H2O':ShishkinaWater(),'CO2':ShishkinaCarbon()}),
 				  'Dixon':                    MixedFluid({'H2O':DixonWater(),'CO2':DixonCarbon()}),
 				  'IaconoMarziano':           MixedFluid({'H2O':IaconoMarzianoWater(),'CO2':IaconoMarzianoCarbon()}),
 				  'Liu':					  MixedFluid({'H2O':LiuWater(),'CO2':LiuCarbon()}),
@@ -7636,9 +7648,13 @@ default_models = {'Shishkina':                MixedFluid({'H2O':ShishkinaWater()
 				  'LiuCarbon':				  LiuCarbon()
 }
 
-# Return homogenised calibration range checks for mixed fluid models:
-default_models['Liu'].models[1].set_calibration_ranges([])
 
+default_models['ShishkinaIdealMixing'].models[0].calibration_ranges.append(CalibrationRange('X_fluid',0.0,crf_MixedFluidWarning,'','Shishkina et al. (2014)',
+				 																fail_msg=crmsg_MixedFluidWarning_fail, pass_msg=crmsg_MixedFluidWarning_pass, description_msg=crmsg_MixedFluidWarning_description))
+
+# Return homogenised calibration range checks for mixed fluid models:
+
+default_models['Liu'].models[1].set_calibration_ranges([])
 _crs_to_update = default_models['Liu'].models[0].calibration_ranges
 for _cr in _crs_to_update:
 	_cr.model_name = 'Liu et al. (2005)'
