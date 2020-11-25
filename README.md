@@ -2,6 +2,8 @@
 A generalized python library for calculating and plotting various things related to mixed volatile (H2O-CO2) solubility in silicate melts.
 
 [![Documentation Status](https://readthedocs.org/projects/vesical/badge/?version=latest)](https://vesical.readthedocs.io/en/latest/?badge=latest)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4291043.svg)](https://doi.org/10.5281/zenodo.4291043)
+
 
 ## Installation
 
