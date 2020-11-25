@@ -8321,51 +8321,80 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, save_fig
 
 	if isinstance(model, list):
 		for modelname in model:
+			model_type = calibrations.return_calibration_type(modelname)
+			if model_type['H2O'] == True:
+				h2o_legend = True
+			if model_type['CO2'] == True or model_type['Mixed'] == True:
+				co2_h2oco2_legend = True
+
+		if h2o_legend == True:
+			plt.scatter([], [], marker='', label=r"$\bf{Pure \ H_2O:}$")
+
+			for modelname in model:
+				calibdata = calibrations.return_calibration(modelname)
+				model_type = calibrations.return_calibration_type(modelname)
+				if isinstance(calibdata, str):
+					w.warn(calibdata)
+				else:
+					if model_type['H2O'] == True:
+						if plot_type == 'TAS':
+							try:
+								plt.scatter(calibdata['H2O']['SiO2'], calibdata['H2O']['Na2O'] + calibdata['H2O']['K2O'],
+											marker='s', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname))
+							except:
+								plt.scatter(calibdata['H2O']['SiO2'], calibdata['H2O']['Na2O+K2O'],
+											marker='s', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname))
+						if plot_type == 'xy':
+							try:
+								plt.scatter(calibdata['H2O'][x], calibdata['H2O'][y],
+											marker='s', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname))
+							except:
+								w.warn("The requested oxides were not found in the calibration dataset for " + str(modelname) + ".")
+			
+			if co2_h2oco2_legend == True:
+				plt.scatter([], [], marker='', label=r"${\ }$")
+
+		if co2_h2oco2_legend == True:
+			plt.scatter([], [], marker='', label=r"$\bf{\ CO_2 \ and \ H_2O\!-\!CO_2:}$")
+
+		for modelname in model:
 			calibdata = calibrations.return_calibration(modelname)
+			model_type = calibrations.return_calibration_type(modelname)
 			if isinstance(calibdata, str):
 				w.warn(calibdata)
 			else:
-				if 'CO2' in calibdata.keys():
+				if model_type['CO2'] == True and model_type['Mixed'] == True:
+					frames = [calibdata['CO2'], calibdata['Mixed']]
+					co2_and_mixed = pd.concat(frames)
 					if plot_type == 'TAS':
 						try:
-							plt.scatter(calibdata['CO2']['SiO2'], calibdata['CO2']['Na2O'] + calibdata['CO2']['K2O'],
-										marker='o', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname)+" CO2")
+							plt.scatter(co2_and_mixed['SiO2'], co2_and_mixed['Na2O'] + co2_and_mixed['K2O'],
+										marker='d', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname))
 						except:
-							plt.scatter(calibdata['CO2']['SiO2'], calibdata['CO2']['Na2O+K2O'],
-									marker='o', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname)+" CO2")
+							plt.scatter(co2_and_mixed['SiO2'], co2_and_mixed['Na2O+K2O'],
+									marker='d', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname))
 					if plot_type == 'xy':
 						try:
-							plt.scatter(calibdata['CO2'][x], calibdata['CO2'][y],
-									marker='o', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname)+" CO2")
+							plt.scatter(co2_and_mixed[x], co2_and_mixed[y],
+									marker='d', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname))
 						except:
 							w.warn("The requested oxides were not found in the calibration dataset for " + str(modelname) + ".")
-
-				if 'H2O' in calibdata.keys():
+				elif model_type['CO2'] == True or model_type['Mixed'] == True:
+					if model_type['CO2'] == True:
+						thistype = 'CO2'
+					if model_type['Mixed'] == True:
+						thistype = 'Mixed'
 					if plot_type == 'TAS':
 						try:
-							plt.scatter(calibdata['H2O']['SiO2'], calibdata['H2O']['Na2O'] + calibdata['H2O']['K2O'],
-										marker='s', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname)+" H2O")
+							plt.scatter(calibdata[thistype]['SiO2'], calibdata[thistype]['Na2O'] + calibdata[thistype]['K2O'],
+										marker='d', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname))
 						except:
-							plt.scatter(calibdata['H2O']['SiO2'], calibdata['H2O']['Na2O+K2O'],
-										marker='s', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname)+" H2O")
+							plt.scatter(calibdata[thistype]['SiO2'], calibdata[thistype]['Na2O+K2O'],
+									marker='d', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname))
 					if plot_type == 'xy':
 						try:
-							plt.scatter(calibdata['H2O'][x], calibdata['H2O'][y],
-										marker='s', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname)+" H2O")
-						except:
-							w.warn("The requested oxides were not found in the calibration dataset for " + str(modelname) + ".")
-				if 'Mixed' in calibdata.keys():
-					if plot_type == 'TAS':
-						try:
-							plt.scatter(calibdata['Mixed']['SiO2'], calibdata['Mixed']['Na2O'] + calibdata['Mixed']['K2O'],
-										marker='d', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname)+" Mixed")
-						except:
-							plt.scatter(calibdata['Mixed']['SiO2'], calibdata['Mixed']['Na2O+K2O'],
-										marker='d', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname)+" Mixed")
-					if plot_type == 'xy':
-						try:
-							plt.scatter(calibdata['Mixed'][x], calibdata['Mixed'][y],
-										marker='d', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname)+" Mixed")
+							plt.scatter(calibdata[thistype][x], calibdata[thistype][y],
+									marker='d', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname))
 						except:
 							w.warn("The requested oxides were not found in the calibration dataset for " + str(modelname) + ".")
 	else:
