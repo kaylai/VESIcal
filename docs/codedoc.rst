@@ -177,13 +177,15 @@ MagmaSat(Model)
 	:members:
 
 MagmaSat Plotting Functions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+===========================
 
 .. autofunction:: VESIcal.plot
 
 .. autofunction:: VESIcal.scatterplot
 
 .. autofunction:: VESIcal.smooth_isobars_and_isopleths
+
+.. autofunction:: VESIcal.calib_plot
 
 
 

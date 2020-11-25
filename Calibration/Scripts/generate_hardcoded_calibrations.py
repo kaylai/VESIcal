@@ -64,7 +64,7 @@ list_of_modelnames=['df_Eguchi_CO2',
 
 for i in range(len(list_of_models)):
     current = list_of_models[i]
-    oxides = ['SiO2', 'TiO2', 'Al2O3', 'Fe2O3', 'Cr2O3', 'FeO', 'MnO', 'MgO', 'NiO', 'CoO', 'CaO', 'Na2O', 'K2O', 'P2O5',
+    oxides = ['SiO2', 'TiO2', 'Al2O3', 'Fe2O3', 'Cr2O3', 'FeO', 'FeOT', 'MnO', 'MgO', 'NiO', 'CoO', 'CaO', 'Na2O', 'K2O', 'P2O5',
               'H2O', 'CO2', 'Na2O+K2O']
 
     f.write("\n")
@@ -75,6 +75,8 @@ for i in range(len(list_of_models)):
             f.write("'" + (str(oxide)+"': ["))
             for index, row in current.iterrows():
                 if math.isnan(row[oxide]):
+                    f.write("float('nan')")
+                elif row[oxide] == 0:
                     f.write("float('nan')")
                 else:
                     f.write(str(row[oxide]))
