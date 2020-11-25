@@ -4,7 +4,7 @@ VESIcal
 A generalized python library for calculating and plotting various things related to mixed volatile (H2O-CO2) solubility in silicate melts.
 """
 
-__version__ = "0.1.4"
+__version__ = "0.1.5"
 __author__ = 'Kayla Iacovino, Simon Matthews, and Penny Wieser'
 
 #--------------TURN OFF WARNINGS-------------#
@@ -7863,7 +7863,7 @@ def get_models(models='all'):
 	if models == 'all':
 		return list(default_models.keys())
 	if models == 'mixed':
-		return ['Shishkina', 'Dixon', 'IaconoMarziano', 'Liu']
+		return ['MagmaSat', 'ShishkinaIdealMixing', 'Dixon', 'IaconoMarziano', 'Liu']
 
 class calculate_dissolved_volatiles(Calculate):
 	""" Calculates the dissolved volatile concentration using a chosen model (default is MagmaSat).
@@ -8303,12 +8303,12 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, save_fig
 	if model == 'all':
 		model = ['MagmaSat',
 				'Shishkina',
-			   'Dixon',
-			   'IaconoMarziano',
-			   'Liu',
-			   #'EguchiCarbon',
-			   'AllisonCarbon',
-			   'MooreWater']
+				'Dixon',
+				'IaconoMarziano',
+				'Liu',
+				#'EguchiCarbon',
+				'AllisonCarbon',
+				'MooreWater']
 	if model == 'mixed':
 		model = ['MagmaSat',
 				 'Shishkina',

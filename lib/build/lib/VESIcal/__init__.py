@@ -4,7 +4,7 @@ VESIcal
 A generalized python library for calculating and plotting various things related to mixed volatile (H2O-CO2) solubility in silicate melts.
 """
 
-__version__ = "0.1.4"
+__version__ = "0.1.5"
 __author__ = 'Kayla Iacovino, Simon Matthews, and Penny Wieser'
 
 #--------------TURN OFF WARNINGS-------------#
@@ -893,7 +893,7 @@ class ExcelFile(object):
 			Name of the file. Extension (.xlsx) should be passed along with the name itself, all in quotes (e.g., 'myfile.xlsx').
 
 		calculations: pandas DataFrame or list of pandas DataFrames
-			A single variable or list of variables containing calculated outputs from any of the core ExcelFile functions: 
+			A single variable or list of variables containing calculated outputs from any of the core ExcelFile functions:
 			calculate_dissolved_volatiles, calculate_equilibrium_fluid_comp, and calculate_saturation_pressure.
 
 		sheet_name: None, string, or list
@@ -1729,7 +1729,10 @@ class Calculate(object):
 		if model == 'MagmaSat':
 			self.model = MagmaSat()
 		elif type(model) == str:
-			self.model = default_models[model]
+			if model in default_models.keys():
+				self.model = default_models[model]
+			else:
+				raise InputError("The model name given is not recognised. Run the method get_models() to find allowed names.")
 		else:
 			self.model = model
 
@@ -1760,6 +1763,18 @@ crmsg_EqualTo_pass = "The {param_name} ({param_val:.1f} {units}) is equal to {ca
 crmsg_EqualTo_fail ="{param_name} ({param_val:.1f} {units}) is outside the calibration range of the {model_name} model ({calib_val:.1f} {units}). "
 crmsg_EqualTo_description = "The {model_name} model is calibrated for {param_name} equal to {calib_val:.1f} {units}. "
 crmsg_EqualTo_fail_AllisonTemp="All calculations for {model_name} are performed at 1200 C (inputted Temp={param_val:.1f} {units}). Allison et al. (2019) suggest the results are likely applicable between 1000-1400°C). "
+
+def crf_MixedFluidWarning(calibval,paramval):
+	if type(paramval) == float or len(paramval) == 1:
+		return paramval == 0 or paramval == 1
+	elif len(paramval) == 2:
+		return list(paramval) == [0,1] or list(paramval) == [1,0]
+	else:
+		return True
+crmsg_MixedFluidWarning_pass = "The pure fluid model is being used. "
+crmsg_MixedFluidWarning_fail ="The {model_name} model should be used to model mixed fluids with caution. The mixed fluid model does not recreate the experimental observations. "
+crmsg_MixedFluidWarning_description = "The {model_name} shoule be used to model mixed fluids with caution. "
+
 
 def crf_GreaterThan(calibval,paramval):
 	return paramval >= calibval
@@ -4093,25 +4108,20 @@ class DixonWater(Model):
 
 class IaconoMarzianoWater(Model):
 	"""
-	Implementation of the Iacono-Marziano et al. (2012) water solubility model, as a Model class. Two
+	Implementation of the Iacono-Marziano et al. (2012) water solubility model, as a Model class. Three
 	calibrations are provided- the one incorporating the H2O content as a parameter (hydrous), and the
-	one that does not (anhydrous). Specify which should be used when initialising the model, with the
-	bool variable hydrous.
+	one that does not (anhydrous), in addition to pre-review coefficient values as implemented in the web app.
+	Which model should be used is specified when the methods are called. The default choice is the hydrous model.
 	"""
 
-	def __init__(self,hydrous=True):
+	def __init__(self):
 		"""
 		Initialise the model.
 
-		Parameters
-		----------
-		hydrous     bool
-			Whether to use the hydrous parameterization, or not.
 		"""
 		self.set_volatile_species(['H2O'])
 		self.set_fugacity_model(fugacity_idealgas())
 		self.set_activity_model(activity_idealsolution())
-		self.hydrous = hydrous
 		self.set_calibration_ranges([CalibrationRange('temperature',[1000,1400],crf_Between,'oC','IaconoMarzianoWater',
 									 				  fail_msg=crmsg_BC_IMT, pass_msg=crmsg_Between_pass, description_msg=crmsg_Between_description),
 									 CalibrationRange('pressure',[100,10000],crf_Between,'bars','IaconoMarzianoWater',
@@ -4377,18 +4387,14 @@ class IaconoMarzianoCarbon(Model):
 	"""
 	Implementation of the Iacono-Marziano et al. (2012) carbon solubility model, as a Model class. Two
 	calibrations are provided- the one incorporating the H2O content as a parameter (hydrous), and the
-	one that does not (anhydrous). Specify which should be used when initialising the model, with the
-	bool variable hydrous.
+	one that does not (anhydrous), in addition to pre-review coefficient values as implemented in the web app.
+	Which model should be used is specified when the methods are called. The default choice is the hydrous model.
 	"""
 
 	def __init__(self):
 		"""
 		Initialise the model.
 
-		Parameters
-		----------
-		hydrous     bool
-			Whether to use the hydrous parameterization, or not.
 		"""
 		self.set_volatile_species(['CO2'])
 		self.set_fugacity_model(fugacity_idealgas())
@@ -7165,7 +7171,7 @@ def smooth_isobars_and_isopleths(isobars=None, isopleths=None):
 
 def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, custom_CO2=None,
 		 isobar_labels=None, isopleth_labels=None, degassing_path_labels=None, custom_labels=None,
-		 custom_colors="VESIcal", custom_symbols=None, markersize=10,
+		 custom_colors="VESIcal", custom_symbols=None, markersize=10, save_fig=False,
 		 extend_isobars_to_zero=True, smooth_isobars=False, smooth_isopleths=False, **kwargs):
 	"""
 	Custom automatic plotting of model calculations in VESIcal.
@@ -7228,6 +7234,10 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 	markersize: int
 		OPTIONAL. Default value is 10. Same as markersize kwarg in matplotlib. Any numeric value passed here will set the
 		marker size for (custom_H2O, custom_CO2) points.
+
+	save_fig: False or str
+		OPTIONAL. Default value is False, in which case the figure will not be saved. If a string is passed,
+		the figure will be saved with the string as the filename. The string must include the file extension.
 
 	extend_isobars_to_zero: bool
 		OPTIONAL. If True (default), isobars will be extended to zero, even if there is a finite solubility at zero partial pressure.
@@ -7566,6 +7576,9 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 	np.seterr(divide='warn', invalid='warn') #turn numpy warning back on
 	w.filterwarnings("always", message="Polyfit may be poorly conditioned")
 
+	if isinstance(save_fig, str):
+		plt.savefig(save_fig)
+
 	return plt.show()
 
 def scatterplot(custom_x, custom_y, xlabel=None, ylabel=None, **kwargs):
@@ -7615,7 +7628,7 @@ def scatterplot(custom_x, custom_y, xlabel=None, ylabel=None, **kwargs):
 
 #====== Define some standard model options =======================================================#
 
-default_models = {'Shishkina':                MixedFluid({'H2O':ShishkinaWater(),'CO2':ShishkinaCarbon()}),
+default_models = {'ShishkinaIdealMixing':     MixedFluid({'H2O':ShishkinaWater(),'CO2':ShishkinaCarbon()}),
 				  'Dixon':                    MixedFluid({'H2O':DixonWater(),'CO2':DixonCarbon()}),
 				  'IaconoMarziano':           MixedFluid({'H2O':IaconoMarzianoWater(),'CO2':IaconoMarzianoCarbon()}),
 				  'Liu':					  MixedFluid({'H2O':LiuWater(),'CO2':LiuCarbon()}),
@@ -7638,9 +7651,13 @@ default_models = {'Shishkina':                MixedFluid({'H2O':ShishkinaWater()
 				  'LiuCarbon':				  LiuCarbon()
 }
 
-# Return homogenised calibration range checks for mixed fluid models:
-default_models['Liu'].models[1].set_calibration_ranges([])
 
+default_models['ShishkinaIdealMixing'].models[0].calibration_ranges.append(CalibrationRange('X_fluid',0.0,crf_MixedFluidWarning,'','Shishkina et al. (2014)',
+				 																fail_msg=crmsg_MixedFluidWarning_fail, pass_msg=crmsg_MixedFluidWarning_pass, description_msg=crmsg_MixedFluidWarning_description))
+
+# Return homogenised calibration range checks for mixed fluid models:
+
+default_models['Liu'].models[1].set_calibration_ranges([])
 _crs_to_update = default_models['Liu'].models[0].calibration_ranges
 for _cr in _crs_to_update:
 	_cr.model_name = 'Liu et al. (2005)'
@@ -8304,51 +8321,80 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, save_fig
 
 	if isinstance(model, list):
 		for modelname in model:
+			model_type = calibrations.return_calibration_type(modelname)
+			if model_type['H2O'] == True:
+				h2o_legend = True
+			if model_type['CO2'] == True or model_type['Mixed'] == True:
+				co2_h2oco2_legend = True
+
+		if h2o_legend == True:
+			plt.scatter([], [], marker='', label=r"$\bf{Pure \ H_2O:}$")
+
+			for modelname in model:
+				calibdata = calibrations.return_calibration(modelname)
+				model_type = calibrations.return_calibration_type(modelname)
+				if isinstance(calibdata, str):
+					w.warn(calibdata)
+				else:
+					if model_type['H2O'] == True:
+						if plot_type == 'TAS':
+							try:
+								plt.scatter(calibdata['H2O']['SiO2'], calibdata['H2O']['Na2O'] + calibdata['H2O']['K2O'],
+											marker='s', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname))
+							except:
+								plt.scatter(calibdata['H2O']['SiO2'], calibdata['H2O']['Na2O+K2O'],
+											marker='s', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname))
+						if plot_type == 'xy':
+							try:
+								plt.scatter(calibdata['H2O'][x], calibdata['H2O'][y],
+											marker='s', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname))
+							except:
+								w.warn("The requested oxides were not found in the calibration dataset for " + str(modelname) + ".")
+			
+			if co2_h2oco2_legend == True:
+				plt.scatter([], [], marker='', label=r"${\ }$")
+
+		if co2_h2oco2_legend == True:
+			plt.scatter([], [], marker='', label=r"$\bf{\ CO_2 \ and \ H_2O\!-\!CO_2:}$")
+
+		for modelname in model:
 			calibdata = calibrations.return_calibration(modelname)
+			model_type = calibrations.return_calibration_type(modelname)
 			if isinstance(calibdata, str):
 				w.warn(calibdata)
 			else:
-				if 'CO2' in calibdata.keys():
+				if model_type['CO2'] == True and model_type['Mixed'] == True:
+					frames = [calibdata['CO2'], calibdata['Mixed']]
+					co2_and_mixed = pd.concat(frames)
 					if plot_type == 'TAS':
 						try:
-							plt.scatter(calibdata['CO2']['SiO2'], calibdata['CO2']['Na2O'] + calibdata['CO2']['K2O'],
-										marker='o', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname)+" CO2")
+							plt.scatter(co2_and_mixed['SiO2'], co2_and_mixed['Na2O'] + co2_and_mixed['K2O'],
+										marker='d', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname))
 						except:
-							plt.scatter(calibdata['CO2']['SiO2'], calibdata['CO2']['Na2O+K2O'],
-									marker='o', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname)+" CO2")
+							plt.scatter(co2_and_mixed['SiO2'], co2_and_mixed['Na2O+K2O'],
+									marker='d', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname))
 					if plot_type == 'xy':
 						try:
-							plt.scatter(calibdata['CO2'][x], calibdata['CO2'][y],
-									marker='o', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname)+" CO2")
+							plt.scatter(co2_and_mixed[x], co2_and_mixed[y],
+									marker='d', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname))
 						except:
 							w.warn("The requested oxides were not found in the calibration dataset for " + str(modelname) + ".")
-
-				if 'H2O' in calibdata.keys():
+				elif model_type['CO2'] == True or model_type['Mixed'] == True:
+					if model_type['CO2'] == True:
+						thistype = 'CO2'
+					if model_type['Mixed'] == True:
+						thistype = 'Mixed'
 					if plot_type == 'TAS':
 						try:
-							plt.scatter(calibdata['H2O']['SiO2'], calibdata['H2O']['Na2O'] + calibdata['H2O']['K2O'],
-										marker='s', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname)+" H2O")
+							plt.scatter(calibdata[thistype]['SiO2'], calibdata[thistype]['Na2O'] + calibdata[thistype]['K2O'],
+										marker='d', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname))
 						except:
-							plt.scatter(calibdata['H2O']['SiO2'], calibdata['H2O']['Na2O+K2O'],
-										marker='s', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname)+" H2O")
+							plt.scatter(calibdata[thistype]['SiO2'], calibdata[thistype]['Na2O+K2O'],
+									marker='d', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname))
 					if plot_type == 'xy':
 						try:
-							plt.scatter(calibdata['H2O'][x], calibdata['H2O'][y],
-										marker='s', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname)+" H2O")
-						except:
-							w.warn("The requested oxides were not found in the calibration dataset for " + str(modelname) + ".")
-				if 'Mixed' in calibdata.keys():
-					if plot_type == 'TAS':
-						try:
-							plt.scatter(calibdata['Mixed']['SiO2'], calibdata['Mixed']['Na2O'] + calibdata['Mixed']['K2O'],
-										marker='d', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname)+" Mixed")
-						except:
-							plt.scatter(calibdata['Mixed']['SiO2'], calibdata['Mixed']['Na2O+K2O'],
-										marker='d', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname)+" Mixed")
-					if plot_type == 'xy':
-						try:
-							plt.scatter(calibdata['Mixed'][x], calibdata['Mixed'][y],
-										marker='d', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname)+" Mixed")
+							plt.scatter(calibdata[thistype][x], calibdata[thistype][y],
+									marker='d', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname))
 						except:
 							w.warn("The requested oxides were not found in the calibration dataset for " + str(modelname) + ".")
 	else:
