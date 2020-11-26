@@ -176,8 +176,8 @@ MagmaSat(Model)
 .. autoclass:: VESIcal.MagmaSat
 	:members:
 
-MagmaSat Plotting Functions
-===========================
+VESIcal Plotting Functions
+==========================
 
 .. autofunction:: VESIcal.plot
 
