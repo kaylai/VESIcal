@@ -9,6 +9,7 @@ VESIcal Quickstart
    install
    about
    quick_tutorials
+   models
    tutorials
    youtube
    codedoc
