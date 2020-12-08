@@ -8209,7 +8209,7 @@ def add_LeMaitre_fields(plot_axes, fontsize=12, color=(0.6, 0.6, 0.6)):
 				 horizontalalignment='center', verticalalignment='top',
 				 rotation=name.rotation, zorder=0)
 
-def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, figsize=(17,8), save_fig=False, **kwargs):
+def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, figsize=(17,8), legend=True, save_fig=False, **kwargs):
 	"""
 	Plots user data and calibration set of any or all models on any x-y plot or a total alkalis vs silica (TAS) diagram.
 	TAS diagram boundaries provided by tasplot python module, copyright John A Stevenson.
@@ -8241,6 +8241,9 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, figsize=
 
 	figsize: tuple
 		OPTIONAL. Default value is (17,8). Sets the matplotlib.pyplot figsize value as (x_dimension, y_dimension)
+
+	legend: bool
+		OPTIONAL. Default value is True. Can be set to False in which case the legend will not be displayed.
 
 	save_fig: False or str
 		OPTIONAL. Default value is False, in which case the figure will not be saved. If a string is passed,
@@ -8427,7 +8430,8 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, figsize=
 						s=150, edgecolors='w', facecolors='red', marker='P',
 						label = 'User Data')
 
-	plt.legend(bbox_to_anchor=(1.04,1), loc="upper left")
+	if legend == True:
+		plt.legend(bbox_to_anchor=(1.04,1), loc="upper left")
 	fig.tight_layout()
 	if isinstance(save_fig, str):
 		fig.savefig(save_fig)
