@@ -7171,7 +7171,7 @@ def smooth_isobars_and_isopleths(isobars=None, isopleths=None):
 
 def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, custom_CO2=None,
 		 isobar_labels=None, isopleth_labels=None, degassing_path_labels=None, custom_labels=None,
-		 custom_colors="VESIcal", custom_symbols=None, markersize=10, save_fig=False,
+		 custom_colors="VESIcal", custom_symbols=None, markersize=10, figsize=(12,8), save_fig=False,
 		 extend_isobars_to_zero=True, smooth_isobars=False, smooth_isopleths=False, **kwargs):
 	"""
 	Custom automatic plotting of model calculations in VESIcal.
@@ -7235,6 +7235,9 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 		OPTIONAL. Default value is 10. Same as markersize kwarg in matplotlib. Any numeric value passed here will set the
 		marker size for (custom_H2O, custom_CO2) points.
 
+	figsize: tuple
+		OPTIONAL. Default value is (12,8). Sets the matplotlib.pyplot figsize value as (x_dimension, y_dimension)
+
 	save_fig: False or str
 		OPTIONAL. Default value is False, in which case the figure will not be saved. If a string is passed,
 		the figure will be saved with the string as the filename. The string must include the file extension.
@@ -7281,7 +7284,7 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 	else:
 		raise InputError("Argument custom_colors must be type list. Just passing one item? Try putting square brackets, [], around it.")
 
-	plt.figure(figsize=(12,8))
+	plt.figure(figsize=figsize)
 	if 'custom_x' in kwargs:
 		plt.xlabel(kwargs['xlabel'])
 		plt.ylabel(kwargs['ylabel'])
@@ -8206,7 +8209,7 @@ def add_LeMaitre_fields(plot_axes, fontsize=12, color=(0.6, 0.6, 0.6)):
 				 horizontalalignment='center', verticalalignment='top',
 				 rotation=name.rotation, zorder=0)
 
-def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, save_fig=False, **kwargs):
+def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, figsize=(17,8), save_fig=False, **kwargs):
 	"""
 	Plots user data and calibration set of any or all models on any x-y plot or a total alkalis vs silica (TAS) diagram.
 	TAS diagram boundaries provided by tasplot python module, copyright John A Stevenson.
@@ -8235,6 +8238,9 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, save_fig
 		where the x and y axes are scaled down to zoom in and only show the region surrounding the user_data. A list of
 		tuples may be passed to manually specify x and y limits. Pass in data as  [(x_min, x_max), (y_min, y_max)].
 		For example, the default limits here would be passed in as [(35,100), (0,25)].
+
+	figsize: tuple
+		OPTIONAL. Default value is (17,8). Sets the matplotlib.pyplot figsize value as (x_dimension, y_dimension)
 
 	save_fig: False or str
 		OPTIONAL. Default value is False, in which case the figure will not be saved. If a string is passed,
@@ -8272,7 +8278,7 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, save_fig
 		user_ymin, user_ymax = zoom[1]
 
 	#Create the figure
-	fig, ax1 = plt.subplots(figsize = (17,8))
+	fig, ax1 = plt.subplots(figsize = figsize)
 	font = {'family': 'sans-serif',
 				'color':  'black',
 				'weight': 'normal',
