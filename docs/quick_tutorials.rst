@@ -133,6 +133,9 @@ Optionally, you can tell VESIcal what to name your new sheets in your new excel 
 
 Normalize and Transform Data
 ============================
+Before performing model calculations on a dataset, it may be desired to normalize the input composition(s) to a total of 100%. VESIcal has multiple built-in methods for doing so. It should be noted that this procedure is by no means required and not necessarily advised depending on what the user intends to model. 
+
+In some cases, data transformations internal to model calculations (e.g., converting between wt% and mol fraction) in effect cause normalization of the input bulk composition anyways, and so normalizing ahead of time will make no difference in the final modeled result. For example, `calculate_dissolved_volatiles` is agnostic to any a priori normalization of the data since the volatiles are handled separately from the dry bulk. On the other hand, `calculate_saturation_pressure` depends very much on any normalization performed, since the calculated pressure depends directly and strongly on the proportion of volatiles in the bulk composition.
 
 Standard normalization
 ----------------------
@@ -171,6 +174,16 @@ Normalizes oxides to 100% assuming the sample is volatile-free. If H2O or CO2  c
 .. code-block:: python
 
 	normalize_AdditionalVolatiles(<your_excelfile_or_sample>)
+
+Normalize an Extracted Sample Composition
+-----------------------------------------
+One might wish to normalize a composition that is pulled from an ExcelFile object. This can be done in one function call, passing `none` (the default), `standard`, `fixedvolatiles`, or `additionalvolatiles` to norm. For example:
+
+.. code-block:: python
+
+	sample_10 = myfile.get_sample_oxide_comp('Sample10', norm='fixedvolatiles')
+
+where myfile is an ExcelFile object and 'Sample10' is the Label of a particular sample in myfile.
 
 ----------
 
