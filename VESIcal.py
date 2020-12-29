@@ -693,11 +693,12 @@ class ExcelFile(object):
 		dataframe: pandas DataFrame
 				OPTIONAL. Default is None in which case this argument is ignored. This argument is used when the user wishes to turn
 				a pandas DataFrame into an ExcelFile object, for example when user data is already in python rather than being imported
-				from an Excel file. If using this option, pass None to filename.
+				from an Excel file. In this case set `dataframe` equal to the dataframe object being passed in. If using this option, pass 
+				None to filename.
 	"""
 
 	def __init__(self, filename, sheet_name=0, input_type='wtpercent', label='Label', **kwargs):
-		"""Return an ExcelFile object whoes parameters are defined here."""
+		"""Return an ExcelFile object whose parameters are defined here."""
 
 		if isinstance(sheet_name, str) or isinstance(sheet_name, int):
 			pass
@@ -733,6 +734,9 @@ class ExcelFile(object):
 
 		if 'model' in kwargs:
 			w.warn("You don't need to pass a model here, so it will be ignored. You can specify a model when performing calculations on your dataset (e.g., calculate_dissolved_volatiles())",RuntimeWarning,stacklevel=2)
+
+		if 'norm' in kwargs:
+			w.warn("We noticed you passed a norm argument here. This does nothing. You can normalize your ExcelFile and save it to a new variable name after import using normalize(ExcelFileObject). See the documentation for more info.",RuntimeWarning,stacklevel=2)
 
 		total_iron_columns = ["FeOt", "FeOT", "FeOtot", "FeOtotal", "FeOstar", "FeO*"]
 		for name in total_iron_columns:
