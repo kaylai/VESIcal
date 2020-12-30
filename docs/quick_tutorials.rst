@@ -133,47 +133,56 @@ Optionally, you can tell VESIcal what to name your new sheets in your new excel 
 
 Normalize and Transform Data
 ============================
+
 Before performing model calculations on a dataset, it may be desired to normalize the input composition(s) to a total of 100%. VESIcal has multiple built-in methods for doing so. It should be noted that this procedure is by no means required and not necessarily advised depending on what the user intends to model. 
 
 In some cases, data transformations internal to model calculations (e.g., converting between wt% and mol fraction) in effect cause normalization of the input bulk composition anyways, and so normalizing ahead of time will make no difference in the final modeled result. For example, `calculate_dissolved_volatiles` is agnostic to any a priori normalization of the data since the volatiles are handled separately from the dry bulk. On the other hand, `calculate_saturation_pressure` depends very much on any normalization performed, since the calculated pressure depends directly and strongly on the proportion of volatiles in the bulk composition.
 
-Standard normalization
+Normalization Function
 ----------------------
-Returns the composition normalized to 100%, including any volatiles.
 
-Normalize an entire dataset:
+.. autofunction:: VESIcal.normalize
 
-.. code-block:: python
-
-	normalize(<your_excelfile_object>)
-
-For example:
+Use of VESIcal.normalize()
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+Normalize can take a single sample as a dict or pandas Series or multiple samples as a pandas DataFrame or VESIcal ExcelFile object. The object returned has the same type as the object passed to `sample`.
 
 .. code-block:: python
 
-	normalize(myfile)
+	normalize(sample)
 
-Or normalize a single sample,where `<your_sample>` is a variable (not a string):
+Normalization Types
+-------------------
+
+Standard normalization
+^^^^^^^^^^^^^^^^^^^^^^
+Returns the composition normalized to 100%, including any volatiles. This is the default if nothing is passed to 'how'.
 
 .. code-block:: python
 
-	normalize(<your_sample>)
+	normalize(sample)
+
+produces the same result as:
+
+.. code-block:: python
+
+	normalize(sample, how='standard')
 
 FixedVolatiles Normalization
-----------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Normalizes the oxides to 100%, but volatiles remain fixed while other major element oxides are reduced proporitonally so that the total is 100 wt%.
 
 .. code-block:: python
 
-	normalize_FixedVolatiles(<your_excelfile_or_sample>)
+	normalize(sample, how='fixedvolatiles')
 
 AdditionalVolatiles Normalization
----------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Normalizes oxides to 100% assuming the sample is volatile-free. If H2O or CO2  concentrations are passed to the function, their un-normalized values will be retained in addition to the normalized non-volatile oxides, summing to >100%.
 
 .. code-block:: python
 
-	normalize_AdditionalVolatiles(<your_excelfile_or_sample>)
+	normalize(sample, how='additionalvolatiles')
 
 Normalize an Extracted Sample Composition
 -----------------------------------------

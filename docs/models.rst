@@ -8,17 +8,28 @@ VESIcal Recognized Models
 
 Models included in VESIcal are:
 
-1. MagmaSat: VESIcal's default model. The mixed-volatile solubility model within MELTS v. 1.2.0 (Ghiorso and Gualda, 2015) 
-2. Dixon: The simplification of the Dixon (1997) model as implemented in VolatileCalc (Newman and Lowenster, 2002)
+**1. MagmaSat:** VESIcal's default model. The mixed-volatile solubility model within MELTS v. 1.2.0 (Ghiorso and Gualda, 2015) 
+
+**2. Dixon:** The simplification of the Dixon (1997) model as implemented in VolatileCalc (Newman and Lowenstern, 2002)
+
 	- DixonWater and DixonCarbon are available as pure-fluid models
-3. MooreWater: (Moore et al. 1998; water only, but H2O fluid concentration can be specified)
-4. Liu: (Liu et al., 2005)
+
+**3. MooreWater:** (Moore et al. 1998; water only, but H2O fluid concentration can be specified)
+
+**4. Liu:** (Liu et al., 2005)
+
 	- LiuWater and LiuCarbon are available as pure-fluid models
-5. IaconoMarziano: (Iacono-Marziano et al., 2012)
+
+**5. IaconoMarziano:** (Iacono-Marziano et al., 2012)
+
 	- IaconoMarzianoWater and IaconoMarzianoCarbon are available as pure-fluid models
-6. ShishkinaIdealMixing: (Shishkina et al., 2014) using pure-H2O and pure-CO2 models and assuming ideal mixing. In general, the pure-fluid versions of this model should be used
+
+**6. ShishkinaIdealMixing:** (Shishkina et al., 2014) using pure-H2O and pure-CO2 models and assuming ideal mixing. In general, the pure-fluid versions of this model should be used.
+
 	- ShishkinaWater and ShishkinaCarbon are available as pure-fluid models
-7. AllisonCarbon: (Allison et al. 2019, carbon only)
+
+**7. AllisonCarbon:** (Allison et al. 2019, carbon only)
+
 	- AllisonCarbon vesuvius (default; phonotephrite from Vesuvius, Italy)
 	- AllisonCarbon sunset (alkali basalt from Sunset Crater, AZ, USA)
 	- AllisonCarbon sfvf (basaltic andesite from San Francisco Volcanic Field, AZ, USA)

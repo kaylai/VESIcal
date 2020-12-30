@@ -187,6 +187,50 @@ VESIcal Plotting Functions
 
 .. autofunction:: VESIcal.calib_plot
 
+VESIcal Visualization Functions
+===============================
+
+.. autofunction:: VESIcal.printTable
+
+Normalization Functions
+=======================
+
+.. autofunction:: VESIcal.isnormalized
+
+.. autofunction:: VESIcal.normalize
+
+.. autofunction:: VESIcal.normalize_FixedVolatiles
+
+.. autofunction:: VESIcal.normalize_AdditionalVolatiles
+
+Data Transformation Functions
+=============================
+
+.. autofunction:: VESIcal.mol_to_wtpercent
+
+.. autofunction:: VESIcal.wtpercentOxides_to_molCations
+
+.. autofunction:: VESIcal.wtpercentOxides_to_molOxides
+
+.. autofunction:: VESIcal.wtpercentOxides_to_molSingleO
+
+.. autofunction:: VESIcal.wtpercentOxides_to_formulaWeight
+
+.. autofunction:: VESIcal.fluid_molfrac_to_wt
+
+.. autofunction:: VESIcal.fluid_wt_to_molfrac
+
+.. autofunction:: VESIcal.get_oxides
+
+.. autofunction:: VESIcal.rename_duplicates
+
+Universal Informative Functions
+===============================
+
+.. autofunction:: VESIcal.get_model_names
+
+
+
 
 
 
