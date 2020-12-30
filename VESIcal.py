@@ -457,16 +457,13 @@ def get_oxides(sample):
 
 	Parameters
 	----------
-	sample: pandas Series, dictionary
+	sample: pandas Series or dictionary
 		A sample composition plus other sample information
 
 	Returns
 	-------
-	Sample passed as > Returned as
-			pandas Series > pandas Series
-			dictionary > dictionary
-
-				Sample composition with extranneous information removed.
+	Same type as passed sample (pandas Series or dictionary)
+		Sample composition with extranneous information removed.
 	"""
 
 	clean = {oxide:  sample[oxide] for oxide in oxides}
@@ -482,8 +479,10 @@ def rename_duplicates(df, suffix='-duplicate-'):
 
 #----------DEFINE SOME NORMALIZATION METHODS-----------#
 
-def normalize(sample):
-	"""Normalizes an input composition to 100%. This is the 'standard' normalization routine.
+def isnormalized(sample):
+	"""
+	Checks to see if passed sample composition or composition(s) in an ExcelFile ojbect are normalized
+	to 100% (including volatiles). Returns bool.
 
 	Parameters
 	----------
@@ -493,42 +492,127 @@ def normalize(sample):
 
 	Returns
 	-------
-	Sample passed as > Returned as
-		pandas Series > pandas Series
-		dictionary > dictionary
-		pandas DataFrame > pandas DataFrame
-		ExcelFile object > pandas DataFrame
-
-			Normalized major element oxides.
+	bool
+		True if sample sums to 100% including volatiles. False if sample does not sum to 100% including
+		volatiles.
 	"""
-	def single_normalize(sample):
-		single_sample = sample
-		return {k: 100.0 * v / sum(single_sample.values()) for k, v in single_sample.items()}
 
-	def multi_normalize(sample):
+	def single_isnormalized(sample):
+		"""
+		Parameters
+		----------
+		sample: dict
+
+		Returns
+		-------
+		bool
+		"""
+		single_sample = sample
+		oxideSum = sum(sample.values())
+		if oxideSum > 99.9 and oxideSum < 100.1:
+			return True
+		else:
+			return False
+
+	def multi_isnormalized(sample):
+		"""
+		Parameters
+		----------
+		sample: pandas DataFrame
+
+		Returns
+		-------
+		bool
+		"""
 		multi_sample = sample.copy()
 		multi_sample["Sum"] = sum([multi_sample[oxide] for oxide in oxides])
-		for column in multi_sample:
-			if column in oxides:
-				multi_sample[column] = 100.0*multi_sample[column]/multi_sample["Sum"]
-
-		del multi_sample["Sum"]
-		return multi_sample
+		for index, row in multi_sample.iterrows():
+			oxideSum = row["Sum"]
+			if oxideSum < 99.9 or oxideSum > 100.1:
+				return False
+				break
+			else:
+				pass
+		return True
 
 	if isinstance(sample, dict):
 		_sample = sample.copy()
-		return single_normalize(_sample)
+		return single_isnormalized(_sample)
 	elif isinstance(sample, pd.core.series.Series):
 		_sample = pd.Series(sample.copy())
 		sample_dict = sample.to_dict()
-		return pd.Series(single_normalize(sample_dict))
+		return single_isnormalized(sample_dict)
 	elif isinstance(sample, ExcelFile):
 		_sample = sample
 		data = _sample.data
-		return multi_normalize(data)
+		return multi_isnormalized(data)
 	elif isinstance(sample, pd.DataFrame):
-		return multi_normalize(sample)
+		return multi_isnormalized(sample)
 
+def normalize(sample, how='standard'):
+	"""
+	Normalizes an input composition to 100%. By default, volatiles are included.
+
+	Parameters
+	----------
+	sample:    pandas Series, dictionary, pandas DataFrame, or ExcelFile object
+		A single composition can be passed as a dictionary. Multiple compositions can be passed either as
+		a pandas DataFrame or an ExcelFile object. Compositional information as oxides must be present.
+
+	how: string
+		Determines which normalization method is used.
+		- 'standard' (default): Normalizes an input composition to 100%.
+		- 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles. 
+		The volatile wt% will remain fixed, whilst the other major element oxides are reduced 
+		proportionally so that the total is 100 wt%.
+		- 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is 
+		volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will 
+		be retained in addition to the normalized non-volatile oxides, summing to >100%.
+
+	Returns
+	-------
+	Same type as passed sample (pandas Series, dictionary, pandas DataFrame, or ExcelFile Object)
+		Normalized major element oxides.
+	"""
+	def single_normalize(sample, how):
+		single_sample = sample
+		if how == 'standard':
+			return {k: 100.0 * v / sum(single_sample.values()) for k, v in single_sample.items()}
+		if how == 'fixedvolatiles':
+			return normalize_FixedVolatiles(sample)
+		if how == 'additionalvolatiles':
+			return normalize_AdditionalVolatiles(sample)
+
+	def multi_normalize(sample, how):
+		multi_sample = sample.copy()
+		if how == 'standard':
+			multi_sample["Sum"] = sum([multi_sample[oxide] for oxide in oxides])
+			for column in multi_sample:
+				if column in oxides:
+					multi_sample[column] = 100.0*multi_sample[column]/multi_sample["Sum"]
+
+			del multi_sample["Sum"]
+			return multi_sample
+		if how == 'fixedvolatiles':
+			return normalize_FixedVolatiles(sample)
+		if how == 'additionalvolatiles':
+			return normalize_AdditionalVolatiles(sample)
+
+	if isinstance(sample, dict):
+		_sample = sample.copy()
+		return single_normalize(_sample, how)
+	elif isinstance(sample, pd.core.series.Series):
+		_sample = pd.Series(sample.copy())
+		sample_dict = sample.to_dict()
+		return pd.Series(single_normalize(sample_dict, how))
+	elif isinstance(sample, ExcelFile):
+		_sample = sample
+		data = _sample.data
+		normed_data = multi_normalize(data, how)
+		ef_obj = ExcelFile(filename=None, dataframe=normed_data)
+		return ef_obj
+	elif isinstance(sample, pd.DataFrame):
+		return multi_normalize(sample, how)
 
 def normalize_FixedVolatiles(sample):
 	""" Normalizes major element oxides to 100 wt%, including volatiles. The volatile
@@ -542,13 +626,8 @@ def normalize_FixedVolatiles(sample):
 
 	Returns
 	-------
-	Sample passed as > Returned as
-		pandas Series > pandas Series
-		dictionary > dictionary
-		pandas DataFrame > pandas DataFrame
-		ExcelFile object > pandas DataFrame
-
-			Normalized major element oxides.
+	Same type as passed sample (pandas Series, dictionary, pandas DataFrame, or ExcelFile Object)
+		Normalized major element oxides.
 	"""
 	def single_FixedVolatiles(sample):
 		normalized = pd.Series({},dtype=float)
@@ -593,7 +672,9 @@ def normalize_FixedVolatiles(sample):
 	elif isinstance(sample, ExcelFile):
 		_sample = sample
 		data = _sample.data
-		return multi_FixedVolatiles(data)
+		normed_data = multi_FixedVolatiles(data)
+		ef_obj = ExcelFile(filename=None, dataframe=normed_data)
+		return ef_obj
 	elif isinstance(sample, pd.DataFrame):
 		return multi_FixedVolatiles(sample)
 	else:
@@ -613,13 +694,8 @@ def normalize_AdditionalVolatiles(sample):
 
 	Returns
 	-------
-	Sample passed as > Returned as
-		pandas Series > pandas Series
-		dictionary > dictionary
-		pandas DataFrame > pandas DataFrame
-		ExcelFile object > pandas DataFrame
-
-			Normalized major element oxides.
+	Same type as passed sample (pandas Series, dictionary, pandas DataFrame, or ExcelFile Object)
+		Normalized major element oxides.
 	"""
 
 	def single_AdditionalVolatiles(sample):
@@ -655,7 +731,9 @@ def normalize_AdditionalVolatiles(sample):
 	elif isinstance(sample, ExcelFile):
 		_sample = sample
 		data = _sample.data
-		return multi_AdditionalVolatiles(data)
+		normed_data = multi_AdditionalVolatiles(data)
+		ef_obj = ExcelFile(filename=None, dataframe=normed_data)
+		return ef_obj
 	elif isinstance(sample, pd.DataFrame):
 		return multi_AdditionalVolatiles(sample)
 	else:
