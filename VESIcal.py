@@ -8079,9 +8079,9 @@ class calculate_isobars_and_isopleths(Calculate):
 	def calculate(self,sample,pressure_list,isopleth_list=[0,1],points=101,**kwargs):
 		check = getattr(self.model, "calculate_isobars_and_isopleths", None)
 		if callable(check):
-			samplenorm = sample.copy()
-			samplenorm = normalize_AdditionalVolatiles(samplenorm)
-			isobars, isopleths = self.model.calculate_isobars_and_isopleths(sample=samplenorm,pressure_list=pressure_list,isopleth_list=isopleth_list,points=points,**kwargs)
+			# samplenorm = sample.copy()
+			# samplenorm = normalize_AdditionalVolatiles(samplenorm)
+			isobars, isopleths = self.model.calculate_isobars_and_isopleths(sample=self.sample,pressure_list=pressure_list,isopleth_list=isopleth_list,points=points,**kwargs)
 			return isobars, isopleths
 		else:
 			raise InputError("This model does not have a calculate_isobars_and_isopleths method built in, most likely because it is a pure fluid model.")
