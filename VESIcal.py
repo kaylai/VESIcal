@@ -562,11 +562,11 @@ def normalize(sample, how='standard'):
 	how: string
 		Determines which normalization method is used.
 		- 'standard' (default): Normalizes an input composition to 100%.
-		- 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles. 
-		The volatile wt% will remain fixed, whilst the other major element oxides are reduced 
+		- 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
+		The volatile wt% will remain fixed, whilst the other major element oxides are reduced
 		proportionally so that the total is 100 wt%.
-		- 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is 
-		volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will 
+		- 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
+		volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
 		be retained in addition to the normalized non-volatile oxides, summing to >100%.
 
 	Returns
@@ -771,7 +771,7 @@ class ExcelFile(object):
 		dataframe: pandas DataFrame
 				OPTIONAL. Default is None in which case this argument is ignored. This argument is used when the user wishes to turn
 				a pandas DataFrame into an ExcelFile object, for example when user data is already in python rather than being imported
-				from an Excel file. In this case set `dataframe` equal to the dataframe object being passed in. If using this option, pass 
+				from an Excel file. In this case set `dataframe` equal to the dataframe object being passed in. If using this option, pass
 				None to filename.
 	"""
 
@@ -4212,9 +4212,7 @@ class IaconoMarzianoWater(Model):
 
 	def preprocess_sample(self,sample):
 		"""
-		Returns sample, normalized to 100 wt%, without changing the wt% of H2O and CO2 if the
-		hydrous parameterization is being used (default). If the anhydrous parameterization is
-		used, it will normalize without including H2O and CO2.
+		Returns sample, normalized to 100 wt%, without changing the wt% of H2O and CO2.
 
 		Parameters
 		----------
@@ -4226,10 +4224,8 @@ class IaconoMarzianoWater(Model):
 		pandas Series or dict
 			Major element oxides normalized to wt%.
 		"""
-		if self.hydrous == True:
-			return normalize_FixedVolatiles(sample)
-		else:
-			return normalize_AdditionalVolatiles(sample)
+		return normalize_FixedVolatiles(sample)
+
 
 	def calculate_dissolved_volatiles(self,pressure,temperature,sample,X_fluid=1.0,
 									  hydrous_coeffs=True,webapp_coeffs=False,**kwargs):
@@ -4489,9 +4485,7 @@ class IaconoMarzianoCarbon(Model):
 
 	def preprocess_sample(self,sample):
 		"""
-		Returns sample, normalized to 100 wt%, without changing the wt% of H2O and CO2 if the
-		hydrous parameterization is being used (default). If the anhydrous parameterization is
-		used, it will normalize without including H2O and CO2.
+		Returns sample, normalized to 100 wt%, without changing the wt% of H2O and CO2.
 
 		Parameters
 		----------
@@ -4503,10 +4497,7 @@ class IaconoMarzianoCarbon(Model):
 		pandas Series or dict
 			Major element oxides normalized to wt%.
 		"""
-		if self.hydrous == True:
-			return normalize_FixedVolatiles(sample)
-		else:
-			return normalize_AdditionalVolatiles(sample)
+		return normalize_FixedVolatiles(sample)
 
 	def calculate_dissolved_volatiles(self,pressure,temperature,sample,X_fluid=1,
 									  hydrous_coeffs=True, **kwargs):
@@ -8441,7 +8432,7 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, figsize=
 											marker='s', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname))
 							except:
 								w.warn("The requested oxides were not found in the calibration dataset for " + str(modelname) + ".")
-			
+
 			if co2_h2oco2_legend == True:
 				plt.scatter([], [], marker='', label=r"${\ }$")
 
