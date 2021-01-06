@@ -575,7 +575,7 @@ def normalize(sample, how='standard'):
 		Normalized major element oxides.
 	"""
 	def single_normalize(sample, how):
-		single_sample = sample
+		single_sample = sample.copy()
 		if how == 'standard':
 			return {k: 100.0 * v / sum(single_sample.values()) for k, v in single_sample.items()}
 		if how == 'fixedvolatiles':
@@ -630,6 +630,7 @@ def normalize_FixedVolatiles(sample):
 		Normalized major element oxides.
 	"""
 	def single_FixedVolatiles(sample):
+		_sample = sample.copy()
 		normalized = pd.Series({},dtype=float)
 		volatiles = 0
 		if 'CO2' in list(_sample.index):
@@ -643,10 +644,10 @@ def normalize_FixedVolatiles(sample):
 
 		normalized = normalized/np.sum(normalized)*(100-volatiles)
 
-		if 'CO2' in list(_sample.index):
-			normalized['CO2'] = _sample['CO2']
-		if 'H2O' in list(_sample.index):
-			normalized['H2O'] = _sample['H2O']
+		if 'CO2' in list(sample.index):
+			normalized['CO2'] = sample['CO2']
+		if 'H2O' in list(sample.index):
+			normalized['H2O'] = sample['H2O']
 
 		return normalized
 
@@ -699,6 +700,7 @@ def normalize_AdditionalVolatiles(sample):
 	"""
 
 	def single_AdditionalVolatiles(sample):
+		_sample = sample.copy()
 		normalized = pd.Series({}, dtype=float)
 		for ox in list(_sample.index):
 			if ox != 'H2O' and ox != 'CO2':
@@ -706,9 +708,9 @@ def normalize_AdditionalVolatiles(sample):
 
 		normalized = normalized/np.sum(normalized)*100
 		if 'H2O' in _sample.index:
-			normalized['H2O'] = _sample['H2O']
+			normalized['H2O'] = sample['H2O']
 		if 'CO2' in _sample.index:
-			normalized['CO2'] = _sample['CO2']
+			normalized['CO2'] = sample['CO2']
 
 		return normalized
 
