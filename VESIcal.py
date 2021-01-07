@@ -5603,13 +5603,18 @@ class LiuCarbon(Model):
 					+ (XCO2fluid*pressureMPa)*(0.4133*(pressureMPa*(1-XCO2fluid))**(0.5)
 					+ 2.041*10**(-3)*(pressureMPa*(1-XCO2fluid))**(1.5))) - CO2melt_ppm)
 
-		XCO2fluid = sympy.solve(equation, XCO2fluid)[0]
-		if XCO2fluid > 1:
-			XCO2fluid = 1
-		if XCO2fluid < 0:
-			XCO2fluid = 0
+		XCO2fluid = sympy.solve(equation, XCO2fluid, real=True)[0]
 
-		return XCO2fluid #1 - XCO2fluid
+		if type(XCO2fluid) != float:
+			w.warn("Could not find equilibrium fluid composition.")
+			return 0
+		else:
+			if XCO2fluid > 1:
+				XCO2fluid = 1
+			if XCO2fluid < 0:
+				XCO2fluid = 0
+
+			return XCO2fluid
 
 	def calculate_saturation_pressure(self,temperature,sample,X_fluid=1.0,**kwargs):
 		"""
@@ -8666,7 +8671,7 @@ def test():
 				 'K2O':1.99,
 				 'P2O5':0.51,
 				 'MnO':0.1,
-				 'CO2':0.8,
+				 'CO2':0.08,
 				 'H2O':4.0}
 
 	test_pressure = 2000.0
