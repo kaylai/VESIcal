@@ -742,6 +742,65 @@ def normalize_AdditionalVolatiles(sample):
 		raise InputError("The composition input must be a pandas Series or dictionary for single sample \
 							or a pandas DataFrame or ExcelFile object for multi-sample.")
 
+#------------DEFINE OTHER DATA IMPORT METHODS----------------#
+def try_set_index(dataframe, label):
+	"""
+	Method to handle setting the index column in an ExcelFile object. If no column is passed that matches the default index name,
+	then this method will attempt to choose the 'best' column that the user might want to serve as an index column.
+
+	Parameters
+	----------
+	dataframe: pandas DataFrame
+
+	label: str
+		Name of the column within the passed Excel file referring to sample names.
+	"""
+	_dataframe = dataframe.copy()
+	try:
+		_dataframe = _dataframe.set_index(label)
+	except:
+		label_found = False
+		for col in _dataframe.columns:
+			if col in oxides:
+				pass
+			else:
+				_dataframe = _dataframe.set_index(col)
+				label_found = True
+				w.warn("No Label column given, so column '" + str(col) + "' was chosen for you. To choose your own, set label='<column-name>'.",RuntimeWarning,stacklevel=2)
+				break
+		if label_found == False:
+			_dataframe.index.name = 'Label'
+			w.warn("No Label column given, so one was created for you. To choose your own, set label='<column-name>'.",RuntimeWarning,stacklevel=2)
+
+	return _dataframe
+
+def ExcelFile_from_csv(filepath_or_buffer, input_type='wtpercent', label='Label', **kwargs):
+	"""
+	Read a comma-separated values (csv) file into an ExcelFile object. Clones functionality of pandas.read_csv(). Any arguments that can
+	be passed to pandas.read_csv() can be passed here.
+
+	Parameters
+	----------
+	filepath_or_buffer: str, path object or file-like object
+		Mimics same argument in pandas.read_csv(). From the Pandas docs: Any valid string path is acceptable. The string could be a URL. 
+		Valid URL schemes include http, ftp, s3, gs, and file. For file URLs, a host is expected. A local file could be: 
+		file://localhost/path/to/table.csv. If you want to pass in a path object, pandas accepts any os.PathLike. By file-like object, 
+		we refer to objects with a read() method, such as a file handle (e.g. via builtin open function) or StringIO.
+
+	input_type: str
+			OPTIONAL. Default is 'wtpercent'. String defining whether the oxide composition is given in wt percent
+			("wtpercent", which is the default), mole percent ("molpercent"), or mole fraction ("molfrac").
+
+	Returns
+	-------
+	ExcelFile object
+	"""
+	dataframe = pd.read_csv(filepath_or_buffer, **kwargs)
+
+	EF_obj = ExcelFile(filename=None, input_type=input_type, label=label, dataframe=dataframe)
+
+	return EF_obj
+
 #------------DEFINE MAJOR CLASSES-------------------#
 class ExcelFile(object):
 	"""An excel file with sample names and oxide compositions
@@ -768,48 +827,31 @@ class ExcelFile(object):
 		label: str
 			OPTIONAL. Default is 'Label'. Name of the column within the passed Excel file referring to sample names.
 
-	kwargs
-	------
 		dataframe: pandas DataFrame
-				OPTIONAL. Default is None in which case this argument is ignored. This argument is used when the user wishes to turn
-				a pandas DataFrame into an ExcelFile object, for example when user data is already in python rather than being imported
-				from an Excel file. In this case set `dataframe` equal to the dataframe object being passed in. If using this option, pass
-				None to filename.
+			OPTIONAL. Default is None in which case this argument is ignored. This argument is used when the user wishes to turn
+			a pandas DataFrame into an ExcelFile object, for example when user data is already in python rather than being imported
+			from an Excel file. In this case set `dataframe` equal to the dataframe object being passed in. If using this option, pass
+			None to filename.
 	"""
 
-	def __init__(self, filename, sheet_name=0, input_type='wtpercent', label='Label', **kwargs):
+	def __init__(self, filename, sheet_name=0, input_type='wtpercent', label='Label', dataframe=None, **kwargs):
 		"""Return an ExcelFile object whose parameters are defined here."""
+		self.input_type = input_type
 
 		if isinstance(sheet_name, str) or isinstance(sheet_name, int):
 			pass
 		else:
 			raise InputError("If sheet_name is passed, it must be of type str or int. Currently, VESIcal cannot import more than one sheet at a time.")
 
-		self.input_type = input_type
-
-		if 'dataframe' in kwargs:
-			data = kwargs['dataframe']
-			data = data.rename_axis('Label')
+		if dataframe is not None:
+			data = dataframe
+			data = try_set_index(data, label)
 		else:
 			data = pd.read_excel(filename, sheet_name=sheet_name)
-
-			try:
-				data = data.set_index(label)
-			except:
-				label_found = False
-				for col in data.columns:
-					if col in oxides:
-						pass
-					else:
-						data = data.set_index(col)
-						label_found = True
-						w.warn("No Label column given, so column '" + str(col) + "' was chosen for you. To choose your own, set label='<column-name>'.",RuntimeWarning,stacklevel=2)
-						break
-				if label_found == False:
-					data.index.name = 'Label'
-					w.warn("No Label column given, so one was created for you. To choose your own, set label='<column-name>'.",RuntimeWarning,stacklevel=2)
+			data = try_set_index(data, label)
 
 		data = rename_duplicates(data) #handle any duplicated sample names
+		data = data.dropna(how='all') #drop any rows that are all NaNs
 		data = data.fillna(0) #fill in any missing data with 0's
 
 		if 'model' in kwargs:
@@ -1015,6 +1057,33 @@ class ExcelFile(object):
 						raise InputError("if sheet_name is passed, it must be list of strings")
 
 		return print("Saved " + str(filename))
+
+	def save_csv(self, filenames, calculations, **kwargs):
+		"""
+		Saves data calculated by the user in batch processing mode to a comma-separated values (csv) file. Mirros the pandas.to_csv()
+		method. Any argument that can be passed to pandas.csv() can be passed here. One csv file will be saved for each calculation
+		passed.
+
+		Parameters
+		----------
+		filenames: string or list of strings
+			Name of the file. Extension (.csv) should be passed along with the name itself, all in quotes (e.g., 'myfile.csv'). The number
+			of calculations passed must match the number of filenames passed. If passing more than one, should be passed as a list.
+
+		calculations: pandas DataFrame or list of pandas DataFrames
+			A single variable or list of variables containing calculated outputs from any of the core ExcelFile functions:
+			calculate_dissolved_volatiles, calculate_equilibrium_fluid_comp, and calculate_saturation_pressure.
+		"""
+		if type(filenames) != list:
+			filenames = [filenames]
+		if type(calculations) != list:
+			calculations = [calculations]
+		if len(filenames) != len(calculations):
+			raise InputError("calculations and filenames must have the same length")
+
+		for i in range(len(filenames)):
+			calculations[i].to_csv(filenames[i], **kwargs)
+			print ("Saved " + str(filenames[i]))
 
 	def calculate_dissolved_volatiles(self, temperature, pressure, X_fluid=1, print_status=True, model='MagmaSat', record_errors=False, **kwargs):
 		"""
