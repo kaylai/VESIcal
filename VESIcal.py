@@ -782,9 +782,9 @@ def ExcelFile_from_csv(filepath_or_buffer, input_type='wtpercent', label='Label'
 	Parameters
 	----------
 	filepath_or_buffer: str, path object or file-like object
-		Mimics same argument in pandas.read_csv(). From the Pandas docs: Any valid string path is acceptable. The string could be a URL. 
-		Valid URL schemes include http, ftp, s3, gs, and file. For file URLs, a host is expected. A local file could be: 
-		file://localhost/path/to/table.csv. If you want to pass in a path object, pandas accepts any os.PathLike. By file-like object, 
+		Mimics same argument in pandas.read_csv(). From the Pandas docs: Any valid string path is acceptable. The string could be a URL.
+		Valid URL schemes include http, ftp, s3, gs, and file. For file URLs, a host is expected. A local file could be:
+		file://localhost/path/to/table.csv. If you want to pass in a path object, pandas accepts any os.PathLike. By file-like object,
 		we refer to objects with a read() method, such as a file handle (e.g. via builtin open function) or StringIO.
 
 	input_type: str
@@ -4342,7 +4342,7 @@ class IaconoMarzianoWater(Model):
 		if hydrous_coeffs == True:
 			if X_fluid==0:
 				return 0
-			H2O = root_scalar(self.root_dissolved_volatiles,args=(pressure,temperature,sample,X_fluid,hydrous_coeffs,kwargs),
+			H2O = root_scalar(self.root_dissolved_volatiles,args=(pressure,temperature,sample,X_fluid,webapp_coeffs,kwargs),
 								x0=1.0,x1=2.0).root
 			return H2O
 		else:
