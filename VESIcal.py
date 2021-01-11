@@ -7,28 +7,29 @@ A generalized python library for calculating and plotting various things related
 __version__ = "0.1.7"
 __author__ = 'Kayla Iacovino, Simon Matthews, and Penny Wieser'
 
-#--------------TURN OFF WARNINGS-------------#
+# -------------- TURN OFF WARNINGS ------------- #
 import warnings as w
 w.filterwarnings("ignore", message="rubicon.objc.ctypes_patch has only been tested ")
 w.filterwarnings("ignore", message="The handle")
 
-#-----------------IMPORTS-----------------#
+# ----------------- IMPORTS ----------------- #
 import pandas as pd
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import matplotlib.font_manager as font_manager
-from cycler import cycler
-from abc import ABC, abstractmethod
 from scipy.optimize import root_scalar
 from scipy.optimize import root
-from scipy.optimize import minimize
+from abc import abstractmethod
 import sys
 import sympy
 from copy import copy
 # import anvil_server
 
-#--------------MELTS preamble---------------#
+# import matplotlib.font_manager as font_manager
+# from cycler import cycler
+# from scipy.optimize import minimize
+
+# -------------- MELTS preamble --------------- #
 from thermoengine import equilibrate
 # instantiate thermoengine equilibrate MELTS instance
 melts = equilibrate.MELTSmodel('1.2.0')
@@ -40,7 +41,7 @@ for phase in phases:
 melts.set_phase_inclusion_status({'Fluid': True, 'Liquid': True})
 
 
-#----------DEFINE SOME CONSTANTS-------------#
+# ---------- DEFINE SOME CONSTANTS ------------- #
 oxides = ['SiO2', 'TiO2', 'Al2O3', 'Fe2O3', 'Cr2O3', 'FeO', 'MnO', 'MgO', 'NiO', 'CoO', 'CaO', 'Na2O', 'K2O', 'P2O5',
 		  'H2O', 'CO2']
 anhydrous_oxides = ['SiO2', 'TiO2', 'Al2O3', 'Fe2O3', 'Cr2O3', 'FeO', 'MnO', 'MgO', 'NiO', 'CoO', 'CaO', 'Na2O', 'K2O', 'P2O5']
@@ -69,7 +70,7 @@ cations_to_oxides = {'Si': 'SiO2', 'Mg': 'MgO', 'Fe': 'FeO', 'Ca': 'CaO', 'Al': 
 			 'Ni': 'NiO', 'Co': 'CoO', 'Fe3': 'Fe2O3', 'H': 'H2O', 'C': 'CO2'}
 
 
-#----------DEFINE SOME EXCEPTIONS--------------#
+# ---------- DEFINE SOME EXCEPTIONS -------------- #
 
 class Error(Exception):
 	"""Base class for exceptions in this module."""
@@ -99,7 +100,7 @@ class SaturationError(Error):
 		self.message = message
 
 
-#----------DEFINE CUSTOM PLOTTING FORMATTING------------#
+# ---------- DEFINE CUSTOM PLOTTING FORMATTING ------------ #
 style = "seaborn-colorblind"
 plt.style.use(style)
 plt.rcParams["mathtext.default"] = "regular"
@@ -113,7 +114,7 @@ plt.rcParams['ytick.labelsize'] = 14
 plt.rcParams['legend.fontsize'] = 14
 mpl.rcParams['lines.markersize'] = 10
 
-#Define color cycler based on plot style set here
+# Define color cycler based on plot style set here
 the_rc = plt.style.library[style] #get style formatting set by plt.style.use()
 color_list = the_rc['axes.prop_cycle'].by_key()['color'] * 10 #list of colors by hex code
 color_cyler = the_rc['axes.prop_cycle'] #get the cycler
@@ -141,7 +142,7 @@ def printTable(myDict):
 						 index = [k for k in _myDict.keys()])
 	return table
 
-#----------DEFINE SOME UNIVERSAL INFORMATIVE METHODS--------------#
+# ---------- DEFINE SOME UNIVERSAL INFORMATIVE METHODS -------------- #
 def get_model_names():
 	"""
 	Returns all available model names as a list of strings.
@@ -152,7 +153,7 @@ def get_model_names():
 
 	return model_names
 
-#----------DEFINE SOME BASIC DATA TRANSFORMATION METHODS-----------#
+# ---------- DEFINE SOME BASIC DATA TRANSFORMATION METHODS ----------- #
 
 def mol_to_wtpercent(sample):
 	"""
@@ -195,13 +196,13 @@ def mol_to_wtpercent(sample):
 
 	return data
 
-def wtpercentOxides_to_molCations(oxides):
+def wtpercentOxides_to_molCations(sample):
 	"""Takes in a pandas Series containing major element oxides in wt%, and converts it
 	to molar proportions of cations (normalised to 1).
 
 	Parameters
 	----------
-	oxides         dict or pandas Series
+	sample         dict or pandas Series
 		Major element oxides in wt%.
 
 	Returns
@@ -210,18 +211,18 @@ def wtpercentOxides_to_molCations(oxides):
 		Molar proportions of cations, normalised to 1.
 	"""
 	molCations = {}
-	_oxides = oxides.copy()
-	if type(oxides) == dict:
-		oxideslist = list(_oxides.keys())
-	elif type(oxides) == pd.core.series.Series:
-		oxideslist = list(_oxides.index)
+	_sample = sample.copy()
+	if type(sample) == dict:
+		oxideslist = list(_sample.keys())
+	elif type(sample) == pd.core.series.Series:
+		oxideslist = list(_sample.index)
 	else:
 		raise InputError("The composition input must be a pandas Series or dictionary.")
 	for ox in oxideslist:
 		cation = oxides_to_cations[ox]
-		molCations[cation] = CationNum[ox]*_oxides[ox]/oxideMass[ox]
+		molCations[cation] = CationNum[ox]*_sample[ox]/oxideMass[ox]
 
-	if type(oxides) == pd.core.series.Series:
+	if type(sample) == pd.core.series.Series:
 		molCations = pd.Series(molCations)
 		molCations = molCations/molCations.sum()
 	else:
@@ -232,13 +233,13 @@ def wtpercentOxides_to_molCations(oxides):
 
 	return molCations
 
-def wtpercentOxides_to_molOxides(oxides):
+def wtpercentOxides_to_molOxides(sample):
 	""" Takes in a pandas Series or dict containing major element oxides in wt%, and converts it
 	to molar proportions (normalised to 1).
 
 	Parameters
 	----------
-	oxides         dict or pandas Series
+	sample         dict or pandas Series
 		Major element oxides in wt%
 
 	Returns
@@ -247,17 +248,17 @@ def wtpercentOxides_to_molOxides(oxides):
 		Molar proportions of major element oxides, normalised to 1.
 	"""
 	molOxides = {}
-	_oxides = oxides.copy()
-	if type(oxides) == dict or type(oxides) == pd.core.series.Series:
-		if type(oxides) == dict:
-			oxideslist = list(oxides.keys())
-		elif type(oxides) == pd.core.series.Series:
-			oxideslist = list(oxides.index)
+	_sample = sample.copy()
+	if type(sample) == dict or type(sample) == pd.core.series.Series:
+		if type(sample) == dict:
+			oxideslist = list(_sample.keys())
+		elif type(sample) == pd.core.series.Series:
+			oxideslist = list(_sample.index)
 
 		for ox in oxideslist:
-			molOxides[ox] = _oxides[ox]/oxideMass[ox]
+			molOxides[ox] = _sample[ox]/oxideMass[ox]
 
-		if type(oxides) == pd.core.series.Series:
+		if type(sample) == pd.core.series.Series:
 			molOxides = pd.Series(molOxides)
 			molOxides = molOxides/molOxides.sum()
 		else:
@@ -283,13 +284,13 @@ def wtpercentOxides_to_molOxides(oxides):
 	else:
 		raise InputError("The composition input must be a pandas Series or dictionary.")
 
-def wtpercentOxides_to_molSingleO(oxides,exclude_volatiles=False):
+def wtpercentOxides_to_molSingleO(sample,exclude_volatiles=False):
 	""" Takes in a pandas Series containing major element oxides in wt%, and constructs
 	the chemical formula, on a single oxygen basis.
 
 	Parameters
 	----------
-	oxides         dict or pandas Series
+	sample         dict or pandas Series
 		Major element oxides in wt%
 
 	Returns
@@ -299,11 +300,11 @@ def wtpercentOxides_to_molSingleO(oxides,exclude_volatiles=False):
 		a separate entry in the Series.
 	"""
 	molCations = {}
-	_oxides = oxides.copy()
-	if type(oxides) == dict:
-		oxideslist = list(oxides.keys())
-	elif type(oxides) == pd.core.series.Series:
-		oxideslist = list(oxides.index)
+	_sample = sample.copy()
+	if type(sample) == dict:
+		oxideslist = list(_sample.keys())
+	elif type(sample) == pd.core.series.Series:
+		oxideslist = list(_sample.index)
 	else:
 		raise InputError("The composition input must be a pandas Series or dictionary.")
 
@@ -311,10 +312,10 @@ def wtpercentOxides_to_molSingleO(oxides,exclude_volatiles=False):
 	for ox in oxideslist:
 		if exclude_volatiles == False or (ox != 'H2O' and ox != 'CO2'):
 			cation = oxides_to_cations[ox]
-			molCations[cation] = CationNum[ox]*oxides[ox]/oxideMass[ox]
-			total_O += OxygenNum[ox]*oxides[ox]/oxideMass[ox]
+			molCations[cation] = CationNum[ox]*_sample[ox]/oxideMass[ox]
+			total_O += OxygenNum[ox]*_sample[ox]/oxideMass[ox]
 
-	if type(oxides) == pd.core.series.Series:
+	if type(sample) == pd.core.series.Series:
 		molCations = pd.Series(molCations)
 		molCations = molCations/total_O
 	else:
@@ -367,7 +368,7 @@ def wtpercentOxides_to_formulaWeight(sample,exclude_volatiles=False):
 		FW += cations[cation]*CationMass[cations_to_oxides[cation]]
 	return FW
 
-#----------DATA TRANSFORMATION FOR PANDAS DATAFRAMES---------#
+# ---------- DATA TRANSFORMATION FOR PANDAS DATAFRAMES --------- #
 def fluid_molfrac_to_wt(data, H2O_colname='XH2O_fl_VESIcal', CO2_colname='XCO2_fl_VESIcal'):
 	"""
 	Takes in a pandas dataframe object and converts only the fluid composition from mole fraction to wt%, leaving the melt composition
@@ -477,7 +478,7 @@ def rename_duplicates(df, suffix='-duplicate-'):
 	appendents = (suffix + df.groupby(level=0).cumcount().astype(str).replace('0','')).replace(suffix, '')
 	return df.set_index(df.index.astype(str) + appendents)
 
-#----------DEFINE SOME NORMALIZATION METHODS-----------#
+# ---------- DEFINE SOME NORMALIZATION METHODS ----------- #
 
 def isnormalized(sample):
 	"""
@@ -507,8 +508,8 @@ def isnormalized(sample):
 		-------
 		bool
 		"""
-		single_sample = sample
-		oxideSum = sum(sample.values())
+		single_sample = sample.copy()
+		oxideSum = sum(single_sample.values())
 		if oxideSum > 99.9 and oxideSum < 100.1:
 			return True
 		else:
@@ -742,7 +743,7 @@ def normalize_AdditionalVolatiles(sample):
 		raise InputError("The composition input must be a pandas Series or dictionary for single sample \
 							or a pandas DataFrame or ExcelFile object for multi-sample.")
 
-#------------DEFINE OTHER DATA IMPORT METHODS----------------#
+# ------------ DEFINE OTHER DATA IMPORT METHODS ---------------- #
 def try_set_index(dataframe, label):
 	"""
 	Method to handle setting the index column in an ExcelFile object. If no column is passed that matches the default index name,
@@ -801,7 +802,7 @@ def ExcelFile_from_csv(filepath_or_buffer, input_type='wtpercent', label='Label'
 
 	return EF_obj
 
-#------------DEFINE MAJOR CLASSES-------------------#
+# ------------ DEFINE MAJOR CLASSES ------------------- #
 class ExcelFile(object):
 	"""An excel file with sample names and oxide compositions
 
@@ -1908,7 +1909,7 @@ class Calculate(object):
 	def check_calibration_range(self):
 		""" """
 
-#-------------DEFAULT CALIBRATIONRANGE OBJECTS---------------#FIND CALIBRATION RANGES
+# ------------- DEFAULT CALIBRATIONRANGE OBJECTS --------------- # FIND CALIBRATION RANGES
 
 def crf_EqualTo(calibval,paramval):
 	return calibval == paramval
@@ -2193,7 +2194,7 @@ crmsg_AllisonComp_fail = " These calibration limits were selected based on the m
 crmsg_AllisonComp_description = "The Allison et al. (2019) Carbon model is defined for 6 different alkali compositions."
 
 
-#-------------FUGACITY MODELS--------------------------------#
+# ------------- FUGACITY MODELS -------------------------------- #
 
 class fugacity_idealgas(FugacityModel):
 	""" An instance of FugacityModel for an ideal gas.
@@ -3448,7 +3449,7 @@ class fugacity_RedlichKwong(FugacityModel):
 
 
 
-#---------------ACTVITY MODELS-------------------------------#
+# --------------- ACTVITY MODELS ------------------------------- #
 
 
 class activity_idealsolution(activity_model):
@@ -3476,7 +3477,7 @@ class activity_idealsolution(activity_model):
 
 
 
-#------------PURE FLUID MODELS-------------------------------#
+# ------------ PURE FLUID MODELS ------------------------------- #
 
 class ShishkinaCarbon(Model):
 	""" Implementation of the Shishkina et al. (2014) carbon solubility model, as a Model class.
@@ -5903,7 +5904,7 @@ class AllisonCarbon(Model):
 
 
 
-#------------MIXED FLUID MODELS-------------------------------#
+# ------------ MIXED FLUID MODELS ------------------------------- #
 class MixedFluid(Model):
 	"""
 	Implements the generic framework for mixed fluid solubility. Any set of pure fluid solubility
@@ -6677,7 +6678,7 @@ class MagmaSat(Model):
 
 		XH2O_fluid = H2O_fl
 
-		#------Coarse Check------#
+		# ------ Coarse Check ------ #
 		while XH2O_fluid < X_fluid - 0.1: #too low coarse check
 			H2O_val += 0.2
 			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
@@ -6686,7 +6687,7 @@ class MagmaSat(Model):
 			CO2_val += 0.1
 			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
 
-		#------Refinement 1------#
+		# ------ Refinement 1 ------ #
 		while XH2O_fluid < X_fluid - 0.01: #too low refinement 1
 			H2O_val += 0.05
 			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
@@ -6695,7 +6696,7 @@ class MagmaSat(Model):
 			CO2_val += 0.01
 			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
 
-		#------Refinement 2------#
+		# ------ Refinement 2 ------ #
 		while XH2O_fluid < X_fluid - 0.001: #too low refinement 2
 			H2O_val += 0.005
 			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
@@ -6704,7 +6705,7 @@ class MagmaSat(Model):
 			CO2_val += 0.001
 			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
 
-		#------Final refinement------#
+		# ------ Final refinement ------ #
 		while XH2O_fluid < X_fluid - 0.0001: #too low final refinement
 			H2O_val += 0.001
 			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
@@ -6713,7 +6714,7 @@ class MagmaSat(Model):
 			CO2_val += 0.0001
 			XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
 
-		#------Get calculated values------#
+		# ------ Get calculated values ------ #
 		bulk_comp["H2O"] = H2O_val
 		bulk_comp["CO2"] = CO2_val
 		feasible = melts.set_bulk_composition(bulk_comp)
@@ -7197,7 +7198,7 @@ class MagmaSat(Model):
 
 		return open_degassing_df
 
-#-----------MAGMASAT PLOTTING FUNCTIONS-----------#
+# ----------- MAGMASAT PLOTTING FUNCTIONS ----------- #
 def smooth_isobars_and_isopleths(isobars=None, isopleths=None):
 	"""
 	Takes in a dataframe with calculated isobar and isopleth information (e.g., output from calculate_isobars_and_isopleths)
@@ -8287,14 +8288,14 @@ class calculate_degassing_path(Calculate):
 		s += self.model.check_calibration_range(parameters,report_nonexistance=False)
 		return s
 
-#-------Define custom plotting tools for checking calibrations-------#
-#----------------------------------------------------------#
-#    			  TAS PLOT PYTHON SCRIPT        	       #
+# ------- Define custom plotting tools for checking calibrations ------- #
+# -------------------------------------------------------- #
+#    			   TAS PLOT PYTHON SCRIPT          	       #
 #														   #
 #  COPYRIGHT:  (C) 2015 John A Stevenson / @volcan01010    #
 #                       Joaquin Cortés					   #
 #  WEBSITE: http://all-geo.org/volcan01010				   #
-#----------------------------------------------------------#
+# -------------------------------------------------------- #
 def add_LeMaitre_fields(plot_axes, fontsize=12, color=(0.6, 0.6, 0.6)):
 	"""Add fields for geochemical classifications from LeMaitre et al (2002)
 	to pre-existing axes.  If necessary, the axes object can be retrieved via
