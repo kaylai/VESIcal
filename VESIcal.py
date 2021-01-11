@@ -4610,10 +4610,10 @@ class IaconoMarzianoCarbon(Model):
 			return 0
 
 		if hydrous_coeffs == True:
-			if 'H2O' not in sample:
-				raise InputError("sample must contain H2O if using the hydrous parameterization.")
-			if sample['H2O'] < 0:
-				raise InputError("Dissolved H2O must be positive.")
+			# if 'H2O' not in sample:
+			# 	raise InputError("sample must contain H2O if using the hydrous parameterization.")
+			# if sample['H2O'] < 0:
+			# 	raise InputError("Dissolved H2O must be positive.")
 
 			im_h2o_model = IaconoMarzianoWater()
 			h2o = im_h2o_model.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature-273.15,
@@ -4632,6 +4632,12 @@ class IaconoMarzianoCarbon(Model):
 			molarProps = wtpercentOxides_to_molOxides(sample_h2o)
 
 		else:
+			im_h2o_model = IaconoMarzianoWater()
+			h2o = im_h2o_model.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature-273.15,
+														sample=sample,X_fluid=1-X_fluid,**kwargs)
+			sample_h2o = sample.copy()
+			sample_h2o['H2O'] = h2o
+
 			d = np.array([2.3,3.8,-16.3,20.1])
 			a = 1.0
 			b = 15.8
@@ -4640,7 +4646,7 @@ class IaconoMarzianoCarbon(Model):
 
 			NBO_O = self.NBO_O(sample=sample,hydrous_coeffs=False)
 
-			molarProps = wtpercentOxides_to_molOxides(sample)
+			molarProps = wtpercentOxides_to_molOxides(sample_h2o)
 
 		fugacity = self.fugacity_model.fugacity(pressure=pressure,X_fluid=X_fluid,temperature=temperature-273.15,**kwargs)
 
