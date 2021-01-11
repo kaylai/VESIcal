@@ -1918,7 +1918,7 @@ crmsg_EqualTo_description = "The {model_name} model is calibrated for {param_nam
 crmsg_EqualTo_fail_AllisonTemp="All calculations for {model_name} are performed at 1200 C (inputted Temp={param_val:.1f} {units}). Allison et al. (2019) suggest the results are likely applicable between 1000-1400°C). "
 
 def crf_MixedFluidWarning(calibval,paramval):
-	if type(paramval) == float or len(paramval) == 1:
+	if type(paramval) == float or type(paramval) == int or len(paramval) == 1:
 		return paramval == 0 or paramval == 1
 	elif len(paramval) == 2:
 		return list(paramval) == [0,1] or list(paramval) == [1,0]
