@@ -4416,7 +4416,7 @@ class IaconoMarzianoWater(Model):
 
 		try:
 			satP = root_scalar(self.root_saturation_pressure,args=(temperature,sample,kwargs),
-								bracket=[1e-15,1e5]).root
+								bracket=[1e-15,9e4]).root
 		except:
 			w.warn("Saturation pressure not found.",RuntimeWarning,stacklevel=2)
 			satP = np.nan
