@@ -1753,6 +1753,41 @@ class Model(object):
 	def set_solubility_dependence(self,solubility_dependence):
 		self.solubility_dependence = solubility_dependence
 
+	def get_calibration_values(self,variable_names):
+		""" Returns the values stored as the calibration range for the given variable(s).
+		However, for checks where there is a single value- i.e. cr_GreaterThan or crf_LessThan,
+		the logical operation will remain a mystery until someone figures out an elegant way
+		of communicating it.
+
+		Parameters
+		----------
+		variable_names 	str or list
+			The name(s) of the variables you want the calibration ranges for.
+
+		Returns
+		-------
+		list
+			A list of values or tuples for the calibration ranges in the order given.
+		"""
+
+		# Check if the variable name is passed as a string, and if so put it in a list
+		if type(variable_names) == str:
+			variable_names = [variable_names]
+
+		calibration_values = []
+
+		for var in variable_names:
+			found_var = False
+			for cr in self.calibration_ranges:
+				if found_var == False:
+					if cr.parameter_name == var:
+						found_var = True
+						calibration_values.append(cr.value)
+			if found_var == False:
+				calibration_values.append(np.nan)
+
+		return calibration_values
+
 	@abstractmethod
 	def calculate_dissolved_volatiles(self,**kwargs):
 		pass
@@ -5918,6 +5953,16 @@ class MixedFluid(Model):
 		"""
 		self.models = tuple(model for model in models.values())
 		self.set_volatile_species(list(models.keys()))
+
+	def get_calibration_values(self,variable_names):
+		""" Placeholder method to prevent an error when this generic method is called for a MixedFluid
+		model.
+
+		Returns
+		-------
+		np.nan
+		"""
+		return np.nan
 
 	def preprocess_sample(self,sample):
 		""" Returns sample, unmodified.
