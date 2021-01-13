@@ -1616,6 +1616,141 @@ class ExcelFile(object):
 
 			return satp_data
 
+class sample(object):
+	""" WORK IN PROGRESS.
+	The sample class stores compositional information for samples, and contains methods
+	for normalization and other compositional calculations.
+	"""
+
+	def __init__(self, composition, type='oxide_wtpt', default_normalization=None, default_type='oxides',
+				 default_units='wtpt'):
+		""" Initialises the sample class.
+
+		The composition is stored as wtpt. If the composition
+		is provided as wtpt, no normalization will be applied. If the composition is supplied as
+		mols, the composition will be normalized to 100 wt%.
+
+		Parameters
+		----------
+		composition 	dict or pandas.Series
+			The composition of the sample in the format specified by the composition_type
+			parameter. Defulat is oxides in wtpt.
+
+		type 	str
+			Specifies the units and type of compositional information passed in the
+			composition parameter. Choose from 'oxide_wtpt', 'oxide_mols', 'cation_mols'.
+
+		default_normalization: 	None or str
+			The type of normalization to apply to the data by default. One of:
+				- None (no normalization)
+				- 'standard' (default): Normalizes an input composition to 100%.
+				- 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
+				The volatile wt% will remain fixed, whilst the other major element oxides are reduced
+				proportionally so that the total is 100 wt%.
+				- 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
+				volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
+				be retained in addition to the normalized non-volatile oxides, summing to >100%.
+
+		default_type 	str
+			The type of composition to return by default, one of:
+			- oxides (default)
+			- cations (used only with mole fractions)
+
+		default_units 	str
+			The units in which the composition should be returned by default, one of:
+			- wtpt (weight percent, default)
+			- mols (mole fraction, summing to 1)
+		"""
+		if type != 'oxide_wtpt':
+			w.warn("Presently the sample class can only be initialised with oxides in wtpt.",RuntimeWarning,stacklevel=2)
+
+		self.composition = composition
+
+		self.set_default_normalization(default_normalization)
+		self.set_default_type(default_type)
+		self.set_default_units(default_units)
+
+
+	def set_default_normalization(self, default_normalization):
+		""" Set the default type of normalization to use with the get_composition() method.
+
+		Parameters
+		----------
+		default_normalization: 	None or str
+			The type of normalization to apply to the data. One of:
+				- None (no normalization)
+				- 'standard' (default): Normalizes an input composition to 100%.
+				- 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
+				The volatile wt% will remain fixed, whilst the other major element oxides are reduced
+				proportionally so that the total is 100 wt%.
+				- 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
+				volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
+				be retained in addition to the normalized non-volatile oxides, summing to >100%.
+		"""
+		self.default_normalization = default_normalization
+
+	def set_default_type(self, default_type):
+		""" Set the default type of composition to return when using the get_composition() method.
+
+		Parameters
+		----------
+		default_type 	str
+			The type of composition to return, one of:
+			- oxides (default)
+			- cations (used only with mole fractions)
+		"""
+		self.default_type = default_type
+
+	def set_default_units(self, default_units):
+		""" Set the default units for reporting the sample composition when using the get_composition() method.
+
+		Parameters
+		----------
+		default_units 	str
+			The units in which the composition should be returned, one of:
+			- wtpt (weight percent, default)
+			- mols (mole fraction, summing to 1)
+		"""
+		self.default_units = default_units
+
+	def get_composition(self,normalization=None,type='oxides',units='wtpt'):
+		""" Returns the composition in the format requested, normalized as requested.
+
+		Parameters
+		----------
+		normalization: 	NoneType or str
+			The type of normalization to apply to the data. One of:
+				- None (no normalization)
+				- 'standard' (default): Normalizes an input composition to 100%.
+				- 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
+				The volatile wt% will remain fixed, whilst the other major element oxides are reduced
+				proportionally so that the total is 100 wt%.
+				- 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
+				volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
+				be retained in addition to the normalized non-volatile oxides, summing to >100%.
+
+		type: 	str
+			The type of composition to return, one of:
+			- oxides (default)
+			- cations (used only with mole fractions)
+
+		units: 	str
+			The units in which the composition should be returned, one of:
+			- wtpt (weight percent, default)
+			- mols (mole fraction, summing to 1)
+
+		Returns
+		-------
+		dict
+			The sample composition, as specified.
+		"""
+
+		if normalization != None or type != 'oxides' or units != 'wtpt':
+			w.warn("The method presently only returns wtpt oxides.",RuntimeWarning,stacklevel=2)
+
+		return self.composition
+
+
 class CalibrationRange(object):
 	""" The CalibrationRange object allows the range of allowable parameters to be specified and
 	used in checking and reporting of the results.
@@ -1752,6 +1887,41 @@ class Model(object):
 
 	def set_solubility_dependence(self,solubility_dependence):
 		self.solubility_dependence = solubility_dependence
+
+	def get_calibration_values(self,variable_names):
+		""" Returns the values stored as the calibration range for the given variable(s).
+		However, for checks where there is a single value- i.e. cr_GreaterThan or crf_LessThan,
+		the logical operation will remain a mystery until someone figures out an elegant way
+		of communicating it.
+
+		Parameters
+		----------
+		variable_names 	str or list
+			The name(s) of the variables you want the calibration ranges for.
+
+		Returns
+		-------
+		list
+			A list of values or tuples for the calibration ranges in the order given.
+		"""
+
+		# Check if the variable name is passed as a string, and if so put it in a list
+		if type(variable_names) == str:
+			variable_names = [variable_names]
+
+		calibration_values = []
+
+		for var in variable_names:
+			found_var = False
+			for cr in self.calibration_ranges:
+				if found_var == False:
+					if cr.parameter_name == var:
+						found_var = True
+						calibration_values.append(cr.value)
+			if found_var == False:
+				calibration_values.append(np.nan)
+
+		return calibration_values
 
 	@abstractmethod
 	def calculate_dissolved_volatiles(self,**kwargs):
@@ -2453,8 +2623,6 @@ class fugacity_KJ81_co2(FugacityModel):
 			e12 = (c['e']*h['e'])**0.5
 			em = c['e']*X_fluid**2 + h['e']*(1-X_fluid)**2 + 2*X_fluid*(1-X_fluid)*e12
 
-		am = cm + dm/v + em/v**2
-
 		y = bm/(4*v)
 
 		# Z = (1+y+y**2-y**3)/(1-y)**2 - am/(83.14*T**1.5*(v+bm))
@@ -2715,8 +2883,6 @@ class fugacity_KJ81_h2o(FugacityModel):
 			e12 = (c['e']*h['e'])**0.5
 			em = h['e']*X_fluid**2 + c['e']*(1-X_fluid)**2 + 2*X_fluid*(1-X_fluid)*e12
 
-		am = cm + dm/v + em/v**2
-
 		y = bm/(4*v)
 
 		# Z = (1+y+y**2-y**3)/(1-y)**2 - am/(83.14*T**1.5*(v+bm))
@@ -2925,10 +3091,7 @@ class fugacity_MRK_co2(FugacityModel):
 			G_2 = np.exp(G_2)
 			if X_1 == 0:
 				fCO2o = G_2 * P #The fugacity of CO2
-				# return fCO2o
-			if X_1 == 1:
-				fH2Oo = G_1 * P #The fugacity of H2O
-				# return fH2Oo
+		# return fCO2o
 		return fCO2o
 
 class fugacity_MRK_h2o(FugacityModel):
@@ -3001,9 +3164,6 @@ class fugacity_MRK_h2o(FugacityModel):
 			G_2 = np.log(V / (V - B)) + B_2 / (V - B) - 2 * (X_1 * self.FNC(TK) + (1 - X_1) * self.FNB(TK)) * np.log((V + B) / V) / (R * TK**1.5 * B)
 			G_2 = G_2 + (np.log((V + B) / V) - B / (V + B)) * A * B_2 / (R * TK**1.5 * B**2) - np.log(P * V / (R * TK))
 			G_2 = np.exp(G_2)
-			if X_1 == 0:
-				fCO2o = G_2 * P #The fugacity of CO2
-				# return fCO2o
 			if X_1 == 1:
 				fH2Oo = G_1 * P #The fugacity of H2O
 				# return fH2Oo
@@ -4415,8 +4575,15 @@ class IaconoMarzianoWater(Model):
 			raise InputError("Dissolved H2O must be greater than 0 wt%.")
 
 		try:
+			# Checks whether the upper bound for the numerical solver returns a positive H2O
+			# concentration, and if it doesn't, it will progressively decrease the bound until
+			# it does.
+			upperbound = 1e5
+			while self.calculate_dissolved_volatiles(upperbound,temperature,sample,**kwargs) < 0:
+				upperbound = upperbound*0.9
+
 			satP = root_scalar(self.root_saturation_pressure,args=(temperature,sample,kwargs),
-								bracket=[1e-15,9e4]).root
+								bracket=[1e-15,upperbound]).root
 		except:
 			w.warn("Saturation pressure not found.",RuntimeWarning,stacklevel=2)
 			satP = np.nan
@@ -5921,6 +6088,16 @@ class MixedFluid(Model):
 		"""
 		self.models = tuple(model for model in models.values())
 		self.set_volatile_species(list(models.keys()))
+
+	def get_calibration_values(self,variable_names):
+		""" Placeholder method to prevent an error when this generic method is called for a MixedFluid
+		model.
+
+		Returns
+		-------
+		np.nan
+		"""
+		return np.nan
 
 	def preprocess_sample(self,sample):
 		""" Returns sample, unmodified.
