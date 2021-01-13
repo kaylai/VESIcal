@@ -4405,8 +4405,11 @@ class IaconoMarzianoWater(Model):
 			raise InputError("Dissolved H2O must be greater than 0 wt%.")
 
 		try:
+			upperbound = 1e5
+			while self.calculate_dissolved_volatiles(upperbound,temperature,sample,**kwargs) < 0:
+				upperbound = upperbound*0.9
 			satP = root_scalar(self.root_saturation_pressure,args=(temperature,sample,kwargs),
-								bracket=[1e-15,9e4]).root
+								bracket=[1e-15,upperbound]).root
 		except:
 			w.warn("Saturation pressure not found.",RuntimeWarning,stacklevel=2)
 			satP = np.nan
