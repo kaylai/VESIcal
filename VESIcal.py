@@ -2453,8 +2453,6 @@ class fugacity_KJ81_co2(FugacityModel):
 			e12 = (c['e']*h['e'])**0.5
 			em = c['e']*X_fluid**2 + h['e']*(1-X_fluid)**2 + 2*X_fluid*(1-X_fluid)*e12
 
-		am = cm + dm/v + em/v**2
-
 		y = bm/(4*v)
 
 		# Z = (1+y+y**2-y**3)/(1-y)**2 - am/(83.14*T**1.5*(v+bm))
@@ -2715,8 +2713,6 @@ class fugacity_KJ81_h2o(FugacityModel):
 			e12 = (c['e']*h['e'])**0.5
 			em = h['e']*X_fluid**2 + c['e']*(1-X_fluid)**2 + 2*X_fluid*(1-X_fluid)*e12
 
-		am = cm + dm/v + em/v**2
-
 		y = bm/(4*v)
 
 		# Z = (1+y+y**2-y**3)/(1-y)**2 - am/(83.14*T**1.5*(v+bm))
@@ -2925,10 +2921,7 @@ class fugacity_MRK_co2(FugacityModel):
 			G_2 = np.exp(G_2)
 			if X_1 == 0:
 				fCO2o = G_2 * P #The fugacity of CO2
-				# return fCO2o
-			if X_1 == 1:
-				fH2Oo = G_1 * P #The fugacity of H2O
-				# return fH2Oo
+		# return fCO2o
 		return fCO2o
 
 class fugacity_MRK_h2o(FugacityModel):
@@ -3001,9 +2994,6 @@ class fugacity_MRK_h2o(FugacityModel):
 			G_2 = np.log(V / (V - B)) + B_2 / (V - B) - 2 * (X_1 * self.FNC(TK) + (1 - X_1) * self.FNB(TK)) * np.log((V + B) / V) / (R * TK**1.5 * B)
 			G_2 = G_2 + (np.log((V + B) / V) - B / (V + B)) * A * B_2 / (R * TK**1.5 * B**2) - np.log(P * V / (R * TK))
 			G_2 = np.exp(G_2)
-			if X_1 == 0:
-				fCO2o = G_2 * P #The fugacity of CO2
-				# return fCO2o
 			if X_1 == 1:
 				fH2Oo = G_1 * P #The fugacity of H2O
 				# return fH2Oo
