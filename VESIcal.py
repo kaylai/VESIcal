@@ -4405,9 +4405,13 @@ class IaconoMarzianoWater(Model):
 			raise InputError("Dissolved H2O must be greater than 0 wt%.")
 
 		try:
+			# Checks whether the upper bound for the numerical solver returns a positive H2O
+			# concentration, and if it doesn't, it will progressively decrease the bound until
+			# it does.
 			upperbound = 1e5
 			while self.calculate_dissolved_volatiles(upperbound,temperature,sample,**kwargs) < 0:
 				upperbound = upperbound*0.9
+
 			satP = root_scalar(self.root_saturation_pressure,args=(temperature,sample,kwargs),
 								bracket=[1e-15,upperbound]).root
 		except:
