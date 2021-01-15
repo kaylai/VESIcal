@@ -4517,7 +4517,7 @@ class IaconoMarzianoWater(Model):
 
 
 	def calculate_dissolved_volatiles(self, pressure, temperature, sample, X_fluid=1.0,
-									  hydrous_coeffs=True, webapp_coeffs=False, **kwargs):
+									  hydrous_coeffs=True, webapp_coeffs=True, **kwargs):
 		"""
 		Calculates the dissolved H2O concentration, using Eq (13) of Iacono-Marziano et al. (2012).
 		If using the hydrous parameterization, it will use the scipy.root_scalar routine to find the
