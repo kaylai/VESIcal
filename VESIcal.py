@@ -1622,7 +1622,7 @@ class sample(object):
 	for normalization and other compositional calculations.
 	"""
 
-	def __init__(self, composition, type='oxide_wtpt', default_normalization=None, default_type='oxides',
+	def __init__(self, composition, type='oxide_wtpt', default_normalization='standard', default_type='oxides',
 				 default_units='wtpt'):
 		""" Initialises the sample class.
 
@@ -1676,9 +1676,9 @@ class sample(object):
 
 		Parameters
 		----------
-		default_normalization: 	None or str
+		default_normalization:	str
 			The type of normalization to apply to the data. One of:
-				- None (no normalization)
+				- 'none' (no normalization)
 				- 'standard' (default): Normalizes an input composition to 100%.
 				- 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
 				The volatile wt% will remain fixed, whilst the other major element oxides are reduced
@@ -1713,14 +1713,14 @@ class sample(object):
 		"""
 		self.default_units = default_units
 
-	def get_composition(self,normalization=None,type='oxides',units='wtpt'):
+	def get_composition(self,normalization=None,type=None,units=None):
 		""" Returns the composition in the format requested, normalized as requested.
 
 		Parameters
 		----------
 		normalization: 	NoneType or str
 			The type of normalization to apply to the data. One of:
-				- None (no normalization)
+				- 'none' (no normalization)
 				- 'standard' (default): Normalizes an input composition to 100%.
 				- 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
 				The volatile wt% will remain fixed, whilst the other major element oxides are reduced
@@ -1728,16 +1728,19 @@ class sample(object):
 				- 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
 				volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
 				be retained in addition to the normalized non-volatile oxides, summing to >100%.
+			If NoneType is passed the default normalization option will be used (self.default_normalization).
 
-		type: 	str
+		type: 	NoneType or str
 			The type of composition to return, one of:
 			- oxides (default)
 			- cations (used only with mole fractions)
+			If NoneType is passed the default type option will be used (self.default_type).
 
 		units: 	str
 			The units in which the composition should be returned, one of:
 			- wtpt (weight percent, default)
 			- mols (mole fraction, summing to 1)
+			If NoneType is passed the default units will be used (self.default_units).
 
 		Returns
 		-------
@@ -1745,10 +1748,64 @@ class sample(object):
 			The sample composition, as specified.
 		"""
 
+		if normalization == None:
+			normalization = self.default_normalization
+
+		if type == None:
+			type = self.default_type
+
+		if units == None:
+			units = self.default_units
+
 		if normalization != None or type != 'oxides' or units != 'wtpt':
 			w.warn("The method presently only returns wtpt oxides.",RuntimeWarning,stacklevel=2)
 
 		return self.composition
+
+	def get_formulaweight(self):
+		""""""
+		return np.nan
+
+	def normalize_Standard(self, composition):
+		""""""
+		return composition
+
+	def normalize_FixedVolatiles(self, composition):
+		""""""
+		return composition
+
+	def normalize_AdditionalVolatiles(self, composition):
+		""""""
+		return composition
+
+	def wtpercentOxides_to_molOxides(self, composition):
+		""""""
+		return composition
+
+	def wtpercentOxides_to_molCations(self, composition):
+		""""""
+		return composition
+
+	def molOxides_to_wtpercentOxides(self, composition):
+		""""""
+		return composition
+
+	def molOxides_to_molCations(self, composition):
+		""""""
+		return composition
+
+	def molCations_to_wtpercentOxides(self, composition):
+		""""""
+		return composition
+
+	def molCations_to_molOxides(self, composition):
+		""""""
+		return composition
+
+
+
+
+
 
 
 class CalibrationRange(object):
@@ -4459,8 +4516,8 @@ class IaconoMarzianoWater(Model):
 		return normalize_FixedVolatiles(sample)
 
 
-	def calculate_dissolved_volatiles(self,pressure,temperature,sample,X_fluid=1.0,
-									  hydrous_coeffs=True,webapp_coeffs=False,**kwargs):
+	def calculate_dissolved_volatiles(self, pressure, temperature, sample, X_fluid=1.0,
+									  hydrous_coeffs=True, webapp_coeffs=False, **kwargs):
 		"""
 		Calculates the dissolved H2O concentration, using Eq (13) of Iacono-Marziano et al. (2012).
 		If using the hydrous parameterization, it will use the scipy.root_scalar routine to find the
@@ -4497,13 +4554,15 @@ class IaconoMarzianoWater(Model):
 		if X_fluid < 0 or X_fluid > 1:
 			raise InputError("X_fluid must have a value between 0 and 1.")
 
+		sample_normed = normalize(sample.copy(), how='additionalvolatiles')
+
 		if pressure == 0:
 			return 0
 
 		if hydrous_coeffs == True:
 			if X_fluid==0:
 				return 0
-			H2O = root_scalar(self.root_dissolved_volatiles,args=(pressure,temperature,sample,X_fluid,webapp_coeffs,kwargs),
+			H2O = root_scalar(self.root_dissolved_volatiles,args=(pressure,temperature,sample_normed,X_fluid,webapp_coeffs,kwargs),
 								x0=1.0,x1=2.0).root
 			return H2O
 		else:
@@ -4515,7 +4574,7 @@ class IaconoMarzianoWater(Model):
 			fugacity = self.fugacity_model.fugacity(pressure=pressure,X_fluid=X_fluid,temperature=temperature-273.15,**kwargs)
 			if fugacity == 0:
 				return 0
-			NBO_O = self.NBO_O(sample=sample,hydrous_coeffs=False)
+			NBO_O = self.NBO_O(sample=sample_normed, hydrous_coeffs=False)
 
 			H2O = np.exp(a*np.log(fugacity) + b*NBO_O + B + C*pressure/temperature)
 
@@ -4654,6 +4713,7 @@ class IaconoMarzianoWater(Model):
 		sample_copy = sample.copy()
 
 		sample_copy['H2O'] = h2o
+		sample_copy = normalize_AdditionalVolatiles(sample_copy)
 
 		NBO_O = self.NBO_O(sample=sample_copy,hydrous_coeffs=True)
 		fugacity = self.fugacity_model.fugacity(pressure=pressure,X_fluid=X_fluid,temperature=temperature,**kwargs)
@@ -4739,7 +4799,7 @@ class IaconoMarzianoCarbon(Model):
 		return normalize_FixedVolatiles(sample)
 
 	def calculate_dissolved_volatiles(self,pressure,temperature,sample,X_fluid=1,
-									  hydrous_coeffs=True, iterate_bulk=True, **kwargs):
+									  hydrous_coeffs=True, iterate_bulk=False, **kwargs):
 		"""
 		Calculates the dissolved CO2 concentration, using Eq (12) of Iacono-Marziano et al. (2012).
 		If using the hydrous parameterization, it will use the scipy.root_scalar routine to find the
@@ -4780,6 +4840,8 @@ class IaconoMarzianoCarbon(Model):
 		if pressure == 0:
 			return 0
 
+		sample_normed = normalize(sample.copy(), how='additionalvolatiles')
+
 		if hydrous_coeffs == True:
 			# if 'H2O' not in sample:
 			# 	raise InputError("sample must contain H2O if using the hydrous parameterization.")
@@ -4789,7 +4851,7 @@ class IaconoMarzianoCarbon(Model):
 			im_h2o_model = IaconoMarzianoWater()
 			h2o = im_h2o_model.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature-273.15,
 														sample=sample,X_fluid=1-X_fluid,**kwargs)
-			sample_h2o = sample.copy()
+			sample_h2o = sample_normed.copy()
 			sample_h2o['H2O'] = h2o
 
 			d = np.array([-16.4,4.4,-17.1,22.8])
@@ -4804,7 +4866,7 @@ class IaconoMarzianoCarbon(Model):
 			im_h2o_model = IaconoMarzianoWater()
 			h2o = im_h2o_model.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature-273.15,
 														sample=sample,X_fluid=1-X_fluid,**kwargs)
-			sample_h2o = sample.copy()
+			sample_h2o = sample_normed.copy()
 			sample_h2o['H2O'] = h2o
 
 			d = np.array([2.3,3.8,-16.3,20.1])
@@ -4848,7 +4910,6 @@ class IaconoMarzianoCarbon(Model):
 				sample_h2o_co2['CO2'] = 0.0
 
 			while np.abs((CO2-sample_h2o_co2['CO2'])/CO2) > 0.001:
-
 				sample_h2o_co2['CO2'] = CO2
 
 				molarProps = wtpercentOxides_to_molOxides(sample_h2o_co2)
