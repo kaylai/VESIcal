@@ -4739,7 +4739,7 @@ class IaconoMarzianoCarbon(Model):
 		return normalize_FixedVolatiles(sample)
 
 	def calculate_dissolved_volatiles(self,pressure,temperature,sample,X_fluid=1,
-									  hydrous_coeffs=True, **kwargs):
+									  hydrous_coeffs=True, iterate_bulk=False, **kwargs):
 		"""
 		Calculates the dissolved CO2 concentration, using Eq (12) of Iacono-Marziano et al. (2012).
 		If using the hydrous parameterization, it will use the scipy.root_scalar routine to find the
@@ -4797,8 +4797,6 @@ class IaconoMarzianoCarbon(Model):
 
 			NBO_O = self.NBO_O(sample=sample_h2o,hydrous_coeffs=True)
 
-			molarProps = wtpercentOxides_to_molOxides(sample_h2o)
-
 		else:
 			im_h2o_model = IaconoMarzianoWater()
 			h2o = im_h2o_model.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature-273.15,
@@ -4814,12 +4812,12 @@ class IaconoMarzianoCarbon(Model):
 
 			NBO_O = self.NBO_O(sample=sample,hydrous_coeffs=False)
 
-			molarProps = wtpercentOxides_to_molOxides(sample_h2o)
-
 		fugacity = self.fugacity_model.fugacity(pressure=pressure,X_fluid=X_fluid,temperature=temperature-273.15,**kwargs)
 
 		if fugacity == 0:
 			return 0
+
+		molarProps = wtpercentOxides_to_molOxides(sample_h2o)
 
 		if all(ox in molarProps for ox in ['Al2O3','CaO','K2O','Na2O','FeO','MgO','Na2O','K2O']) == False:
 			raise InputError("sample must contain Al2O3, CaO, K2O, Na2O, FeO, MgO, Na2O, and K2O.")
@@ -4839,9 +4837,39 @@ class IaconoMarzianoCarbon(Model):
 		x = np.array(x)
 
 		CO3 = np.exp(np.sum(x*d) + a*np.log(fugacity) + b*NBO_O + B + C*pressure/temperature)
+		CO2 = CO3/1e4
 
-		CO2 = CO3/1e4#/(12+16*3)*(12+16*2)/1e4
+		if iterate_bulk == True:
+			sample_h2o_co2 = sample_h2o.copy()
+			if 'CO2' not in sample_h2o_co2.keys():
+				sample_h2o_co2['CO2'] = 0.0
 
+			while np.abs((CO2-sample_h2o_co2['CO2'])/CO2) > 0.001:
+
+				sample_h2o_co2['CO2'] = CO2
+
+				molarProps = wtpercentOxides_to_molOxides(sample_h2o_co2)
+
+				if all(ox in molarProps for ox in ['Al2O3','CaO','K2O','Na2O','FeO','MgO','Na2O','K2O']) == False:
+					raise InputError("sample must contain Al2O3, CaO, K2O, Na2O, FeO, MgO, Na2O, and K2O.")
+				if 'Fe2O3' in molarProps:
+					Fe2O3 = molarProps['Fe2O3']
+				else:
+					Fe2O3 = 0
+
+				x = list()
+				if 'H2O' in molarProps:
+					x.append(molarProps['H2O'])
+				else:
+					x.append(0.0)
+				x.append(molarProps['Al2O3']/(molarProps['CaO']+molarProps['K2O']+molarProps['Na2O']))
+				x.append((molarProps['FeO']+Fe2O3*2+molarProps['MgO']))
+				x.append((molarProps['Na2O']+molarProps['K2O']))
+				x = np.array(x)
+
+				CO3 = np.exp(np.sum(x*d) + a*np.log(fugacity) + b*NBO_O + B + C*pressure/temperature)
+
+				CO2 = CO3/1e4#/(12+16*3)*(12+16*2)/1e4
 		return CO2
 
 
