@@ -4757,6 +4757,10 @@ class IaconoMarzianoCarbon(Model):
 			Mole fraction of H2O in the fluid. Default is 1.0.
 		hydrous_coeffs 	bool
 			Use the hydrous or anhydrous NBO/O paramterisation (True for hydrous). Default is True.
+		iterate_bulk:	bool
+			Whether the bulk composition should be iterated, so that the bulk composition is internally
+			consistent with the calculated CO2 composition. Default is False, but will be changed to
+			True once compatability is ensured with other methods.
 
 		Returns
 		-------
