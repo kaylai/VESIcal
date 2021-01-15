@@ -4739,7 +4739,7 @@ class IaconoMarzianoCarbon(Model):
 		return normalize_FixedVolatiles(sample)
 
 	def calculate_dissolved_volatiles(self,pressure,temperature,sample,X_fluid=1,
-									  hydrous_coeffs=True, iterate_bulk=False, **kwargs):
+									  hydrous_coeffs=True, iterate_bulk=True, **kwargs):
 		"""
 		Calculates the dissolved CO2 concentration, using Eq (12) of Iacono-Marziano et al. (2012).
 		If using the hydrous parameterization, it will use the scipy.root_scalar routine to find the
@@ -4759,8 +4759,7 @@ class IaconoMarzianoCarbon(Model):
 			Use the hydrous or anhydrous NBO/O paramterisation (True for hydrous). Default is True.
 		iterate_bulk:	bool
 			Whether the bulk composition should be iterated, so that the bulk composition is internally
-			consistent with the calculated CO2 composition. Default is False, but will be changed to
-			True once compatability is ensured with other methods.
+			consistent with the calculated CO2 composition. Default is True.
 
 		Returns
 		-------
