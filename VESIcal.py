@@ -44,6 +44,7 @@ melts.set_phase_inclusion_status({'Fluid': True, 'Liquid': True})
 
 
 # ---------- DEFINE SOME CONSTANTS ------------- #
+# SM note to KI- I've copied this to the sample file, I'm not sure whether we still need these here?
 oxides = ['SiO2', 'TiO2', 'Al2O3', 'Fe2O3', 'Cr2O3', 'FeO', 'MnO', 'MgO', 'NiO', 'CoO', 'CaO', 'Na2O', 'K2O', 'P2O5',
 		  'H2O', 'CO2']
 anhydrous_oxides = ['SiO2', 'TiO2', 'Al2O3', 'Fe2O3', 'Cr2O3', 'FeO', 'MnO', 'MgO', 'NiO', 'CoO', 'CaO', 'Na2O', 'K2O', 'P2O5']
