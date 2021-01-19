@@ -158,6 +158,7 @@ def get_model_names():
 
 # ---------- DEFINE SOME BASIC DATA TRANSFORMATION METHODS ----------- #
 
+# to be deprecated
 def mol_to_wtpercent(sample):
 	"""
 	Takes in a pandas DataFrame containing multi-sample input or a dictionary containing single-sample input
@@ -199,6 +200,7 @@ def mol_to_wtpercent(sample):
 
 	return data
 
+# to be deprecated
 def wtpercentOxides_to_molCations(sample):
 	"""Takes in a pandas Series containing major element oxides in wt%, and converts it
 	to molar proportions of cations (normalised to 1).
@@ -236,6 +238,7 @@ def wtpercentOxides_to_molCations(sample):
 
 	return molCations
 
+# to be deprecated
 def wtpercentOxides_to_molOxides(sample):
 	""" Takes in a pandas Series or dict containing major element oxides in wt%, and converts it
 	to molar proportions (normalised to 1).
@@ -287,6 +290,7 @@ def wtpercentOxides_to_molOxides(sample):
 	else:
 		raise InputError("The composition input must be a pandas Series or dictionary.")
 
+# to be deprecated
 def wtpercentOxides_to_molSingleO(sample,exclude_volatiles=False):
 	""" Takes in a pandas Series containing major element oxides in wt%, and constructs
 	the chemical formula, on a single oxygen basis.
@@ -330,6 +334,7 @@ def wtpercentOxides_to_molSingleO(sample,exclude_volatiles=False):
 
 	return molCations
 
+# to be deprecated
 def wtpercentOxides_to_formulaWeight(sample,exclude_volatiles=False):
 	""" Converts major element oxides in wt% to the formula weight (on a 1 oxygen basis).
 	Parameters
@@ -553,6 +558,7 @@ def isnormalized(sample):
 	elif isinstance(sample, pd.DataFrame):
 		return multi_isnormalized(sample)
 
+# to be deprecated
 def normalize(sample, how='standard'):
 	"""
 	Normalizes an input composition to 100%. By default, volatiles are included.
@@ -618,6 +624,7 @@ def normalize(sample, how='standard'):
 	elif isinstance(sample, pd.DataFrame):
 		return multi_normalize(sample, how)
 
+# to be deprecated
 def normalize_FixedVolatiles(sample):
 	""" Normalizes major element oxides to 100 wt%, including volatiles. The volatile
 	wt% will remain fixed, whilst the other major element oxides are reduced proportionally
@@ -686,7 +693,7 @@ def normalize_FixedVolatiles(sample):
 		raise InputError("The composition input must be a pandas Series or dictionary for single sample \
 							or a pandas DataFrame or ExcelFile object for multi-sample.")
 
-
+# to be deprecated
 def normalize_AdditionalVolatiles(sample):
 	"""Normalises major element oxide wt% to 100%, assuming it is volatile-free. If
 	H2O or CO2 are passed to the function, their un-normalized values will be retained
