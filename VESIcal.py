@@ -29,7 +29,8 @@ from copy import copy
 # from cycler import cycler
 # from scipy.optimize import minimize
 
-import sample
+from sample_class import *
+from exceptions import *
 
 # -------------- MELTS preamble --------------- #
 from thermoengine import equilibrate
@@ -75,32 +76,32 @@ cations_to_oxides = {'Si': 'SiO2', 'Mg': 'MgO', 'Fe': 'FeO', 'Ca': 'CaO', 'Al': 
 
 # ---------- DEFINE SOME EXCEPTIONS -------------- #
 
-class Error(Exception):
-	"""Base class for exceptions in this module."""
-	pass
-
-
-class InputError(Error):
-	"""Exception raised for errors in the input.
-
-	Attributes:
-		expression -- input expression in which the error occurred
-		message -- explanation of the error
-	"""
-
-	def __init__(self, message):
-		self.message = message
-
-class SaturationError(Error):
-	"""Exception raised for errors thrown when a sample does not reach saturation.
-
-	Attributes:
-		expression -- input expression in which the error occurred
-		message -- explanation of the error
-	"""
-
-	def __init__(self, message):
-		self.message = message
+# class Error(Exception):
+# 	"""Base class for exceptions in this module."""
+# 	pass
+#
+#
+# class InputError(Error):
+# 	"""Exception raised for errors in the input.
+#
+# 	Attributes:
+# 		expression -- input expression in which the error occurred
+# 		message -- explanation of the error
+# 	"""
+#
+# 	def __init__(self, message):
+# 		self.message = message
+#
+# class SaturationError(Error):
+# 	"""Exception raised for errors thrown when a sample does not reach saturation.
+#
+# 	Attributes:
+# 		expression -- input expression in which the error occurred
+# 		message -- explanation of the error
+# 	"""
+#
+# 	def __init__(self, message):
+		# self.message = message
 
 
 # ---------- DEFINE CUSTOM PLOTTING FORMATTING ------------ #
