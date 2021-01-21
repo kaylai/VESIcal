@@ -70,3 +70,7 @@ class TestCreateSample(unittest.TestCase):
     def test_setdefaults_garbageNorm(self):
         with self.assertRaises(v.InputError):
             v.sample(composition=self.majorsv,default_normalization='garbage')
+
+    def test_setdefaults_garbageType(self):
+        with self.assertRaises(v.InputError):
+            v.sample(composition=self.majorsv,default_type='garbage')
