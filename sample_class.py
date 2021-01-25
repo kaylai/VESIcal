@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 from core import *
 
@@ -9,7 +10,7 @@ class sample(object):
     for normalization and other compositional calculations.
     """
 
-    def __init__(self, composition, type='oxide_wtpt', default_normalization='none', default_type='wtpt_oxides'):
+    def __init__(self, composition, type='wtpt_oxides', default_normalization='none', default_type='wtpt_oxides'):
         """ Initialises the sample class.
 
         The composition is stored as wtpt. If the composition
@@ -24,7 +25,7 @@ class sample(object):
 
         type     str
             Specifies the units and type of compositional information passed in the
-            composition parameter. Choose from 'oxide_wtpt', 'oxide_mols', 'cation_mols'.
+            composition parameter. Choose from 'wtpt_oxides', 'mol_oxides', 'mol_cations'.
 
         default_normalization:     None or str
             The type of normalization to apply to the data by default. One of:
@@ -44,10 +45,17 @@ class sample(object):
             - mol_cations
             - mol_singleO
         """
-        if type != 'oxide_wtpt':
-            w.warn("Presently the sample class can only be initialised with oxides in wtpt.",RuntimeWarning,stacklevel=2)
 
-        self._composition = composition
+        composition = composition.copy()
+
+        if type == 'wtpt_oxides':
+            self._composition = composition
+        elif type == 'mol_oxides':
+            self._composition = self._molOxides_to_wtpercentOxides(composition)
+        elif type == 'mol_cations':
+            self._composition = self._molCations_to_wtpercentOxides(composition)
+        else:
+            raise InputError("Type must be one of 'wtpt_oxides', 'mol_oxides', or 'mol_cations'.")
 
         self.set_default_normalization(default_normalization)
         self.set_default_type(default_type)
@@ -87,10 +95,13 @@ class sample(object):
             - mol_cations
             - mol_singleO
         """
-        self.default_type = default_type
+        if default_type in ['wtpt_oxides','mol_oxides','mol_cations','mol_singleO']:
+            self.default_type = default_type
+        else:
+            raise InputError("The type must be one of 'wtpt_oxides','mol_oxides','mol_cations','mol_singleO'.")
 
 
-    def get_composition(self,normalization=None,type=None):
+    def get_composition(self, normalization=None, type=None, exclude_volatiles=False):
         """ Returns the composition in the format requested, normalized as requested.
 
         Parameters
@@ -115,6 +126,10 @@ class sample(object):
             - mol_singleO
             If NoneType is passed the default type option will be used (self.default_type).
 
+        exclude_volatiles   bool
+            If True, volatiles will be excluded from the returned composition, prior to normalization and
+            conversion.
+
         Returns
         -------
         dict
@@ -127,15 +142,24 @@ class sample(object):
         if type == None:
             type = self.default_type
 
+        if exclude_volatiles == True:
+            composition = self._composition.copy()
+            if 'H2O' in composition.index:
+                composition = composition.drop(index='H2O')
+            if 'CO2' in composition.index:
+                composition = composition.drop(index='CO2')
+        else:
+            composition = self._composition
+
         # Do requested normalization
         if normalization == 'none':
-            normed = self._composition
+            normed = composition
         elif normalization == 'standard':
-            normed = self._normalize_Standard(self._composition)
+            normed = self._normalize_Standard(composition)
         elif normalization == 'fixedvolatiles':
-            normed = self._normalize_FixedVolatiles(self._composition)
+            normed = self._normalize_FixedVolatiles(composition)
         elif normalization == 'additionalvolatiles':
-            normed = self._normalize_AdditionalVolatiles(self._composition)
+            normed = self._normalize_AdditionalVolatiles(composition)
         else:
             raise InputError("The normalization method must be one of 'none', 'standard', 'fixedvolatiles',\
              or 'additionalvolatiles'.")
@@ -144,18 +168,23 @@ class sample(object):
         if type == 'wtpt_oxides':
             return normed
         elif type == 'mol_oxides':
-            return self._wtpercentOxides_to_molOxides(self._composition)
+            return self._wtpercentOxides_to_molOxides(composition)
         elif type == 'mol_cations':
-            return self._wtpercentOxides_to_molCations(self._composition)
+            return self._wtpercentOxides_to_molCations(composition)
         elif type == 'mol_singleO':
-            return self._wtpercentOxides_to_molSingleO(self._composition)
+            return self._wtpercentOxides_to_molSingleO(composition)
         else:
             raise InputError("The type must be one of 'wtpt_oxides', 'mol_oxides', 'mol_cations', \
             or 'mol_singleO'.")
 
 
-    def get_formulaweight(self):
+    def get_formulaweight(self,exclude_volatiles=False):
         """ Converts major element oxides in wt% to the formula weight (on a 1 oxygen basis).
+
+        Parameters
+        ----------
+        exclude_volatiles   bool
+            If True the formula weight will be calculated without volatiles
 
         Returns
         -------
@@ -163,7 +192,7 @@ class sample(object):
             The formula weight of the composition, on a one oxygen basis.
         """
 
-        cations = self.get_composition(type='mol_singleO')
+        cations = self.get_composition(type='mol_singleO',exclude_volatiles=exclude_volatiles)
 
         if type(cations) != dict:
             cations = dict(cations)
@@ -190,7 +219,8 @@ class sample(object):
             Normalized oxides in wt%.
         """
         comp = composition.copy()
-        return {k: 100.0 * v / sum(comp.values()) for k, v in comp.items()}
+        comp = dict(comp)
+        return pd.Series({k: 100.0 * v / sum(comp.values()) for k, v in comp.items()})
 
     def _normalize_FixedVolatiles(self, composition):
         """
@@ -226,7 +256,7 @@ class sample(object):
 
         if 'CO2' in list(comp.index):
             normalized['CO2'] = comp['CO2']
-        if 'H2O' in list(sample.index):
+        if 'H2O' in list(comp.index):
             normalized['H2O'] = comp['H2O']
 
         return normalized
