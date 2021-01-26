@@ -329,11 +329,11 @@ def fluid_molfrac_to_wt(data, H2O_colname='XH2O_fl_VESIcal', CO2_colname='XCO2_f
 		Sample composition(s) containing columns for H2O and CO2 concentrations in the fluid.
 
 	H2O_colname: str
-		OPTIONAL. The default value is 'XH2O_fl', which is what is returned by ExcelFile() core calculations.
+		OPTIONAL. The default value is 'XH2O_fl', which is what is returned by BatchFile() core calculations.
 		String containing the name of the column corresponding to the H2O concentration in the fluid, in mol fraction.
 
 	CO2_colname: str
-		OPTIONAL. The default value is 'XCO2_fl', which is what is returned by ExcelFile() core calculations.
+		OPTIONAL. The default value is 'XCO2_fl', which is what is returned by BatchFile() core calculations.
 		String containing the name of the column corresponding to the CO2 concentration in the fluid, in mol fraction.
 
 	Returns
@@ -370,11 +370,11 @@ def fluid_wt_to_molfrac(data, H2O_colname='H2O_fl_wt', CO2_colname='CO2_fl_wt'):
 		DataFrame containing columns for H2O and CO2 concentrations in the fluid.
 
 	H2O_colname: str
-		OPTIONAL. The default value is 'H2O_fl_wt', which is what is returned by ExcelFile() core calculations.
+		OPTIONAL. The default value is 'H2O_fl_wt', which is what is returned by BatchFile() core calculations.
 		String containing the name of the column corresponding to the H2O concentration in the fluid, in wt%.
 
 	CO2_colname: str
-		OPTIONAL. The default value is 'CO2_fl_wt', which is what is returned by ExcelFile() core calculations.
+		OPTIONAL. The default value is 'CO2_fl_wt', which is what is returned by BatchFile() core calculations.
 		String containing the name of the column corresponding to the CO2 concentration in the fluid, in wt%.
 
 	Returns
@@ -431,14 +431,14 @@ def rename_duplicates(df, suffix='-duplicate-'):
 
 def isnormalized(sample):
 	"""
-	Checks to see if passed sample composition or composition(s) in an ExcelFile ojbect are normalized
+	Checks to see if passed sample composition or composition(s) in an BatchFile ojbect are normalized
 	to 100% (including volatiles). Returns bool.
 
 	Parameters
 	----------
-	sample:    pandas Series, dictionary, pandas DataFrame, or ExcelFile object
+	sample:    pandas Series, dictionary, pandas DataFrame, or BatchFile object
 		A single composition can be passed as a dictionary. Multiple compositions can be passed either as
-		a pandas DataFrame or an ExcelFile object. Compositional information as oxides must be present.
+		a pandas DataFrame or an BatchFile object. Compositional information as oxides must be present.
 
 	Returns
 	-------
@@ -492,7 +492,7 @@ def isnormalized(sample):
 		_sample = pd.Series(sample.copy())
 		sample_dict = sample.to_dict()
 		return single_isnormalized(sample_dict)
-	elif isinstance(sample, ExcelFile):
+	elif isinstance(sample, BatchFile):
 		_sample = sample
 		data = _sample.data
 		return multi_isnormalized(data)
@@ -506,9 +506,9 @@ def normalize(sample, how='standard'):
 
 	Parameters
 	----------
-	sample:    pandas Series, dictionary, pandas DataFrame, or ExcelFile object
+	sample:    pandas Series, dictionary, pandas DataFrame, or BatchFile object
 		A single composition can be passed as a dictionary. Multiple compositions can be passed either as
-		a pandas DataFrame or an ExcelFile object. Compositional information as oxides must be present.
+		a pandas DataFrame or an BatchFile object. Compositional information as oxides must be present.
 
 	how: string
 		Determines which normalization method is used.
@@ -522,7 +522,7 @@ def normalize(sample, how='standard'):
 
 	Returns
 	-------
-	Same type as passed sample (pandas Series, dictionary, pandas DataFrame, or ExcelFile Object)
+	Same type as passed sample (pandas Series, dictionary, pandas DataFrame, or BatchFile Object)
 		Normalized major element oxides.
 	"""
 	def single_normalize(sample, how):
@@ -556,11 +556,11 @@ def normalize(sample, how='standard'):
 		_sample = pd.Series(sample.copy())
 		sample_dict = sample.to_dict()
 		return pd.Series(single_normalize(sample_dict, how))
-	elif isinstance(sample, ExcelFile):
+	elif isinstance(sample, BatchFile):
 		_sample = sample
 		data = _sample.data
 		normed_data = multi_normalize(data, how)
-		ef_obj = ExcelFile(filename=None, dataframe=normed_data)
+		ef_obj = BatchFile(filename=None, dataframe=normed_data)
 		return ef_obj
 	elif isinstance(sample, pd.DataFrame):
 		return multi_normalize(sample, how)
@@ -573,12 +573,12 @@ def normalize_FixedVolatiles(sample):
 
 	Parameters
 	----------
-	sample:    pandas Series, dictionary, pandas DataFrame, or ExcelFile object
+	sample:    pandas Series, dictionary, pandas DataFrame, or BatchFile object
 		Major element oxides in wt%
 
 	Returns
 	-------
-	Same type as passed sample (pandas Series, dictionary, pandas DataFrame, or ExcelFile Object)
+	Same type as passed sample (pandas Series, dictionary, pandas DataFrame, or BatchFile Object)
 		Normalized major element oxides.
 	"""
 	def single_FixedVolatiles(sample):
@@ -622,17 +622,17 @@ def normalize_FixedVolatiles(sample):
 	elif isinstance(sample, pd.core.series.Series):
 		_sample = pd.Series(sample.copy())
 		return single_FixedVolatiles(_sample)
-	elif isinstance(sample, ExcelFile):
+	elif isinstance(sample, BatchFile):
 		_sample = sample
 		data = _sample.data
 		normed_data = multi_FixedVolatiles(data)
-		ef_obj = ExcelFile(filename=None, dataframe=normed_data)
+		ef_obj = BatchFile(filename=None, dataframe=normed_data)
 		return ef_obj
 	elif isinstance(sample, pd.DataFrame):
 		return multi_FixedVolatiles(sample)
 	else:
 		raise InputError("The composition input must be a pandas Series or dictionary for single sample \
-							or a pandas DataFrame or ExcelFile object for multi-sample.")
+							or a pandas DataFrame or BatchFile object for multi-sample.")
 
 # to be deprecated
 def normalize_AdditionalVolatiles(sample):
@@ -642,12 +642,12 @@ def normalize_AdditionalVolatiles(sample):
 
 	Parameters
 	----------
-	sample:    pandas Series, dictionary, pandas DataFrame, or ExcelFile object
+	sample:    pandas Series, dictionary, pandas DataFrame, or BatchFile object
 		Major element oxides in wt%
 
 	Returns
 	-------
-	Same type as passed sample (pandas Series, dictionary, pandas DataFrame, or ExcelFile Object)
+	Same type as passed sample (pandas Series, dictionary, pandas DataFrame, or BatchFile Object)
 		Normalized major element oxides.
 	"""
 
@@ -682,22 +682,22 @@ def normalize_AdditionalVolatiles(sample):
 	elif isinstance(sample, pd.core.series.Series):
 		_sample = pd.Series(sample.copy())
 		return single_AdditionalVolatiles(sample)
-	elif isinstance(sample, ExcelFile):
+	elif isinstance(sample, BatchFile):
 		_sample = sample
 		data = _sample.data
 		normed_data = multi_AdditionalVolatiles(data)
-		ef_obj = ExcelFile(filename=None, dataframe=normed_data)
+		ef_obj = BatchFile(filename=None, dataframe=normed_data)
 		return ef_obj
 	elif isinstance(sample, pd.DataFrame):
 		return multi_AdditionalVolatiles(sample)
 	else:
 		raise InputError("The composition input must be a pandas Series or dictionary for single sample \
-							or a pandas DataFrame or ExcelFile object for multi-sample.")
+							or a pandas DataFrame or BatchFile object for multi-sample.")
 
 # ------------ DEFINE OTHER DATA IMPORT METHODS ---------------- #
 def try_set_index(dataframe, label):
 	"""
-	Method to handle setting the index column in an ExcelFile object. If no column is passed that matches the default index name,
+	Method to handle setting the index column in an BatchFile object. If no column is passed that matches the default index name,
 	then this method will attempt to choose the 'best' column that the user might want to serve as an index column.
 
 	Parameters
@@ -726,9 +726,9 @@ def try_set_index(dataframe, label):
 
 	return _dataframe
 
-def ExcelFile_from_csv(filepath_or_buffer, input_type='wtpercent', label='Label', **kwargs):
+def BatchFile_from_csv(filepath_or_buffer, input_type='wtpercent', label='Label', **kwargs):
 	"""
-	Read a comma-separated values (csv) file into an ExcelFile object. Clones functionality of pandas.read_csv(). Any arguments that can
+	Read a comma-separated values (csv) file into an BatchFile object. Clones functionality of pandas.read_csv(). Any arguments that can
 	be passed to pandas.read_csv() can be passed here.
 
 	Parameters
@@ -745,16 +745,16 @@ def ExcelFile_from_csv(filepath_or_buffer, input_type='wtpercent', label='Label'
 
 	Returns
 	-------
-	ExcelFile object
+	BatchFile object
 	"""
 	dataframe = pd.read_csv(filepath_or_buffer, **kwargs)
 
-	EF_obj = ExcelFile(filename=None, input_type=input_type, label=label, dataframe=dataframe)
+	EF_obj = BatchFile(filename=None, input_type=input_type, label=label, dataframe=dataframe)
 
 	return EF_obj
 
 # ------------ DEFINE MAJOR CLASSES ------------------- #
-class ExcelFile(object):
+class BatchFile(object):
 	"""An excel file with sample names and oxide compositions
 
 	Attributes
@@ -781,13 +781,13 @@ class ExcelFile(object):
 
 		dataframe: pandas DataFrame
 			OPTIONAL. Default is None in which case this argument is ignored. This argument is used when the user wishes to turn
-			a pandas DataFrame into an ExcelFile object, for example when user data is already in python rather than being imported
+			a pandas DataFrame into an BatchFile object, for example when user data is already in python rather than being imported
 			from an Excel file. In this case set `dataframe` equal to the dataframe object being passed in. If using this option, pass
 			None to filename.
 	"""
 
 	def __init__(self, filename, sheet_name=0, input_type='wtpercent', label='Label', dataframe=None, **kwargs):
-		"""Return an ExcelFile object whose parameters are defined here."""
+		"""Return an BatchFile object whose parameters are defined here."""
 		self.input_type = input_type
 
 		if isinstance(sheet_name, str) or isinstance(sheet_name, int):
@@ -810,7 +810,7 @@ class ExcelFile(object):
 			w.warn("You don't need to pass a model here, so it will be ignored. You can specify a model when performing calculations on your dataset (e.g., calculate_dissolved_volatiles())",RuntimeWarning,stacklevel=2)
 
 		if 'norm' in kwargs:
-			w.warn("We noticed you passed a norm argument here. This does nothing. You can normalize your ExcelFile and save it to a new variable name after import using normalize(ExcelFileObject). See the documentation for more info.",RuntimeWarning,stacklevel=2)
+			w.warn("We noticed you passed a norm argument here. This does nothing. You can normalize your BatchFile and save it to a new variable name after import using normalize(BatchFileObject). See the documentation for more info.",RuntimeWarning,stacklevel=2)
 
 		total_iron_columns = ["FeOt", "FeOT", "FeOtot", "FeOtotal", "FeOstar", "FeO*"]
 		for name in total_iron_columns:
@@ -960,9 +960,9 @@ class ExcelFile(object):
 
 		return H2O_fl
 
-	def save_excelfile(self, filename, calculations, sheet_name=None):
+	def save_BatchFile(self, filename, calculations, sheet_name=None):
 		"""
-		Saves data calculated by the user in batch processing mode (using the ExcelFile class methods) to an organized
+		Saves data calculated by the user in batch processing mode (using the BatchFile class methods) to an organized
 		excel file, with the original user data plus any calculated data.
 
 		Parameters
@@ -971,7 +971,7 @@ class ExcelFile(object):
 			Name of the file. Extension (.xlsx) should be passed along with the name itself, all in quotes (e.g., 'myfile.xlsx').
 
 		calculations: pandas DataFrame or list of pandas DataFrames
-			A single variable or list of variables containing calculated outputs from any of the core ExcelFile functions:
+			A single variable or list of variables containing calculated outputs from any of the core BatchFile functions:
 			calculate_dissolved_volatiles, calculate_equilibrium_fluid_comp, and calculate_saturation_pressure.
 
 		sheet_name: None, string, or list
@@ -1023,7 +1023,7 @@ class ExcelFile(object):
 			of calculations passed must match the number of filenames passed. If passing more than one, should be passed as a list.
 
 		calculations: pandas DataFrame or list of pandas DataFrames
-			A single variable or list of variables containing calculated outputs from any of the core ExcelFile functions:
+			A single variable or list of variables containing calculated outputs from any of the core BatchFile functions:
 			calculate_dissolved_volatiles, calculate_equilibrium_fluid_comp, and calculate_saturation_pressure.
 		"""
 		if type(filenames) != list:
@@ -1047,20 +1047,20 @@ class ExcelFile(object):
 		temperature: float, int, or str
 			Temperature, in degrees C. Can be passed as float, in which case the
 			passed value is used as the temperature for all samples. Alternatively, temperature information for each individual
-			sample may already be present in the ExcelFile object. If so, pass the str value corresponding to the column
-			title in the ExcelFile object.
+			sample may already be present in the BatchFile object. If so, pass the str value corresponding to the column
+			title in the BatchFile object.
 
 		presure: float, int, or str
 			Pressure, in bars. Can be passed as float or int, in which case the
 			passed value is used as the pressure for all samples. Alternatively, pressure information for each individual
-			sample may already be present in the ExcelFile object. If so, pass the str value corresponding to the column
-			title in the ExcelFile object.
+			sample may already be present in the BatchFile object. If so, pass the str value corresponding to the column
+			title in the BatchFile object.
 
 		X_fluid: float, int, or str
 			OPTIONAL: Default value is 1. The mole fraction of H2O in the H2O-CO2 fluid. X_fluid=1 is a pure H2O fluid. X_fluid=0 is a
 			pure CO2 fluid. Can be passed as a float or int, in which case the passed value is used as the X_fluid for all samples.
-			Alternatively, X_fluid information for each individual sample may already be present in the ExcelFile object. If so, pass
-			the str value corresponding to the column title in the ExcelFile object.
+			Alternatively, X_fluid information for each individual sample may already be present in the BatchFile object. If so, pass
+			the str value corresponding to the column title in the BatchFile object.
 
 		print_status: bool
 			OPTIONAL: The default value is True, in which case the progress of the calculation will be printed to the terminal.
@@ -1298,20 +1298,20 @@ class ExcelFile(object):
 
 		Parameters
 		----------
-		sample: ExcelFile object
+		sample: BatchFile object
 			Compositional information on samples in oxides.
 
 		temperature: float, int, or str
 			Temperature, in degrees C. Can be passed as float, in which case the
 			passed value is used as the temperature for all samples. Alternatively, temperature information for each individual
-			sample may already be present in the ExcelFile object. If so, pass the str value corresponding to the column
-			title in the  ExcelFile object.
+			sample may already be present in the BatchFile object. If so, pass the str value corresponding to the column
+			title in the  BatchFile object.
 
 		presure: float, int, or str
 			Pressure, in bars. Can be passed as float or int, in which case the
 			passed value is used as the pressure for all samples. Alternatively, pressure information for each individual
-			sample may already be present in the ExcelFile object. If so, pass the str value corresponding to the column
-			title in the ExcelFile object.
+			sample may already be present in the BatchFile object. If so, pass the str value corresponding to the column
+			title in the BatchFile object.
 
 		model: string
 			OPTIONAL: Default is 'MagmaSat'. Any other model name can be passed here.
@@ -1449,15 +1449,15 @@ class ExcelFile(object):
 
 	def calculate_saturation_pressure(self, temperature, print_status=True, model='MagmaSat', **kwargs):
 		"""
-		Calculates the saturation pressure of multiple sample compositions in the ExcelFile.
+		Calculates the saturation pressure of multiple sample compositions in the BatchFile.
 
 		Parameters
 		----------
 		temperature: float, int, or str
 			Temperature at which to calculate saturation pressures, in degrees C. Can be passed as float or int, in which case the
 			passed value is used as the temperature for all samples. Alternatively, temperature information for each individual
-			sample may already be present in the passed ExcelFile object. If so, pass the str value corresponding to the column
-			title in the passed ExcelFile object.
+			sample may already be present in the passed BatchFile object. If so, pass the str value corresponding to the column
+			title in the passed BatchFile object.
 
 		print_status: bool
 			OPTIONAL: The default value is True, in which case the progress of the calculation will be printed to the terminal.
@@ -8400,10 +8400,10 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, figsize=
 
 	Parameters
 	----------
-	user_data: ExcelFile object, pandas DataFrame, pandas Series, or dict
+	user_data: BatchFile object, pandas DataFrame, pandas Series, or dict
 		OPTIONAL. Default value is None, in which case only the model calibration set is plotted.
 		User provided sample data describing the oxide composition of one or more samples. Multiple samples
-		can be passed as an ExcelFile object or pandas DataFrame. A single sample can be passed as a pandas
+		can be passed as an BatchFile object or pandas DataFrame. A single sample can be passed as a pandas
 		Series.
 
 	model: str or list
@@ -8447,7 +8447,7 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, figsize=
 		user_ymin = 0
 		user_ymax = 25
 	elif zoom == 'user_data':
-		if isinstance(user_data, ExcelFile) or isinstance(user_data, pd.DataFrame):
+		if isinstance(user_data, BatchFile) or isinstance(user_data, pd.DataFrame):
 			print("'user_data' type zoom for more than one sample is not implemented yet.")
 			user_xmin = 35
 			user_xmax = 100
@@ -8597,7 +8597,7 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, figsize=
 	if user_data is None:
 		pass
 	else:
-		if isinstance(user_data, ExcelFile):
+		if isinstance(user_data, BatchFile):
 			user_data = user_data.data
 		if plot_type == 'TAS':
 			_sample = user_data.copy()
@@ -8622,7 +8622,7 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, figsize=
 
 	return plt.show()
 
-def test_ExcelFile(filename=None):
+def test_BatchFile(filename=None):
 	"""
 	A test routine that takes in an excel file and runs multiple calculations on that file.
 
@@ -8658,9 +8658,9 @@ COMPLETELY broken the module.")
 								'CO2': [0.8, 0.2, 0.3],
 								'H2O': [4.0, 6.0, 2.0]})
 		fakedata = fakedata.set_index('Label')
-		myfile = ExcelFile(filename=None, dataframe=fakedata)
+		myfile = BatchFile(filename=None, dataframe=fakedata)
 	else:
-		myfile = ExcelFile(filename)
+		myfile = BatchFile(filename)
 
 	test_temperature = 1000
 	test_pressure = 2000
