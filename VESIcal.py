@@ -232,7 +232,7 @@ def wtpercentOxides_to_molCations(oxides):
 
 	return molCations
 
-def wtpercentOxides_to_molOxides(oxides):
+def wtpercentOxides_to_molOxides(sample):
 	""" Takes in a pandas Series or dict containing major element oxides in wt%, and converts it
 	to molar proportions (normalised to 1).
 
@@ -247,17 +247,17 @@ def wtpercentOxides_to_molOxides(oxides):
 		Molar proportions of major element oxides, normalised to 1.
 	"""
 	molOxides = {}
-	_oxides = oxides.copy()
-	if type(oxides) == dict or type(oxides) == pd.core.series.Series:
-		if type(oxides) == dict:
-			oxideslist = list(oxides.keys())
-		elif type(oxides) == pd.core.series.Series:
-			oxideslist = list(oxides.index)
+	_sample = sample.copy()
+	if type(sample) == dict or type(sample) == pd.core.series.Series:
+		if type(sample) == dict:
+			oxideslist = list(sample.keys())
+		elif type(sample) == pd.core.series.Series:
+			oxideslist = list(sample.index)
 
 		for ox in oxideslist:
-			molOxides[ox] = _oxides[ox]/oxideMass[ox]
+			molOxides[ox] = _sample[ox]/oxideMass[ox]
 
-		if type(oxides) == pd.core.series.Series:
+		if type(sample) == pd.core.series.Series:
 			molOxides = pd.Series(molOxides)
 			molOxides = molOxides/molOxides.sum()
 		else:
