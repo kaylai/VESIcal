@@ -4,7 +4,7 @@ VESIcal
 A generalized python library for calculating and plotting various things related to mixed volatile (H2O-CO2) solubility in silicate melts.
 """
 
-__version__ = "0.1.7"
+__version__ = "0.1.8"
 __author__ = 'Kayla Iacovino, Simon Matthews, and Penny Wieser'
 
 #--------------TURN OFF WARNINGS-------------#
@@ -232,7 +232,7 @@ def wtpercentOxides_to_molCations(oxides):
 
 	return molCations
 
-def wtpercentOxides_to_molOxides(oxides):
+def wtpercentOxides_to_molOxides(sample):
 	""" Takes in a pandas Series or dict containing major element oxides in wt%, and converts it
 	to molar proportions (normalised to 1).
 
@@ -247,17 +247,17 @@ def wtpercentOxides_to_molOxides(oxides):
 		Molar proportions of major element oxides, normalised to 1.
 	"""
 	molOxides = {}
-	_oxides = oxides.copy()
-	if type(oxides) == dict or type(oxides) == pd.core.series.Series:
-		if type(oxides) == dict:
-			oxideslist = list(oxides.keys())
-		elif type(oxides) == pd.core.series.Series:
-			oxideslist = list(oxides.index)
+	_sample = sample.copy()
+	if type(sample) == dict or type(sample) == pd.core.series.Series:
+		if type(sample) == dict:
+			oxideslist = list(sample.keys())
+		elif type(sample) == pd.core.series.Series:
+			oxideslist = list(sample.index)
 
 		for ox in oxideslist:
-			molOxides[ox] = _oxides[ox]/oxideMass[ox]
+			molOxides[ox] = _sample[ox]/oxideMass[ox]
 
-		if type(oxides) == pd.core.series.Series:
+		if type(sample) == pd.core.series.Series:
 			molOxides = pd.Series(molOxides)
 			molOxides = molOxides/molOxides.sum()
 		else:
@@ -457,16 +457,13 @@ def get_oxides(sample):
 
 	Parameters
 	----------
-	sample: pandas Series, dictionary
+	sample: pandas Series or dictionary
 		A sample composition plus other sample information
 
 	Returns
 	-------
-	Sample passed as > Returned as
-			pandas Series > pandas Series
-			dictionary > dictionary
-
-				Sample composition with extranneous information removed.
+	Same type as passed sample (pandas Series or dictionary)
+		Sample composition with extranneous information removed.
 	"""
 
 	clean = {oxide:  sample[oxide] for oxide in oxides}
@@ -482,8 +479,10 @@ def rename_duplicates(df, suffix='-duplicate-'):
 
 #----------DEFINE SOME NORMALIZATION METHODS-----------#
 
-def normalize(sample):
-	"""Normalizes an input composition to 100%. This is the 'standard' normalization routine.
+def isnormalized(sample):
+	"""
+	Checks to see if passed sample composition or composition(s) in an ExcelFile ojbect are normalized
+	to 100% (including volatiles). Returns bool.
 
 	Parameters
 	----------
@@ -493,42 +492,127 @@ def normalize(sample):
 
 	Returns
 	-------
-	Sample passed as > Returned as
-		pandas Series > pandas Series
-		dictionary > dictionary
-		pandas DataFrame > pandas DataFrame
-		ExcelFile object > pandas DataFrame
-
-			Normalized major element oxides.
+	bool
+		True if sample sums to 100% including volatiles. False if sample does not sum to 100% including
+		volatiles.
 	"""
-	def single_normalize(sample):
-		single_sample = sample
-		return {k: 100.0 * v / sum(single_sample.values()) for k, v in single_sample.items()}
 
-	def multi_normalize(sample):
+	def single_isnormalized(sample):
+		"""
+		Parameters
+		----------
+		sample: dict
+
+		Returns
+		-------
+		bool
+		"""
+		single_sample = sample
+		oxideSum = sum(sample.values())
+		if oxideSum > 99.9 and oxideSum < 100.1:
+			return True
+		else:
+			return False
+
+	def multi_isnormalized(sample):
+		"""
+		Parameters
+		----------
+		sample: pandas DataFrame
+
+		Returns
+		-------
+		bool
+		"""
 		multi_sample = sample.copy()
 		multi_sample["Sum"] = sum([multi_sample[oxide] for oxide in oxides])
-		for column in multi_sample:
-			if column in oxides:
-				multi_sample[column] = 100.0*multi_sample[column]/multi_sample["Sum"]
-
-		del multi_sample["Sum"]
-		return multi_sample
+		for index, row in multi_sample.iterrows():
+			oxideSum = row["Sum"]
+			if oxideSum < 99.9 or oxideSum > 100.1:
+				return False
+				break
+			else:
+				pass
+		return True
 
 	if isinstance(sample, dict):
 		_sample = sample.copy()
-		return single_normalize(_sample)
+		return single_isnormalized(_sample)
 	elif isinstance(sample, pd.core.series.Series):
 		_sample = pd.Series(sample.copy())
 		sample_dict = sample.to_dict()
-		return pd.Series(single_normalize(sample_dict))
+		return single_isnormalized(sample_dict)
 	elif isinstance(sample, ExcelFile):
 		_sample = sample
 		data = _sample.data
-		return multi_normalize(data)
+		return multi_isnormalized(data)
 	elif isinstance(sample, pd.DataFrame):
-		return multi_normalize(sample)
+		return multi_isnormalized(sample)
 
+def normalize(sample, how='standard'):
+	"""
+	Normalizes an input composition to 100%. By default, volatiles are included.
+
+	Parameters
+	----------
+	sample:    pandas Series, dictionary, pandas DataFrame, or ExcelFile object
+		A single composition can be passed as a dictionary. Multiple compositions can be passed either as
+		a pandas DataFrame or an ExcelFile object. Compositional information as oxides must be present.
+
+	how: string
+		Determines which normalization method is used.
+		- 'standard' (default): Normalizes an input composition to 100%.
+		- 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
+		The volatile wt% will remain fixed, whilst the other major element oxides are reduced
+		proportionally so that the total is 100 wt%.
+		- 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
+		volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
+		be retained in addition to the normalized non-volatile oxides, summing to >100%.
+
+	Returns
+	-------
+	Same type as passed sample (pandas Series, dictionary, pandas DataFrame, or ExcelFile Object)
+		Normalized major element oxides.
+	"""
+	def single_normalize(sample, how):
+		single_sample = sample.copy()
+		if how == 'standard':
+			return {k: 100.0 * v / sum(single_sample.values()) for k, v in single_sample.items()}
+		if how == 'fixedvolatiles':
+			return normalize_FixedVolatiles(sample)
+		if how == 'additionalvolatiles':
+			return normalize_AdditionalVolatiles(sample)
+
+	def multi_normalize(sample, how):
+		multi_sample = sample.copy()
+		if how == 'standard':
+			multi_sample["Sum"] = sum([multi_sample[oxide] for oxide in oxides])
+			for column in multi_sample:
+				if column in oxides:
+					multi_sample[column] = 100.0*multi_sample[column]/multi_sample["Sum"]
+
+			del multi_sample["Sum"]
+			return multi_sample
+		if how == 'fixedvolatiles':
+			return normalize_FixedVolatiles(sample)
+		if how == 'additionalvolatiles':
+			return normalize_AdditionalVolatiles(sample)
+
+	if isinstance(sample, dict):
+		_sample = sample.copy()
+		return single_normalize(_sample, how)
+	elif isinstance(sample, pd.core.series.Series):
+		_sample = pd.Series(sample.copy())
+		sample_dict = sample.to_dict()
+		return pd.Series(single_normalize(sample_dict, how))
+	elif isinstance(sample, ExcelFile):
+		_sample = sample
+		data = _sample.data
+		normed_data = multi_normalize(data, how)
+		ef_obj = ExcelFile(filename=None, dataframe=normed_data)
+		return ef_obj
+	elif isinstance(sample, pd.DataFrame):
+		return multi_normalize(sample, how)
 
 def normalize_FixedVolatiles(sample):
 	""" Normalizes major element oxides to 100 wt%, including volatiles. The volatile
@@ -542,15 +626,11 @@ def normalize_FixedVolatiles(sample):
 
 	Returns
 	-------
-	Sample passed as > Returned as
-		pandas Series > pandas Series
-		dictionary > dictionary
-		pandas DataFrame > pandas DataFrame
-		ExcelFile object > pandas DataFrame
-
-			Normalized major element oxides.
+	Same type as passed sample (pandas Series, dictionary, pandas DataFrame, or ExcelFile Object)
+		Normalized major element oxides.
 	"""
 	def single_FixedVolatiles(sample):
+		_sample = sample.copy()
 		normalized = pd.Series({},dtype=float)
 		volatiles = 0
 		if 'CO2' in list(_sample.index):
@@ -564,10 +644,10 @@ def normalize_FixedVolatiles(sample):
 
 		normalized = normalized/np.sum(normalized)*(100-volatiles)
 
-		if 'CO2' in list(_sample.index):
-			normalized['CO2'] = _sample['CO2']
-		if 'H2O' in list(_sample.index):
-			normalized['H2O'] = _sample['H2O']
+		if 'CO2' in list(sample.index):
+			normalized['CO2'] = sample['CO2']
+		if 'H2O' in list(sample.index):
+			normalized['H2O'] = sample['H2O']
 
 		return normalized
 
@@ -593,7 +673,9 @@ def normalize_FixedVolatiles(sample):
 	elif isinstance(sample, ExcelFile):
 		_sample = sample
 		data = _sample.data
-		return multi_FixedVolatiles(data)
+		normed_data = multi_FixedVolatiles(data)
+		ef_obj = ExcelFile(filename=None, dataframe=normed_data)
+		return ef_obj
 	elif isinstance(sample, pd.DataFrame):
 		return multi_FixedVolatiles(sample)
 	else:
@@ -613,16 +695,12 @@ def normalize_AdditionalVolatiles(sample):
 
 	Returns
 	-------
-	Sample passed as > Returned as
-		pandas Series > pandas Series
-		dictionary > dictionary
-		pandas DataFrame > pandas DataFrame
-		ExcelFile object > pandas DataFrame
-
-			Normalized major element oxides.
+	Same type as passed sample (pandas Series, dictionary, pandas DataFrame, or ExcelFile Object)
+		Normalized major element oxides.
 	"""
 
 	def single_AdditionalVolatiles(sample):
+		_sample = sample.copy()
 		normalized = pd.Series({}, dtype=float)
 		for ox in list(_sample.index):
 			if ox != 'H2O' and ox != 'CO2':
@@ -630,9 +708,9 @@ def normalize_AdditionalVolatiles(sample):
 
 		normalized = normalized/np.sum(normalized)*100
 		if 'H2O' in _sample.index:
-			normalized['H2O'] = _sample['H2O']
+			normalized['H2O'] = sample['H2O']
 		if 'CO2' in _sample.index:
-			normalized['CO2'] = _sample['CO2']
+			normalized['CO2'] = sample['CO2']
 
 		return normalized
 
@@ -655,7 +733,9 @@ def normalize_AdditionalVolatiles(sample):
 	elif isinstance(sample, ExcelFile):
 		_sample = sample
 		data = _sample.data
-		return multi_AdditionalVolatiles(data)
+		normed_data = multi_AdditionalVolatiles(data)
+		ef_obj = ExcelFile(filename=None, dataframe=normed_data)
+		return ef_obj
 	elif isinstance(sample, pd.DataFrame):
 		return multi_AdditionalVolatiles(sample)
 	else:
@@ -693,11 +773,12 @@ class ExcelFile(object):
 		dataframe: pandas DataFrame
 				OPTIONAL. Default is None in which case this argument is ignored. This argument is used when the user wishes to turn
 				a pandas DataFrame into an ExcelFile object, for example when user data is already in python rather than being imported
-				from an Excel file. If using this option, pass None to filename.
+				from an Excel file. In this case set `dataframe` equal to the dataframe object being passed in. If using this option, pass
+				None to filename.
 	"""
 
 	def __init__(self, filename, sheet_name=0, input_type='wtpercent', label='Label', **kwargs):
-		"""Return an ExcelFile object whoes parameters are defined here."""
+		"""Return an ExcelFile object whose parameters are defined here."""
 
 		if isinstance(sheet_name, str) or isinstance(sheet_name, int):
 			pass
@@ -733,6 +814,9 @@ class ExcelFile(object):
 
 		if 'model' in kwargs:
 			w.warn("You don't need to pass a model here, so it will be ignored. You can specify a model when performing calculations on your dataset (e.g., calculate_dissolved_volatiles())",RuntimeWarning,stacklevel=2)
+
+		if 'norm' in kwargs:
+			w.warn("We noticed you passed a norm argument here. This does nothing. You can normalize your ExcelFile and save it to a new variable name after import using normalize(ExcelFileObject). See the documentation for more info.",RuntimeWarning,stacklevel=2)
 
 		total_iron_columns = ["FeOt", "FeOT", "FeOtot", "FeOtotal", "FeOstar", "FeO*"]
 		for name in total_iron_columns:
@@ -4130,9 +4214,7 @@ class IaconoMarzianoWater(Model):
 
 	def preprocess_sample(self,sample):
 		"""
-		Returns sample, normalized to 100 wt%, without changing the wt% of H2O and CO2 if the
-		hydrous parameterization is being used (default). If the anhydrous parameterization is
-		used, it will normalize without including H2O and CO2.
+		Returns sample, normalized to 100 wt%, without changing the wt% of H2O and CO2.
 
 		Parameters
 		----------
@@ -4144,10 +4226,8 @@ class IaconoMarzianoWater(Model):
 		pandas Series or dict
 			Major element oxides normalized to wt%.
 		"""
-		if self.hydrous == True:
-			return normalize_FixedVolatiles(sample)
-		else:
-			return normalize_AdditionalVolatiles(sample)
+		return normalize_FixedVolatiles(sample)
+
 
 	def calculate_dissolved_volatiles(self,pressure,temperature,sample,X_fluid=1.0,
 									  hydrous_coeffs=True,webapp_coeffs=False,**kwargs):
@@ -4407,9 +4487,7 @@ class IaconoMarzianoCarbon(Model):
 
 	def preprocess_sample(self,sample):
 		"""
-		Returns sample, normalized to 100 wt%, without changing the wt% of H2O and CO2 if the
-		hydrous parameterization is being used (default). If the anhydrous parameterization is
-		used, it will normalize without including H2O and CO2.
+		Returns sample, normalized to 100 wt%, without changing the wt% of H2O and CO2.
 
 		Parameters
 		----------
@@ -4421,10 +4499,7 @@ class IaconoMarzianoCarbon(Model):
 		pandas Series or dict
 			Major element oxides normalized to wt%.
 		"""
-		if self.hydrous == True:
-			return normalize_FixedVolatiles(sample)
-		else:
-			return normalize_AdditionalVolatiles(sample)
+		return normalize_FixedVolatiles(sample)
 
 	def calculate_dissolved_volatiles(self,pressure,temperature,sample,X_fluid=1,
 									  hydrous_coeffs=True, **kwargs):
@@ -7171,7 +7246,7 @@ def smooth_isobars_and_isopleths(isobars=None, isopleths=None):
 
 def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, custom_CO2=None,
 		 isobar_labels=None, isopleth_labels=None, degassing_path_labels=None, custom_labels=None,
-		 custom_colors="VESIcal", custom_symbols=None, markersize=10, save_fig=False,
+		 custom_colors="VESIcal", custom_symbols=None, markersize=10, figsize=(12,8), save_fig=False,
 		 extend_isobars_to_zero=True, smooth_isobars=False, smooth_isopleths=False, **kwargs):
 	"""
 	Custom automatic plotting of model calculations in VESIcal.
@@ -7235,6 +7310,9 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 		OPTIONAL. Default value is 10. Same as markersize kwarg in matplotlib. Any numeric value passed here will set the
 		marker size for (custom_H2O, custom_CO2) points.
 
+	figsize: tuple
+		OPTIONAL. Default value is (12,8). Sets the matplotlib.pyplot figsize value as (x_dimension, y_dimension)
+
 	save_fig: False or str
 		OPTIONAL. Default value is False, in which case the figure will not be saved. If a string is passed,
 		the figure will be saved with the string as the filename. The string must include the file extension.
@@ -7281,7 +7359,7 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 	else:
 		raise InputError("Argument custom_colors must be type list. Just passing one item? Try putting square brackets, [], around it.")
 
-	plt.figure(figsize=(12,8))
+	plt.figure(figsize=figsize)
 	if 'custom_x' in kwargs:
 		plt.xlabel(kwargs['xlabel'])
 		plt.ylabel(kwargs['ylabel'])
@@ -8003,9 +8081,9 @@ class calculate_isobars_and_isopleths(Calculate):
 	def calculate(self,sample,pressure_list,isopleth_list=[0,1],points=101,**kwargs):
 		check = getattr(self.model, "calculate_isobars_and_isopleths", None)
 		if callable(check):
-			samplenorm = sample.copy()
-			samplenorm = normalize_AdditionalVolatiles(samplenorm)
-			isobars, isopleths = self.model.calculate_isobars_and_isopleths(sample=samplenorm,pressure_list=pressure_list,isopleth_list=isopleth_list,points=points,**kwargs)
+			# samplenorm = sample.copy()
+			# samplenorm = normalize_AdditionalVolatiles(samplenorm)
+			isobars, isopleths = self.model.calculate_isobars_and_isopleths(sample=self.sample,pressure_list=pressure_list,isopleth_list=isopleth_list,points=points,**kwargs)
 			return isobars, isopleths
 		else:
 			raise InputError("This model does not have a calculate_isobars_and_isopleths method built in, most likely because it is a pure fluid model.")
@@ -8206,7 +8284,7 @@ def add_LeMaitre_fields(plot_axes, fontsize=12, color=(0.6, 0.6, 0.6)):
 				 horizontalalignment='center', verticalalignment='top',
 				 rotation=name.rotation, zorder=0)
 
-def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, save_fig=False, **kwargs):
+def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, figsize=(17,8), legend=True, save_fig=False, **kwargs):
 	"""
 	Plots user data and calibration set of any or all models on any x-y plot or a total alkalis vs silica (TAS) diagram.
 	TAS diagram boundaries provided by tasplot python module, copyright John A Stevenson.
@@ -8235,6 +8313,12 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, save_fig
 		where the x and y axes are scaled down to zoom in and only show the region surrounding the user_data. A list of
 		tuples may be passed to manually specify x and y limits. Pass in data as  [(x_min, x_max), (y_min, y_max)].
 		For example, the default limits here would be passed in as [(35,100), (0,25)].
+
+	figsize: tuple
+		OPTIONAL. Default value is (17,8). Sets the matplotlib.pyplot figsize value as (x_dimension, y_dimension)
+
+	legend: bool
+		OPTIONAL. Default value is True. Can be set to False in which case the legend will not be displayed.
 
 	save_fig: False or str
 		OPTIONAL. Default value is False, in which case the figure will not be saved. If a string is passed,
@@ -8272,7 +8356,7 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, save_fig
 		user_ymin, user_ymax = zoom[1]
 
 	#Create the figure
-	fig, ax1 = plt.subplots(figsize = (17,8))
+	fig, ax1 = plt.subplots(figsize = figsize)
 	font = {'family': 'sans-serif',
 				'color':  'black',
 				'weight': 'normal',
@@ -8350,7 +8434,7 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, save_fig
 											marker='s', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname))
 							except:
 								w.warn("The requested oxides were not found in the calibration dataset for " + str(modelname) + ".")
-			
+
 			if co2_h2oco2_legend == True:
 				plt.scatter([], [], marker='', label=r"${\ }$")
 
@@ -8421,7 +8505,8 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, save_fig
 						s=150, edgecolors='w', facecolors='red', marker='P',
 						label = 'User Data')
 
-	plt.legend(bbox_to_anchor=(1.04,1), loc="upper left")
+	if legend == True:
+		plt.legend(bbox_to_anchor=(1.04,1), loc="upper left")
 	fig.tight_layout()
 	if isinstance(save_fig, str):
 		fig.savefig(save_fig)
