@@ -15,15 +15,12 @@ w.filterwarnings("ignore", message="The handle")
 # ----------------- IMPORTS ----------------- #
 import pandas as pd
 import numpy as np
-import matplotlib as mpl
-import matplotlib.pyplot as plt
 from scipy.optimize import root_scalar
 from scipy.optimize import root
 from abc import abstractmethod
 import sys
 import sympy
 from copy import copy
-# import anvil_server
 
 # import matplotlib.font_manager as font_manager
 # from cycler import cycler
@@ -31,6 +28,8 @@ from copy import copy
 
 from sample_class import *
 from core import *
+import batchfile
+from vplot import *
 
 # -------------- MELTS preamble --------------- #
 from thermoengine import equilibrate
@@ -42,26 +41,6 @@ phases = melts.get_phase_names()
 for phase in phases:
 	melts.set_phase_inclusion_status({phase: False})
 melts.set_phase_inclusion_status({'Fluid': True, 'Liquid': True})
-
-
-# ---------- DEFINE CUSTOM PLOTTING FORMATTING ------------ #
-style = "seaborn-colorblind"
-plt.style.use(style)
-plt.rcParams["mathtext.default"] = "regular"
-plt.rcParams["mathtext.fontset"] = "dejavusans"
-mpl.rcParams['patch.linewidth'] = 1
-mpl.rcParams['axes.linewidth'] = 1
-plt.rcParams['axes.titlesize'] = 20
-plt.rcParams['axes.labelsize'] = 18
-plt.rcParams['xtick.labelsize'] = 14
-plt.rcParams['ytick.labelsize'] = 14
-plt.rcParams['legend.fontsize'] = 14
-mpl.rcParams['lines.markersize'] = 10
-
-# Define color cycler based on plot style set here
-the_rc = plt.style.library[style] #get style formatting set by plt.style.use()
-color_list = the_rc['axes.prop_cycle'].by_key()['color'] * 10 #list of colors by hex code
-color_cyler = the_rc['axes.prop_cycle'] #get the cycler
 
 def printTable(myDict):
 	""" Pretty print a dictionary (as pandas DataFrame)
@@ -85,17 +64,6 @@ def printTable(myDict):
 	table = pd.DataFrame([v for v in _myDict.values()], columns = ['value'],
 						 index = [k for k in _myDict.keys()])
 	return table
-
-# ---------- DEFINE SOME UNIVERSAL INFORMATIVE METHODS -------------- #
-def get_model_names():
-	"""
-	Returns all available model names as a list of strings.
-	"""
-	model_names = []
-	for key, value in default_models.items():
-		model_names.append(key)
-
-	return model_names
 
 # ---------- DEFINE SOME BASIC DATA TRANSFORMATION METHODS ----------- #
 
@@ -316,116 +284,6 @@ def wtpercentOxides_to_formulaWeight(sample,exclude_volatiles=False):
 	for cation in list(cations.keys()):
 		FW += cations[cation]*CationMass[cations_to_oxides[cation]]
 	return FW
-
-# ---------- DATA TRANSFORMATION FOR PANDAS DATAFRAMES --------- #
-def fluid_molfrac_to_wt(data, H2O_colname='XH2O_fl_VESIcal', CO2_colname='XCO2_fl_VESIcal'):
-	"""
-	Takes in a pandas dataframe object and converts only the fluid composition from mole fraction to wt%, leaving the melt composition
-	in tact. The user must specify the names of the XH2O_fl and XCO2_fl columns.
-
-	Parameters
-	----------
-	data: pandas DataFrame
-		Sample composition(s) containing columns for H2O and CO2 concentrations in the fluid.
-
-	H2O_colname: str
-		OPTIONAL. The default value is 'XH2O_fl', which is what is returned by BatchFile() core calculations.
-		String containing the name of the column corresponding to the H2O concentration in the fluid, in mol fraction.
-
-	CO2_colname: str
-		OPTIONAL. The default value is 'XCO2_fl', which is what is returned by BatchFile() core calculations.
-		String containing the name of the column corresponding to the CO2 concentration in the fluid, in mol fraction.
-
-	Returns
-	-------
-	pandas DataFrame
-		Original data passed plus newly calculated values are returned.
-	"""
-	convData = data.copy()
-
-	MPO_H2O_list = []
-	MPO_CO2_list = []
-	for index, row in convData.iterrows():
-		MPO_H2O_list.append(row[H2O_colname] * oxideMass["H2O"])
-		MPO_CO2_list.append(row[CO2_colname] * oxideMass["CO2"])
-
-	convData["MPO_H2O"] = MPO_H2O_list
-	convData["MPO_CO2"] = MPO_CO2_list
-	convData["H2O_fl_wt"] = 100 * convData["MPO_H2O"] / (convData["MPO_H2O"] + convData["MPO_CO2"])
-	convData["CO2_fl_wt"] = 100 * convData["MPO_CO2"] / (convData["MPO_H2O"] + convData["MPO_CO2"])
-
-	del convData["MPO_H2O"]
-	del convData["MPO_CO2"]
-
-	return convData
-
-def fluid_wt_to_molfrac(data, H2O_colname='H2O_fl_wt', CO2_colname='CO2_fl_wt'):
-	"""
-	Takes in a pandas dataframe object and converts only the fluid composition from wt% to mole fraction, leaving the melt composition
-	in tact. The user must specify the names of the H2O_fl_wt and CO2_fl_wt columns.
-
-	Parameters
-	----------
-	data: pandas DataFrame
-		DataFrame containing columns for H2O and CO2 concentrations in the fluid.
-
-	H2O_colname: str
-		OPTIONAL. The default value is 'H2O_fl_wt', which is what is returned by BatchFile() core calculations.
-		String containing the name of the column corresponding to the H2O concentration in the fluid, in wt%.
-
-	CO2_colname: str
-		OPTIONAL. The default value is 'CO2_fl_wt', which is what is returned by BatchFile() core calculations.
-		String containing the name of the column corresponding to the CO2 concentration in the fluid, in wt%.
-
-	Returns
-	-------
-	pandas DataFrame
-		Original data passed plus newly calculated values are returned.
-	"""
-	convData = data.copy()
-
-	MPO_H2O_list = []
-	MPO_CO2_list = []
-	for index, row in convData.iterrows():
-		MPO_H2O_list.append(row[H2O_colname] / oxideMass["H2O"])
-		MPO_CO2_list.append(row[CO2_colname] / oxideMass["CO2"])
-
-	convData["MPO_H2O"] = MPO_H2O_list
-	convData["MPO_CO2"] = MPO_CO2_list
-	convData["XH2O_fl"] = convData["MPO_H2O"] / (convData["MPO_H2O"] + convData["MPO_CO2"])
-	convData["XCO2_fl"] = convData["MPO_CO2"] / (convData["MPO_H2O"] + convData["MPO_CO2"])
-
-	del convData["MPO_H2O"]
-	del convData["MPO_CO2"]
-
-	return convData
-
-def get_oxides(sample):
-	"""
-	Returns a sample composition with only compositional oxide data, removing any extranneous data.
-	Useful when passing a self-defined sample (e.g. dict or pandas Series) to a some VESIcal function.
-
-	Parameters
-	----------
-	sample: pandas Series or dictionary
-		A sample composition plus other sample information
-
-	Returns
-	-------
-	Same type as passed sample (pandas Series or dictionary)
-		Sample composition with extranneous information removed.
-	"""
-
-	clean = {oxide:  sample[oxide] for oxide in oxides}
-
-	if isinstance(sample, dict):
-		return clean
-	if isinstance(sample, pd.core.series.Series):
-		return pd.Series(clean)
-
-def rename_duplicates(df, suffix='-duplicate-'):
-	appendents = (suffix + df.groupby(level=0).cumcount().astype(str).replace('0','')).replace(suffix, '')
-	return df.set_index(df.index.astype(str) + appendents)
 
 # ---------- DEFINE SOME NORMALIZATION METHODS ----------- #
 
@@ -694,223 +552,11 @@ def normalize_AdditionalVolatiles(sample):
 		raise InputError("The composition input must be a pandas Series or dictionary for single sample \
 							or a pandas DataFrame or BatchFile object for multi-sample.")
 
-# ------------ DEFINE OTHER DATA IMPORT METHODS ---------------- #
-def try_set_index(dataframe, label):
+# -------------- BATCH PROCESSING ----------- #
+class BatchFile(batchfile.BatchFile):
+	"""Performs model functions on a batchfile.BatchFile object
 	"""
-	Method to handle setting the index column in an BatchFile object. If no column is passed that matches the default index name,
-	then this method will attempt to choose the 'best' column that the user might want to serve as an index column.
-
-	Parameters
-	----------
-	dataframe: pandas DataFrame
-
-	label: str
-		Name of the column within the passed Excel file referring to sample names.
-	"""
-	_dataframe = dataframe.copy()
-	try:
-		_dataframe = _dataframe.set_index(label)
-	except:
-		label_found = False
-		for col in _dataframe.columns:
-			if col in oxides:
-				pass
-			else:
-				_dataframe = _dataframe.set_index(col)
-				label_found = True
-				w.warn("No Label column given, so column '" + str(col) + "' was chosen for you. To choose your own, set label='<column-name>'.",RuntimeWarning,stacklevel=2)
-				break
-		if label_found == False:
-			_dataframe.index.name = 'Label'
-			w.warn("No Label column given, so one was created for you. To choose your own, set label='<column-name>'.",RuntimeWarning,stacklevel=2)
-
-	return _dataframe
-
-def BatchFile_from_csv(filepath_or_buffer, input_type='wtpercent', label='Label', **kwargs):
-	"""
-	Read a comma-separated values (csv) file into an BatchFile object. Clones functionality of pandas.read_csv(). Any arguments that can
-	be passed to pandas.read_csv() can be passed here.
-
-	Parameters
-	----------
-	filepath_or_buffer: str, path object or file-like object
-		Mimics same argument in pandas.read_csv(). From the Pandas docs: Any valid string path is acceptable. The string could be a URL.
-		Valid URL schemes include http, ftp, s3, gs, and file. For file URLs, a host is expected. A local file could be:
-		file://localhost/path/to/table.csv. If you want to pass in a path object, pandas accepts any os.PathLike. By file-like object,
-		we refer to objects with a read() method, such as a file handle (e.g. via builtin open function) or StringIO.
-
-	input_type: str
-			OPTIONAL. Default is 'wtpercent'. String defining whether the oxide composition is given in wt percent
-			("wtpercent", which is the default), mole percent ("molpercent"), or mole fraction ("molfrac").
-
-	Returns
-	-------
-	BatchFile object
-	"""
-	dataframe = pd.read_csv(filepath_or_buffer, **kwargs)
-
-	EF_obj = BatchFile(filename=None, input_type=input_type, label=label, dataframe=dataframe)
-
-	return EF_obj
-
-# ------------ DEFINE MAJOR CLASSES ------------------- #
-class BatchFile(object):
-	"""An excel file with sample names and oxide compositions
-
-	Attributes
-	----------
-		filename: str
-			Path to the excel file, e.g., "my_file.xlsx". This always needs to be passed, even if the user is passing a pandas DataFrame
-			rather than an Excel file. If passing a DataFrame, filename should be set to None.
-
-		sheet_name: str
-			OPTIONAL. Default value is 0 which gets the first sheet in the excel spreadsheet file. This implements the pandas.
-			read_excel() sheet_name parameter. But functionality to read in more than one sheet at a time (e.g., pandas.read_excel(sheet_name=None))
-			is not yet imlpemented in VESIcal. From the pandas 1.0.4 documentation:
-				Available cases:
-					- Defaults to 0: 1st sheet as a DataFrame
-					- 1: 2nd sheet as a DataFrame
-					- "Sheet1": Load sheet with name “Sheet1”
-
-		input_type: str
-			OPTIONAL. Default is 'wtpercent'. String defining whether the oxide composition is given in wt percent
-			("wtpercent", which is the default), mole percent ("molpercent"), or mole fraction ("molfrac").
-
-		label: str
-			OPTIONAL. Default is 'Label'. Name of the column within the passed Excel file referring to sample names.
-
-		dataframe: pandas DataFrame
-			OPTIONAL. Default is None in which case this argument is ignored. This argument is used when the user wishes to turn
-			a pandas DataFrame into an BatchFile object, for example when user data is already in python rather than being imported
-			from an Excel file. In this case set `dataframe` equal to the dataframe object being passed in. If using this option, pass
-			None to filename.
-	"""
-
-	def __init__(self, filename, sheet_name=0, input_type='wtpercent', label='Label', dataframe=None, **kwargs):
-		"""Return an BatchFile object whose parameters are defined here."""
-		self.input_type = input_type
-
-		if isinstance(sheet_name, str) or isinstance(sheet_name, int):
-			pass
-		else:
-			raise InputError("If sheet_name is passed, it must be of type str or int. Currently, VESIcal cannot import more than one sheet at a time.")
-
-		if dataframe is not None:
-			data = dataframe
-			data = try_set_index(data, label)
-		else:
-			data = pd.read_excel(filename, sheet_name=sheet_name)
-			data = try_set_index(data, label)
-
-		data = rename_duplicates(data) #handle any duplicated sample names
-		data = data.dropna(how='all') #drop any rows that are all NaNs
-		data = data.fillna(0) #fill in any missing data with 0's
-
-		if 'model' in kwargs:
-			w.warn("You don't need to pass a model here, so it will be ignored. You can specify a model when performing calculations on your dataset (e.g., calculate_dissolved_volatiles())",RuntimeWarning,stacklevel=2)
-
-		if 'norm' in kwargs:
-			w.warn("We noticed you passed a norm argument here. This does nothing. You can normalize your BatchFile and save it to a new variable name after import using normalize(BatchFileObject). See the documentation for more info.",RuntimeWarning,stacklevel=2)
-
-		total_iron_columns = ["FeOt", "FeOT", "FeOtot", "FeOtotal", "FeOstar", "FeO*"]
-		for name in total_iron_columns:
-			if name in data.columns:
-				if 'FeO' in data.columns:
-					for row in data.itertuples():
-						if data.at[row.Index, "FeO"] == 0 and data.at[row.Index, name] > 0:
-							w.warn("Sample " + str(row.Index) + ": " + str(name) + " value of " + str(data.at[row.Index, name]) + " used as FeO. Fe2O3 set to 0.0.",RuntimeWarning,stacklevel=2)
-							data.at[row.Index, "Fe2O3"] = 0.0
-							data.at[row.Index, "FeO"] = data.at[row.Index, name]
-				else:
-					w.warn("Total iron column " + str(name) + " detected. This column will be treated as FeO. If Fe2O3 data are not given, Fe2O3 will be 0.0. In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",RuntimeWarning,stacklevel=2)
-					data['FeO'] = data[name]
-
-		for oxide in oxides:
-			if oxide in data.columns:
-				pass
-			else:
-				data[oxide] = 0.0
-
-		if input_type == "wtpercent":
-			pass
-		if input_type == "molpercent":
-			data = mol_to_wtpercent(data)
-		if input_type == "molfrac":
-			data = mol_to_wtpercent(data)
-
-		self.data = data
-
-	def preprocess_sample(self,sample):
-		"""
-		Adds 0.0 values to any oxide data not passed.
-
-		Parameters
-		----------
-		sample: pandas DataFrame
-			self.data composition of samples in wt% oxides
-
-		Returns
-		-------
-		pandas DataFrame
-		"""
-		for oxide in oxides:
-			if oxide in self.data.columns:
-				pass
-			else:
-				self.data[oxide] = 0.0
-
-		return sample
-
-	def get_sample_oxide_comp(self, samplename, norm='none'):
-		"""
-		Returns oxide composition of a single sample from a user-imported excel file as a dictionary
-
-		Parameters
-		----------
-		samplename: string
-			Name of the desired sample
-
-		norm_style: string
-			OPTIONAL. Default value is 'standard'. This specifies the style of normalization applied to the sample.
-
-			'standard' normalizes the entire input composition (including any volatiles) to 100%.
-
-			'fixedvolatiles' normalizes oxides to 100%, including volatiles. The volatile
-			wt% will remain fixed, whilst the other major element oxides are reduced proportionally
-			so that the total is 100 wt%.
-
-			'additionalvolatiles' normalizes oxides to 100%, assuming it is volatile-free. If
-			H2O or CO2 are passed to the function, their un-normalized values will be retained
-			in addition to the normalized non-volatile oxides, summing to >100%.
-
-			'none' returns the value-for-value un-normalized composition.
-
-		Returns
-		-------
-		dictionary
-			Composition of the sample as oxides
-		"""
-		if norm == 'none' or norm == 'standard' or norm == 'fixedvolatiles' or norm == 'additionalvolatiles':
-			pass
-		else:
-			raise InputError('norm must be either none, standard, fixedvolatiles, or additionalvolatiles.')
-
-		data = self.data
-		my_sample = pd.DataFrame(data.loc[samplename])
-		sample_dict = (my_sample.to_dict()[samplename])
-		sample_oxides = {}
-		for item, value in sample_dict.items():
-			if item in oxides:
-				sample_oxides.update({item: value})
-
-		if norm == 'standard':
-			return normalize(sample_oxides)
-		if norm == 'fixedvolatiles':
-			return normalize_FixedVolatiles(sample_oxides)
-		if norm == 'additionalvolatiles':
-			return normalize_AdditionalVolatiles(sample_oxides)
-		if norm == 'none':
-			return sample_oxides
+	pass
 
 	def get_XH2O_fluid(self, sample, temperature, pressure, H2O, CO2):
 		"""An internally used function to calculate fluid composition.
@@ -959,83 +605,6 @@ class BatchFile(object):
 		#   raise SaturationError("Composition not fluid saturated.")
 
 		return H2O_fl
-
-	def save_BatchFile(self, filename, calculations, sheet_name=None):
-		"""
-		Saves data calculated by the user in batch processing mode (using the BatchFile class methods) to an organized
-		excel file, with the original user data plus any calculated data.
-
-		Parameters
-		----------
-		filename: string
-			Name of the file. Extension (.xlsx) should be passed along with the name itself, all in quotes (e.g., 'myfile.xlsx').
-
-		calculations: pandas DataFrame or list of pandas DataFrames
-			A single variable or list of variables containing calculated outputs from any of the core BatchFile functions:
-			calculate_dissolved_volatiles, calculate_equilibrium_fluid_comp, and calculate_saturation_pressure.
-
-		sheet_name: None, string, or list
-			OPTIONAL. Default value is None. Allows user to set the name of the sheet or sheets written to the Excel file.
-
-		Returns
-		-------
-		Excel File
-			Creates and saves an Excel file with data from each calculation saved to its own sheet.
-		"""
-		if isinstance(calculations, list):
-			if isinstance(sheet_name, list) or sheet_name is None:
-				pass
-		else:
-			calculations = [calculations]
-		with pd.ExcelWriter(filename) as writer:
-			self.data.to_excel(writer, 'Original_User_Data')
-			if sheet_name is None:
-				for n, df in enumerate(calculations):
-					df.to_excel(writer, 'Calc%s' % n)
-			elif isinstance(sheet_name, list):
-				pass
-			else:
-				sheet_name = [sheet_name]
-			if isinstance(sheet_name, list):
-				if len(sheet_name) == len(calculations):
-					pass
-				else:
-					raise InputError("calculations and sheet_name must have the same length")
-
-				for i in range(len(calculations)):
-					if isinstance(sheet_name[i], str):
-						calculations[i].to_excel(writer, sheet_name[i])
-					else:
-						raise InputError("if sheet_name is passed, it must be list of strings")
-
-		return print("Saved " + str(filename))
-
-	def save_csv(self, filenames, calculations, **kwargs):
-		"""
-		Saves data calculated by the user in batch processing mode to a comma-separated values (csv) file. Mirros the pandas.to_csv()
-		method. Any argument that can be passed to pandas.csv() can be passed here. One csv file will be saved for each calculation
-		passed.
-
-		Parameters
-		----------
-		filenames: string or list of strings
-			Name of the file. Extension (.csv) should be passed along with the name itself, all in quotes (e.g., 'myfile.csv'). The number
-			of calculations passed must match the number of filenames passed. If passing more than one, should be passed as a list.
-
-		calculations: pandas DataFrame or list of pandas DataFrames
-			A single variable or list of variables containing calculated outputs from any of the core BatchFile functions:
-			calculate_dissolved_volatiles, calculate_equilibrium_fluid_comp, and calculate_saturation_pressure.
-		"""
-		if type(filenames) != list:
-			filenames = [filenames]
-		if type(calculations) != list:
-			calculations = [calculations]
-		if len(filenames) != len(calculations):
-			raise InputError("calculations and filenames must have the same length")
-
-		for i in range(len(filenames)):
-			calculations[i].to_csv(filenames[i], **kwargs)
-			print ("Saved " + str(filenames[i]))
 
 	def calculate_dissolved_volatiles(self, temperature, pressure, X_fluid=1, print_status=True, model='MagmaSat', record_errors=False, **kwargs):
 		"""
@@ -1158,9 +727,12 @@ class BatchFile(object):
 			XH2Ovals = []
 			XCO2vals = []
 			FluidProportionvals = []
+			iterno = 0
 			for index, row in dissolved_data.iterrows():
+				iterno += 1
 				if print_status == True:
-					print("Calculating sample " + str(index))
+					percent = iterno/len(dissolved_data.index)
+					batchfile.status_bar(percent, index)
 
 				if file_has_temp == True:
 					temperature = row[temp_name]
@@ -1375,9 +947,12 @@ class BatchFile(object):
 
 			return fluid_data
 		elif model == 'MagmaSat':
+			iterno = 0
 			for index, row in fluid_data.iterrows():
+				iterno += 1
 				if print_status == True:
-					print("Calculating sample " + str(index))
+					percent = iterno/len(fluid_data.index)
+					batchfile.status_bar(percent, index)
 
 				if file_has_temp == True:
 					temperature = row[temp_name]
@@ -1519,9 +1094,12 @@ class BatchFile(object):
 			flCO2 = []
 			flsystem_wtper = []
 			warnings = []
+			iterno = 0
 			for index, row in satp_data.iterrows():
+				iterno += 1
 				if print_status == True:
-					print("Calculating sample " + str(index))
+					percent = iterno/len(satp_data.index)
+					batchfile.status_bar(percent, index)
 
 				if file_has_temp == True:
 					temperature = row[temp_name]
@@ -1562,10 +1140,9 @@ class BatchFile(object):
 			satp_data["Model"] = model
 			satp_data["Warnings"] = warnings
 
-			if print_status == True:
-				print("Done!")
-
 			return satp_data
+
+# ------------ DEFINE MAJOR CLASSES ------------------- #
 
 class CalibrationRange(object):
 	""" The CalibrationRange object allows the range of allowable parameters to be specified and
@@ -3427,7 +3004,6 @@ class fugacity_RedlichKwong(FugacityModel):
 
 # --------------- ACTVITY MODELS ------------------------------- #
 
-
 class activity_idealsolution(activity_model):
 	""" Implements an ideal solution activity model, i.e. it
 	will always return the mole fraction.
@@ -3448,10 +3024,6 @@ class activity_idealsolution(activity_model):
 			The activity of the species in the solution, i.e., the mole fraction.
 		"""
 		return X
-
-
-
-
 
 # ------------ PURE FLUID MODELS ------------------------------- #
 
@@ -7226,594 +6798,31 @@ class MagmaSat(Model):
 
 		return open_degassing_df
 
-# ----------- MAGMASAT PLOTTING FUNCTIONS ----------- #
-def smooth_isobars_and_isopleths(isobars=None, isopleths=None):
+# ====== Define some standard model options ======================================================= #
+# Is this functionatlity duplicated in get_model_names()? Should we just have one?
+def get_models(models='all'):
 	"""
-	Takes in a dataframe with calculated isobar and isopleth information (e.g., output from calculate_isobars_and_isopleths)
-	and smooths the data for plotting.
-
+	Returns model names as a list
 	Parameters
 	----------
-	isobars: pandas DataFrame
-		OPTIONAL. DataFrame object containing isobar information as calculated by calculate_isobars_and_isopleths.
-
-	isopleths: pandas DataFrame
-		OPTIONAL. DataFrame object containing isopleth information as calculated by calculate_isobars_and_isopleths.
-
-	Returns
-	-------
-	pandas DataFrame
-		DataFrame with x and y values for all isobars and all isopleths. Useful if a user wishes to do custom plotting
-		with isobar and isopleth data rather than using the built-in `plot_isobars_and_isopleths()` function.
+	models:	str
+		OPTIONAL. Default value is 'all' in which case all keys in defaule_models are returned.
+		If 'mixed' is passed, only the MixedFluid model names are returned.
 	"""
-	np.seterr(divide='ignore', invalid='ignore') #turn off numpy warning
-	w.filterwarnings("ignore", message="Polyfit may be poorly conditioned")
+	if models == 'all':
+		return list(default_models.keys())
+	if models == 'mixed':
+		return ['ShishkinaIdealMixing', 'Dixon', 'IaconoMarziano', 'Liu'] #MagmaSat not included here as it is treated separately
 
-	if isobars is not None:
-		P_vals = isobars.Pressure.unique()
-		isobars_lists = isobars.values.tolist()
-		# add zero values to volatiles list
-		isobars_lists.append([0.0, 0.0, 0.0, 0.0])
-
-		isobars_pressure = []
-		isobars_H2O_liq = []
-		isobars_CO2_liq = []
-		# do some data smoothing
-		for pressure in P_vals:
-			Pxs = [item[1] for item in isobars_lists if item[0] == pressure]
-			Pys = [item[2] for item in isobars_lists if item[0] == pressure]
-
-			try:
-				## calcualte polynomial
-				Pz = np.polyfit(Pxs, Pys, 3)
-				Pf = np.poly1d(Pz)
-
-				## calculate new x's and y's
-				Px_new = np.linspace(Pxs[0], Pxs[-1], 50)
-				Py_new = Pf(Px_new)
-
-				# Save x's and y's
-				Px_new_list = list(Px_new)
-				isobars_H2O_liq += Px_new_list
-
-				Py_new_list = list(Py_new)
-				isobars_CO2_liq += Py_new_list
-
-				pressure_vals_for_list = [pressure]*len(Px_new)
-				isobars_pressure += pressure_vals_for_list
-
-			except:
-				Px_list = list(Pxs)
-				isobars_H2O_liq += Px_list
-
-				Py_list = list(Pys)
-				isobars_CO2_liq += Py_list
-
-				pressure_vals_for_list = [pressure]*len(Pxs)
-				isobars_pressure += pressure_vals_for_list
-
-		isobar_df = pd.DataFrame({"Pressure": isobars_pressure,
-							  "H2O_liq": isobars_H2O_liq,
-							  "CO2_liq": isobars_CO2_liq})
-
-	if isopleths is not None:
-		XH2O_vals = isopleths.XH2O_fl.unique()
-		isopleths_lists = isopleths.values.tolist()
-
-		isopleths_XH2O_fl = []
-		isopleths_H2O_liq = []
-		isopleths_CO2_liq = []
-		for Xfl in XH2O_vals:
-			Xxs = [item[1] for item in isopleths_lists if item[0] == Xfl]
-			Xys = [item[2] for item in isopleths_lists if item[0] == Xfl]
-
-			try:
-				## calcualte polynomial
-				Xz = np.polyfit(Xxs, Xys, 2)
-				Xf = np.poly1d(Xz)
-
-				## calculate new x's and y's
-				Xx_new = np.linspace(Xxs[0], Xxs[-1], 50)
-				Xy_new = Xf(Xx_new)
-
-				# Save x's and y's
-				Xx_new_list = list(Xx_new)
-				isopleths_H2O_liq += Xx_new_list
-
-				Xy_new_list = list(Xy_new)
-				isopleths_CO2_liq += Xy_new_list
-
-				XH2Ofl_vals_for_list = [Xfl]*len(Xx_new)
-				isopleths_XH2O_fl += XH2Ofl_vals_for_list
-
-			except:
-				Xx_list = list(Xxs)
-				isopleths_H2O_liq += Xx_list
-
-				Xy_list = list(Xys)
-				isopleths_CO2_liq += Xy_list
-
-				XH2Ofl_vals_for_list = [Xfl]*len(Xxs)
-				isopleths_XH2O_fl += XH2Ofl_vals_for_list
-
-		isopleth_df = pd.DataFrame({"XH2O_fl": isopleths_XH2O_fl,
-							  "H2O_liq": isopleths_H2O_liq,
-							  "CO2_liq": isopleths_CO2_liq})
-
-	np.seterr(divide='warn', invalid='warn') #turn numpy warning back on
-	w.filterwarnings("always", message="Polyfit may be poorly conditioned")
-
-	if isobars is not None:
-		if isopleths is not None:
-			return isobar_df, isopleth_df
-		else:
-			return isobar_df
-	else:
-		if isopleths is not None:
-			return isopleth_df
-
-
-def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, custom_CO2=None,
-		 isobar_labels=None, isopleth_labels=None, degassing_path_labels=None, custom_labels=None,
-		 custom_colors="VESIcal", custom_symbols=None, markersize=10, figsize=(12,8), save_fig=False,
-		 extend_isobars_to_zero=True, smooth_isobars=False, smooth_isopleths=False, **kwargs):
+def get_model_names():
 	"""
-	Custom automatic plotting of model calculations in VESIcal.
-	Isobars, isopleths, and degassing paths can be plotted. Labels can be specified for each.
-	Any combination of isobars, isopleths, and degassing paths can be plotted.
-
-	Parameters
-	----------
-	isobars: pandas DataFrame or list
-		OPTIONAL. DataFrame object containing isobar information as calculated by calculate_isobars_and_isopleths. Or a list
-		of DataFrame objects.
-
-	isopleths: pandas DataFrame or list
-		OPTIONAL. DataFrame object containing isopleth information as calculated by calculate_isobars_and_isopleths. Or a list
-		of DataFrame objects.
-
-	degassing_paths: list
-		OPTIONAL. List of DataFrames with degassing information as generated by calculate_degassing_path().
-
-	custom_H2O: list
-		OPTIONAL. List of groups of H2O values to plot as points. For example myfile.data['H2O'] is one group of H2O values.
-		Must be passed with custom_CO2 and must be same length as custom_CO2.
-
-	custom_CO2: list
-		OPTIONAL. List of groups of CO2 values to plot as points.For example myfile.data['CO2'] is one group of CO2 values.
-		Must be passed with custom_H2O and must be same length as custom_H2O.
-
-	isobar_labels: list
-		OPTIONAL. Labels for the plot legend. Default is None, in which case each plotted line will be given the generic
-		legend name of "Isobars n", with n referring to the nth isobars passed. Isobar pressure is given in parentheses.
-		The user can pass their own labels as a list of strings. If more than one set of isobars is passed, the labels should
-		refer to each set of isobars, not each pressure.
-
-	isopleth_labels: list
-		OPTIONAL. Labels for the plot legend. Default is None, in which case each plotted isopleth will be given the generic
-		legend name of "Isopleth n", with n referring to the nth isopleths passed. Isopleth XH2O values are given in
-		parentheses. The user can pass their own labels as a list of strings. If more than one set of isopleths is passed,
-		the labels should refer to each set of isopleths, not each XH2O value.
-
-	degassing_path_labels: list
-		OPTIONAL. Labels for the plot legend. Default is None, in which case each plotted line will be given the generic
-		legend name of "Pathn", with n referring to the nth degassing path passed. The user can pass their own labels
-		as a list of strings.
-
-	custom_labels: list
-		OPTIONAL. Labels for the plot legend. Default is None, in which case each group of custom points will be given the
-		generic legend name of "Customn", with n referring to the nth degassing path passed. The user can pass their own labels
-		as a list of strings.
-
-	custom_colors: list
-		OPTIONAL. Default value is "VESIcal", which uses VESIcal's color ramp. A list of color values readable by matplotlib
-		can be passed here if custom symbol colors are desired. The length of this list must match that of custom_H2O and
-		custom_CO2.
-
-	custom_symbols: list
-		OPTIONAL. Default value is None, in which case data are plotted as filled circles.. A list of symbol tyles readable
-		by matplotlib can be passed here if custom symbol types are desired. The length of this list must match that of
-		custom_H2O and custom_CO2.
-
-	markersize: int
-		OPTIONAL. Default value is 10. Same as markersize kwarg in matplotlib. Any numeric value passed here will set the
-		marker size for (custom_H2O, custom_CO2) points.
-
-	figsize: tuple
-		OPTIONAL. Default value is (12,8). Sets the matplotlib.pyplot figsize value as (x_dimension, y_dimension)
-
-	save_fig: False or str
-		OPTIONAL. Default value is False, in which case the figure will not be saved. If a string is passed,
-		the figure will be saved with the string as the filename. The string must include the file extension.
-
-	extend_isobars_to_zero: bool
-		OPTIONAL. If True (default), isobars will be extended to zero, even if there is a finite solubility at zero partial pressure.
-
-	smooth_isobars: bool
-		OPTIONAL. Default is False. If set to True, isobar data will be fit to a polynomial and plotted. If False, the raw input data
-		will be plotted.
-
-	smooth_isopleths: bool
-		OPTIONAL. Default is False. If set to True, isopleth data will be fit to a polynomial and plotted. If False, the raw input data
-		will be plotted.
-
-	Returns
-	-------
-	matplotlib object
-		Plot with x-axis as H2O wt% in the melt and y-axis as CO2 wt% in the melt. Isobars, or lines of
-		constant pressure at which the sample magma composition is saturated, and isopleths, or lines of constant
-		fluid composition at which the sample magma composition is saturated, are plotted if passed. Degassing
-		paths, or the concentration of dissolved H2O and CO2 in a melt equilibrated along a path of decreasing
-		pressure, is plotted if passed.
+	Returns all available model names as a list of strings.
 	"""
-	np.seterr(divide='ignore', invalid='ignore') #turn off numpy warning
-	w.filterwarnings("ignore", message="Polyfit may be poorly conditioned")
+	model_names = []
+	for key, value in default_models.items():
+		model_names.append(key)
 
-	if custom_H2O is not None:
-		if custom_CO2 is None:
-			raise InputError("If x data is passed, y data must also be passed.")
-		else:
-			if len(custom_H2O) == len(custom_CO2):
-				pass
-			else:
-				raise InputError("x and y data must be same length")
-	if custom_CO2 is not None:
-		if custom_H2O is None:
-			raise InputError("If y data is passed, x data must also be passed.")
-
-	if custom_colors == "VESIcal":
-		use_colors = color_list
-	elif isinstance(custom_colors, list):
-		use_colors = custom_colors
-	else:
-		raise InputError("Argument custom_colors must be type list. Just passing one item? Try putting square brackets, [], around it.")
-
-	plt.figure(figsize=figsize)
-	if 'custom_x' in kwargs:
-		plt.xlabel(kwargs['xlabel'])
-		plt.ylabel(kwargs['ylabel'])
-	else:
-		plt.xlabel('H$_2$O wt%')
-		plt.ylabel('CO$_2$ wt%')
-
-	labels = []
-
-	if isobars is not None:
-		if isinstance(isobars, pd.DataFrame):
-			isobars = [isobars]
-
-		for i in range(len(isobars)):
-			P_vals = isobars[i].Pressure.unique()
-			isobars_lists = isobars[i].values.tolist()
-
-			# add zero values to volatiles list
-			isobars_lists.append([0.0, 0.0, 0.0, 0.0])
-
-			P_iter = 0
-			for pressure in P_vals:
-				P_iter += 1
-				Pxs = [item[1] for item in isobars_lists if item[0] == pressure]
-				Pys = [item[2] for item in isobars_lists if item[0] == pressure]
-
-				if len(isobars) > 1:
-					if P_iter == 1:
-						P_list = [int(i) for i in P_vals]
-						if isinstance(isobar_labels, list):
-							labels.append(str(isobar_labels[i]) + ' (' + ', '.join(map(str, P_list)) + " bars)")
-						else:
-							labels.append('Isobars ' + str(i+1) + ' (' + ', '.join(map(str, P_list)) + " bars)")
-					else:
-						labels.append('_nolegend_')
-				if smooth_isobars == True:
-				# do some data smoothing
-					try:
-						## calcualte polynomial
-						Pz = np.polyfit(Pxs, Pys, 3)
-						Pf = np.poly1d(Pz)
-
-						## calculate new x's and y's
-						Px_new = np.linspace(Pxs[0], Pxs[-1], 50)
-						Py_new = Pf(Px_new)
-
-						if extend_isobars_to_zero == True and Px_new[0]*Py_new[0] != 0.0:
-							if Px_new[0] > Py_new[0]:
-								Px_newer = np.zeros(np.shape(Px_new)[0]+1)
-								Px_newer[0] = 0
-								Px_newer[1:] = Px_new
-								Px_new = Px_newer
-
-								Py_newer = np.zeros(np.shape(Py_new)[0]+1)
-								Py_newer[0] = Py_new[0]
-								Py_newer[1:] = Py_new
-								Py_new = Py_newer
-							else:
-								Px_newer = np.zeros(np.shape(Px_new)[0]+1)
-								Px_newer[0] = Px_new[0]
-								Px_newer[1:] = Px_new
-								Px_new = Px_newer
-
-								Py_newer = np.zeros(np.shape(Py_new)[0]+1)
-								Py_newer[0] = 0
-								Py_newer[1:] = Py_new
-								Py_new = Py_newer
-
-						if extend_isobars_to_zero == True and Px_new[-1]*Py_new[-1] != 0.0:
-							if Px_new[-1] < Py_new[-1]:
-								Px_newer = np.zeros(np.shape(Px_new)[0]+1)
-								Px_newer[-1] = 0
-								Px_newer[:-1] = Px_new
-								Px_new = Px_newer
-
-								Py_newer = np.zeros(np.shape(Py_new)[0]+1)
-								Py_newer[-1] = Py_new[-1]
-								Py_newer[:-1] = Py_new
-								Py_new = Py_newer
-							else:
-								Px_newer = np.zeros(np.shape(Px_new)[0]+1)
-								Px_newer[-1] = Px_new[-1]
-								Px_newer[:-1] = Px_new
-								Px_new = Px_newer
-
-								Py_newer = np.zeros(np.shape(Py_new)[0]+1)
-								Py_newer[-1] = 0
-								Py_newer[:-1] = Py_new
-								Py_new = Py_newer
-
-						# Plot some stuff
-						if len(isobars) > 1:
-							plt.plot(Px_new, Py_new, color=color_list[i])
-						else:
-							plt.plot(Px_new, Py_new)
-					except:
-						if len(isobars) > 1:
-							plt.plot(Pxs, Pys, color=color_list[i])
-						else:
-							plt.plot(Pxs, Pys)
-
-				elif smooth_isobars == False:
-					if extend_isobars_to_zero == True and Pxs[0]*Pys[0] != 0.0:
-						if Pxs[0] > Pys[0]:
-							Px_newer = np.zeros(np.shape(Pxs)[0]+1)
-							Px_newer[0] = 0
-							Px_newer[1:] = Pxs
-							Pxs = Px_newer
-
-							Py_newer = np.zeros(np.shape(Pys)[0]+1)
-							Py_newer[0] = Pys[0]
-							Py_newer[1:] = Pys
-							Pys = Py_newer
-						else:
-							Px_newer = np.zeros(np.shape(Pxs)[0]+1)
-							Px_newer[0] = Pxs[0]
-							Px_newer[1:] = Pxs
-							Pxs = Px_newer
-
-							Py_newer = np.zeros(np.shape(Pys)[0]+1)
-							Py_newer[0] = 0
-							Py_newer[1:] = Pys
-							Pys = Py_newer
-
-					if extend_isobars_to_zero == True and Pxs[-1]*Pys[-1] != 0.0:
-						if Pxs[-1] < Pys[-1]:
-							Px_newer = np.zeros(np.shape(Pxs)[0]+1)
-							Px_newer[-1] = 0
-							Px_newer[:-1] = Pxs
-							Pxs = Px_newer
-
-							Py_newer = np.zeros(np.shape(Pys)[0]+1)
-							Py_newer[-1] = Pys[-1]
-							Py_newer[:-1] = Pys
-							Pys = Py_newer
-						else:
-							Px_newer = np.zeros(np.shape(Pxs)[0]+1)
-							Px_newer[-1] = Pxs[-1]
-							Px_newer[:-1] = Pxs
-							Pxs = Px_newer
-
-							Py_newer = np.zeros(np.shape(Pys)[0]+1)
-							Py_newer[-1] = 0
-							Py_newer[:-1] = Pys
-							Pys = Py_newer
-					if len(isobars) > 1:
-						plt.plot(Pxs, Pys, color=color_list[i])
-					else:
-						plt.plot(Pxs, Pys)
-
-			if len(isobars) == 1:
-				labels = [str(P_val) + " bars" for P_val in P_vals]
-
-	if isopleths is not None:
-		if isinstance(isopleths, pd.DataFrame):
-			isopleths = [isopleths]
-
-		for i in range(len(isopleths)):
-			XH2O_vals = isopleths[i].XH2O_fl.unique()
-			isopleths_lists = isopleths[i].values.tolist()
-
-			H_iter = 0
-			for Xfl in XH2O_vals:
-				H_iter += 1
-				Xxs = [item[1] for item in isopleths_lists if item[0] == Xfl]
-				Xys = [item[2] for item in isopleths_lists if item[0] == Xfl]
-
-				if len(isopleths) > 1:
-					if H_iter == 1:
-						H_list = [i for i in XH2O_vals]
-						if isinstance(isopleth_labels, list):
-							labels.append(str(isopleth_labels[i]) + ' (' + ', '.join(map(str, H_list)) + " XH2Ofluid)")
-						else:
-							labels.append('Isopleths ' + str(i+1) + ' (' + ', '.join(map(str, H_list)) + " XH2Ofluid)")
-					else:
-						labels.append('_nolegend_')
-				if smooth_isopleths == True:
-				# do some data smoothing
-					try:
-						## calcualte polynomial
-						Xz = np.polyfit(Xxs, Xys, 2)
-						Xf = np.poly1d(Xz)
-
-						## calculate new x's and y's
-						Xx_new = np.linspace(Xxs[0], Xxs[-1], 50)
-						Xy_new = Xf(Xx_new)
-
-						# Plot some stuff
-						if len(isopleths) == 1:
-							plt.plot(Xx_new, Xy_new, ls='dashed', color='k')
-						else:
-							plt.plot(Xx_new, Xy_new, ls='dashed', color=color_list[i])
-					except:
-						if len(isopleths) == 1:
-							plt.plot(Xxs, Xys, ls='dashed', color='k')
-						else:
-							plt.plot(Xxs, Xys, ls='dashed', color=color_list[i])
-
-				elif smooth_isopleths == False:
-					if len(isopleths) == 1:
-							plt.plot(Xxs, Xys, ls='dashed', color='k')
-					else:
-						plt.plot(Xxs, Xys, ls='dashed', color=color_list[i])
-
-			if len(isopleths) == 1:
-				H_list = [i for i in XH2O_vals]
-				iso_label_iter = 0
-				for i in XH2O_vals:
-					iso_label_iter += 1
-					if iso_label_iter == 1:
-						labels.append('Isopleths (' + ', '.join(map(str, H_list)) + " XH2Ofluid)")
-					else:
-						labels.append('_nolegend_')
-
-	if degassing_paths is not None:
-		if isinstance(degassing_paths, pd.DataFrame):
-			degassing_paths = [degassing_paths]
-
-		degassing_colors = color_list.copy()
-		#degassing_colors.reverse()
-		iterno = 0
-		for i in range(len(degassing_paths)):
-			if degassing_path_labels == None:
-				iterno += 1
-				labels.append('Path%s' %iterno)
-				plt.plot(degassing_paths[i]["H2O_liq"], degassing_paths[i]["CO2_liq"], ls='dotted', color=degassing_colors[i])
-			else:
-				labels.append(degassing_path_labels[iterno])
-				plt.plot(degassing_paths[i]["H2O_liq"], degassing_paths[i]["CO2_liq"], ls='dotted', color=degassing_colors[i])
-				iterno += 1
-
-		for i in range(len(degassing_paths)):
-			plt.plot(degassing_paths[i]["H2O_liq"].max(), degassing_paths[i]["CO2_liq"].max(), 'o', color=degassing_colors[i])
-			labels.append('_nolegend_')
-
-	if custom_H2O is not None and custom_CO2 is not None:
-		if isinstance(custom_H2O, pd.DataFrame):
-			custom_H2O = [custom_H2O]
-		if isinstance(custom_CO2, pd.DataFrame):
-			custom_CO2 = [custom_CO2]
-
-		if custom_symbols == None:
-			use_marker = ['o'] * len(custom_H2O)
-		else:
-			use_marker = custom_symbols
-
-		iterno = 0
-		for i in range(len(custom_H2O)):
-			if custom_labels == None:
-				iterno +=1
-				labels.append('Custom%s' %iterno)
-				plt.plot(custom_H2O[i], custom_CO2[i], use_marker[i], color=use_colors[i], markersize=markersize)
-			else:
-				labels.append(custom_labels[iterno])
-				plt.plot(custom_H2O[i], custom_CO2[i], use_marker[i], color=use_colors[i], markersize=markersize)
-				iterno += 1
-
-	if 'custom_x' in kwargs:
-			custom_x = kwargs['custom_x']
-			custom_y = kwargs['custom_y']
-			xlabel = kwargs['xlabel']
-			ylabel = kwargs['ylabel']
-
-			if isinstance(custom_x, pd.core.series.Series):
-				custom_x = [list(custom_x.values)]
-			if isinstance(custom_y, pd.core.series.Series):
-				custom_y = [list(custom_y.values)]
-
-			if custom_symbols == None:
-				use_marker = ['o'] * len(custom_x)
-			else:
-				use_marker = custom_symbols
-
-			iterno = 0
-			for i in range(len(custom_x)):
-				if custom_labels == None:
-					iterno +=1
-					labels.append('Custom%s' %iterno)
-					plt.plot(custom_x[i], custom_y[i], use_marker[i], color=use_colors[i], markersize=markersize)
-				else:
-					labels.append(custom_labels[iterno])
-					plt.plot(custom_x[i], custom_y[i], use_marker[i], color=use_colors[i], markersize=markersize)
-					iterno += 1
-
-
-	plt.legend(labels, bbox_to_anchor=(1.01,1), loc='upper left')
-
-	if 'custom_x' not in kwargs:
-		plt.xlim(left=0)
-		plt.ylim(bottom=0)
-
-	np.seterr(divide='warn', invalid='warn') #turn numpy warning back on
-	w.filterwarnings("always", message="Polyfit may be poorly conditioned")
-
-	if isinstance(save_fig, str):
-		plt.savefig(save_fig)
-
-	return plt.show()
-
-def scatterplot(custom_x, custom_y, xlabel=None, ylabel=None, **kwargs):
-	"""
-	Custom x-y plotting using VESIcal's built-in plot() function, built on Matplotlib's plot and scatter functions.
-
-	Parameters
-	----------
-	custom_x: list
-		List of groups of x-values to plot as points or lines
-
-	custom_y: list
-		List of groups of y-values to plot as points or lines
-
-	xlabel: str
-		OPTIONAL. What to display along the x-axis.
-
-	ylabel: str
-		OPTIONAL. What to display along the y-axis.
-
-	kwargs:
-		Can take in any key word agruments that can be passed to `plot()`.
-
-	Returns
-	-------
-	matplotlib object
-		X-y plot with custom x and y axis values and labels.
-	"""
-
-	if isinstance(custom_x, list) and isinstance(custom_y, list):
-		if len(custom_x) != len(custom_y):
-			raise InputError("X and y lists must be same length")
-
-	if xlabel is not None:
-		if isinstance(xlabel, str):
-			pass
-		else:
-			raise InputError("xlabel must be string")
-
-	if ylabel is not None:
-		if isinstance(ylabel, str):
-			pass
-		else:
-			raise InputError("ylabel must be string")
-
-	return plot(custom_x=custom_x, custom_y=custom_y, xlabel=xlabel, ylabel=ylabel, **kwargs)
-
-#====== Define some standard model options =======================================================#
+	return model_names
 
 default_models = {'ShishkinaIdealMixing':     MixedFluid({'H2O':ShishkinaWater(),'CO2':ShishkinaCarbon()}),
 				  'Dixon':                    MixedFluid({'H2O':DixonWater(),'CO2':DixonCarbon()}),
@@ -8037,20 +7046,6 @@ default_models['AllisonCarbon_stromboli'].set_calibration_ranges(_crs_to_update+
 													  fail_msg=crmsg_BC_fail, pass_msg=crmsg_BC_pass, description_msg=crmsg_Between_description),
 				CalibrationRange('sample',None,crf_AllisonComp_stromboli,None,None,
 									 				  fail_msg=crmsg_AllisonComp_fail, pass_msg=crmsg_AllisonComp_pass)])
-
-def get_models(models='all'):
-	"""
-	Returns model names as a list
-	Parameters
-	----------
-	models:	str
-		OPTIONAL. Default value is 'all' in which case all keys in defaule_models are returned.
-		If 'mixed' is passed, only the MixedFluid model names are returned.
-	"""
-	if models == 'all':
-		return list(default_models.keys())
-	if models == 'mixed':
-		return ['ShishkinaIdealMixing', 'Dixon', 'IaconoMarziano', 'Liu'] #MagmaSat not included here as it is treated separately
 
 class calculate_dissolved_volatiles(Calculate):
 	""" Calculates the dissolved volatile concentration using a chosen model (default is MagmaSat).
@@ -8315,312 +7310,6 @@ class calculate_degassing_path(Calculate):
 		# 	parameters['pressure'] = kwargs.get("pressure")
 		s += self.model.check_calibration_range(parameters,report_nonexistance=False)
 		return s
-
-# ------- Define custom plotting tools for checking calibrations ------- #
-# -------------------------------------------------------- #
-#    			   TAS PLOT PYTHON SCRIPT          	       #
-#														   #
-#  COPYRIGHT:  (C) 2015 John A Stevenson / @volcan01010    #
-#                       Joaquin Cortés					   #
-#  WEBSITE: http://all-geo.org/volcan01010				   #
-# -------------------------------------------------------- #
-def add_LeMaitre_fields(plot_axes, fontsize=12, color=(0.6, 0.6, 0.6)):
-	"""Add fields for geochemical classifications from LeMaitre et al (2002)
-	to pre-existing axes.  If necessary, the axes object can be retrieved via
-	plt.gca() command. e.g.
-
-	ax1 = plt.gca()
-	add_LeMaitre_fields(ax1)
-	ax1.plot(silica, total_alkalis, 'o')
-
-	Fontsize and color options can be used to change from the defaults.
-
-	It may be necessary to follow the command with plt.draw() to update
-	the plot.
-
-	Le Maitre RW (2002) Igneous rocks : IUGS classification and glossary of
-		terms : recommendations of the International Union of Geological
-		Sciences Subcommission on the Systematics of igneous rocks, 2nd ed.
-		Cambridge University Press, Cambridge
-	"""
-	from collections import namedtuple
-	# Prepare the field information
-	FieldLine = namedtuple('FieldLine', 'x1 y1 x2 y2')
-	lines = (FieldLine(x1=41, y1=0, x2=41, y2=7),
-			 FieldLine(x1=41, y1=7, x2=52.5, y2=14),
-			 FieldLine(x1=45, y1=0, x2=45, y2=5),
-			 FieldLine(x1=41, y1=3, x2=45, y2=3),
-			 FieldLine(x1=45, y1=5, x2=61, y2=13.5),
-			 FieldLine(x1=45, y1=5, x2=52, y2=5),
-			 FieldLine(x1=52, y1=5, x2=69, y2=8),
-			 FieldLine(x1=49.4, y1=7.3, x2=52, y2=5),
-			 FieldLine(x1=52, y1=5, x2=52, y2=0),
-			 FieldLine(x1=48.4, y1=11.5, x2=53, y2=9.3),
-			 FieldLine(x1=53, y1=9.3, x2=57, y2=5.9),
-			 FieldLine(x1=57, y1=5.9, x2=57, y2=0),
-			 FieldLine(x1=52.5, y1=14, x2=57.6, y2=11.7),
-			 FieldLine(x1=57.6, y1=11.7, x2=63, y2=7),
-			 FieldLine(x1=63, y1=7, x2=63, y2=0),
-			 FieldLine(x1=69, y1=12, x2=69, y2=8),
-			 FieldLine(x1=45, y1=9.4, x2=49.4, y2=7.3),
-			 FieldLine(x1=69, y1=8, x2=77, y2=0))
-
-	FieldName = namedtuple('FieldName', 'name x y rotation')
-	names = (FieldName('Picro\nbasalt', 43, 2, 0),
-			 FieldName('Basalt', 48.5, 2, 0),
-			 FieldName('Basaltic\nandesite', 54.5, 2, 0),
-			 FieldName('Andesite', 60, 2, 0),
-			 FieldName('Dacite', 68.5, 2, 0),
-			 FieldName('Rhyolite', 76, 9, 0),
-			 FieldName('Trachyte\n(Q < 20%)\n\nTrachydacite\n(Q > 20%)',
-					   64.5, 11.5, 0),
-			 FieldName('Basaltic\ntrachyandesite', 53, 8, -20),
-			 FieldName('Trachy-\nbasalt', 49, 6.2, 0),
-			 FieldName('Trachyandesite', 57.2, 9, 0),
-			 FieldName('Phonotephrite', 49, 9.6, 0),
-			 FieldName('Tephriphonolite', 53.0, 11.8, 0),
-			 FieldName('Phonolite', 57.5, 13.5, 0),
-			 FieldName('Tephrite\n(Ol < 10%)', 45, 8, 0),
-			 FieldName('Foidite', 44, 11.5, 0),
-			 FieldName('Basanite\n(Ol > 10%)', 43.5, 6.5, 0))
-
-	# Plot the lines and fields
-	for line in lines:
-		plot_axes.plot([line.x1, line.x2], [line.y1, line.y2],
-					   '-', color=color, zorder=0)
-	for name in names:
-		plot_axes.text(name.x, name.y, name.name, color=color, size=fontsize,
-				 horizontalalignment='center', verticalalignment='top',
-				 rotation=name.rotation, zorder=0)
-
-def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, figsize=(17,8), legend=True, save_fig=False, **kwargs):
-	"""
-	Plots user data and calibration set of any or all models on any x-y plot or a total alkalis vs silica (TAS) diagram.
-	TAS diagram boundaries provided by tasplot python module, copyright John A Stevenson.
-
-	Parameters
-	----------
-	user_data: BatchFile object, pandas DataFrame, pandas Series, or dict
-		OPTIONAL. Default value is None, in which case only the model calibration set is plotted.
-		User provided sample data describing the oxide composition of one or more samples. Multiple samples
-		can be passed as an BatchFile object or pandas DataFrame. A single sample can be passed as a pandas
-		Series.
-
-	model: str or list
-		OPTIONAL. Default value is 'all', in which case all model calibration datasets will be plotted.
-		'Mixed' can be used to plot all mixed fluid models.
-		String of the name of the model calibration dataset to plot (e.g., 'Shishkina'). Multiple models
-		can be plotted by passing them as strings within a list (e.g., ['Shishkina', 'Dixon']).
-
-	plot_type: str
-		OPTIONAL. Default value is 'TAS', which returns a total alkali vs silica (TAS) diagram. Any two oxides can
-		be plotted as an x-y plot by setting plot_type='xy' and specifying x- and y-axis oxides, e.g., x='SiO2', y='Al2O3'
-
-	zoom: str or list
-		OPTIONAL. Default value is None in which case axes will be set to the default of 35<x<100 wt% and 0<y<25 wt% for
-		TAS type plots and the best values to show the data for xy type plots. Can pass "user_data" to plot the figure
-		where the x and y axes are scaled down to zoom in and only show the region surrounding the user_data. A list of
-		tuples may be passed to manually specify x and y limits. Pass in data as  [(x_min, x_max), (y_min, y_max)].
-		For example, the default limits here would be passed in as [(35,100), (0,25)].
-
-	figsize: tuple
-		OPTIONAL. Default value is (17,8). Sets the matplotlib.pyplot figsize value as (x_dimension, y_dimension)
-
-	legend: bool
-		OPTIONAL. Default value is True. Can be set to False in which case the legend will not be displayed.
-
-	save_fig: False or str
-		OPTIONAL. Default value is False, in which case the figure will not be saved. If a string is passed,
-		the figure will be saved with the string as the filename. The string must include the file extension.
-
-	Returns
-	-------
-	matplotlib object
-	"""
-	sys.path.insert(0, 'Calibration/')
-	import calibrations
-
-	#Get x and y axis limits, if user passed them
-	if zoom == None:
-		user_xmin = 35
-		user_xmax = 100
-		user_ymin = 0
-		user_ymax = 25
-	elif zoom == 'user_data':
-		if isinstance(user_data, BatchFile) or isinstance(user_data, pd.DataFrame):
-			print("'user_data' type zoom for more than one sample is not implemented yet.")
-			user_xmin = 35
-			user_xmax = 100
-			user_ymin = 0
-			user_ymax = 25
-		elif isinstance(user_data, pd.core.series.Series) or isinstance(user_data, dict):
-			user_xmin = user_data['SiO2'] - 5
-			user_xmax = user_data['SiO2'] + 5
-			user_ymin = user_data['Na2O'] + user_data['K2O'] - 2
-			if user_ymin <0:
-				user_ymin = 0
-			user_ymax = user_data['Na2O'] + user_data['K2O'] + 2
-	elif isinstance(zoom, list):
-		user_xmin, user_xmax = zoom[0]
-		user_ymin, user_ymax = zoom[1]
-
-	#Create the figure
-	fig, ax1 = plt.subplots(figsize = figsize)
-	font = {'family': 'sans-serif',
-				'color':  'black',
-				'weight': 'normal',
-				'size': 20,
-				}
-
-	#TAS figure
-	if plot_type == 'TAS':
-		ax1.set_xlim([user_xmin, user_xmax]) # adjust x limits here if you want to focus on a specific part of compostional space
-		ax1.set_ylim([user_ymin, user_ymax]) # adjust y limits here
-		plt.xlabel('SiO$_2$, wt%', fontdict=font, labelpad = 15)
-		plt.ylabel('Na$_2$O+K$_2$O, wt%', fontdict=font, labelpad = 15)
-		if zoom == None:
-			add_LeMaitre_fields(ax1)
-	elif plot_type == 'xy':
-		if 'x' in kwargs and 'y' in kwargs:
-			x = kwargs['x']
-			y = kwargs['y']
-			if zoom != None:
-				ax1.set_xlim([user_xmin, user_xmax])
-				ax1.set_ylim([user_ymin, user_ymax])
-			plt.xlabel(str(x)+", wt%", fontdict=font, labelpad = 15)
-			plt.ylabel(str(y)+", wt%", fontdict=font, labelpad = 15)
-		else:
-			raise InputError("If plot_type is 'xy', then x and y values must be passed as strings. For example, x='SiO2', y='Al2O3'.")
-
-	#Plot Calibration Data
-	if model == 'all':
-		model = ['MagmaSat',
-				'Shishkina',
-				'Dixon',
-				'IaconoMarziano',
-				'Liu',
-				#'EguchiCarbon',
-				'AllisonCarbon',
-				'MooreWater']
-	if model == 'mixed':
-		model = ['MagmaSat',
-				 'Shishkina',
-				 'Dixon',
-				 'IaconoMarziano',
-				 'Liu']
-
-	if isinstance(model, str):
-		model = [model]
-
-	if isinstance(model, list):
-		for modelname in model:
-			model_type = calibrations.return_calibration_type(modelname)
-			if model_type['H2O'] == True:
-				h2o_legend = True
-			if model_type['CO2'] == True or model_type['Mixed'] == True:
-				co2_h2oco2_legend = True
-
-		if h2o_legend == True:
-			plt.scatter([], [], marker='', label=r"$\bf{Pure \ H_2O:}$")
-
-			for modelname in model:
-				calibdata = calibrations.return_calibration(modelname)
-				model_type = calibrations.return_calibration_type(modelname)
-				if isinstance(calibdata, str):
-					w.warn(calibdata)
-				else:
-					if model_type['H2O'] == True:
-						if plot_type == 'TAS':
-							try:
-								plt.scatter(calibdata['H2O']['SiO2'], calibdata['H2O']['Na2O'] + calibdata['H2O']['K2O'],
-											marker='s', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname))
-							except:
-								plt.scatter(calibdata['H2O']['SiO2'], calibdata['H2O']['Na2O+K2O'],
-											marker='s', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname))
-						if plot_type == 'xy':
-							try:
-								plt.scatter(calibdata['H2O'][x], calibdata['H2O'][y],
-											marker='s', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname))
-							except:
-								w.warn("The requested oxides were not found in the calibration dataset for " + str(modelname) + ".")
-
-			if co2_h2oco2_legend == True:
-				plt.scatter([], [], marker='', label=r"${\ }$")
-
-		if co2_h2oco2_legend == True:
-			plt.scatter([], [], marker='', label=r"$\bf{\ CO_2 \ and \ H_2O\!-\!CO_2:}$")
-
-		for modelname in model:
-			calibdata = calibrations.return_calibration(modelname)
-			model_type = calibrations.return_calibration_type(modelname)
-			if isinstance(calibdata, str):
-				w.warn(calibdata)
-			else:
-				if model_type['CO2'] == True and model_type['Mixed'] == True:
-					frames = [calibdata['CO2'], calibdata['Mixed']]
-					co2_and_mixed = pd.concat(frames)
-					if plot_type == 'TAS':
-						try:
-							plt.scatter(co2_and_mixed['SiO2'], co2_and_mixed['Na2O'] + co2_and_mixed['K2O'],
-										marker='d', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname))
-						except:
-							plt.scatter(co2_and_mixed['SiO2'], co2_and_mixed['Na2O+K2O'],
-									marker='d', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname))
-					if plot_type == 'xy':
-						try:
-							plt.scatter(co2_and_mixed[x], co2_and_mixed[y],
-									marker='d', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname))
-						except:
-							w.warn("The requested oxides were not found in the calibration dataset for " + str(modelname) + ".")
-				elif model_type['CO2'] == True or model_type['Mixed'] == True:
-					if model_type['CO2'] == True:
-						thistype = 'CO2'
-					if model_type['Mixed'] == True:
-						thistype = 'Mixed'
-					if plot_type == 'TAS':
-						try:
-							plt.scatter(calibdata[thistype]['SiO2'], calibdata[thistype]['Na2O'] + calibdata[thistype]['K2O'],
-										marker='d', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname))
-						except:
-							plt.scatter(calibdata[thistype]['SiO2'], calibdata[thistype]['Na2O+K2O'],
-									marker='d', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname))
-					if plot_type == 'xy':
-						try:
-							plt.scatter(calibdata[thistype][x], calibdata[thistype][y],
-									marker='d', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname))
-						except:
-							w.warn("The requested oxides were not found in the calibration dataset for " + str(modelname) + ".")
-	else:
-		raise InputError("model must be of type str or list")
-
-	#Plot user data
-	if user_data is None:
-		pass
-	else:
-		if isinstance(user_data, BatchFile):
-			user_data = user_data.data
-		if plot_type == 'TAS':
-			_sample = user_data.copy()
-			try:
-				_sample["TotalAlkalis"] = _sample["Na2O"] + _sample["K2O"]
-			except:
-				InputError("Na2O and K2O data must be in user_data")
-			plt.scatter(_sample['SiO2'], _sample['TotalAlkalis'],
-						s=150, edgecolors='w', facecolors='red', marker='P',
-						label = 'User Data')
-		if plot_type == 'xy':
-			_sample = user_data.copy()
-			plt.scatter(_sample[x], _sample[y],
-						s=150, edgecolors='w', facecolors='red', marker='P',
-						label = 'User Data')
-
-	if legend == True:
-		plt.legend(bbox_to_anchor=(1.04,1), loc="upper left")
-	fig.tight_layout()
-	if isinstance(save_fig, str):
-		fig.savefig(save_fig)
-
-	return plt.show()
 
 def test_BatchFile(filename=None):
 	"""

@@ -26,6 +26,89 @@ cations_to_oxides = {'Si': 'SiO2', 'Mg': 'MgO', 'Fe': 'FeO', 'Ca': 'CaO', 'Al': 
              'K': 'K2O', 'Mn': 'MnO', 'Ti': 'TiO2', 'P': 'P2O5', 'Cr': 'Cr2O3',
              'Ni': 'NiO', 'Co': 'CoO', 'Fe3': 'Fe2O3', 'H': 'H2O', 'C': 'CO2'}
 
+# ---------- DATA TRANSFORMATION FOR PANDAS DATAFRAMES --------- #
+def fluid_molfrac_to_wt(data, H2O_colname='XH2O_fl_VESIcal', CO2_colname='XCO2_fl_VESIcal'):
+	"""
+	Takes in a pandas dataframe object and converts only the fluid composition from mole fraction to wt%, leaving the melt composition
+	in tact. The user must specify the names of the XH2O_fl and XCO2_fl columns.
+
+	Parameters
+	----------
+	data: pandas DataFrame
+		Sample composition(s) containing columns for H2O and CO2 concentrations in the fluid.
+
+	H2O_colname: str
+		OPTIONAL. The default value is 'XH2O_fl', which is what is returned by BatchFile() core calculations.
+		String containing the name of the column corresponding to the H2O concentration in the fluid, in mol fraction.
+
+	CO2_colname: str
+		OPTIONAL. The default value is 'XCO2_fl', which is what is returned by BatchFile() core calculations.
+		String containing the name of the column corresponding to the CO2 concentration in the fluid, in mol fraction.
+
+	Returns
+	-------
+	pandas DataFrame
+		Original data passed plus newly calculated values are returned.
+	"""
+	convData = data.copy()
+
+	MPO_H2O_list = []
+	MPO_CO2_list = []
+	for index, row in convData.iterrows():
+		MPO_H2O_list.append(row[H2O_colname] * oxideMass["H2O"])
+		MPO_CO2_list.append(row[CO2_colname] * oxideMass["CO2"])
+
+	convData["MPO_H2O"] = MPO_H2O_list
+	convData["MPO_CO2"] = MPO_CO2_list
+	convData["H2O_fl_wt"] = 100 * convData["MPO_H2O"] / (convData["MPO_H2O"] + convData["MPO_CO2"])
+	convData["CO2_fl_wt"] = 100 * convData["MPO_CO2"] / (convData["MPO_H2O"] + convData["MPO_CO2"])
+
+	del convData["MPO_H2O"]
+	del convData["MPO_CO2"]
+
+	return convData
+
+def fluid_wt_to_molfrac(data, H2O_colname='H2O_fl_wt', CO2_colname='CO2_fl_wt'):
+	"""
+	Takes in a pandas dataframe object and converts only the fluid composition from wt% to mole fraction, leaving the melt composition
+	in tact. The user must specify the names of the H2O_fl_wt and CO2_fl_wt columns.
+
+	Parameters
+	----------
+	data: pandas DataFrame
+		DataFrame containing columns for H2O and CO2 concentrations in the fluid.
+
+	H2O_colname: str
+		OPTIONAL. The default value is 'H2O_fl_wt', which is what is returned by BatchFile() core calculations.
+		String containing the name of the column corresponding to the H2O concentration in the fluid, in wt%.
+
+	CO2_colname: str
+		OPTIONAL. The default value is 'CO2_fl_wt', which is what is returned by BatchFile() core calculations.
+		String containing the name of the column corresponding to the CO2 concentration in the fluid, in wt%.
+
+	Returns
+	-------
+	pandas DataFrame
+		Original data passed plus newly calculated values are returned.
+	"""
+	convData = data.copy()
+
+	MPO_H2O_list = []
+	MPO_CO2_list = []
+	for index, row in convData.iterrows():
+		MPO_H2O_list.append(row[H2O_colname] / oxideMass["H2O"])
+		MPO_CO2_list.append(row[CO2_colname] / oxideMass["CO2"])
+
+	convData["MPO_H2O"] = MPO_H2O_list
+	convData["MPO_CO2"] = MPO_CO2_list
+	convData["XH2O_fl"] = convData["MPO_H2O"] / (convData["MPO_H2O"] + convData["MPO_CO2"])
+	convData["XCO2_fl"] = convData["MPO_CO2"] / (convData["MPO_H2O"] + convData["MPO_CO2"])
+
+	del convData["MPO_H2O"]
+	del convData["MPO_CO2"]
+
+	return convData
+
 class Error(Exception):
 	"""Base class for exceptions in this module."""
 	pass
@@ -51,3 +134,51 @@ class SaturationError(Error):
 
 	def __init__(self, message):
 		self.message = message
+
+def get_oxides(sample):
+	"""
+	Returns a sample composition with only compositional oxide data, removing any extranneous data.
+	Useful when passing a self-defined sample (e.g. dict or pandas Series) to a some VESIcal function.
+
+	Parameters
+	----------
+	sample: pandas Series or dictionary
+		A sample composition plus other sample information
+
+	Returns
+	-------
+	Same type as passed sample (pandas Series or dictionary)
+		Sample composition with extranneous information removed.
+	"""
+
+	clean = {oxide:  sample[oxide] for oxide in oxides}
+
+	if isinstance(sample, dict):
+		return clean
+	if isinstance(sample, pd.core.series.Series):
+		return pd.Series(clean)
+
+#Is this functionatlity duyplicated in get_model_names()? Should we just have one?
+def get_models(models='all'):
+	"""
+	Returns model names as a list
+	Parameters
+	----------
+	models:	str
+		OPTIONAL. Default value is 'all' in which case all keys in defaule_models are returned.
+		If 'mixed' is passed, only the MixedFluid model names are returned.
+	"""
+	if models == 'all':
+		return list(default_models.keys())
+	if models == 'mixed':
+		return ['ShishkinaIdealMixing', 'Dixon', 'IaconoMarziano', 'Liu'] #MagmaSat not included here as it is treated separately
+
+def get_model_names():
+	"""
+	Returns all available model names as a list of strings.
+	"""
+	model_names = []
+	for key, value in default_models.items():
+		model_names.append(key)
+
+	return model_names
