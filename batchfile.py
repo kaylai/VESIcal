@@ -67,11 +67,12 @@ class BatchFile(object):
 		"""Return a BatchFile object whose parameters are defined here."""
 		self.input_type = input_type
 
-		file_name, file_extension = os.path.splitext(filename)
-		if file_extension == '.xlsx' or file_extension == '.xls':
-			file_type = 'excel'
-		if file_extension == '.csv':
-			file_type = 'csv'
+		if filename != None:
+			file_name, file_extension = os.path.splitext(filename)
+			if file_extension == '.xlsx' or file_extension == '.xls':
+				file_type = 'excel'
+			if file_extension == '.csv':
+				file_type = 'csv'
 
 		if isinstance(sheet_name, str) or isinstance(sheet_name, int):
 			pass
@@ -321,4 +322,26 @@ class BatchFile(object):
 			calculations[i].to_csv(filenames[i], **kwargs)
 			print ("Saved " + str(filenames[i]))
 
+def from_DataFrame(dataframe, input_type='wtpercent', label='Label'):
+	"""
+	Transforms any pandas DataFrame object into a VESIcal BatchFile object.
+
+	Parameters
+	----------
+	dataframe: pd.DataFrame object
+		DataFrame object containing samples and oxide compositions.
+
+	input_type: str
+		OPTIONAL. Default is 'wtpercent'. String defining whether the oxide composition is given in wt percent
+		("wtpercent", which is the default), mole percent ("molpercent"), or mole fraction ("molfrac").
+
+	label: str
+		OPTIONAL. Default is 'Label'. Name of the column within the passed file referring to sample names. This
+		column will be set as the index column.
+
+	Returns
+	-------
+	VESIcal.BatchFile object
+	"""
+	return BatchFile(filename=None, dataframe=dataframe, input_type=input_type, label=label)
 	
