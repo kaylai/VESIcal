@@ -1,6 +1,7 @@
 from core import *
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from matplotlib.pyplot import *
 import pandas as pd
 import numpy as np
 import warnings as w
@@ -239,45 +240,113 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 
 	Returns
 	-------
-	matplotlib object
-		Plot with x-axis as H2O wt% in the melt and y-axis as CO2 wt% in the melt. Isobars, or lines of
-		constant pressure at which the sample magma composition is saturated, and isopleths, or lines of constant
-		fluid composition at which the sample magma composition is saturated, are plotted if passed. Degassing
-		paths, or the concentration of dissolved H2O and CO2 in a melt equilibrated along a path of decreasing
-		pressure, is plotted if passed.
+	fig, axes Matplotlib objects
+		fig and axes matploblib objects defining a plot with x-axis as H2O wt% in the melt and y-axis as CO2 wt% 
+		in the melt. Isobars, or lines of constant pressure at which the sample magma composition is saturated, 
+		and isopleths, or lines of constant fluid composition at which the sample magma composition is saturated, 
+		are plotted if passed. Degassing paths, or the concentration of dissolved H2O and CO2 in a melt 
+		equilibrated along a path of decreasing pressure, is plotted if passed.
 	"""
+	## ------ TURN OFF WARNINGS ------ ##
 	np.seterr(divide='ignore', invalid='ignore') #turn off numpy warning
 	w.filterwarnings("ignore", message="Polyfit may be poorly conditioned")
 
-	if custom_H2O is not None:
-		if custom_CO2 is None:
-			raise InputError("If x data is passed, y data must also be passed.")
-		else:
-			if len(custom_H2O) == len(custom_CO2):
-				pass
+	def check_inputs(custom_H2O, custom_CO2):
+		if custom_H2O is not None:
+			if custom_CO2 is None:
+				raise InputError("If x data is passed, y data must also be passed.")
 			else:
-				raise InputError("x and y data must be same length")
-	if custom_CO2 is not None:
-		if custom_H2O is None:
-			raise InputError("If y data is passed, x data must also be passed.")
+				if len(custom_H2O) == len(custom_CO2):
+					pass
+				else:
+					raise InputError("x and y data must be same length")
+		if custom_CO2 is not None:
+			if custom_H2O is None:
+				raise InputError("If y data is passed, x data must also be passed.")
 
-	if custom_colors == "VESIcal":
-		use_colors = color_list
-	elif isinstance(custom_colors, list):
-		use_colors = custom_colors
-	else:
-		raise InputError("Argument custom_colors must be type list. Just passing one item? Try putting square brackets, [], around it.")
+	def check_colors(custom_colors):
+		if custom_colors == "VESIcal":
+			use_colors = color_list
+		elif isinstance(custom_colors, list):
+			use_colors = custom_colors
+		else:
+			raise InputError("Argument custom_colors must be type list. Just passing one item? Try putting square brackets, [], around it.")
+		return use_colors
 
-	plt.figure(figsize=figsize)
+	def extend_isobars_to_zero(Pxs, Pys):
+		"""
+		Calculates new end-points for plotting isobars when extend_isobars_to_zero option is set to True.
+
+		Parameters
+		----------
+		Pxs, Pys: list
+			List of x and y values corresponding to isobars.
+		"""
+		if Pxs[0]*Pys[0] != 0.0:
+			if Pxs[0] > Pys[0]:
+				Px_new = np.zeros(np.shape(Pxs)[0]+1)
+				Px_new[0] = 0
+				Px_new[1:] = Pxs
+				Pxs = Px_new
+
+				Py_new = np.zeros(np.shape(Pys)[0]+1)
+				Py_new[0] = Pys[0]
+				Py_new[1:] = Pys
+				Pys = Py_new
+			else:
+				Px_new = np.zeros(np.shape(Pxs)[0]+1)
+				Px_new[0] = Pxs[0]
+				Px_new[1:] = Pxs
+				Pxs = Px_new
+
+				Py_new = np.zeros(np.shape(Pys)[0]+1)
+				Py_new[0] = 0
+				Py_new[1:] = Pys
+				Pys = Py_new
+
+		if Pxs[-1]*Pys[-1] != 0.0:
+			if Pxs[-1] < Pys[-1]:
+				Px_new = np.zeros(np.shape(Pxs)[0]+1)
+				Px_new[-1] = 0
+				Px_new[:-1] = Pxs
+				Pxs = Px_new
+
+				Py_new = np.zeros(np.shape(Pys)[0]+1)
+				Py_new[-1] = Pys[-1]
+				Py_new[:-1] = Pys
+				Pys = Py_new
+			else:
+				Px_new = np.zeros(np.shape(Pxs)[0]+1)
+				Px_new[-1] = Pxs[-1]
+				Px_new[:-1] = Pxs
+				Pxs = Px_new
+
+				Py_new = np.zeros(np.shape(Pys)[0]+1)
+				Py_new[-1] = 0
+				Py_new[:-1] = Pys
+				Pys = Py_new
+
+		return Px_new, Py_new
+
+	## -------- HANDLE USER INPUT ERRORS, SET COLORS, SMOOTH ISOBARS/PLETHS IF DESIRED -------- ##
+	check_inputs(custom_H2O=custom_H2O, custom_CO2=custom_CO2)
+	use_colors = check_colors(custom_colors=custom_colors)
+
+	if smooth_isobars == True:
+		isobars = smooth_isobars_and_isopleths(isobars=isobars)
+	if smooth_isopleths == True:
+		isopleths = smooth_isobars_and_isopleths(isopleths=isopleths)
+
+	## -------- CREATE FIGURE -------- ##
+	fig, ax = subplots(figsize=figsize)
 	if 'custom_x' in kwargs:
-		plt.xlabel(kwargs['xlabel'])
-		plt.ylabel(kwargs['ylabel'])
+		ax.set(xlabel=kwargs['xlabel'], ylabel=kwargs['ylabel'])
 	else:
-		plt.xlabel('H$_2$O wt%')
-		plt.ylabel('CO$_2$ wt%')
+		ax.set(xlabel='H$_2$O wt%', ylabel='CO$_2$ wt%')
 
 	labels = []
 
+	## -------- PLOT ISOBARS -------- ##
 	if isobars is not None:
 		if isinstance(isobars, pd.DataFrame):
 			isobars = [isobars]
@@ -304,124 +373,20 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 							labels.append('Isobars ' + str(i+1) + ' (' + ', '.join(map(str, P_list)) + " bars)")
 					else:
 						labels.append('_nolegend_')
-				if smooth_isobars == True:
-				# do some data smoothing
-					try:
-						## calcualte polynomial
-						Pz = np.polyfit(Pxs, Pys, 3)
-						Pf = np.poly1d(Pz)
-
-						## calculate new x's and y's
-						Px_new = np.linspace(Pxs[0], Pxs[-1], 50)
-						Py_new = Pf(Px_new)
-
-						if extend_isobars_to_zero == True and Px_new[0]*Py_new[0] != 0.0:
-							if Px_new[0] > Py_new[0]:
-								Px_newer = np.zeros(np.shape(Px_new)[0]+1)
-								Px_newer[0] = 0
-								Px_newer[1:] = Px_new
-								Px_new = Px_newer
-
-								Py_newer = np.zeros(np.shape(Py_new)[0]+1)
-								Py_newer[0] = Py_new[0]
-								Py_newer[1:] = Py_new
-								Py_new = Py_newer
-							else:
-								Px_newer = np.zeros(np.shape(Px_new)[0]+1)
-								Px_newer[0] = Px_new[0]
-								Px_newer[1:] = Px_new
-								Px_new = Px_newer
-
-								Py_newer = np.zeros(np.shape(Py_new)[0]+1)
-								Py_newer[0] = 0
-								Py_newer[1:] = Py_new
-								Py_new = Py_newer
-
-						if extend_isobars_to_zero == True and Px_new[-1]*Py_new[-1] != 0.0:
-							if Px_new[-1] < Py_new[-1]:
-								Px_newer = np.zeros(np.shape(Px_new)[0]+1)
-								Px_newer[-1] = 0
-								Px_newer[:-1] = Px_new
-								Px_new = Px_newer
-
-								Py_newer = np.zeros(np.shape(Py_new)[0]+1)
-								Py_newer[-1] = Py_new[-1]
-								Py_newer[:-1] = Py_new
-								Py_new = Py_newer
-							else:
-								Px_newer = np.zeros(np.shape(Px_new)[0]+1)
-								Px_newer[-1] = Px_new[-1]
-								Px_newer[:-1] = Px_new
-								Px_new = Px_newer
-
-								Py_newer = np.zeros(np.shape(Py_new)[0]+1)
-								Py_newer[-1] = 0
-								Py_newer[:-1] = Py_new
-								Py_new = Py_newer
-
-						# Plot some stuff
-						if len(isobars) > 1:
-							plt.plot(Px_new, Py_new, color=color_list[i])
-						else:
-							plt.plot(Px_new, Py_new)
-					except:
-						if len(isobars) > 1:
-							plt.plot(Pxs, Pys, color=color_list[i])
-						else:
-							plt.plot(Pxs, Pys)
-
-				elif smooth_isobars == False:
-					if extend_isobars_to_zero == True and Pxs[0]*Pys[0] != 0.0:
-						if Pxs[0] > Pys[0]:
-							Px_newer = np.zeros(np.shape(Pxs)[0]+1)
-							Px_newer[0] = 0
-							Px_newer[1:] = Pxs
-							Pxs = Px_newer
-
-							Py_newer = np.zeros(np.shape(Pys)[0]+1)
-							Py_newer[0] = Pys[0]
-							Py_newer[1:] = Pys
-							Pys = Py_newer
-						else:
-							Px_newer = np.zeros(np.shape(Pxs)[0]+1)
-							Px_newer[0] = Pxs[0]
-							Px_newer[1:] = Pxs
-							Pxs = Px_newer
-
-							Py_newer = np.zeros(np.shape(Pys)[0]+1)
-							Py_newer[0] = 0
-							Py_newer[1:] = Pys
-							Pys = Py_newer
-
-					if extend_isobars_to_zero == True and Pxs[-1]*Pys[-1] != 0.0:
-						if Pxs[-1] < Pys[-1]:
-							Px_newer = np.zeros(np.shape(Pxs)[0]+1)
-							Px_newer[-1] = 0
-							Px_newer[:-1] = Pxs
-							Pxs = Px_newer
-
-							Py_newer = np.zeros(np.shape(Pys)[0]+1)
-							Py_newer[-1] = Pys[-1]
-							Py_newer[:-1] = Pys
-							Pys = Py_newer
-						else:
-							Px_newer = np.zeros(np.shape(Pxs)[0]+1)
-							Px_newer[-1] = Pxs[-1]
-							Px_newer[:-1] = Pxs
-							Pxs = Px_newer
-
-							Py_newer = np.zeros(np.shape(Pys)[0]+1)
-							Py_newer[-1] = 0
-							Py_newer[:-1] = Pys
-							Pys = Py_newer
-					if len(isobars) > 1:
-						plt.plot(Pxs, Pys, color=color_list[i])
-					else:
-						plt.plot(Pxs, Pys)
+				try:
+					if extend_isobars_to_zero == True:
+						Pxs, Pys = extend_isobars_to_zero(Pxs, Pys)
+				except:
+					pass
+				if len(isobars) > 1:
+					ax.plot(Pxs, Pys, color=color_list[i])
+				else:
+					ax.plot(Pxs, Pys)
 
 			if len(isobars) == 1:
-				labels = [str(P_val) + " bars" for P_val in P_vals]
+				labels += [str(P_val) + " bars" for P_val in P_vals]
 
+	## -------- PLOT ISOPLETHS -------- ##
 	if isopleths is not None:
 		if isinstance(isopleths, pd.DataFrame):
 			isopleths = [isopleths]
@@ -445,44 +410,20 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 							labels.append('Isopleths ' + str(i+1) + ' (' + ', '.join(map(str, H_list)) + " XH2Ofluid)")
 					else:
 						labels.append('_nolegend_')
-				if smooth_isopleths == True:
-				# do some data smoothing
-					try:
-						## calcualte polynomial
-						Xz = np.polyfit(Xxs, Xys, 2)
-						Xf = np.poly1d(Xz)
+					ax.plot(Xxs, Xys, ls='dashed', color=color_list[i])
 
-						## calculate new x's and y's
-						Xx_new = np.linspace(Xxs[0], Xxs[-1], 50)
-						Xy_new = Xf(Xx_new)
-
-						# Plot some stuff
-						if len(isopleths) == 1:
-							plt.plot(Xx_new, Xy_new, ls='dashed', color='k')
+				if len(isopleths) == 1:
+					H_list = [i for i in XH2O_vals]
+					iso_label_iter = 0
+					for i in XH2O_vals:
+						iso_label_iter += 1
+						if iso_label_iter == 1:
+							labels.append('Isopleths (' + ', '.join(map(str, H_list)) + " XH2Ofluid)")
 						else:
-							plt.plot(Xx_new, Xy_new, ls='dashed', color=color_list[i])
-					except:
-						if len(isopleths) == 1:
-							plt.plot(Xxs, Xys, ls='dashed', color='k')
-						else:
-							plt.plot(Xxs, Xys, ls='dashed', color=color_list[i])
+							labels.append('_nolegend_')
+					ax.plot(Xxs, Xys, ls='dashed', color='k')
 
-				elif smooth_isopleths == False:
-					if len(isopleths) == 1:
-							plt.plot(Xxs, Xys, ls='dashed', color='k')
-					else:
-						plt.plot(Xxs, Xys, ls='dashed', color=color_list[i])
-
-			if len(isopleths) == 1:
-				H_list = [i for i in XH2O_vals]
-				iso_label_iter = 0
-				for i in XH2O_vals:
-					iso_label_iter += 1
-					if iso_label_iter == 1:
-						labels.append('Isopleths (' + ', '.join(map(str, H_list)) + " XH2Ofluid)")
-					else:
-						labels.append('_nolegend_')
-
+	## -------- PLOT DEGASSING PATHS -------- ##
 	if degassing_paths is not None:
 		if isinstance(degassing_paths, pd.DataFrame):
 			degassing_paths = [degassing_paths]
@@ -494,16 +435,17 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 			if degassing_path_labels == None:
 				iterno += 1
 				labels.append('Path%s' %iterno)
-				plt.plot(degassing_paths[i]["H2O_liq"], degassing_paths[i]["CO2_liq"], ls='dotted', color=degassing_colors[i])
+				ax.plot(degassing_paths[i]["H2O_liq"], degassing_paths[i]["CO2_liq"], ls='dotted', color=degassing_colors[i])
 			else:
 				labels.append(degassing_path_labels[iterno])
-				plt.plot(degassing_paths[i]["H2O_liq"], degassing_paths[i]["CO2_liq"], ls='dotted', color=degassing_colors[i])
+				ax.plot(degassing_paths[i]["H2O_liq"], degassing_paths[i]["CO2_liq"], ls='dotted', color=degassing_colors[i])
 				iterno += 1
 
 		for i in range(len(degassing_paths)):
-			plt.plot(degassing_paths[i]["H2O_liq"].max(), degassing_paths[i]["CO2_liq"].max(), 'o', color=degassing_colors[i])
+			ax.plot(degassing_paths[i]["H2O_liq"].max(), degassing_paths[i]["CO2_liq"].max(), 'o', color=degassing_colors[i])
 			labels.append('_nolegend_')
 
+	## -------- PLOT CUSTOM H2O-CO2 -------- ##
 	if custom_H2O is not None and custom_CO2 is not None:
 		if isinstance(custom_H2O, pd.DataFrame):
 			custom_H2O = [custom_H2O]
@@ -520,12 +462,13 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 			if custom_labels == None:
 				iterno +=1
 				labels.append('Custom%s' %iterno)
-				plt.plot(custom_H2O[i], custom_CO2[i], use_marker[i], color=use_colors[i], markersize=markersize)
+				ax.plot(custom_H2O[i], custom_CO2[i], use_marker[i], color=use_colors[i], markersize=markersize)
 			else:
 				labels.append(custom_labels[iterno])
-				plt.plot(custom_H2O[i], custom_CO2[i], use_marker[i], color=use_colors[i], markersize=markersize)
+				ax.plot(custom_H2O[i], custom_CO2[i], use_marker[i], color=use_colors[i], markersize=markersize)
 				iterno += 1
 
+	## -------- PLOT CUSTOM X-Y -------- ##
 	if 'custom_x' in kwargs:
 			custom_x = kwargs['custom_x']
 			custom_y = kwargs['custom_y']
@@ -547,26 +490,27 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 				if custom_labels == None:
 					iterno +=1
 					labels.append('Custom%s' %iterno)
-					plt.plot(custom_x[i], custom_y[i], use_marker[i], color=use_colors[i], markersize=markersize)
+					ax.plot(custom_x[i], custom_y[i], use_marker[i], color=use_colors[i], markersize=markersize)
 				else:
 					labels.append(custom_labels[iterno])
-					plt.plot(custom_x[i], custom_y[i], use_marker[i], color=use_colors[i], markersize=markersize)
+					ax.plot(custom_x[i], custom_y[i], use_marker[i], color=use_colors[i], markersize=markersize)
 					iterno += 1
 
-
-	plt.legend(labels, bbox_to_anchor=(1.01,1), loc='upper left')
+	## -------- PLOT LEGEND -------- ##
+	ax.legend(labels, bbox_to_anchor=(1.01,1), loc='upper left')
 
 	if 'custom_x' not in kwargs:
-		plt.xlim(left=0)
-		plt.ylim(bottom=0)
+		ax.set_xlim(left=0)
+		ax.set_ylim(bottom=0)
 
 	np.seterr(divide='warn', invalid='warn') #turn numpy warning back on
 	w.filterwarnings("always", message="Polyfit may be poorly conditioned")
 
-	if isinstance(save_fig, str):
-		plt.savefig(save_fig)
+	## -------- SAVE FIGURE IF DESIRED -------- ##
+	if save_fig != False:
+		fig.savefig(save_fig)
 
-	return plt.show()
+	return fig, ax
 
 def scatterplot(custom_x, custom_y, xlabel=None, ylabel=None, **kwargs):
 	"""
@@ -591,7 +535,7 @@ def scatterplot(custom_x, custom_y, xlabel=None, ylabel=None, **kwargs):
 
 	Returns
 	-------
-	matplotlib object
+	fig, ax matplotlib objects
 		X-y plot with custom x and y axis values and labels.
 	"""
 
