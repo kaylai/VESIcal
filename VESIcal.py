@@ -1142,6 +1142,29 @@ class BatchFile(batchfile.BatchFile):
 
 			return satp_data
 
+def BatchFile_from_DataFrame(dataframe, input_type='wtpercent', label='Label'):
+	"""
+	Transforms any pandas DataFrame object into a VESIcal BatchFile object.
+
+	Parameters
+	----------
+	dataframe: pd.DataFrame object
+		DataFrame object containing samples and oxide compositions.
+
+	input_type: str
+		OPTIONAL. Default is 'wtpercent'. String defining whether the oxide composition is given in wt percent
+		("wtpercent", which is the default), mole percent ("molpercent"), or mole fraction ("molfrac").
+
+	label: str
+		OPTIONAL. Default is 'Label'. Name of the column within the passed file referring to sample names. This
+		column will be set as the index column.
+
+	Returns
+	-------
+	VESIcal.BatchFile object
+	"""
+	return BatchFile(filename=None, dataframe=dataframe, input_type=input_type, label=label)
+
 # ------------ DEFINE MAJOR CLASSES ------------------- #
 
 class CalibrationRange(object):
