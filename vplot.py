@@ -761,8 +761,10 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, figsize=
 	if user_data is None:
 		pass
 	else:
-		if isinstance(user_data, BatchFile):
+		if (user_data.__class__.__module__, user_data.__class__.__name__) == ('VESIcal', 'BatchFile'):
 			user_data = user_data.data
+			#batchfile and VESIcal (__init__) are not imported to avoid circular imports
+			#use above notation to interrogate datatype
 		if plot_type == 'TAS':
 			_sample = user_data.copy()
 			try:
