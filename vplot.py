@@ -273,7 +273,7 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 			raise InputError("Argument custom_colors must be type list. Just passing one item? Try putting square brackets, [], around it.")
 		return use_colors
 
-	def extend_isobars_to_zero(Pxs, Pys):
+	def calc_extend_isobars_to_zero(Pxs, Pys):
 		"""
 		Calculates new end-points for plotting isobars when extend_isobars_to_zero option is set to True.
 
@@ -284,10 +284,10 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 		"""
 		if Pxs[0]*Pys[0] != 0.0:
 			if Pxs[0] > Pys[0]:
-				Px_new = np.zeros(np.shape(Pxs)[0]+1)
-				Px_new[0] = 0
-				Px_new[1:] = Pxs
-				Pxs = Px_new
+				Px_new = np.zeros(np.shape(Pxs)[0]+1) #create new array of length n+1 if n is the length of the original array
+				Px_new[0] = 0 #set the first x value in the new array equal to 0
+				Px_new[1:] = Pxs #fill the rest of the new array with the original array values
+				Pxs = Px_new #overwrite the original array with the new one
 
 				Py_new = np.zeros(np.shape(Pys)[0]+1)
 				Py_new[0] = Pys[0]
@@ -326,7 +326,7 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 				Py_new[:-1] = Pys
 				Pys = Py_new
 
-		return Px_new, Py_new
+		return Pxs, Pys
 
 	## -------- HANDLE USER INPUT ERRORS, SET COLORS, SMOOTH ISOBARS/PLETHS IF DESIRED -------- ##
 	check_inputs(custom_H2O=custom_H2O, custom_CO2=custom_CO2)
@@ -364,6 +364,14 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 				Pxs = [item[1] for item in isobars_lists if item[0] == pressure]
 				Pys = [item[2] for item in isobars_lists if item[0] == pressure]
 
+				if extend_isobars_to_zero == True:
+					try:
+						Pxs, Pys = calc_extend_isobars_to_zero(Pxs, Pys)
+					except:
+						pass
+				else:
+					print(extend_isobars_to_zero)
+
 				if len(isobars) > 1:
 					if P_iter == 1:
 						P_list = [int(i) for i in P_vals]
@@ -373,11 +381,7 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 							labels.append('Isobars ' + str(i+1) + ' (' + ', '.join(map(str, P_list)) + " bars)")
 					else:
 						labels.append('_nolegend_')
-				try:
-					if extend_isobars_to_zero == True:
-						Pxs, Pys = extend_isobars_to_zero(Pxs, Pys)
-				except:
-					pass
+
 				if len(isobars) > 1:
 					ax.plot(Pxs, Pys, color=color_list[i])
 				else:
