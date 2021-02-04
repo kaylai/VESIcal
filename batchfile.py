@@ -10,22 +10,41 @@ def rename_duplicates(df, suffix='-duplicate-'):
 	appendents = (suffix + df.groupby(level=0).cumcount().astype(str).replace('0','')).replace(suffix, '')
 	return df.set_index(df.index.astype(str) + appendents)
 
-def status_bar(percent, sample_name, barLen=20):
+class status_bar(object):
+	"""Various styles of status bars that display the progress of a calculation 
+		within a loop
 	"""
-	Prints a status bar to the terminal.
 
-	percent: float
-		Percent value of progress from 0 to 1
+	def __init__():
+		pass
 
-	barLen: int
-		Length of bar to print
-	""" 
-	sys.stdout.write("\r")
-	sys.stdout.write("[{:<{}}] {:.0f}%".format("=" * int(barLen * percent), barLen, percent * 100))
-	sys.stdout.write("  Working on sample " + str(sample_name))
-	if percent == 1.0:
-		sys.stdout.write("\n")
-	sys.stdout.flush()
+	def status_bar(percent, sample_name=None, btext=None, barLen=20):
+		"""
+		Prints an updating status bar to the terminal or jupyter notebook.
+
+		Parameters
+		----------
+		percent: float
+			Percent value of progress from 0 to 1
+
+		sample_name: string
+			Name of the current sample being calculated
+
+		btext: string
+			Any extra text to display next to status bar
+
+		barLen: int
+			Length of bar to print
+		""" 
+		sys.stdout.write("\r")
+		sys.stdout.write("[{:<{}}] {:.0f}%".format("=" * int(barLen * percent), barLen, percent * 100))
+		if sample_name != None:
+			sys.stdout.write("  Working on sample " + str(sample_name))
+		if btext != None:
+			sys.stdout.write(" " + str(btext))
+		if percent == 1.0:
+			sys.stdout.write("\n")
+		sys.stdout.flush()
 
 # ---------- BATCHFILE CLASS --------- #
 class BatchFile(object):
