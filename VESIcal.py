@@ -732,7 +732,7 @@ class BatchFile(batchfile.BatchFile):
 				iterno += 1
 				if print_status == True:
 					percent = iterno/len(dissolved_data.index)
-					batchfile.status_bar(percent, index)
+					batchfile.status_bar.status_bar(percent, index)
 
 				if file_has_temp == True:
 					temperature = row[temp_name]
@@ -952,7 +952,7 @@ class BatchFile(batchfile.BatchFile):
 				iterno += 1
 				if print_status == True:
 					percent = iterno/len(fluid_data.index)
-					batchfile.status_bar(percent, index)
+					batchfile.status_bar.status_bar(percent, index)
 
 				if file_has_temp == True:
 					temperature = row[temp_name]
@@ -1099,7 +1099,7 @@ class BatchFile(batchfile.BatchFile):
 				iterno += 1
 				if print_status == True:
 					percent = iterno/len(satp_data.index)
-					batchfile.status_bar(percent, index)
+					batchfile.status_bar.status_bar(percent, index)
 
 				if file_has_temp == True:
 					temperature = row[temp_name]
@@ -6713,6 +6713,8 @@ class MagmaSat(Model):
 		pandas DataFrame object
 
 		"""
+		sys.stdout.write("Finding saturation point... ") #print start of calculation to terminal
+		
 		_sample, bulk_comp = self.preprocess_sample(sample)
 		bulk_comp_orig = sample.copy()
 
@@ -6771,7 +6773,14 @@ class MagmaSat(Model):
 		H2Ofl = []
 		CO2fl = []
 		fluid_wtper = []
+		iterno = 0
+		sys.stdout.write("\r") #carriage return to remove previous printed text
 		for i in P_array:
+			#Handle status_bar
+			iterno += 1
+			percent = iterno/len(P_array)
+			batchfile.status_bar.status_bar(percent, btext="Calculating degassing path...")
+
 			fl_mass = 0.0
 			feasible = melts.set_bulk_composition(bulk_comp)
 			output = melts.equilibrate_tp(temperature, i, initialize=True)
