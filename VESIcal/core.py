@@ -182,3 +182,27 @@ def get_model_names():
 		model_names.append(key)
 
 	return model_names
+
+# Is this function used for anything anymore?
+def printTable(myDict):
+	""" Pretty print a dictionary (as pandas DataFrame)
+
+	Parameters
+	----------
+	myDict: dict
+		A dictionary
+
+	Returns
+	-------
+	pandas DataFrame
+		The input dictionary converted to a pandas DataFrame
+	"""
+	_myDict = myDict.copy()
+	try:
+		oxidesum = sum(_myDict[oxide] for oxide in oxides)
+		_myDict.update({"Sum oxides": oxidesum})
+	except:
+		pass
+	table = pd.DataFrame([v for v in _myDict.values()], columns = ['value'],
+						 index = [k for k in _myDict.keys()])
+	return table

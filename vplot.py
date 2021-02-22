@@ -1,4 +1,4 @@
-from core import *
+from VESIcal.core import *
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import *
@@ -241,10 +241,10 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 	Returns
 	-------
 	fig, axes Matplotlib objects
-		fig and axes matploblib objects defining a plot with x-axis as H2O wt% in the melt and y-axis as CO2 wt% 
-		in the melt. Isobars, or lines of constant pressure at which the sample magma composition is saturated, 
-		and isopleths, or lines of constant fluid composition at which the sample magma composition is saturated, 
-		are plotted if passed. Degassing paths, or the concentration of dissolved H2O and CO2 in a melt 
+		fig and axes matploblib objects defining a plot with x-axis as H2O wt% in the melt and y-axis as CO2 wt%
+		in the melt. Isobars, or lines of constant pressure at which the sample magma composition is saturated,
+		and isopleths, or lines of constant fluid composition at which the sample magma composition is saturated,
+		are plotted if passed. Degassing paths, or the concentration of dissolved H2O and CO2 in a melt
 		equilibrated along a path of decreasing pressure, is plotted if passed.
 	"""
 	## ------ TURN OFF WARNINGS ------ ##
