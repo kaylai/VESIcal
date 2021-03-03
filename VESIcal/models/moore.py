@@ -82,7 +82,7 @@ class water(model_classes.Model):
 
         _sample.change_composition(sample_molfrac,units='mol_oxides')
 
-        return sample.get_composition('H2O')
+        return _sample.get_composition('H2O')
 
     def calculate_equilibrium_fluid_comp(self, sample, pressure, temperature, **kwargs):
         """

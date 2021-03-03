@@ -4,7 +4,8 @@ import os
 import sys
 import warnings as w
 
-from VESIcal.core import *
+import VESIcal.core
+import VESIcal.sample_class
 
 def rename_duplicates(df, suffix='-duplicate-'):
     appendents = (suffix + df.groupby(level=0).cumcount().astype(str).replace('0','')).replace(suffix, '')
@@ -69,9 +70,9 @@ class BatchFile(object):
             OPTIONAL. Default is 'excel', which denotes that passed file has extension .xlsx. Other option is 'csv', which denotes that
             the passed file has extension .csv.
 
-        input_type: str
-            OPTIONAL. Default is 'wtpercent'. String defining whether the oxide composition is given in wt percent
-            ("wtpercent", which is the default), mole percent ("molpercent"), or mole fraction ("molfrac").
+        input_units: str
+            OPTIONAL. Default is 'wtpt_oxides'. String defining whether the oxide composition is given in wt percent
+            ("wtpt_oxides", which is the default), mole oxides (mol_oxides) or mole cations (mol_cations).
 
         label: str
             OPTIONAL. Default is 'Label'. Name of the column within the passed file referring to sample names.
@@ -82,9 +83,9 @@ class BatchFile(object):
             from a file. In this case set `dataframe` equal to the dataframe object being passed in. If using this option, pass
             None to filename.
     """
-    def __init__(self, filename, sheet_name=0, file_type='excel', input_type='wtpercent', label='Label', dataframe=None, **kwargs):
+    def __init__(self, filename, sheet_name=0, file_type='excel', input_units='wtpt_oxides', label='Label', dataframe=None, **kwargs):
         """Return a BatchFile object whose parameters are defined here."""
-        self.input_type = input_type
+        self.input_type = input_units
 
         if filename != None:
             file_name, file_extension = os.path.splitext(filename)
@@ -116,10 +117,12 @@ class BatchFile(object):
         data = data.fillna(0) #fill in any missing data with 0's
 
         if 'model' in kwargs:
-            w.warn("You don't need to pass a model here, so it will be ignored. You can specify a model when performing calculations on your dataset (e.g., calculate_dissolved_volatiles())",RuntimeWarning,stacklevel=2)
+            w.warn("You don't need to pass a model here, so it will be ignored. You can specify a model when performing calculations on your dataset \
+(e.g., calculate_dissolved_volatiles())",RuntimeWarning,stacklevel=2)
 
         if 'norm' in kwargs:
-            w.warn("We noticed you passed a norm argument here. This does nothing. You can normalize your BatchFile and save it to a new variable name after import using normalize(BatchFileObject). See the documentation for more info.",RuntimeWarning,stacklevel=2)
+            w.warn("We noticed you passed a norm argument here. This does nothing. You can normalize your BatchFile and save it to a new variable name \
+after import using normalize(BatchFileObject). See the documentation for more info.",RuntimeWarning,stacklevel=2)
 
         total_iron_columns = ["FeOt", "FeOT", "FeOtot", "FeOtotal", "FeOstar", "FeO*"]
         for name in total_iron_columns:
@@ -127,27 +130,57 @@ class BatchFile(object):
                 if 'FeO' in data.columns:
                     for row in data.itertuples():
                         if data.at[row.Index, "FeO"] == 0 and data.at[row.Index, name] > 0:
-                            w.warn("Sample " + str(row.Index) + ": " + str(name) + " value of " + str(data.at[row.Index, name]) + " used as FeO. Fe2O3 set to 0.0.",RuntimeWarning,stacklevel=2)
+                            w.warn("Sample " + str(row.Index) + ": " + str(name) + " value of " + str(data.at[row.Index, name]) + " used as FeO. Fe2O3 set to 0.0.",
+                                    RuntimeWarning,stacklevel=2)
                             data.at[row.Index, "Fe2O3"] = 0.0
                             data.at[row.Index, "FeO"] = data.at[row.Index, name]
                 else:
-                    w.warn("Total iron column " + str(name) + " detected. This column will be treated as FeO. If Fe2O3 data are not given, Fe2O3 will be 0.0. In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",RuntimeWarning,stacklevel=2)
+                    w.warn("Total iron column " + str(name) + " detected. This column will be treated as FeO. If Fe2O3 data are not given, Fe2O3 will be 0.0. \
+In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",RuntimeWarning,stacklevel=2)
                     data['FeO'] = data[name]
 
-        for oxide in oxides:
+        if input_units == "wtpt_oxides":
+            pass
+        if input_units == "mol_oxides":
+            data = self._molOxides_to_wtpercentOxides(data)
+        if input_units == "mol_cations":
+            data = self._molCations_to_wtpercentOxides(data)
+
+        for oxide in VESIcal.core.oxides:
             if oxide in data.columns:
                 pass
             else:
                 data[oxide] = 0.0
 
-        if input_type == "wtpercent":
-            pass
-        if input_type == "molpercent":
-            data = mol_to_wtpercent(data)
-        if input_type == "molfrac":
-            data = mol_to_wtpercent(data)
-
         self.data = data
+
+    def _molOxides_to_wtpercentOxides(self, data):
+        for i, row in data.iterrows():
+            sample_comp = {}
+            for oxide in VESIcal.core.oxides:
+                if oxide in data.columns:
+                    sample_comp[oxide] = row[oxide]
+                else:
+                    sample_comp[oxide] = 0.0
+            _sample = VESIcal.sample_class.Sample(sample_comp, units='mol_oxides')
+            _sample_conv = _sample.get_composition()
+            for ox in VESIcal.core.oxides:
+                data.loc[i,oxide] = _sample_conv[oxide]
+        return data
+
+    def _molCations_to_wtpercentOxides(self, data):
+        for i, row in data.iterrows():
+            sample_comp = {}
+            for cation in VESIcal.core.oxides_to_cations[VESIcal.core.oxides]:
+                if cation in data.columns:
+                    sample_comp[cation] = row[cation]
+                else:
+                    sample_comp[cation] = 0.0
+            _sample = VESIcal.sample_class.Sample(sample_comp, units='mol_cations')
+            _sample_conv = _sample.get_composition()
+            for oxide in VESIcal.core.oxides:
+                data.loc[i,oxide] = _sample_conv[oxide]
+        return data
 
     def try_set_index(self, dataframe, label):
         """
@@ -193,7 +226,7 @@ class BatchFile(object):
         -------
         pandas DataFrame
         """
-        for oxide in oxides:
+        for oxide in VESIcal.core.oxides:
             if oxide in self.data.columns:
                 pass
             else:
@@ -201,7 +234,7 @@ class BatchFile(object):
 
         return sample
 
-    def get_sample_oxide_comp(self, samplename, norm='none'):
+    def get_sample_oxide_comp(self, samplename, norm='none', asSampleClass=False):
         """
         Returns oxide composition of a single sample from a user-imported file as a dictionary
 
@@ -225,6 +258,10 @@ class BatchFile(object):
 
             'none' returns the value-for-value un-normalized composition.
 
+        asSampleClass:  bool
+            If True, the sample composition will be returned as a sample class, with default options. In this case
+            any normalization instructions will be ignored.
+
         Returns
         -------
         dictionary
@@ -240,17 +277,22 @@ class BatchFile(object):
         sample_dict = (my_sample.to_dict()[samplename])
         sample_oxides = {}
         for item, value in sample_dict.items():
-            if item in oxides:
+            if item in VESIcal.core.oxides:
                 sample_oxides.update({item: value})
 
-        if norm == 'standard':
-            return normalize(sample_oxides)
-        if norm == 'fixedvolatiles':
-            return normalize_FixedVolatiles(sample_oxides)
-        if norm == 'additionalvolatiles':
-            return normalize_AdditionalVolatiles(sample_oxides)
-        if norm == 'none':
+        if norm == 'none' and asSampleClass == False:
             return sample_oxides
+        else:
+            _sample = VESIcal.sample_class.Sample(sample_oxides)
+
+        if asSampleClass == True:
+            return _sample
+        elif norm == 'standard':
+            return dict(_sample.get_composition(units='wtpt_oxides', normalization='standard'))
+        elif norm == 'fixedvolatiles':
+            return dict(_sample.get_composition(units='wtpt_oxides', normalization='fixedvolatiles'))
+        elif norm == 'additionalvolatiles':
+            return dict(_sample.get_composition(units='wtpt_oxides', normalization='additionalvolatiles'))
 
 
     def save_excel(self, filename, calculations, sheet_names=None):
