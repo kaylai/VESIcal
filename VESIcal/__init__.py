@@ -26,7 +26,6 @@ from copy import copy
 # from cycler import cycler
 # from scipy.optimize import minimize
 
-# from sample_class import *
 import VESIcal.activity_models
 import VESIcal.batchfile
 import VESIcal.calculate_classes
@@ -35,9 +34,10 @@ import VESIcal.core
 import VESIcal.fugacity_models
 import VESIcal.models
 import VESIcal.sample_class
+import VESIcal.vplot
 
-from vplot import *
 
+#Depreciate? (move to magmasat.py)
 # -------------- MELTS preamble --------------- #
 from thermoengine import equilibrate
 # instantiate thermoengine equilibrate MELTS instance
@@ -50,7 +50,7 @@ for phase in phases:
 melts.set_phase_inclusion_status({'Fluid': True, 'Liquid': True})
 
 
-# -------------- CALCULATION DEFINITIONS -----#
+# -------------- CALCULATION DEFINITIONS ----- #
 class calculate_dissolved_volatiles(calculate_classes.calculate_dissolved_volatiles):
     pass
 
@@ -66,6 +66,12 @@ class calculate_saturation_pressure(calculate_classes.calculate_saturation_press
 class calculate_degassing_path(calculate_classes.calculate_degassing_path):
     pass
 
+# -------------- PLOTTING DEFINITIONS ----- #
+def plot(**kwargs):
+    return vplot.plot(**kwargs)
+
+def show():
+    return vplot.show()
 
 
 # -------------- SAMPLE PROCESSING ---------- #
