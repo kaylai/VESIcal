@@ -4,8 +4,8 @@ import os
 import sys
 import warnings as w
 
-import VESIcal.core
-import VESIcal.sample_class
+from VESIcal import core
+from VESIcal import sample_class
 
 def rename_duplicates(df, suffix='-duplicate-'):
     appendents = (suffix + df.groupby(level=0).cumcount().astype(str).replace('0','')).replace(suffix, '')
@@ -101,7 +101,8 @@ class BatchFile(object):
 
         if dataframe is not None:
             data = dataframe
-            data = self.try_set_index(data, label)
+            if label is not None:
+                data = self.try_set_index(data, label)
         else:
             if file_type == 'excel':
                 data = pd.read_excel(filename, sheet_name=sheet_name)
@@ -146,7 +147,7 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
         if input_units == "mol_cations":
             data = self._molCations_to_wtpercentOxides(data)
 
-        for oxide in VESIcal.core.oxides:
+        for oxide in core.oxides:
             if oxide in data.columns:
                 pass
             else:
@@ -157,28 +158,28 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
     def _molOxides_to_wtpercentOxides(self, data):
         for i, row in data.iterrows():
             sample_comp = {}
-            for oxide in VESIcal.core.oxides:
+            for oxide in core.oxides:
                 if oxide in data.columns:
                     sample_comp[oxide] = row[oxide]
                 else:
                     sample_comp[oxide] = 0.0
-            _sample = VESIcal.sample_class.Sample(sample_comp, units='mol_oxides')
+            _sample = sample_class.Sample(sample_comp, units='mol_oxides')
             _sample_conv = _sample.get_composition()
-            for ox in VESIcal.core.oxides:
+            for ox in core.oxides:
                 data.loc[i,oxide] = _sample_conv[oxide]
         return data
 
     def _molCations_to_wtpercentOxides(self, data):
         for i, row in data.iterrows():
             sample_comp = {}
-            for cation in VESIcal.core.oxides_to_cations[VESIcal.core.oxides]:
+            for cation in core.oxides_to_cations[core.oxides]:
                 if cation in data.columns:
                     sample_comp[cation] = row[cation]
                 else:
                     sample_comp[cation] = 0.0
-            _sample = VESIcal.sample_class.Sample(sample_comp, units='mol_cations')
+            _sample = sample_class.Sample(sample_comp, units='mol_cations')
             _sample_conv = _sample.get_composition()
-            for oxide in VESIcal.core.oxides:
+            for oxide in core.oxides:
                 data.loc[i,oxide] = _sample_conv[oxide]
         return data
 
@@ -200,7 +201,7 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
         except:
             label_found = False
             for col in _dataframe.columns:
-                if col in oxides:
+                if col in core.oxides:
                     pass
                 else:
                     _dataframe = _dataframe.set_index(col)
@@ -226,7 +227,7 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
         -------
         pandas DataFrame
         """
-        for oxide in VESIcal.core.oxides:
+        for oxide in core.oxides:
             if oxide in self.data.columns:
                 pass
             else:
@@ -277,13 +278,13 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
         sample_dict = (my_sample.to_dict()[samplename])
         sample_oxides = {}
         for item, value in sample_dict.items():
-            if item in VESIcal.core.oxides:
+            if item in core.oxides:
                 sample_oxides.update({item: value})
 
         if norm == 'none' and asSampleClass == False:
             return sample_oxides
         else:
-            _sample = VESIcal.sample_class.Sample(sample_oxides)
+            _sample = sample_class.Sample(sample_oxides)
 
         if asSampleClass == True:
             return _sample
