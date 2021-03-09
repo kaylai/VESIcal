@@ -36,20 +36,6 @@ import VESIcal.models
 import VESIcal.sample_class
 import VESIcal.vplot
 
-
-#Depreciate? (move to magmasat.py)
-# -------------- MELTS preamble --------------- #
-from thermoengine import equilibrate
-# instantiate thermoengine equilibrate MELTS instance
-melts = equilibrate.MELTSmodel('1.2.0')
-
-# Suppress phases not required in the melts simulation
-phases = melts.get_phase_names()
-for phase in phases:
-    melts.set_phase_inclusion_status({phase: False})
-melts.set_phase_inclusion_status({'Fluid': True, 'Liquid': True})
-
-
 # -------------- CALCULATION DEFINITIONS ----- #
 class calculate_dissolved_volatiles(calculate_classes.calculate_dissolved_volatiles):
     pass
@@ -115,7 +101,7 @@ class BatchFile(batchfile.BatchFile):
         """
         pressureMPa = pressure / 10.0
 
-        bulk_comp = {oxide:  sample[oxide] for oxide in oxides}
+        bulk_comp = {oxide:  sample[oxide] for oxide in core.oxides}
         bulk_comp["H2O"] = H2O
         bulk_comp["CO2"] = CO2
         feasible = melts.set_bulk_composition(bulk_comp)
@@ -223,7 +209,7 @@ class BatchFile(batchfile.BatchFile):
                     if file_has_X == True:
                         X_fluid = row[X_name]
 
-                    bulk_comp = Sample({oxide:  row[oxide] for oxide in oxides})
+                    bulk_comp = Sample({oxide:  row[oxide] for oxide in core.oxides})
                     calc = calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature,
                                                                     X_fluid=(X_fluid, 1-X_fluid), model=model,
                                                                     silence_warnings=True, **kwargs)
@@ -311,7 +297,7 @@ class BatchFile(batchfile.BatchFile):
 
                 if temperature > 0 and pressure > 0 and X_fluid >=0 and X_fluid <=1:
                     try:
-                        bulk_comp = Sample({oxide:  row[oxide] for oxide in oxides})
+                        bulk_comp = Sample({oxide:  row[oxide] for oxide in core.oxides})
                         calc = calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature,
                                                                         X_fluid=X_fluid, model=model, silence_warnings=True,
                                                                         verbose=True)
@@ -358,7 +344,7 @@ class BatchFile(batchfile.BatchFile):
                     pressure = row[press_name]
                 if file_has_X == True:
                     X_fluid = row[X_name]
-                bulk_comp = Sample({oxide:  row[oxide] for oxide in oxides})
+                bulk_comp = Sample({oxide:  row[oxide] for oxide in core.oxides})
                 if 'Water' in model:
                     try:
                         calc = calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature,
@@ -451,7 +437,7 @@ class BatchFile(batchfile.BatchFile):
                         temperature = row[temp_name]
                     if file_has_press == True:
                         pressure = row[press_name]
-                    bulk_comp = Sample({oxide:  row[oxide] for oxide in oxides})
+                    bulk_comp = Sample({oxide:  row[oxide] for oxide in core.oxides})
                     calc = calculate_equilibrium_fluid_comp(sample=bulk_comp, pressure=pressure, temperature=temperature,
                                                             model=model, silence_warnings=True, **kwargs)
 
@@ -501,7 +487,7 @@ class BatchFile(batchfile.BatchFile):
 
                 if temperature > 0 and pressure > 0:
                     try:
-                        bulk_comp = Sample({oxide:  row[oxide] for oxide in oxides})
+                        bulk_comp = Sample({oxide:  row[oxide] for oxide in core.oxides})
                         calc = calculate_equilibrium_fluid_comp(sample=bulk_comp, pressure=pressure, temperature=temperature, model=model, silence_warnings=True)
 
                         H2Ovals.append(calc.result['H2O'])
@@ -534,7 +520,7 @@ class BatchFile(batchfile.BatchFile):
                         temperature = row[temp_name]
                     if file_has_press == True:
                         pressure = row[press_name]
-                    bulk_comp = Sample({oxide:  row[oxide] for oxide in oxides})
+                    bulk_comp = Sample({oxide:  row[oxide] for oxide in core.oxides})
                     calc = calculate_equilibrium_fluid_comp(sample=bulk_comp, pressure=pressure, temperature=temperature, model=model, silence_warnings=True)
                     saturated.append(calc.result)
                     warnings.append(calc.calib_check)
@@ -577,8 +563,8 @@ class BatchFile(batchfile.BatchFile):
             Values returned are saturation pressure in bars, the mass of fluid present, and the composition of the
             fluid present.
         """
-        data = self.preprocess_sample(self.data)
-        satp_data = data.copy()
+        #data = self.preprocess_sample(self.data)
+        satp_data = self.data.copy()
 
         if isinstance(temperature, str):
             file_has_temp = True
@@ -596,7 +582,7 @@ class BatchFile(batchfile.BatchFile):
                 try:
                     if file_has_temp == True:
                         temperature = row[temp_name]
-                    bulk_comp = Sample({oxide:  row[oxide] for oxide in oxides})
+                    bulk_comp = Sample({oxide:  row[oxide] for oxide in core.oxides})
                     calc = calculate_saturation_pressure(sample=bulk_comp, temperature=temperature,
                                                          model=model, silence_warnings=True, **kwargs)
                     satP.append(calc.result)
@@ -643,7 +629,7 @@ class BatchFile(batchfile.BatchFile):
 
                 if temperature > 0:
                     try:
-                        bulk_comp = Sample({oxide:  row[oxide] for oxide in oxides})
+                        bulk_comp = Sample({oxide:  row[oxide] for oxide in core.oxides})
                         calc = calculate_saturation_pressure(sample=bulk_comp, temperature=temperature, model=model, verbose=True, silence_warnings=True)
                         satP.append(calc.result["SaturationP_bars"])
                         flmass.append(calc.result["FluidMass_grams"])
