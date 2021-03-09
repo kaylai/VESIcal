@@ -4,6 +4,7 @@ import numpy as np
 
 from VESIcal import core
 from VESIcal import models
+from VESIcal.models import magmasat
 
 class Calculate(object):
     """ The Calculate object is a template for implementing user-friendly methods for
@@ -29,7 +30,7 @@ class Calculate(object):
             this functionality should be redundant.
         """
         if model == 'MagmaSat':
-            self.model = MagmaSat()
+            self.model = magmasat.MagmaSat()
         elif type(model) == str:
             if model in models.default_models.keys():
                 self.model = models.default_models[model]

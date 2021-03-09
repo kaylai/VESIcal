@@ -1,3 +1,13 @@
+from VESIcal import activity_models
+from VESIcal import calibration_checks
+from VESIcal.core import *
+from VESIcal import fugacity_models
+from VESIcal import model_classes
+from VESIcal import sample_class
+
+import numpy as np
+import warnings as w
+
 # I think Kayla was planning on moving this into its own module, but I've put it here to get it out of the VESIcal main file.
 class MagmaSat(model_classes.Model):
     """
@@ -8,10 +18,10 @@ class MagmaSat(model_classes.Model):
         self.melts_version = '1.2.0' #just here so users can see which version is being used
 
         self.set_volatile_species(['H2O', 'CO2'])
-        self.set_calibration_ranges([calibration_checks.CalibrationRange('pressure',[0.0,20000.0],crf_Between,'bar','MagmaSat',
+        self.set_calibration_ranges([calibration_checks.CalibrationRange('pressure',[0.0,20000.0],calibration_checks.crf_Between,'bar','MagmaSat',
                                                       fail_msg=calibration_checks.crmsg_Between_fail, pass_msg=calibration_checks.crmsg_Between_pass,
                                                       description_msg=calibration_checks.crmsg_Between_description),
-                                     calibration_checks.CalibrationRange('temperature',[800,1400],crf_Between,'oC','MagmaSat',
+                                     calibration_checks.CalibrationRange('temperature',[800,1400],calibration_checks.crf_Between,'oC','MagmaSat',
                                                        fail_msg=calibration_checks.crmsg_Between_fail, pass_msg=calibration_checks.crmsg_Between_pass,
                                                       description_msg=calibration_checks.crmsg_Between_description)])
 
