@@ -5,10 +5,12 @@ from VESIcal import fugacity_models
 from VESIcal import model_classes
 from VESIcal import sample_class
 from VESIcal import vplot
+from VESIcal import batchfile #needed for status_bar functions
 
 import numpy as np
 import pandas as pd
 import warnings as w
+import sys
 w.filterwarnings("ignore", message="rubicon.objc.ctypes_patch has only been tested ")
 
 # -------------- MELTS preamble --------------- #
