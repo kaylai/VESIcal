@@ -53,7 +53,7 @@ class Sample(object):
         composition = deepcopy(composition)
 
         if isinstance(composition, dict):
-            composition = pd.Series(composition)
+            composition = pd.Series(composition, dtype='float64')
         elif isinstance(composition, pd.Series) == False:
             raise core.InputError("The composition must be given as either a dictionary or a pandas Series.")
 
