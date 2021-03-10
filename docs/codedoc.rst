@@ -1,19 +1,28 @@
-==========================
+##########################
 VESIcal Code Documentation
-==========================
+##########################
 .. contents::
 
-Major Classes
-=============
+*******
+Modules
+*******
+
+VESIcal
+=======
 
 Model()
 -------
 .. autoclass:: VESIcal.Model
 	:members:
 
-ExcelFile()
+BatchFile()
 -----------
-.. autoclass:: VESIcal.ExcelFile
+.. autoclass:: VESIcal.BatchFile
+	:members:
+
+BatchFile_from_DataFrame()
+--------------------------
+.. autoclass:: VESIcal.BatchFile_from_DataFrame
 	:members:
 
 FugacityModel()
@@ -56,6 +65,35 @@ calculate_degassing_path(Calculate)
 .. autoclass:: VESIcal.calculate_degassing_path
 	:members:
 
+VESIcal core functions
+======================
+Functions defined in VESIcal.core
+
+.. autofunction:: VESIcal.fluid_molfrac_to_wt
+
+.. autofunction:: VESIcal.fluid_wt_to_molfrac
+
+.. autofunction:: VESIcal.get_oxides
+
+batchfile module
+================
+Functions defined in VESIcal.batchfile
+
+BatchFile()
+-----------
+.. autoclass:: VESIcal.batchfile.BatchFile
+	:members:
+
+status_bar()
+------------
+.. autofunction:: VESIcal.batchfile.status_bar
+
+Sample
+======
+Functions defined in VESIcal.sample_class
+
+Sample()
+--------
 
 Fugacity Models
 ===============
@@ -178,6 +216,7 @@ MagmaSat(Model)
 
 VESIcal Plotting Functions
 ==========================
+Functions defined in VESIcal.vplot
 
 .. autofunction:: VESIcal.plot
 
@@ -215,10 +254,6 @@ Data Transformation Functions
 .. autofunction:: VESIcal.wtpercentOxides_to_molSingleO
 
 .. autofunction:: VESIcal.wtpercentOxides_to_formulaWeight
-
-.. autofunction:: VESIcal.fluid_molfrac_to_wt
-
-.. autofunction:: VESIcal.fluid_wt_to_molfrac
 
 .. autofunction:: VESIcal.get_oxides
 
