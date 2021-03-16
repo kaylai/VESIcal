@@ -333,7 +333,7 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
 
         Returns
         -------
-        dictionary
+        dictionary, float, or sample_class.Sample object
             Composition of the sample as oxides
         """
         # Fetch the default return types if not specified in function call

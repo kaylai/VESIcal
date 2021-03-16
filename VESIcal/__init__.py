@@ -81,36 +81,31 @@ def BatchFile_from_DataFrame(dataframe, **kwargs):
     """
     return batchmodel.BatchFile_from_DataFrame(dataframe, **kwargs)
 
+# ====== Define some standard model options ======================================================= #
+# Is this functionatlity duplicated in get_model_names()? Should we just have one?
+def get_models(models='all'):
+    """
+    Returns model names as a list
+    Parameters
+    ----------
+    models:    str
+        OPTIONAL. Default value is 'all' in which case all keys in defaule_models are returned.
+        If 'mixed' is passed, only the MixedFluid model names are returned.
+    """
+    if models == 'all':
+        return list(models.default_models.keys())
+    if models == 'mixed':
+        return ['ShishkinaIdealMixing', 'Dixon', 'IaconoMarziano', 'Liu'] #MagmaSat not included here as it is treated separately
 
-# DEPRECIATE? (already in core.py)
-# # ====== Define some standard model options ======================================================= #
-# # Is this functionatlity duplicated in get_model_names()? Should we just have one?
-# def get_models(models='all'):
-#     """
-#     Returns model names as a list
-#     Parameters
-#     ----------
-#     models:    str
-#         OPTIONAL. Default value is 'all' in which case all keys in defaule_models are returned.
-#         If 'mixed' is passed, only the MixedFluid model names are returned.
-#     """
-#     if models == 'all':
-#         return list(models.default_models.keys())
-#     if models == 'mixed':
-#         return ['ShishkinaIdealMixing', 'Dixon', 'IaconoMarziano', 'Liu'] #MagmaSat not included here as it is treated separately
+def get_model_names():
+    """
+    Returns all available model names as a list of strings.
+    """
+    model_names = []
+    for key, value in models.default_models.items():
+        model_names.append(key)
 
-# def get_model_names():
-#     """
-#     Returns all available model names as a list of strings.
-#     """
-#     model_names = []
-#     for key, value in models.default_models.items():
-#         model_names.append(key)
-
-#     return model_names
-
-
-
+    return model_names
 
 def test_BatchFile(filename=None):
     """
