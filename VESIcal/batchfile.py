@@ -155,6 +155,83 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
 
         self.data = data
 
+    def get_composition(self, species=None, normalization=None, units=None, exclude_volatiles=False):
+        """ Returns a pandas DataFrame containing the compositional information for all samples
+        in the BatchFile object
+
+        Parameters
+        ----------
+        species:    NoneType or str
+            The name of the oxide or cation to return the concentration of. If NoneType (default) the
+            whole composition of each sample will be returned. If an oxide is passed, the value in
+            wtpt will be returned unless units is set to 'mol_oxides', even if the default units for the
+            sample object are mol_oxides. If an element is passed, the concentration will be returned as
+            mol_cations, unless 'mol_singleO' is specified as units, even if the default units for the
+            sample object are mol_singleO. Unless normalization is specified in the method call, none
+            will be applied.
+
+        normalization:     NoneType or str
+            The type of normalization to apply to the data. One of:
+                - 'none' (no normalization)
+                - 'standard' (default): Normalizes an input composition to 100%.
+                - 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
+                The volatile wt% will remain fixed, whilst the other major element oxides are reduced
+                proportionally so that the total is 100 wt%.
+                - 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
+                volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
+                be retained in addition to the normalized non-volatile oxides, summing to >100%.
+            If NoneType is passed the default normalization option will be used (self.default_normalization).
+
+        units:     NoneType or str
+            The units of composition to return, one of:
+            - wtpt_oxides (default)
+            - mol_oxides
+            - mol_cations
+            - mol_singleO
+            If NoneType is passed the default units option will be used (self.default_type).
+
+        exclude_volatiles   bool
+            If True, volatiles will be excluded from the returned composition, prior to normalization and
+            conversion.
+
+        Returns
+        -------
+        pandas.DataFrame
+            All sample compositions, as specified.
+        """
+
+        data = self.data.copy()
+
+        new_compositions = []
+        sample_names = []
+        for index, row in data.iterrows():
+            sample_comp = sample_class.Sample(self.get_sample_oxide_comp(index))
+            new_compositions.append(sample_comp.get_composition(species=species, normalization=normalization, units=units, exclude_volatiles=exclude_volatiles))
+            sample_names.append(index)
+        if isinstance(new_compositions[0], pd.Series):
+            return_frame = pd.concat([pd.DataFrame(j) for j in new_compositions], axis=1)
+            return_frame = return_frame.transpose()
+            return_frame["new_index"] = sample_names
+            return_frame = return_frame.set_index("new_index")
+            return_frame.index.name = None
+        elif isinstance(new_compositions[0], float):
+            species_data = {species: new_compositions}
+            return_frame = pd.DataFrame(species_data, index=[name for name in sample_names])
+        else:
+            return_frame = None
+
+        return return_frame
+
+    def get_data(self):
+        """
+        Todo: function to return self.data
+        """
+
+    def get_Sample(self):
+        """
+        Todo: return all sample data as a Sample object.
+        """
+
     def _molOxides_to_wtpercentOxides(self, data):
         for i, row in data.iterrows():
             sample_comp = {}
