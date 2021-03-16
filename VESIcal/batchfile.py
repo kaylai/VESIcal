@@ -70,9 +70,26 @@ class BatchFile(object):
             OPTIONAL. Default is 'excel', which denotes that passed file has extension .xlsx. Other option is 'csv', which denotes that
             the passed file has extension .csv.
 
-        input_units: str
+        units: str
             OPTIONAL. Default is 'wtpt_oxides'. String defining whether the oxide composition is given in wt percent
             ("wtpt_oxides", which is the default), mole oxides (mol_oxides) or mole cations (mol_cations).
+
+        default_normalization:     None or str
+            The type of normalization to apply to the data by default. One of:
+                - None (no normalization)
+                - 'standard' (default): Normalizes an input composition to 100%.
+                - 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
+                The volatile wt% will remain fixed, whilst the other major element oxides are reduced
+                proportionally so that the total is 100 wt%.
+                - 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
+                volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
+                be retained in addition to the normalized non-volatile oxides, summing to >100%.
+
+        default_units     str
+            The type of composition to return by default, one of:
+            - wtpt_oxides (default)
+            - mol_oxides
+            - mol_cations
 
         label: str
             OPTIONAL. Default is 'Label'. Name of the column within the passed file referring to sample names.
@@ -83,9 +100,11 @@ class BatchFile(object):
             from a file. In this case set `dataframe` equal to the dataframe object being passed in. If using this option, pass
             None to filename.
     """
-    def __init__(self, filename, sheet_name=0, file_type='excel', input_units='wtpt_oxides', label='Label', dataframe=None, **kwargs):
+    def __init__(self, filename, sheet_name=0, file_type='excel', units='wtpt_oxides', label='Label', default_normalization='none', default_units='wtpt_oxides', dataframe=None, **kwargs):
         """Return a BatchFile object whose parameters are defined here."""
-        self.input_type = input_units
+        self.input_type = units
+        self.set_default_normalization(default_normalization)
+        self.set_default_units(default_units)
 
         if filename != None:
             file_name, file_extension = os.path.splitext(filename)
@@ -97,7 +116,7 @@ class BatchFile(object):
         if isinstance(sheet_name, str) or isinstance(sheet_name, int):
             pass
         else:
-            raise InputError("If sheet_name is passed, it must be of type str or int. Currently, VESIcal cannot import more than one sheet at a time.")
+            raise core.InputError("If sheet_name is passed, it must be of type str or int. Currently, VESIcal cannot import more than one sheet at a time.")
 
         if dataframe is not None:
             data = dataframe
@@ -111,7 +130,7 @@ class BatchFile(object):
                 data = pd.read_csv(filename)
                 data = self.try_set_index(data, label)
             else:
-                raise InputError("file_type must be one of \'excel\' or \'csv\'.")
+                raise core.InputError("file_type must be one of \'excel\' or \'csv\'.")
 
         data = rename_duplicates(data) #handle any duplicated sample names
         data = data.dropna(how='all') #drop any rows that are all NaNs
@@ -140,11 +159,11 @@ after import using normalize(BatchFileObject). See the documentation for more in
 In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",RuntimeWarning,stacklevel=2)
                     data['FeO'] = data[name]
 
-        if input_units == "wtpt_oxides":
+        if units == "wtpt_oxides":
             pass
-        if input_units == "mol_oxides":
+        if units == "mol_oxides":
             data = self._molOxides_to_wtpercentOxides(data)
-        if input_units == "mol_cations":
+        if units == "mol_cations":
             data = self._molCations_to_wtpercentOxides(data)
 
         for oxide in core.oxides:
@@ -154,6 +173,44 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
                 data[oxide] = 0.0
 
         self.data = data
+
+    def set_default_normalization(self, default_normalization):
+        """ Set the default type of normalization to use with the get_composition() method.
+
+        Parameters
+        ----------
+        default_normalization:    str
+            The type of normalization to apply to the data. One of:
+                - 'none' (no normalization)
+                - 'standard' (default): Normalizes an input composition to 100%.
+                - 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
+                The volatile wt% will remain fixed, whilst the other major element oxides are reduced
+                proportionally so that the total is 100 wt%.
+                - 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
+                volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
+                be retained in addition to the normalized non-volatile oxides, summing to >100%.
+        """
+        if default_normalization in ['none','standard','fixedvolatiles','additionalvolatiles']:
+            self.default_normalization = default_normalization
+        else:
+            raise core.InputError("The normalization method must be one of 'none', 'standard', 'fixedvolatiles',\
+             or 'additionalvolatiles'.")
+
+    def set_default_units(self, default_units):
+        """ Set the default units of composition to return when using the get_composition() method.
+
+        Parameters
+        ----------
+        default_units     str
+            The type of composition to return, one of:
+            - wtpt_oxides (default)
+            - mol_oxides
+            - mol_cations
+        """
+        if default_units in ['wtpt_oxides','mol_oxides','mol_cations']:
+            self.default_units = default_units
+        else:
+            raise core.InputError("The units must be one of 'wtpt_oxides','mol_oxides','mol_cations'.")
 
     def get_composition(self, species=None, normalization=None, units=None, exclude_volatiles=False):
         """ Returns a pandas DataFrame containing the compositional information for all samples
@@ -199,13 +256,18 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
         pandas.DataFrame
             All sample compositions, as specified.
         """
-
         data = self.data.copy()
+
+        # Fetch the default return types if not specified in function call
+        if normalization == None and species == None:
+            normalization = self.default_normalization
+        if units == None and species == None:
+            units = self.default_units
 
         new_compositions = []
         sample_names = []
         for index, row in data.iterrows():
-            sample_comp = sample_class.Sample(self.get_sample_oxide_comp(index))
+            sample_comp = sample_class.Sample(self.get_sample_composition(index))
             new_compositions.append(sample_comp.get_composition(species=species, normalization=normalization, units=units, exclude_volatiles=exclude_volatiles))
             sample_names.append(index)
         if isinstance(new_compositions[0], pd.Series):
@@ -224,13 +286,87 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
 
     def get_data(self):
         """
-        Todo: function to return self.data
+        Returns all data stored in a BatchFile object (both compositional and other data). To return only the
+        compositional data, use get_composition().
+
+        Returns
+        -------
+        pandas.DataFrame
+            All sample information.
         """
 
-    def get_Sample(self):
+        data = self.data.copy()
+        return data
+
+    def get_sample_composition(self, samplename, species=None, normalization=None, units=None, asSampleClass=False):
         """
-        Todo: return all sample data as a Sample object.
+        Returns oxide composition of a single sample from a user-imported file as a dictionary
+
+        Parameters
+        ----------
+        samplename: string
+            Name of the desired sample
+
+        normalization: NoneType or str
+            The type of normalization to apply to the data. One of:
+                - 'none' (no normalization)
+                - 'standard' (default): Normalizes an input composition to 100%.
+                - 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
+                The volatile wt% will remain fixed, whilst the other major element oxides are reduced
+                proportionally so that the total is 100 wt%.
+                - 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
+                volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
+                be retained in addition to the normalized non-volatile oxides, summing to >100%.
+            If NoneType is passed the default normalization option will be used (self.default_normalization).
+
+        units:     NoneType or str
+            The units of composition to return, one of:
+            - wtpt_oxides (default)
+            - mol_oxides
+            - mol_cations
+            - mol_singleO
+            If NoneType is passed the default units option will be used (self.default_type).
+
+        asSampleClass:  bool
+            If True, the sample composition will be returned as a sample class, with default options. In this case
+            any normalization instructions will be ignored.
+
+        Returns
+        -------
+        dictionary
+            Composition of the sample as oxides
         """
+        # Fetch the default return types if not specified in function call
+        if normalization == None and species == None:
+            normalization = self.default_normalization
+        if units == None and species == None:
+            units = self.default_units
+
+        # Check that normalization being chosen is one of the possible options
+        if normalization in [None, 'none','standard','fixedvolatiles','additionalvolatiles']:
+            pass
+        else:
+            raise core.InputError("The normalization method must be one of 'none', 'standard', 'fixedvolatiles',\
+             or 'additionalvolatiles'.")
+
+        data = self.data
+        my_sample = pd.DataFrame(data.loc[samplename])
+        sample_dict = (my_sample.to_dict()[samplename])
+        sample_oxides = {}
+        for item, value in sample_dict.items():
+            if item in core.oxides:
+                sample_oxides.update({item: value})
+
+        _sample = sample_class.Sample(sample_oxides)
+
+        if asSampleClass == True:
+            return _sample
+        else:
+            return_sample = _sample.get_composition(species=species, units=units, normalization=normalization)
+            if species == None:
+                return dict(return_sample)
+            elif isinstance(species, str):
+                return return_sample
 
     def _molOxides_to_wtpercentOxides(self, data):
         for i, row in data.iterrows():
@@ -312,67 +448,6 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
 
         return sample
 
-    def get_sample_oxide_comp(self, samplename, norm='none', asSampleClass=False):
-        """
-        Returns oxide composition of a single sample from a user-imported file as a dictionary
-
-        Parameters
-        ----------
-        samplename: string
-            Name of the desired sample
-
-        norm_style: string
-            OPTIONAL. Default value is 'standard'. This specifies the style of normalization applied to the sample.
-
-            'standard' normalizes the entire input composition (including any volatiles) to 100%.
-
-            'fixedvolatiles' normalizes oxides to 100%, including volatiles. The volatile
-            wt% will remain fixed, whilst the other major element oxides are reduced proportionally
-            so that the total is 100 wt%.
-
-            'additionalvolatiles' normalizes oxides to 100%, assuming it is volatile-free. If
-            H2O or CO2 are passed to the function, their un-normalized values will be retained
-            in addition to the normalized non-volatile oxides, summing to >100%.
-
-            'none' returns the value-for-value un-normalized composition.
-
-        asSampleClass:  bool
-            If True, the sample composition will be returned as a sample class, with default options. In this case
-            any normalization instructions will be ignored.
-
-        Returns
-        -------
-        dictionary
-            Composition of the sample as oxides
-        """
-        if norm == 'none' or norm == 'standard' or norm == 'fixedvolatiles' or norm == 'additionalvolatiles':
-            pass
-        else:
-            raise InputError('norm must be either none, standard, fixedvolatiles, or additionalvolatiles.')
-
-        data = self.data
-        my_sample = pd.DataFrame(data.loc[samplename])
-        sample_dict = (my_sample.to_dict()[samplename])
-        sample_oxides = {}
-        for item, value in sample_dict.items():
-            if item in core.oxides:
-                sample_oxides.update({item: value})
-
-        if norm == 'none' and asSampleClass == False:
-            return sample_oxides
-        else:
-            _sample = sample_class.Sample(sample_oxides)
-
-        if asSampleClass == True:
-            return _sample
-        elif norm == 'standard':
-            return dict(_sample.get_composition(units='wtpt_oxides', normalization='standard'))
-        elif norm == 'fixedvolatiles':
-            return dict(_sample.get_composition(units='wtpt_oxides', normalization='fixedvolatiles'))
-        elif norm == 'additionalvolatiles':
-            return dict(_sample.get_composition(units='wtpt_oxides', normalization='additionalvolatiles'))
-
-
     def save_excel(self, filename, calculations, sheet_names=None):
         """
         Saves data calculated by the user in batch processing mode (using the BatchFile class methods) to an organized
@@ -399,7 +474,7 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
             if isinstance(sheet_names, list) or sheet_names is None:
                 pass
             else:
-                raise InputError("If calculations is passed as list, sheet_names must also be list of same length")
+                raise core.InputError("If calculations is passed as list, sheet_names must also be list of same length")
         elif calculations == None:
             pass
         else:
@@ -419,13 +494,13 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
                     if len(sheet_names) == len(calculations):
                         pass
                     else:
-                        raise InputError("calculations and sheet_names must have the same length")
+                        raise core.InputError("calculations and sheet_names must have the same length")
 
                     for i in range(len(calculations)):
                         if isinstance(sheet_names[i], str):
                             calculations[i].to_excel(writer, sheet_names[i])
                         else:
-                            raise InputError("if sheet_names is passed, it must be list of strings")
+                            raise core.InputError("if sheet_names is passed, it must be list of strings")
             elif calculations == None:
                 pass
         return print("Saved " + str(filename))
@@ -455,7 +530,7 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
         if type(calculations) != list:
             calculations = [calculations]
         if len(filenames) != len(calculations):
-            raise InputError("calculations and filenames must have the same length")
+            raise core.InputError("calculations and filenames must have the same length")
 
         for i in range(len(filenames)):
             calculations[i].to_csv(filenames[i], **kwargs)

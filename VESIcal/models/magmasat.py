@@ -652,7 +652,7 @@ class MagmaSat(model_classes.Model):
 
             Legacy info follows, might still be useful?
             If pulling from an uploaded file
-            with data for many samples, first call get_sample_oxide_comp() to get the sample desired. Then pass
+            with data for many samples, first call get_sample_composition() to get the sample desired. Then pass
             the result into this function.
 
         temperature: float
