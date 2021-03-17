@@ -284,19 +284,42 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
 
         return return_frame
 
-    def get_data(self):
+    def get_data(self, units=None):
         """
         Returns all data stored in a BatchFile object (both compositional and other data). To return only the
         compositional data, use get_composition().
+
+        Parameters
+        ----------
+        units:     NoneType or str
+            The units of composition to return, one of:
+            - wtpt_oxides (default)
+            - mol_oxides
+            - mol_cations
+            - mol_singleO
+            If NoneType is passed the default units option will be used (self.default_type).
 
         Returns
         -------
         pandas.DataFrame
             All sample information.
         """
-
         data = self.data.copy()
-        return data
+
+        # Fetch the default return units if not specified in function call
+        if units == None:
+            units = self.default_units
+
+        # Grab all compositional data
+        compositional_data = self.get_composition(units=units)
+
+        # Grab all non-compositional data
+        non_compositional_data = data.filter([col for col in data.columns if col not in core.oxides])
+
+        # concatenate both compositional and non-compositional dataframes into one
+        return_frame = pd.concat([compositional_data, non_compositional_data], axis=1)
+
+        return return_frame
 
     def get_sample_composition(self, samplename, species=None, normalization=None, units=None, asSampleClass=False):
         """
