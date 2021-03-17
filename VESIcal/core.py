@@ -158,31 +158,6 @@ def get_oxides(sample):
 	if isinstance(sample, pd.core.series.Series):
 		return pd.Series(clean)
 
-#Is this functionatlity duyplicated in get_model_names()? Should we just have one?
-def get_models(models='all'):
-	"""
-	Returns model names as a list
-	Parameters
-	----------
-	models:	str
-		OPTIONAL. Default value is 'all' in which case all keys in defaule_models are returned.
-		If 'mixed' is passed, only the MixedFluid model names are returned.
-	"""
-	if models == 'all':
-		return list(default_models.keys())
-	if models == 'mixed':
-		return ['ShishkinaIdealMixing', 'Dixon', 'IaconoMarziano', 'Liu'] #MagmaSat not included here as it is treated separately
-
-def get_model_names():
-	"""
-	Returns all available model names as a list of strings.
-	"""
-	model_names = []
-	for key, value in default_models.items():
-		model_names.append(key)
-
-	return model_names
-
 # Is this function used for anything anymore?
 def printTable(myDict):
 	""" Pretty print a dictionary (as pandas DataFrame)

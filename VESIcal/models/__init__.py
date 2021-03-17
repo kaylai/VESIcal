@@ -27,3 +27,33 @@ default_models = {'ShishkinaIdealMixing':     shishkina.mixed,
                   'LiuWater':                 liu.water(),
                   'LiuCarbon':                liu.carbon()
 }
+
+def get_models(model='all'):
+    """
+    Returns model objects as a list
+
+    Parameters
+    ----------
+    models:    str
+        OPTIONAL. Default value is 'all' in which case all keys in default_models are returned.
+        If 'mixed' is passed, only the MixedFluid model names are returned.
+    """
+    if model == 'all':
+        return list(default_models.values())
+    if model == 'mixed':
+        return [shishkina.mixed, dixon.mixed, iaconomarziano.mixed, liu.mixed] #MagmaSat not included here as it is treated separately
+
+def get_model_names(model='all'):
+    """
+    Returns all available model names as a list of strings.
+
+    Parameters
+    ----------
+    models:    str
+        OPTIONAL. Default value is 'all' in which case all keys in default_models are returned.
+        If 'mixed' is passed, only the MixedFluid model names are returned.
+    """
+    if model == 'all':
+        return list(default_models.keys())
+    if model == 'mixed':
+        return ['ShishkinaIdealMixing', 'Dixon', 'IaconoMarziano', 'Liu'] #MagmaSat not included here as it is treated separately

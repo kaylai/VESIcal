@@ -53,6 +53,10 @@ class calculate_saturation_pressure(calculate_classes.calculate_saturation_press
 class calculate_degassing_path(calculate_classes.calculate_degassing_path):
     pass
 
+# -------------- ACCESS TO GET_MODEL_NAMES ----- #
+def get_model_names(model='all'):
+  return models.get_model_names(model=model)
+
 # -------------- PLOTTING DEFINITIONS ----- #
 def plot(**kwargs):
     return vplot.plot(**kwargs)
@@ -80,32 +84,6 @@ def BatchFile_from_DataFrame(dataframe, **kwargs):
     Provides method for creating a BatchFile object from an existing pandas DataFrame.
     """
     return batchmodel.BatchFile_from_DataFrame(dataframe, **kwargs)
-
-# ====== Define some standard model options ======================================================= #
-# Is this functionatlity duplicated in get_model_names()? Should we just have one?
-def get_models(models='all'):
-    """
-    Returns model names as a list
-    Parameters
-    ----------
-    models:    str
-        OPTIONAL. Default value is 'all' in which case all keys in defaule_models are returned.
-        If 'mixed' is passed, only the MixedFluid model names are returned.
-    """
-    if models == 'all':
-        return list(models.default_models.keys())
-    if models == 'mixed':
-        return ['ShishkinaIdealMixing', 'Dixon', 'IaconoMarziano', 'Liu'] #MagmaSat not included here as it is treated separately
-
-def get_model_names():
-    """
-    Returns all available model names as a list of strings.
-    """
-    model_names = []
-    for key, value in models.default_models.items():
-        model_names.append(key)
-
-    return model_names
 
 def test_BatchFile(filename=None):
     """
