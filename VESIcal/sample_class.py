@@ -25,7 +25,7 @@ class Sample(object):
         ----------
         composition     dict or pandas.Series
             The composition of the sample in the format specified by the composition_type
-            parameter. Defulat is oxides in wtpt.
+            parameter. Default is oxides in wtpt.
 
         units     str
             Specifies the units and type of compositional information passed in the
