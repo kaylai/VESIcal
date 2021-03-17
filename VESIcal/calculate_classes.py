@@ -6,6 +6,8 @@ from VESIcal import core
 from VESIcal import models
 from VESIcal.models import magmasat
 
+from copy import deepcopy
+
 class Calculate(object):
     """ The Calculate object is a template for implementing user-friendly methods for
     running calculations using the volatile solubility models. All Calculate methods
@@ -29,13 +31,14 @@ class Calculate(object):
             Before running the calculation, run the sample through the preprocessing routine. As of Feb 2021
             this functionality should be redundant.
         """
+        self.model_name = model
         if model == 'MagmaSat':
             self.model = magmasat.MagmaSat()
         elif type(model) == str:
             if model in models.default_models.keys():
                 self.model = models.default_models[model]
             else:
-                raise core.InputError("The model name given is not recognised. Run the method get_models() to find allowed names.")
+                raise core.InputError("The model name given is not recognised. Run the method get_model_names() to find allowed names.")
         else:
             self.model = model
 
@@ -83,9 +86,44 @@ class calculate_dissolved_volatiles(Calculate):
         volatile concentrations (in wt%), in order (CO2, H2O, if using a mixed fluid
         default model).
     """
+    def return_default_units(self, sample, calc_result):
+            """ Checkes the default units set for the sample_class.Sample object and returns the
+            result of a calculation in those units.
+
+            Parameters
+            ----------
+            sample: Sample class
+                The rock composition as a Sample object.
+
+            calc_result: dict or float
+                Result of a calculate_dissolved_volatiles() calculation on a sample.
+            """
+            default_units = sample.default_units
+
+            # get the composition of
+            bulk_comp = deepcopy(sample)
+
+            # check if calculation result is H2O-only, CO2-only, or mixed H2O-CO2
+            if self.model_name in models.get_model_names(model='mixed') or self.model_name == 'MagmaSat':
+                # set dissolved H2O and CO2 values. 
+                # this action assumes they are input as wt% but updates the composition in its default units.
+                bulk_comp.change_composition({'H2O': calc_result['H2O_liq'], 
+                                              'CO2': calc_result['CO2_liq']})
+                return {'H2O_liq': bulk_comp.get_composition(species='H2O', units=default_units),
+                        'CO2_liq': bulk_comp.get_composition(species='CO2', units=default_units)}
+            elif 'Water' in self.model_name:
+                bulk_comp.change_composition({'H2O': calc_result})
+                return bulk_comp.get_composition(species='H2O', units=default_units)
+            elif 'Carbon' in self.model_name:
+                bulk_comp.change_composition({'CO2': calc_result})
+                return bulk_comp.get_composition(species='CO2', units=default_units)
+            else:
+                pass
+
     def calculate(self,sample,pressure,**kwargs):
         dissolved = self.model.calculate_dissolved_volatiles(pressure=pressure,sample=sample,returndict=True,**kwargs)
-        return dissolved
+        dissolved_default_units = self.return_default_units(sample, dissolved)
+        return dissolved_default_units
 
     def check_calibration_range(self,sample,pressure,**kwargs):
         parameters = kwargs
