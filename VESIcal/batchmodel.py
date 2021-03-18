@@ -2,6 +2,7 @@ from VESIcal import activity_models
 from VESIcal import calibration_checks
 from VESIcal import core
 from VESIcal import fugacity_models
+from VESIcal import models
 from VESIcal import model_classes
 from VESIcal import sample_class
 from VESIcal import calculate_classes
@@ -109,7 +110,7 @@ class BatchFile(batchfile.BatchFile):
         pandas DataFrame
             Original data passed plus newly calculated values are returned.
         """
-        dissolved_data = self.data.copy()
+        dissolved_data = self.get_data()
 
         if isinstance(temperature, str):
             file_has_temp = True
@@ -143,7 +144,7 @@ class BatchFile(batchfile.BatchFile):
         CO2vals = []
         warnings = []
         errors = []
-        if model in core.get_models(models='mixed'):
+        if model in models.get_model_names(model='mixed'):
             for index, row in dissolved_data.iterrows():
                 try:
                     if file_has_temp == True:
@@ -155,7 +156,8 @@ class BatchFile(batchfile.BatchFile):
                     if file_has_X == True:
                         X_fluid = row[X_name]
 
-                    bulk_comp = sample_class.Sample({oxide:  row[oxide] for oxide in core.oxides})
+                    bulk_comp = self.get_sample_composition(index, asSampleClass=True)
+                    bulk_comp.set_default_units(self.default_units)
                     calc = calculate_classes.calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature,
                                                                     X_fluid=(X_fluid, 1-X_fluid), model=model,
                                                                     silence_warnings=True, **kwargs)
@@ -243,7 +245,8 @@ class BatchFile(batchfile.BatchFile):
 
                 if temperature > 0 and pressure > 0 and X_fluid >=0 and X_fluid <=1:
                     try:
-                        bulk_comp = sample_class.Sample({oxide:  row[oxide] for oxide in core.oxides})
+                        bulk_comp = self.get_sample_composition(index, asSampleClass=True)
+                        bulk_comp.set_default_units(self.default_units)
                         calc = calculate_classes.calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature,
                                                                         X_fluid=X_fluid, model=model, silence_warnings=True,
                                                                         verbose=True)
@@ -254,7 +257,6 @@ class BatchFile(batchfile.BatchFile):
                         FluidProportionvals.append(calc.result['FluidProportion_wt'])
                         warnings.append(calc.calib_check)
                         errors.append('')
-
                     except Exception as inst:
                         H2Ovals.append(np.nan)
                         CO2vals.append(np.nan)
@@ -263,7 +265,6 @@ class BatchFile(batchfile.BatchFile):
                         FluidProportionvals.append(np.nan)
                         warnings.append('Calculation Failed.')
                         errors.append(sys.exc_info()[0])
-
             dissolved_data["H2O_liq_VESIcal"] = H2Ovals
             dissolved_data["CO2_liq_VESIcal"] = CO2vals
 
@@ -279,6 +280,7 @@ class BatchFile(batchfile.BatchFile):
                 dissolved_data["Errors"] = errors
 
             return dissolved_data
+        
         else:
             XH2Ovals = []
             XCO2vals = []
@@ -290,7 +292,8 @@ class BatchFile(batchfile.BatchFile):
                     pressure = row[press_name]
                 if file_has_X == True:
                     X_fluid = row[X_name]
-                bulk_comp = sample_class.Sample({oxide:  row[oxide] for oxide in core.oxides})
+                bulk_comp = self.get_sample_composition(index, asSampleClass=True)
+                bulk_comp.set_default_units(self.default_units)
                 if 'Water' in model:
                     try:
                         calc = calculate_classes.calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature,
@@ -375,14 +378,14 @@ class BatchFile(batchfile.BatchFile):
         H2Ovals = []
         CO2vals = []
         warnings = []
-        if model in core.get_models(models='mixed') or model == "MooreWater":
+        if model in  models.get_model_names(model='mixed') or model == "MooreWater":
             for index, row in fluid_data.iterrows():
                 try:
                     if file_has_temp == True:
                         temperature = row[temp_name]
                     if file_has_press == True:
                         pressure = row[press_name]
-                    bulk_comp = sample_class.Sample({oxide:  row[oxide] for oxide in core.oxides})
+                    bulk_comp = sample_class.Sample({oxide:  row[oxide] for oxide in core.oxides}, units='wtpt_oxides')
                     calc = calculate_classes.calculate_equilibrium_fluid_comp(sample=bulk_comp, pressure=pressure, temperature=temperature,
                                                             model=model, silence_warnings=True, **kwargs)
 
@@ -432,7 +435,7 @@ class BatchFile(batchfile.BatchFile):
 
                 if temperature > 0 and pressure > 0:
                     try:
-                        bulk_comp = sample_class.Sample({oxide:  row[oxide] for oxide in core.oxides})
+                        bulk_comp = sample_class.Sample({oxide:  row[oxide] for oxide in core.oxides}, units='wtpt_oxides')
                         calc = calculate_classes.calculate_equilibrium_fluid_comp(sample=bulk_comp, pressure=pressure, temperature=temperature, model=model, silence_warnings=True)
 
                         H2Ovals.append(calc.result['H2O'])
@@ -465,7 +468,7 @@ class BatchFile(batchfile.BatchFile):
                         temperature = row[temp_name]
                     if file_has_press == True:
                         pressure = row[press_name]
-                    bulk_comp = sample_class.Sample({oxide:  row[oxide] for oxide in core.oxides})
+                    bulk_comp = sample_class.Sample({oxide:  row[oxide] for oxide in core.oxides}, units='wtpt_oxides')
                     calc = calculate_classes.calculate_equilibrium_fluid_comp(sample=bulk_comp, pressure=pressure, temperature=temperature, model=model, silence_warnings=True)
                     saturated.append(calc.result)
                     warnings.append(calc.calib_check)
@@ -526,7 +529,7 @@ class BatchFile(batchfile.BatchFile):
                 # try:
                 if file_has_temp == True:
                     temperature = row[temp_name]
-                bulk_comp = sample_class.Sample({oxide:  row[oxide] for oxide in core.oxides})
+                bulk_comp = sample_class.Sample({oxide:  row[oxide] for oxide in core.oxides}, units='wtpt_oxides')
                 calc = calculate_classes.calculate_saturation_pressure(sample=bulk_comp, temperature=temperature,
                                                      model=model, silence_warnings=True, **kwargs)
                 satP.append(calc.result)
@@ -573,7 +576,7 @@ class BatchFile(batchfile.BatchFile):
 
                 if temperature > 0:
                     try:
-                        bulk_comp = sample_class.Sample({oxide:  row[oxide] for oxide in core.oxides})
+                        bulk_comp = sample_class.Sample({oxide:  row[oxide] for oxide in core.oxides}, units='wtpt_oxides')
                         calc = calculate_classes.calculate_saturation_pressure(sample=bulk_comp, temperature=temperature, model=model, verbose=True, silence_warnings=True)
                         satP.append(calc.result["SaturationP_bars"])
                         flmass.append(calc.result["FluidMass_grams"])
