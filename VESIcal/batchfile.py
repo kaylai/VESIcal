@@ -7,6 +7,8 @@ import warnings as w
 from VESIcal import core
 from VESIcal import sample_class
 
+from copy import deepcopy
+
 def rename_duplicates(df, suffix='-duplicate-'):
     appendents = (suffix + df.groupby(level=0).cumcount().astype(str).replace('0','')).replace(suffix, '')
     return df.set_index(df.index.astype(str) + appendents)
@@ -102,7 +104,7 @@ class BatchFile(object):
     """
     def __init__(self, filename, sheet_name=0, file_type='excel', units='wtpt_oxides', label='Label', default_normalization='none', default_units='wtpt_oxides', dataframe=None, **kwargs):
         """Return a BatchFile object whose parameters are defined here."""
-        self.input_type = units
+        self.units = units
         self.set_default_normalization(default_normalization)
         self.set_default_units(default_units)
 
@@ -559,7 +561,7 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
             calculations[i].to_csv(filenames[i], **kwargs)
             print ("Saved " + str(filenames[i]))
 
-def from_DataFrame(dataframe, input_type='wtpercent', label='Label'):
+def from_DataFrame(dataframe, units='wtpt_oxides', label='Label'):
     """
     Transforms any pandas DataFrame object into a VESIcal BatchFile object.
 
@@ -568,9 +570,9 @@ def from_DataFrame(dataframe, input_type='wtpercent', label='Label'):
     dataframe: pd.DataFrame object
         DataFrame object containing samples and oxide compositions.
 
-    input_type: str
-        OPTIONAL. Default is 'wtpercent'. String defining whether the oxide composition is given in wt percent
-        ("wtpercent", which is the default), mole percent ("molpercent"), or mole fraction ("molfrac").
+    units: str
+        OPTIONAL. Default is 'wtpt_oxides'. String defining whether the oxide composition is given in wt percent
+        ("wtpt_oxides", which is the default), mole fraction oxides ("mol_oxides"), or mole fraction cations ("mol_cations").
 
     label: str
         OPTIONAL. Default is 'Label'. Name of the column within the passed file referring to sample names. This
@@ -580,4 +582,4 @@ def from_DataFrame(dataframe, input_type='wtpercent', label='Label'):
     -------
     VESIcal.BatchFile object
     """
-    return BatchFile(filename=None, dataframe=dataframe, input_type=input_type, label=label)
+    return BatchFile(filename=None, dataframe=dataframe, units=units, label=label)
