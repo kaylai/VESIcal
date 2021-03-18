@@ -243,6 +243,10 @@ class Sample(object):
             Modified Sample class.
         """
 
+        # if new_composition is pandas.Series, convert to dict
+        if isinstance(new_composition, pd.Series):
+            new_composition = dict(new_composition)
+
         if inplace == False:
             newsample = deepcopy(self)
             return newsample.change_composition(new_composition, units=units)
