@@ -41,8 +41,16 @@ class status_bar(object):
         """
         sys.stdout.write("\r")
         sys.stdout.write("[{:<{}}] {:.0f}%".format("=" * int(barLen * percent), barLen, percent * 100))
+
+        sample_string = str(sample_name)
+        # Set max number of characters in sample name
+        max_name_length = 25
+        if len(str(sample_name)) >= max_name_length:
+            sample_string = str(sample_name)[0:max_name_length-1] + "..."
+
+        # Write out sample name and trailing spaces to cover contents of previous sample names left over on line
         if sample_name != None:
-            sys.stdout.write("  Working on sample " + str(sample_name))
+            sys.stdout.write("  Working on sample " + sample_string + "                            ")
         if btext != None:
             sys.stdout.write(" " + str(btext))
         if percent == 1.0:
