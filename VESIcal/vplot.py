@@ -419,12 +419,10 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 				if len(isopleths) == 1:
 					H_list = [i for i in XH2O_vals]
 					iso_label_iter = 0
-					for i in XH2O_vals:
-						iso_label_iter += 1
-						if iso_label_iter == 1:
-							labels.append('Isopleths (' + ', '.join(map(str, H_list)) + " XH2Ofluid)")
-						else:
-							labels.append('_nolegend_')
+					if H_iter == 1:
+						labels.append('Isopleths (' + ', '.join(map(str, H_list)) + " XH2Ofluid)")
+					else:
+						labels.append('_nolegend_')
 					ax.plot(Xxs, Xys, ls='dashed', color='k')
 
 	## -------- PLOT DEGASSING PATHS -------- ##
