@@ -267,7 +267,7 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
         new_compositions = []
         sample_names = []
         for index, row in data.iterrows():
-            sample_comp = sample_class.Sample(self.get_sample_composition(index))
+            sample_comp = self.get_sample_composition(index, units=units, asSampleClass=True)
             new_compositions.append(sample_comp.get_composition(species=species, normalization=normalization, units=units, exclude_volatiles=exclude_volatiles))
             sample_names.append(index)
         if isinstance(new_compositions[0], pd.Series):
