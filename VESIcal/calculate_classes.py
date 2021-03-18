@@ -86,7 +86,7 @@ class calculate_dissolved_volatiles(Calculate):
         volatile concentrations (in wt%), in order (CO2, H2O, if using a mixed fluid
         default model).
     """
-    def return_default_units(self, sample, calc_result):
+    def return_default_units(self, sample, calc_result, **kwargs):
             """ Checkes the default units set for the sample_class.Sample object and returns the
             result of a calculation in those units.
 
@@ -104,7 +104,7 @@ class calculate_dissolved_volatiles(Calculate):
             bulk_comp = deepcopy(sample)
 
             # check if calculation result is H2O-only, CO2-only, or mixed H2O-CO2
-            if self.model_name in models.get_model_names(model='mixed') or self.model_name == 'MagmaSat':
+            if self.model_name in models.get_model_names(model='mixed'):
                 # set dissolved H2O and CO2 values. 
                 # this action assumes they are input as wt% but updates the composition in its default units.
                 bulk_comp.change_composition({'H2O': calc_result['H2O_liq'], 
@@ -117,12 +117,25 @@ class calculate_dissolved_volatiles(Calculate):
             elif 'Carbon' in self.model_name:
                 bulk_comp.change_composition({'CO2': calc_result})
                 return bulk_comp.get_composition(species='CO2', units=default_units)
-            else:
-                pass
+            elif self.model_name == 'MagmaSat':
+                bulk_comp.change_composition({'H2O': calc_result['H2O_liq'], 
+                                              'CO2': calc_result['CO2_liq']})
+
+                isverbose = kwargs['verbose'] #check if verbose method has been chosen
+                if isverbose == False:
+                    return {'H2O_liq': bulk_comp.get_composition(species='H2O', units=default_units),
+                            'CO2_liq': bulk_comp.get_composition(species='CO2', units=default_units)}
+
+                if isverbose == True:
+                    return {'H2O_liq': bulk_comp.get_composition(species='H2O', units=default_units),
+                            'CO2_liq': bulk_comp.get_composition(species='CO2', units=default_units),
+                            'XH2O_fl': calc_result['XH2O_fl'],
+                            'XCO2_fl': calc_result['XCO2_fl'],
+                            'FluidProportion_wt': calc_result['FluidProportion_wt']}
 
     def calculate(self,sample,pressure,**kwargs):
         dissolved = self.model.calculate_dissolved_volatiles(pressure=pressure,sample=sample,returndict=True,**kwargs)
-        dissolved_default_units = self.return_default_units(sample, dissolved)
+        dissolved_default_units = self.return_default_units(sample, dissolved,**kwargs)
         return dissolved_default_units
 
     def check_calibration_range(self,sample,pressure,**kwargs):
