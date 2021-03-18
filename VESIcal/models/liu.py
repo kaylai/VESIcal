@@ -164,7 +164,7 @@ class water(model_classes.Model):
 
         try:
             satP = root_scalar(self.root_saturation_pressure,args=(temperature,sample,X_fluid,kwargs),
-                                x0=10.0,x1=200.0).root
+                                x0=1.0,x1=2.0).root
         except:
             w.warn("Saturation pressure not found.",RuntimeWarning,stacklevel=2)
             satP = np.nan
