@@ -116,7 +116,7 @@ class TestCreateSample(unittest.TestCase):
                                              'H':    0.19747,
                                              'C':    0.00081})
 
-        self.sample = v.sample(self.majorsv)
+        self.sample = v.Sample(self.majorsv)
 
     def test_createSample(self):
         for ox in self.majors.index:
@@ -124,52 +124,52 @@ class TestCreateSample(unittest.TestCase):
 
     def test_setdefault_noargs(self):
         self.assertEqual(self.sample.default_normalization,'none')
-        self.assertEqual(self.sample.default_type,'wtpt_oxides')
+        self.assertEqual(self.sample.default_units,'wtpt_oxides')
 
     def test_setdefaults_none_wtpt(self):
-        sample = v.sample(self.majorsv, default_normalization='none',default_type='wtpt_oxides')
+        sample = v.Sample(self.majorsv, default_normalization='none',default_units='wtpt_oxides')
         self.assertEqual(sample.default_normalization,'none')
-        self.assertEqual(sample.default_type,'wtpt_oxides')
+        self.assertEqual(sample.default_units,'wtpt_oxides')
 
     def test_setdefaults_standard_molox(self):
-        sample = v.sample(self.majorsv, default_normalization='standard',default_type='mol_oxides')
+        sample = v.Sample(self.majorsv, default_normalization='standard',default_units='mol_oxides')
         self.assertEqual(sample.default_normalization,'standard')
-        self.assertEqual(sample.default_type,'mol_oxides')
+        self.assertEqual(sample.default_units,'mol_oxides')
 
     def test_setdefaults_fixvol_molcat(self):
-        sample = v.sample(self.majorsv, default_normalization='fixedvolatiles',default_type='mol_cations')
+        sample = v.Sample(self.majorsv, default_normalization='fixedvolatiles',default_units='mol_cations')
         self.assertEqual(sample.default_normalization,'fixedvolatiles')
-        self.assertEqual(sample.default_type,'mol_cations')
+        self.assertEqual(sample.default_units,'mol_cations')
 
     def test_setdefaults_addvol_molSinO(self):
-        sample = v.sample(self.majorsv, default_normalization='additionalvolatiles',default_type='mol_singleO')
+        sample = v.Sample(self.majorsv, default_normalization='additionalvolatiles',default_units='mol_singleO')
         self.assertEqual(sample.default_normalization,'additionalvolatiles')
-        self.assertEqual(sample.default_type,'mol_singleO')
+        self.assertEqual(sample.default_units,'mol_singleO')
 
     def test_setdefaults_garbageNorm(self):
         with self.assertRaises(v.InputError):
-            v.sample(composition=self.majorsv,default_normalization='garbage')
+            v.Sample(composition=self.majorsv,default_normalization='garbage')
 
     def test_setdefaults_garbageType(self):
         with self.assertRaises(v.InputError):
-            v.sample(composition=self.majorsv,default_type='garbage')
+            v.Sample(composition=self.majorsv,default_units='garbage')
 
     def test_type_garbage(self):
         with self.assertRaises(v.InputError):
-            v.sample(composition=self.majorsv,type='garbage')
+            v.Sample(composition=self.majorsv,units='garbage')
 
     def test_type_wtptoxides(self):
-        sample = v.sample(self.majors,type='wtpt_oxides')
+        sample = v.Sample(self.majors,units='wtpt_oxides')
         for ox in self.majors.index:
             self.assertEqual(self.sample._composition[ox],self.majors[ox])
 
     def test_type_moloxides(self):
-        sample = v.sample(self.majorsv_moloxides,type='mol_oxides')
+        sample = v.Sample(self.majorsv_moloxides,units='mol_oxides')
         for ox in self.majorsv.index:
             self.assertEqual(np.round(sample._composition[ox],2),np.round(self.majorsv_normed[ox],2))
 
     def test_type_molcations(self):
-        sample = v.sample(self.majorsv_molcations,type='mol_cations')
+        sample = v.Sample(self.majorsv_molcations,units='mol_cations')
         for ox in self.majorsv.index:
             self.assertEqual(np.round(sample._composition[ox],2),np.round(self.majorsv_normed[ox],2))
 
@@ -318,7 +318,7 @@ class TestGetComposition(unittest.TestCase):
 
         self.majorsv_fw = 35.2704
 
-        self.sample = v.sample(self.majorsv)
+        self.sample = v.Sample(self.majorsv)
 
     def test_default(self):
         composition = self.sample.get_composition()
@@ -372,32 +372,32 @@ class TestGetComposition(unittest.TestCase):
             self.assertEqual(np.round(composition[ox],2),np.round(self.majors_normed[ox],2))
 
     def test_moloxides(self):
-        composition = self.sample.get_composition(type='mol_oxides')
+        composition = self.sample.get_composition(units='mol_oxides')
         for ox in composition.index:
             self.assertEqual(np.round(composition[ox],3),np.round(self.majorsv_moloxides[ox],3))
 
     def test_moloxides_exclV(self):
-        composition = self.sample.get_composition(type='mol_oxides',exclude_volatiles=True)
+        composition = self.sample.get_composition(units='mol_oxides',exclude_volatiles=True)
         for ox in composition.index:
             self.assertEqual(np.round(composition[ox],3),np.round(self.majors_moloxides[ox],3))
 
     def test_molcations(self):
-        composition = self.sample.get_composition(type='mol_cations')
+        composition = self.sample.get_composition(units='mol_cations')
         for el in composition.index:
             self.assertEqual(np.round(composition[el],3),np.round(self.majorsv_molcations[el],3))
 
     def test_molcations_exclV(self):
-        composition = self.sample.get_composition(type='mol_cations',exclude_volatiles=True)
+        composition = self.sample.get_composition(units='mol_cations',exclude_volatiles=True)
         for el in composition.index:
             self.assertEqual(np.round(composition[el],3),np.round(self.majors_molcations[el],3))
 
     def test_molsingleO(self):
-        composition = self.sample.get_composition(type='mol_singleO')
+        composition = self.sample.get_composition(units='mol_singleO')
         for el in composition.index:
             self.assertEqual(np.round(composition[el],3),np.round(self.majorsv_molSingleO[el],3))
 
     def test_molsingleO_exclV(self):
-        composition = self.sample.get_composition(type='mol_singleO',exclude_volatiles=True)
+        composition = self.sample.get_composition(units='mol_singleO',exclude_volatiles=True)
         for el in composition.index:
             self.assertEqual(np.round(composition[el],3),np.round(self.majors_molSingleO[el],3))
 
