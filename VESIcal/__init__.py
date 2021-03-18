@@ -61,6 +61,9 @@ def get_model_names(model='all'):
 def plot(**kwargs):
     return vplot.plot(**kwargs)
 
+def calib_plot(**kwargs):
+    return vplot.calib_plot(**kwargs)
+
 def show():
     return vplot.show()
 
