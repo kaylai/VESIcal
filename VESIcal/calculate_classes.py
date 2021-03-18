@@ -120,18 +120,15 @@ class calculate_dissolved_volatiles(Calculate):
             elif self.model_name == 'MagmaSat':
                 bulk_comp.change_composition({'H2O': calc_result['H2O_liq'], 
                                               'CO2': calc_result['CO2_liq']})
-
-                isverbose = kwargs['verbose'] #check if verbose method has been chosen
-                if isverbose == False:
-                    return {'H2O_liq': bulk_comp.get_composition(species='H2O', units=default_units),
-                            'CO2_liq': bulk_comp.get_composition(species='CO2', units=default_units)}
-
-                if isverbose == True:
+                if 'verbose' in kwargs and kwargs['verbose'] == True: # check if verbose method has been chosen
                     return {'H2O_liq': bulk_comp.get_composition(species='H2O', units=default_units),
                             'CO2_liq': bulk_comp.get_composition(species='CO2', units=default_units),
                             'XH2O_fl': calc_result['XH2O_fl'],
                             'XCO2_fl': calc_result['XCO2_fl'],
                             'FluidProportion_wt': calc_result['FluidProportion_wt']}
+                else:
+                    return {'H2O_liq': bulk_comp.get_composition(species='H2O', units=default_units),
+                            'CO2_liq': bulk_comp.get_composition(species='CO2', units=default_units)}
 
     def calculate(self,sample,pressure,**kwargs):
         dissolved = self.model.calculate_dissolved_volatiles(pressure=pressure,sample=sample,returndict=True,**kwargs)

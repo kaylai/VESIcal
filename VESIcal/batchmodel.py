@@ -526,7 +526,6 @@ class BatchFile(batchfile.BatchFile):
             warnings = []
             piStar = []
             for index, row in satp_data.iterrows():
-                # try:
                 if file_has_temp == True:
                     temperature = row[temp_name]
                 bulk_comp = sample_class.Sample({oxide:  row[oxide] for oxide in core.oxides}, units='wtpt_oxides')
@@ -536,9 +535,7 @@ class BatchFile(batchfile.BatchFile):
                 warnings.append(calc.calib_check)
                 if model == 'Shishkina':
                     piStar.append(default_models['Shishkina'].models[1].PiStar(bulk_comp))
-                # except:
-                #     satP.append(np.nan)
-                #     warnings.append("Calculation Failed")
+
             satp_data["SaturationP_bars_VESIcal"] = satP
             if file_has_temp == False:
                 satp_data["Temperature_C_VESIcal"] = temperature
