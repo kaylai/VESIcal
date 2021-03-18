@@ -616,11 +616,11 @@ class MagmaSat(model_classes.Model):
                 saturated_vols = self.calculate_dissolved_volatiles(sample=_sample, temperature=temperature, pressure=i, H2O_guess=guess, X_fluid=X)
 
                 if X in required_iso_vals:
-                    isobar_data.append([i, saturated_vols['H2O'], saturated_vols['CO2']])
+                    isobar_data.append([i, saturated_vols['H2O_liq'], saturated_vols['CO2_liq']])
                 if X in iso_vals:
-                    isopleth_data.append([X, saturated_vols['H2O'], saturated_vols['CO2']])
+                    isopleth_data.append([X, saturated_vols['H2O_liq'], saturated_vols['CO2_liq']])
 
-                guess = saturated_vols['H2O']
+                guess = saturated_vols['H2O_liq']
 
         if print_status == True:
             print("Done!")
