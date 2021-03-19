@@ -294,13 +294,25 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
 
         return return_frame
 
-    def get_data(self, units=None):
+    def get_data(self, normalization=None, units=None):
         """
         Returns all data stored in a BatchFile object (both compositional and other data). To return only the
         compositional data, use get_composition().
 
         Parameters
         ----------
+        normalization:     NoneType or str
+            The type of normalization to apply to the data. One of:
+                - 'none' (no normalization)
+                - 'standard' (default): Normalizes an input composition to 100%.
+                - 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
+                The volatile wt% will remain fixed, whilst the other major element oxides are reduced
+                proportionally so that the total is 100 wt%.
+                - 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
+                volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
+                be retained in addition to the normalized non-volatile oxides, summing to >100%.
+            If NoneType is passed the default normalization option will be used (self.default_normalization).
+
         units:     NoneType or str
             The units of composition to return, one of:
             - wtpt_oxides (default)
@@ -321,7 +333,7 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
             units = self.default_units
 
         # Grab all compositional data
-        compositional_data = self.get_composition(units=units)
+        compositional_data = self.get_composition(normalization=normalization, units=units)
 
         # Grab all non-compositional data
         non_compositional_data = data.filter([col for col in data.columns if col not in core.oxides])
