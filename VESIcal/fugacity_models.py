@@ -597,7 +597,7 @@ class fugacity_ZD09_co2(FugacityModel):
         """ Calculates the fugacity of a pure CO2 fluid, or a mixed fluid assuming
         ideal mixing. Implements eqn (14) of Zhang and Duan (2009).
 
-        Paramters
+        Parameters
         ---------
         pressure     float
             Pressure in bars
