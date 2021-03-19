@@ -198,7 +198,69 @@ COMPLETELY broken the module.")
 
     print("\nTesting routine complete.\n")
 
+def test_BatchFile(filename=None):
+    """
+    A test routine that takes in an excel file and runs multiple calculations on that file.
 
+    Parameters
+    ----------
+    filename: string
+        OPTIONAL. Name with extension of file to be tested. If no file is passed, data will
+        be generated automatially.
+    """
+    pd.set_option('display.max_rows', None, 'display.max_columns', None)
+
+    print("\n================================\n= MAGMASATPLUS BATCH TESTING ROUTINE =\n================================")
+
+    print("\n This routine will check that key methods run using typical values of variables or given user data. \
+The routine does not check that the results are correct (though this may be obvious from the outputs),\
+nor does it check every possible iteration of methods and input types. It will check that an update hasn't \
+COMPLETELY broken the module.")
+
+    #SET UP THE DATA
+    if filename == None:
+        fakedata = pd.DataFrame({'Label': ['Samp1', 'Samp2', 'Samp3'],
+                                'SiO2': [47.95, 69.02, 55.4],
+                                'TiO2': [1.67, 0.78, 1.01],
+                                'Al2O3': [17.32, 15.2, 10.1],
+                                'FeO': [10.24, 4.2, 8.9],
+                                'Fe2O3': [0.1, 0.2, 0.5],
+                                'MgO': [5.76, 0.3, 3.0],
+                                'CaO': [10.93, 12.99, 10.9],
+                                'Na2O': [3.45, 5.67, 4.22],
+                                'K2O': [1.99, 3.2, 3.2],
+                                'P2O5': [0.51, 0.2, 0.5],
+                                'MnO': [0.1, 0.15, 0.1],
+                                'CO2': [0.8, 0.2, 0.3],
+                                'H2O': [4.0, 6.0, 2.0]})
+        fakedata = fakedata.set_index('Label')
+        myfile = BatchFile(filename=None, dataframe=fakedata)
+    else:
+        myfile = BatchFile(filename)
+
+    test_temperature = 1000
+    test_pressure = 2000
+    test_X_fluid = 1
+
+    #CALCULTE SATURATION PRESSURE
+    print("\n Saturation Pressures:")
+    print(" =====================")
+    satPs = myfile.calculate_saturation_pressure(temperature=test_temperature)
+    print(satPs)
+
+    #CALCULATE DISSOLVED VOLATILES
+    print("\n Dissolved Volatile Concentrations:")
+    print(" ==================================")
+    dissolved = myfile.calculate_dissolved_volatiles(temperature=test_temperature, pressure=test_pressure, X_fluid=test_X_fluid)
+    print(dissolved)
+
+    #CALCULATE EQUILIBRIUM FLUID COMPOSITIONS
+    print("\n Equilibrium Fluid Compositions:")
+    print(" ===============================")
+    eqfluid = myfile.calculate_equilibrium_fluid_comp(temperature=test_temperature, pressure=test_pressure)
+    print(eqfluid)
+
+    print("\nTesting routine complete.\n")
 
 
 test()
