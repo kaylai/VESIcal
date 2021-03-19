@@ -1,13 +1,10 @@
 import pandas as pd
-import numpy as np
 import os
 import sys
 import warnings as w
 
 from VESIcal import core
 from VESIcal import sample_class
-
-from copy import deepcopy
 
 def rename_duplicates(df, suffix='-duplicate-'):
     appendents = (suffix + df.groupby(level=0).cumcount().astype(str).replace('0','')).replace(suffix, '')

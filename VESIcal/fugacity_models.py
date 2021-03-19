@@ -1,5 +1,7 @@
 from VESIcal import calibration_checks
+from VESIcal import core
 
+from scipy.optimize import root_scalar
 from abc import abstractmethod
 import numpy as np
 

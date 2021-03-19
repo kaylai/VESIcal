@@ -1,12 +1,13 @@
-from VESIcal.core import *
+from VESIcal import core
+from VESIcal import calibrations
+from VESIcal.tasplot import *
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import *
 import pandas as pd
 import numpy as np
 import warnings as w
-from VESIcal import calibrations
-from VESIcal.tasplot import *
 
 # ---------- DEFINE CUSTOM PLOTTING FORMATTING ------------ #
 style = "seaborn-colorblind"
@@ -254,15 +255,15 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 	def check_inputs(custom_H2O, custom_CO2):
 		if custom_H2O is not None:
 			if custom_CO2 is None:
-				raise InputError("If x data is passed, y data must also be passed.")
+				raise core.InputError("If x data is passed, y data must also be passed.")
 			else:
 				if len(custom_H2O) == len(custom_CO2):
 					pass
 				else:
-					raise InputError("x and y data must be same length")
+					raise core.InputError("x and y data must be same length")
 		if custom_CO2 is not None:
 			if custom_H2O is None:
-				raise InputError("If y data is passed, x data must also be passed.")
+				raise core.InputError("If y data is passed, x data must also be passed.")
 
 	def check_colors(custom_colors):
 		if custom_colors == "VESIcal":
@@ -270,7 +271,7 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 		elif isinstance(custom_colors, list):
 			use_colors = custom_colors
 		else:
-			raise InputError("Argument custom_colors must be type list. Just passing one item? Try putting square brackets, [], around it.")
+			raise core.InputError("Argument custom_colors must be type list. Just passing one item? Try putting square brackets, [], around it.")
 		return use_colors
 
 	def calc_extend_isobars_to_zero(Pxs, Pys):
@@ -418,7 +419,6 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 
 				if len(isopleths) == 1:
 					H_list = [i for i in XH2O_vals]
-					iso_label_iter = 0
 					if H_iter == 1:
 						labels.append('Isopleths (' + ', '.join(map(str, H_list)) + " XH2Ofluid)")
 					else:
@@ -474,8 +474,6 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 	if 'custom_x' in kwargs:
 			custom_x = kwargs['custom_x']
 			custom_y = kwargs['custom_y']
-			xlabel = kwargs['xlabel']
-			ylabel = kwargs['ylabel']
 
 			if isinstance(custom_x, pd.core.series.Series):
 				custom_x = [list(custom_x.values)]
@@ -543,19 +541,19 @@ def scatterplot(custom_x, custom_y, xlabel=None, ylabel=None, **kwargs):
 
 	if isinstance(custom_x, list) and isinstance(custom_y, list):
 		if len(custom_x) != len(custom_y):
-			raise InputError("X and y lists must be same length")
+			raise core.InputError("X and y lists must be same length")
 
 	if xlabel is not None:
 		if isinstance(xlabel, str):
 			pass
 		else:
-			raise InputError("xlabel must be string")
+			raise core.InputError("xlabel must be string")
 
 	if ylabel is not None:
 		if isinstance(ylabel, str):
 			pass
 		else:
-			raise InputError("ylabel must be string")
+			raise core.InputError("ylabel must be string")
 
 	return plot(custom_x=custom_x, custom_y=custom_y, xlabel=xlabel, ylabel=ylabel, **kwargs)
 
@@ -656,7 +654,7 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, figsize=
 			plt.xlabel(str(x)+", wt%", fontdict=font, labelpad = 15)
 			plt.ylabel(str(y)+", wt%", fontdict=font, labelpad = 15)
 		else:
-			raise InputError("If plot_type is 'xy', then x and y values must be passed as strings. For example, x='SiO2', y='Al2O3'.")
+			raise core.InputError("If plot_type is 'xy', then x and y values must be passed as strings. For example, x='SiO2', y='Al2O3'.")
 
 	#Plot Calibration Data
 	if model == 'all':
@@ -757,7 +755,7 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, figsize=
 						except:
 							w.warn("The requested oxides were not found in the calibration dataset for " + str(modelname) + ".")
 	else:
-		raise InputError("model must be of type str or list")
+		raise core.InputError("model must be of type str or list")
 
 	#Plot user data
 	if user_data is None:
@@ -772,7 +770,7 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, figsize=
 			try:
 				_sample["TotalAlkalis"] = _sample["Na2O"] + _sample["K2O"]
 			except:
-				InputError("Na2O and K2O data must be in user_data")
+				core.InputError("Na2O and K2O data must be in user_data")
 			plt.scatter(_sample['SiO2'], _sample['TotalAlkalis'],
 						s=150, edgecolors='w', facecolors='red', marker='P',
 						label = 'User Data')

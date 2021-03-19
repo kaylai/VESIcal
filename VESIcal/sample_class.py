@@ -4,7 +4,6 @@ import warnings as w
 
 from VESIcal import core
 
-from copy import copy
 from copy import deepcopy
 
 

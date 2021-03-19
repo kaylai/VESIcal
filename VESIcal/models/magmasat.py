@@ -1,13 +1,10 @@
-from VESIcal import activity_models
 from VESIcal import calibration_checks
 from VESIcal import core
-from VESIcal import fugacity_models
 from VESIcal import model_classes
 from VESIcal import sample_class
 from VESIcal import vplot
 from VESIcal import batchfile #needed for status_bar functions
 
-from copy import copy
 from copy import deepcopy
 
 import numpy as np
@@ -580,30 +577,24 @@ class MagmaSat(model_classes.Model):
             raise core.InputError("pressure_list must be a single float (1000.0), int (1000), or list of those [1000, 2000.0, 3000].")
 
         if isopleth_list == None:
-            has_isopleths = False
+            pass
         elif isinstance(isopleth_list, list):
             iso_vals = isopleth_list
-            has_isopleths = True
         else:
             iso_vals = [isopleth_list]
-            has_isopleths = True
 
         _sample = self.preprocess_sample(sample)
 
         required_iso_vals = [0, 0.25, 0.5, 0.75, 1]
         all_iso_vals = iso_vals + required_iso_vals
         all_iso_vals = list(dict.fromkeys(all_iso_vals)) #remove duplicates
-        all_iso_vals.sort() #sort from smallest to largest
+        all_iso_vals.sort() # sort from smallest to largest
 
         isobar_data = []
         isopleth_data = []
         for X in iso_vals:
             isopleth_data.append([X, 0.0, 0.0])
-        H2O_val = 0.0
-        CO2_val = 0.0
-        fluid_mass = 0.0
         # Calculate equilibrium phase assemblage for all P/T conditions, check if saturated in fluid...
-        P_iter = 0
         for i in P_vals:
             guess = 0.0
             if print_status == True:
