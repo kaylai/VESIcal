@@ -104,31 +104,37 @@ class calculate_dissolved_volatiles(Calculate):
             bulk_comp = deepcopy(sample)
 
             # check if calculation result is H2O-only, CO2-only, or mixed H2O-CO2
-            if self.model_name in models.get_model_names(model='mixed'):
-                # set dissolved H2O and CO2 values. 
-                # this action assumes they are input as wt% but updates the composition in its default units.
-                bulk_comp.change_composition({'H2O': calc_result['H2O_liq'], 
-                                              'CO2': calc_result['CO2_liq']})
-                return {'H2O_liq': bulk_comp.get_composition(species='H2O', units=default_units),
-                        'CO2_liq': bulk_comp.get_composition(species='CO2', units=default_units)}
-            elif 'Water' in self.model_name:
-                bulk_comp.change_composition({'H2O': calc_result})
-                return bulk_comp.get_composition(species='H2O', units=default_units)
-            elif 'Carbon' in self.model_name:
-                bulk_comp.change_composition({'CO2': calc_result})
-                return bulk_comp.get_composition(species='CO2', units=default_units)
-            elif self.model_name == 'MagmaSat':
-                bulk_comp.change_composition({'H2O': calc_result['H2O_liq'], 
-                                              'CO2': calc_result['CO2_liq']})
-                if 'verbose' in kwargs and kwargs['verbose'] == True: # check if verbose method has been chosen
-                    return {'H2O_liq': bulk_comp.get_composition(species='H2O', units=default_units),
-                            'CO2_liq': bulk_comp.get_composition(species='CO2', units=default_units),
-                            'XH2O_fl': calc_result['XH2O_fl'],
-                            'XCO2_fl': calc_result['XCO2_fl'],
-                            'FluidProportion_wt': calc_result['FluidProportion_wt']}
-                else:
+            if isinstance(self.model_name, str):
+                if self.model_name in models.get_model_names(model='mixed'):
+                    # set dissolved H2O and CO2 values. 
+                    # this action assumes they are input as wt% but updates the composition in its default units.
+                    bulk_comp.change_composition({'H2O': calc_result['H2O_liq'], 
+                                                  'CO2': calc_result['CO2_liq']})
                     return {'H2O_liq': bulk_comp.get_composition(species='H2O', units=default_units),
                             'CO2_liq': bulk_comp.get_composition(species='CO2', units=default_units)}
+                elif 'Water' in self.model_name:
+                    bulk_comp.change_composition({'H2O': calc_result})
+                    return bulk_comp.get_composition(species='H2O', units=default_units)
+                elif 'Carbon' in self.model_name:
+                    bulk_comp.change_composition({'CO2': calc_result})
+                    return bulk_comp.get_composition(species='CO2', units=default_units)
+                elif self.model_name == 'MagmaSat':
+                    bulk_comp.change_composition({'H2O': calc_result['H2O_liq'], 
+                                                  'CO2': calc_result['CO2_liq']})
+                    if 'verbose' in kwargs and kwargs['verbose'] == True: # check if verbose method has been chosen
+                        return {'H2O_liq': bulk_comp.get_composition(species='H2O', units=default_units),
+                                'CO2_liq': bulk_comp.get_composition(species='CO2', units=default_units),
+                                'XH2O_fl': calc_result['XH2O_fl'],
+                                'XCO2_fl': calc_result['XCO2_fl'],
+                                'FluidProportion_wt': calc_result['FluidProportion_wt']}
+                    else:
+                        return {'H2O_liq': bulk_comp.get_composition(species='H2O', units=default_units),
+                                'CO2_liq': bulk_comp.get_composition(species='CO2', units=default_units)}
+            else: 
+            # if self.model_name is not a string, most likely this is a user-created model class, 
+            # and so we cannot interrogate it for model type (H2O, CO2, or mixed)
+            # TODO: create model type parameter so that we can ID model type this way instead of via strings in a list!
+                return calc_result
 
     def calculate(self,sample,pressure,**kwargs):
         dissolved = self.model.calculate_dissolved_volatiles(pressure=pressure,sample=sample,returndict=True,**kwargs)
