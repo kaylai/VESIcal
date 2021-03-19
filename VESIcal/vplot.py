@@ -5,7 +5,7 @@ from matplotlib.pyplot import *
 import pandas as pd
 import numpy as np
 import warnings as w
-import VESIcal.calibrations
+from VESIcal import calibrations
 from VESIcal.tasplot import *
 
 # ---------- DEFINE CUSTOM PLOTTING FORMATTING ------------ #
@@ -613,7 +613,7 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, figsize=
 		user_ymin = 0
 		user_ymax = 25
 	elif zoom == 'user_data':
-		if isinstance(user_data, BatchFile) or isinstance(user_data, pd.DataFrame):
+		if isinstance(user_data, pd.DataFrame):
 			print("'user_data' type zoom for more than one sample is not implemented yet.")
 			user_xmin = 35
 			user_xmax = 100
