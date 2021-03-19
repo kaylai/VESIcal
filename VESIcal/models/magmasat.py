@@ -617,7 +617,7 @@ class MagmaSat(model_classes.Model):
                     if X not in iso_vals:
                         sys.stdout.write("\r Calculating isobar control point at XH2Ofluid = " + str(X) + "               ")
                     if X_iter == len(all_iso_vals):
-                        sys.stdout.write("\r done.                                                                                                                           ")
+                        sys.stdout.write("\r done.                                                                                                                           \n")
                 saturated_vols = self.calculate_dissolved_volatiles(sample=_sample, temperature=temperature, pressure=i, H2O_guess=guess, X_fluid=X)
 
                 if X in required_iso_vals:
@@ -628,7 +628,7 @@ class MagmaSat(model_classes.Model):
                 guess = saturated_vols['H2O_liq']
 
         if print_status == True:
-            print("\nDone!")
+            print("Done!")
 
         isobars_df = pd.DataFrame(isobar_data, columns=['Pressure', 'H2O_liq', 'CO2_liq'])
         isopleths_df = pd.DataFrame(isopleth_data, columns=['XH2O_fl', 'H2O_liq', 'CO2_liq'])
