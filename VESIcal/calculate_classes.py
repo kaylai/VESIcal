@@ -66,8 +66,8 @@ class calculate_dissolved_volatiles(Calculate):
 
     Parameters
     ----------
-    sample:     dict or pandas Series
-        The major element oxides in wt%.
+    sample:    Sample class
+        The rock composition as a Sample object.
     pressure:   float
         Total pressure in bars.
     model:  string or Model object
@@ -163,8 +163,8 @@ class calculate_equilibrium_fluid_comp(Calculate):
 
     Parameters
     ----------
-    sample:     dict or pandas Series
-        The major element oxides in wt%.
+    sample:    Sample class
+        The rock composition as a Sample object.
     pressure:   float or None
         Total pressure in bars. If None, the saturation pressure will be used.
     model:  string or Model object
@@ -215,8 +215,8 @@ class calculate_isobars_and_isopleths(Calculate):
 
     Parameters
     ----------
-    sample:     dict or pandas Series
-        The major element oxides in wt%.
+    sample:    Sample class
+        The rock composition as a Sample object.
     pressure_list:   list
         List of all pressure values at which to calculate isobars, in bars.
     isopleth_list:   list
@@ -280,8 +280,8 @@ class calculate_saturation_pressure(Calculate):
 
     Parameters
     ----------
-    sample     pandas Series or dict
-        Major element oxides in wt% (including volatiles).
+    sample:    Sample class
+        The rock composition as a Sample object.
     model:  string or Model object
         Model to be used. If using one of the default models, this can be
         the string corresponding to the model in the default_models dict.
@@ -318,8 +318,8 @@ class calculate_degassing_path(Calculate):
 
     Parameters
     ----------
-    sample     pandas Series or dict
-        Major element oxides in wt% (including volatiles).
+    sample:    Sample class
+        The rock composition as a Sample object.
     pressure     string, float, int, list, or numpy array
         Defaults to 'saturation', the calculation will begin at the saturation pressure. If a number is passed
         as either a float or int, this will be the starting pressure. If a list of numpy array is passed, the
