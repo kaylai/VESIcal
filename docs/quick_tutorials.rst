@@ -5,6 +5,10 @@ Quick Reference
 
 General Notes, Tips, and Tricks
 ===============================
+Start with this:
+
+.. code-block:: python
+	import VESIcal as v
 
 Single-sample vs. batch processing
 ----------------------------------
@@ -14,7 +18,7 @@ Define a single sample manually, like this:
 
 .. code-block:: python
 
-	my_sample = {'SiO2':  77.3, 
+	my_sample = v.Sample({'SiO2':  77.3, 
          'TiO2':   0.08, 
          'Al2O3': 12.6, 
          'Fe2O3':  0.207,
@@ -29,13 +33,13 @@ Define a single sample manually, like this:
          'K2O':    4.88, 
          'P2O5':   0.0, 
          'H2O':    6.5,
-         'CO2':    0.05}
+         'CO2':    0.05})
 
 You can also extract a sample from a provided Excel or CSV file and save it to a variable. In this example, we have imported an Excel file to a variable named `myfile` and wish to extract the sample named 'SampleOne' (also see Import an Excel or CSV File below):
 
 .. code-block:: python
 
-	extracted_sample = myfile.get_sample_oxide_comp('SampleOne')
+	extracted_sample = myfile.get_sample_composition('SampleOne', asSampleClass=True)
 
 
 Using models other than MagmaSat
@@ -44,7 +48,7 @@ MagmaSat (i.e., MELTS v.1.2.0) is the default model for all function calls. But,
 
 .. code-block:: python
 
-	get_model_names()
+	v.get_model_names()
 
 which returns a list of model names, as strings.
 
@@ -52,7 +56,7 @@ You can then pass any one of those model names to any calculation, both for batc
 
 .. code-block:: python
 
-	calculate_saturation_pressure(sample=<your_sample>,
+	v.calculate_saturation_pressure(sample=<your_sample>,
 					temperature=<your_temp>,
 					model='Shishkina').result
 
@@ -94,26 +98,26 @@ You can import an Excel or CSV file containing compositional data describing you
 
 .. code-block:: python
 
-	BatchFile('path/to/your/file.xlsx')
+	v.BatchFile('path/to/your/file.xlsx')
 
 You'll want to save this BatchFile object to a variable. Do that like this:
 
 .. code-block:: python
 
-	myfile = BatchFile('path/to/your/file.xlsx')
+	myfile = v.BatchFile('path/to/your/file.xlsx')
 
 If your excel file has multiple sheets, you can specify which sheet to import. Note that you can only import one sheet at a time.
 
 .. code-block:: python
 
-	myfile = BatchFile('path/to/your/file.xlsx', sheet_name="SameOfYourSheet")
+	myfile = v.BatchFile('path/to/your/file.xlsx', sheet_name="SameOfYourSheet")
 
 You can also specify the sheet name by it's number (e.g. the 1st, 2nd, 3rd... sheet in the file) as:
 
 .. code-block:: python
 
-	myfile = BatchFile('path/to/your/file.xlsx', sheet_name=0) #import the first sheet
-	myotherfile = BatchFile('path/to/your/file.xlsx', sheet_name=4) #import the fifth sheet
+	myfile = v.BatchFile('path/to/your/file.xlsx', sheet_name=0) #import the first sheet
+	myotherfile = v.BatchFile('path/to/your/file.xlsx', sheet_name=4) #import the fifth sheet
 
 ----------
 
@@ -218,7 +222,7 @@ Or for a single sample, where `<your_sample>` is a variable (not a string):
 
 .. code-block:: python
 
-	calculate_dissolved_volatiles(sample=<your_sample>, 
+	v.calculate_dissolved_volatiles(sample=<your_sample>, 
 					temperature=<your_temp>, 
 					pressure=<your_pressure>, 
 					X_fluid=<your_X_fluid>).result
@@ -238,7 +242,7 @@ Or for a single sample, where `<your_sample>` is a variable (not a string):
 
 .. code-block:: python
 
-	calculate_equilibrium_fluid_comp(sample=<your_sample>, 
+	v.calculate_equilibrium_fluid_comp(sample=<your_sample>, 
 					temperature=<your_temp>, 
 					pressure=<your_pressure>).result
 
@@ -256,7 +260,7 @@ Or for a single sample, where `<your_sample>` is a variable (not a string):
 
 .. code-block:: python
 
-	calculate_saturation_pressure(sample=<your_sample>, 
+	v.calculate_saturation_pressure(sample=<your_sample>, 
 					temperature=<your_temp>).result
 
 ----------
@@ -267,7 +271,7 @@ You can only do this for a single sample. First, calculate the isobars and isopl
 
 .. code-block:: python
 
-	isobars, isopleths = calculate_isobars_and_isopleths(sample=<your_sample>, 
+	isobars, isopleths = v.calculate_isobars_and_isopleths(sample=<your_sample>, 
                                             temperature=<your_temp>,
                                             pressure_list=[<pressure1>, <pressure2>, <pressure3>],
                                             isopleth_list=[<isopleth1>, <isopleth2>, <isopleth3>].result
@@ -276,14 +280,14 @@ Then, you can very easily plot your newly calculated isobars and isopleths, like
 
 .. code-block:: python
 
-	fig, ax = plot(isobars=isobars, isopleths=isopleths)
+	fig, ax = v.plot(isobars=isobars, isopleths=isopleths)
 	show()
 
 You may wish to do some custom plotting of your isobar and isopleth data without relying on our built-in plot function. However, the raw isobars and isopleths output by the calculate method are a bit messy. `plot_isobars_and_isopleths()` has curve smoothing built-in. We have also implemented the same smoothing in a separate method, called `smooth_isobars_and_isopleths()` which takes isobars and/or isopleths as inputs and returns a pandas DataFrame with smoothed data ready for plotting. Use that function like so:
 
 .. code-block:: python
 
-	smooth_isobars_and_isopleths(isobars=isobars, isopleths=isopleths)
+	v.vplot.smooth_isobars_and_isopleths(isobars=isobars, isopleths=isopleths)
 
 ----------
 
@@ -297,7 +301,7 @@ This example shows the default degassing path, which is closed system degassing 
 
 .. code-block:: python
 
-	degass_closed = calculate_degassing_path(sample=<your_sample>,
+	degass_closed = v.calculate_degassing_path(sample=<your_sample>,
 					temperature=<your_temp>).result
 
 Closed-system with initial fluid
@@ -306,7 +310,7 @@ You might wish to calculate a degassing path for a closed-system, but where your
 
 .. code-block:: python
 
-	degass_init = calculate_degassing_path(sample=<your_sample>,
+	degass_init = v.calculate_degassing_path(sample=<your_sample>,
 					temperature=<your_temp>,
 					init_vapor=2.0).result
 
@@ -318,7 +322,7 @@ A completely open system, where `<your_sample>` is a variable (not a string):
 
 .. code-block:: python
 
-	degass_open = calculate_degassing_path(sample=<your_sample>,
+	degass_open = v.calculate_degassing_path(sample=<your_sample>,
 					temperature=<your_temp>,
 					fractionate_vapor=1.0).result
 
@@ -326,7 +330,7 @@ A partially open system, where 20% of vapor is fractionated at each calculation 
 
 .. code-block:: python
 
-	degass_partly_open = calculate_degassing_path(sample=<your_sample>,
+	degass_partly_open = v.calculate_degassing_path(sample=<your_sample>,
 					temperature=<your_temp>,
 					fractionate_vapor=0.2).result
 
@@ -334,9 +338,9 @@ You can then easily plot your newly calculated degassing paths like so:
 
 .. code-block:: python
 
-	fig, ax = plot(degassing_paths=[degass_closed, degass_init, degass_open, degass_partly_open],
+	fig, ax = v.plot(degassing_paths=[degass_closed, degass_init, degass_open, degass_partly_open],
             		degassing_path_labels=["Closed System", "2% Initial Fluid", "Open System", "Partly Open System"])
-    show()
+    v.show()
 
 
 

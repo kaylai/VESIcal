@@ -12,68 +12,48 @@ VESIcal
 
 Model()
 -------
-.. autoclass:: VESIcal.Model
-	:members:
-
-BatchFile()
------------
-.. autoclass:: VESIcal.BatchFile
-	:members:
-
-BatchFile_from_DataFrame()
---------------------------
-.. autoclass:: VESIcal.BatchFile_from_DataFrame
+.. autoclass:: VESIcal.model_classes.Model
 	:members:
 
 FugacityModel()
 ---------------
-.. autoclass:: VESIcal.FugacityModel
+.. autoclass:: VESIcal.fugacity_models.FugacityModel
 	:members:
 
 activity_model()
 ----------------
-.. autoclass:: VESIcal.activity_model
+.. autoclass:: VESIcal.activity_models.activity_model
 	:members:
 
 Calculate()
 -----------
-.. autoclass:: VESIcal.Calculate
+.. autoclass:: VESIcal.calculate_classes.Calculate
 	:members:
 
 calculate_dissolved_volatiles(Calculate)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autoclass:: VESIcal.calculate_dissolved_volatiles
+.. autoclass:: VESIcal.calculate_classes.calculate_dissolved_volatiles
 	:members:
 
 calculate_equilibrium_fluid_comp(Calculate)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autoclass:: VESIcal.calculate_equilibrium_fluid_comp
+.. autoclass:: VESIcal.calculate_classes.calculate_equilibrium_fluid_comp
 	:members:
 
 calculate_saturation_pressure(Calculate)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autoclass:: VESIcal.calculate_saturation_pressure
+.. autoclass:: VESIcal.calculate_classes.calculate_saturation_pressure
 	:members:
 
 calculate_isobars_and_isopleths(Calculate)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autoclass:: VESIcal.calculate_isobars_and_isopleths
+.. autoclass:: VESIcal.calculate_classes.calculate_isobars_and_isopleths
 	:members:
 
 calculate_degassing_path(Calculate)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autoclass:: VESIcal.calculate_degassing_path
+.. autoclass:: VESIcal.calculate_classes.calculate_degassing_path
 	:members:
-
-VESIcal core functions
-======================
-Functions defined in VESIcal.core
-
-.. autofunction:: VESIcal.fluid_molfrac_to_wt
-
-.. autofunction:: VESIcal.fluid_wt_to_molfrac
-
-.. autofunction:: VESIcal.get_oxides
 
 batchfile module
 ================
@@ -88,54 +68,61 @@ status_bar()
 ------------
 .. autofunction:: VESIcal.batchfile.status_bar
 
+BatchFile_from_DataFrame()
+--------------------------
+.. autoclass:: VESIcal.batchmodel.BatchFile_from_DataFrame
+	:members:
+
 Sample
 ======
 Functions defined in VESIcal.sample_class
 
 Sample()
 --------
+.. autoclass:: VESIcal.sample_class.Sample
+	:members:
 
 Fugacity Models
 ===============
 
 fugacity_idealgas(FugacityModel)
 --------------------------------
-.. autoclass:: VESIcal.fugacity_idealgas
+.. autoclass:: VESIcal.fugacity_models.fugacity_idealgas
 	:members:
 
 fugacity_KJ81_co2(FugacityModel)
 --------------------------------
-.. autoclass:: VESIcal.fugacity_KJ81_co2
+.. autoclass:: VESIcal.fugacity_models.fugacity_KJ81_co2
 	:members:
 
 fugacity_KJ81_h2o(FugacityModel)
 --------------------------------
-.. autoclass:: VESIcal.fugacity_KJ81_h2o
+.. autoclass:: VESIcal.fugacity_models.fugacity_KJ81_h2o
 	:members:
 
 fugacity_ZD09_co2(FugacityModel)
 --------------------------------
-.. autoclass:: VESIcal.fugacity_ZD09_co2
+.. autoclass:: VESIcal.fugacity_models.fugacity_ZD09_co2
 	:members:
 
 fugacity_RedlichKwong(FugacityModel)
 ------------------------------------
-.. autoclass:: VESIcal.fugacity_RedlichKwong
+.. autoclass:: VESIcal.fugacity_models.fugacity_RedlichKwong
 	:members:
 
 fugacity_HollowayBlank(FugacityModel)
 -------------------------------------
-.. autoclass:: VESIcal.fugacity_HollowayBlank
+.. autoclass:: VESIcal.fugacity_models.fugacity_HollowayBlank
 	:members:
 
 fugacity_HB_co2(FugacityModel)
 ------------------------------------
-.. autoclass:: VESIcal.fugacity_HB_co2
+.. autoclass:: VESIcal.fugacity_models.fugacity_HB_co2
 	:members:
 
 fugacity_HB_h2o(FugacityModel)
 ------------------------------------
-.. autoclass:: VESIcal.fugacity_HB_h2o
+.. autoclass:: VESIcal.fugacity_models.fugacity_HB_h2o
 	:members:
 
 Activity Models
@@ -143,7 +130,7 @@ Activity Models
 
 activity_idealsolution(activity_model)
 --------------------------------------
-.. autoclass:: VESIcal.activity_idealsolution
+.. autoclass:: VESIcal.activity_models.activity_idealsolution
 	:members:
 
 
@@ -152,52 +139,52 @@ Pure Fluid Models
 
 ShishkinaCarbon(Model)
 ----------------------
-.. autoclass:: VESIcal.ShishkinaCarbon
+.. autoclass:: VESIcal.models.shishkina.carbon
 	:members:
 
 ShishkinaWater(Model)
 ---------------------
-.. autoclass:: VESIcal.ShishkinaWater
+.. autoclass:: VESIcal.models.shishkina.water
 	:members:
 
 DixonCarbon(Model)
 ------------------
-.. autoclass:: VESIcal.DixonCarbon
+.. autoclass:: VESIcal.models.dixon.carbon
 	:members:
 
 DixonWater(Model)
 -----------------
-.. autoclass:: VESIcal.DixonWater
-	:members:
-
-IaconoMarzianoWater(Model)
---------------------------
-.. autoclass:: VESIcal.IaconoMarzianoWater
+.. autoclass:: VESIcal.models.dixon.water
 	:members:
 
 IaconoMarzianoCarbon(Model)
 ---------------------------
-.. autoclass:: VESIcal.IaconoMarzianoCarbon
+.. autoclass:: VESIcal.models.iaconomarziano.carbon
+	:members:
+
+IaconoMarzianoWater(Model)
+--------------------------
+.. autoclass:: VESIcal.models.iaconomarziano.water
 	:members:
 
 LiuWater(Model)
 -------------------
-.. autoclass:: VESIcal.LiuWater
+.. autoclass:: VESIcal.models.liu.water
 	:members:
 
 LiuCarbon(Model)
 -------------------
-.. autoclass:: VESIcal.LiuCarbon
+.. autoclass:: VESIcal.models.liu.carbon
 	:members:
 
 MooreWater(Model)
 -----------------
-.. autoclass:: VESIcal.MooreWater
+.. autoclass:: VESIcal.models.moore.water
 	:members:
 
 AllisonCarbon(Model)
 --------------------
-.. autoclass:: VESIcal.AllisonCarbon
+.. autoclass:: VESIcal.models.allison.carbon
 	:members:
 
 
@@ -206,12 +193,12 @@ Mixed Fluid Models
 
 MixedFluid(Model)
 -----------------
-.. autoclass:: VESIcal.MixedFluid
+.. autoclass:: VESIcal.model_classes.MixedFluid
 	:members:
 
 MagmaSat(Model)
 -----------------
-.. autoclass:: VESIcal.MagmaSat
+.. autoclass:: VESIcal.models.magmasat.MagmaSat
 	:members:
 
 VESIcal Plotting Functions
@@ -220,44 +207,20 @@ Functions defined in VESIcal.vplot
 
 .. autofunction:: VESIcal.plot
 
-.. autofunction:: VESIcal.scatterplot
+.. autofunction:: VESIcal.vplot.scatterplot
 
-.. autofunction:: VESIcal.smooth_isobars_and_isopleths
+.. autofunction:: VESIcal.vplot.smooth_isobars_and_isopleths
 
 .. autofunction:: VESIcal.calib_plot
-
-VESIcal Visualization Functions
-===============================
-
-.. autofunction:: VESIcal.printTable
-
-Normalization Functions
-=======================
-
-.. autofunction:: VESIcal.isnormalized
-
-.. autofunction:: VESIcal.normalize
-
-.. autofunction:: VESIcal.normalize_FixedVolatiles
-
-.. autofunction:: VESIcal.normalize_AdditionalVolatiles
 
 Data Transformation Functions
 =============================
 
-.. autofunction:: VESIcal.mol_to_wtpercent
+.. autofunction:: VESIcal.fluid_molfrac_to_wt
 
-.. autofunction:: VESIcal.wtpercentOxides_to_molCations
-
-.. autofunction:: VESIcal.wtpercentOxides_to_molOxides
-
-.. autofunction:: VESIcal.wtpercentOxides_to_molSingleO
-
-.. autofunction:: VESIcal.wtpercentOxides_to_formulaWeight
+.. autofunction:: VESIcal.fluid_wt_to_molfrac
 
 .. autofunction:: VESIcal.get_oxides
-
-.. autofunction:: VESIcal.rename_duplicates
 
 Universal Informative Functions
 ===============================

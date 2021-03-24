@@ -18,8 +18,8 @@ Import an Excel file
 
 .. code-block:: python
 
-	myfile = v.ExcelFile('example_data.xlsx')
-	myfile.data
+	myfile = v.BatchFile('example_data.xlsx')
+	myfile.get_data()
 
 .. csv-table:: Output
    :file: tables/example_data.csv
@@ -31,12 +31,18 @@ Returns the composition normalized to 100%, including any volatiles.
 
 .. code-block:: python
 
-	standard = v.normalize(myfile)
-	standard.data
+	standard = myfile.get_data(normalization='standard')
+	standard
 
 .. csv-table:: Output
    :file: tables/NormStandard.csv
    :header-rows: 1
+
+The variable standards is a pandas DataFrame object, not a VESIcal.BatchFile object. To apply this normalization to your data, you will need to create a new BatchFile object (or overwrite myfile):
+
+.. code-block:: python
+
+	my_normalized_file = v.BatchFile_from_DataFrame(standard)
 
 FixedVolatiles Normalization
 ----------------------------
@@ -44,8 +50,8 @@ Normalizes the oxides to 100%, but volatiles remain fixed while other major elem
 
 .. code-block:: python
 
-	fixed = v.normalize(myfile, how='fixedvolatiles')
-	fixed.data
+	fixed_vols = myfile.get_data(normalization='fixedvolatiles')
+	fixed_vols
 
 .. csv-table:: Output
    :file: tables/NormFixedVolatiles.csv
@@ -57,8 +63,8 @@ Normalizes oxides to 100% assuming the sample is volatile-free. If H_2O or CO_2 
 
 .. code-block:: python
 
-	additional = v.normalize(myfile, how='additionalvolatiles')
-	additional.data
+	additional_vols = myfile.get_data(normalization='additionalvolatiles')
+	additional_vols
 
 .. csv-table:: Output
    :file: tables/NormAdditionalVolatiles.csv
@@ -68,17 +74,27 @@ Normalize a single sample composition
 =====================================
 Extract a single sample from your dataset
 -----------------------------------------
+Here, a composition is extracted from a BatchFile object and returned as a Sample object. Set asSampleClass=False to return as a dictionary.
 
 .. code-block:: python
 
 	SampleName = 'BT-ex'
-	extracted_bulk_comp = myfile.get_sample_oxide_comp(SampleName)
+	extracted_bulk_comp = myfile.get_sample_composition(SampleName, asSampleClass=True)
+
+The normalization type can be passed to get_sample_composition directly:
+
+.. code-block:: python
+	extracted_bulk_comp = myfile.get_sample_composition(SampleName, normalization=<normalization-type>, asSampleClass=True)
+
+Or, normalization can be done to any Sample object, as shown below.
 
 Standard Normalization
 ----------------------
+In the following three examples, the normalized composition is returned as a dictionary, not as a Sample object.
+
 .. code-block:: python
 
-	single_standard = v.normalize(extracted_bulk_comp)
+	single_standard = extracted_bulk_comp.get_composition(normalization='standard')
 	single_standard
 
 .. code-block:: python
@@ -104,7 +120,7 @@ FixedVolatiles Normalization
 ----------------------------
 .. code-block:: python
 
-	single_fixed = v.normalize_FixedVolatiles(extracted_bulk_comp)
+	single_fixed = extracted_bulk_comp.get_composition(normalization='fixedvolatiles')
 	single_fixed
 
 .. code-block:: python
@@ -130,7 +146,7 @@ AdditionalVolatiles Normalization
 ---------------------------------
 .. code-block:: python
 
-	single_additional = v.normalize_AdditionalVolatiles(extracted_bulk_comp)
+	single_additional = extracted_bulk_comp.get_composition(normalization='additionalvolatiles')
 	single_additional
 
 .. code-block:: python
@@ -151,34 +167,5 @@ AdditionalVolatiles Normalization
 	 'P2O5': 0.0,
 	 'H2O': 5.5,
 	 'CO2': 0.05}
-
-Normalize Extracted Sample Composition In Place
------------------------------------------------
-A sample can be simultaneously extracted and normalized via 'standard', 'fixedvolatiles', and 'additionalvolatiles' normalization routines in one function call. This is acheived by passing any of these three strings to `norm` (which, by default, is set to 'none').
-
-.. code-block:: python
-
-	SampleName = 'BT-ex'
-	extracted_bulk_comp = myfile.get_sample_oxide_comp(SampleName, norm='standard')
-	extracted_bulk_comp
-
-.. code-block:: python
-
-	{'SiO2': 73.3693079617533,
-	 'TiO2': 0.07573605983148728,
-	 'Al2O3': 11.833759348669886,
-	 'Fe2O3': 0.1959670548139733,
-	 'Cr2O3': 0.0,
-	 'FeO': 0.44778945375366846,
-	 'MnO': 0.0,
-	 'MgO': 0.028401022436807727,
-	 'NiO': 0.0,
-	 'CoO': 0.0,
-	 'CaO': 0.4070813215942441,
-	 'Na2O': 3.7678689766164917,
-	 'K2O': 4.619899649720724,
-	 'P2O5': 0.0,
-	 'H2O': 5.2068541134147495,
-	 'CO2': 0.04733503739467954}
 
 
