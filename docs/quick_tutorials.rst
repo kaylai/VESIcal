@@ -5,16 +5,20 @@ Quick Reference
 
 General Notes, Tips, and Tricks
 ===============================
+Start with this:
+
+.. code-block:: python
+	import VESIcal as v
 
 Single-sample vs. batch processing
 ----------------------------------
-VESIcal allows you to perform calculations on a single sample, either defined as a dictionary or pulled from a supplied Excel file, or on an entire dataset, supplied by an Excel file. To define a single sample manually, create a dictionary with oxide names as keys and oxide concentrations as values. Note that you are defining a bulk system here, so the H2O and CO2 concentrations refer to those oxides in the entire melt +/- fluid system, not just dissolved in the melt.
+VESIcal allows you to perform calculations on a single sample, either defined as a dictionary or pulled from a supplied Excel or CSV file, or on an entire dataset, supplied by an Excel or CSV file. To define a single sample manually, create a dictionary with oxide names as keys and oxide concentrations as values. Note that you are defining a bulk system here, so the H2O and CO2 concentrations refer to those oxides in the entire melt +/- fluid system, not just dissolved in the melt.
 
 Define a single sample manually, like this:
 
 .. code-block:: python
 
-	my_sample = {'SiO2':  77.3, 
+	my_sample = v.Sample({'SiO2':  77.3, 
          'TiO2':   0.08, 
          'Al2O3': 12.6, 
          'Fe2O3':  0.207,
@@ -29,13 +33,13 @@ Define a single sample manually, like this:
          'K2O':    4.88, 
          'P2O5':   0.0, 
          'H2O':    6.5,
-         'CO2':    0.05}
+         'CO2':    0.05})
 
-You can also extract a sample from a provided Excel file and save it to a variable. In this example, we have imported an Excel file to a variable named `myfile` and wish to extract the sample named 'SampleOne' (also see Import an Excel File below):
+You can also extract a sample from a provided Excel or CSV file and save it to a variable. In this example, we have imported an Excel file to a variable named `myfile` and wish to extract the sample named 'SampleOne' (also see Import an Excel or CSV File below):
 
 .. code-block:: python
 
-	extracted_sample = myfile.get_sample_oxide_comp('SampleOne')
+	extracted_sample = myfile.get_sample_composition('SampleOne', asSampleClass=True)
 
 
 Using models other than MagmaSat
@@ -44,7 +48,7 @@ MagmaSat (i.e., MELTS v.1.2.0) is the default model for all function calls. But,
 
 .. code-block:: python
 
-	get_model_names()
+	v.get_model_names()
 
 which returns a list of model names, as strings.
 
@@ -52,13 +56,13 @@ You can then pass any one of those model names to any calculation, both for batc
 
 .. code-block:: python
 
-	calculate_saturation_pressure(sample=<your_sample>,
+	v.calculate_saturation_pressure(sample=<your_sample>,
 					temperature=<your_temp>,
 					model='Shishkina').result
 
-Pull arguments (P, T, X_fluid) from Excel file
-----------------------------------------------
-For any batch calcultions that take `pressure`, `temperature`, or `X_fluid` arguments, those arguments can either be defined directly in the function call, in which case the one value will be applied to all samples, or the arguments can be passed from the Excel file. For example, let's say we have an Excel file, which we've imported into VESIcal and named `myfile`, which contains compositional data, pressure, and temperature values for all of our samples. Our column with temperature values is named "MyTemps", and our column with pressure values is named "SomePs". We will apply one value for X_fluid to the whole dataset. Note that, even if a column of values for X_fluid exists in our Excel file, the following call will ignore it and instead use the value provided for all samples.
+Pull arguments (P, T, X_fluid) from a file
+------------------------------------------
+For any batch calcultions that take `pressure`, `temperature`, or `X_fluid` arguments, those arguments can either be defined directly in the function call, in which case the one value will be applied to all samples, or the arguments can be passed from the batch file. For example, let's say we have an Excel file, which we've imported into VESIcal and named `myfile`, which contains compositional data, pressure, and temperature values for all of our samples. Our column with temperature values is named "MyTemps", and our column with pressure values is named "SomePs". We will apply one value for X_fluid to the whole dataset. Note that, even if a column of values for X_fluid exists in our Excel file, the following call will ignore it and instead use the value provided for all samples.
 
 .. code-block:: python
 
@@ -88,48 +92,56 @@ as an argument to the function call. The values returned depend upon the calcula
 
 ----------
 
-Import an Excel file
-====================
-You can import an excel file containing compositional data describing your samples using the `ExcelFile` class. Your file should have each sample in a separate row, with data in terms of oxides. You can pass the optional argument `input_type` if oxide concentrations are not in wt% (options are 'wtpercent' (default), 'molpercent', and 'molfrac'). You can pass the optional argument 'label' to define the column title referring to the column containing sample names. The default value is 'Label'.
+Import an Excel or CSV file
+===========================
+You can import an Excel or CSV file containing compositional data describing your samples using the `BatchFile` class. Your file should have each sample in a separate row, with data in terms of oxides. You can pass the optional argument `input_type` if oxide concentrations are not in wt% (options are 'wtpercent' (default), 'molpercent', and 'molfrac'). You can pass the optional argument 'label' to define the column title referring to the column containing sample names. The default value is 'Label'.
 
 .. code-block:: python
 
-	ExcelFile('path/to/your/file.xlsx')
+	v.BatchFile('path/to/your/file.xlsx')
 
-You'll want to save this ExcelFile object to a variable. Do that like this:
+You'll want to save this BatchFile object to a variable. Do that like this:
 
 .. code-block:: python
 
-	myfile = ExcelFile('path/to/your/file.xlsx')
+	myfile = v.BatchFile('path/to/your/file.xlsx')
 
 If your excel file has multiple sheets, you can specify which sheet to import. Note that you can only import one sheet at a time.
 
 .. code-block:: python
 
-	myfile = ExcelFile('path/to/your/file.xlsx', sheet_name="SameOfYourSheet")
+	myfile = v.BatchFile('path/to/your/file.xlsx', sheet_name="SameOfYourSheet")
 
 You can also specify the sheet name by it's number (e.g. the 1st, 2nd, 3rd... sheet in the file) as:
 
 .. code-block:: python
 
-	myfile = ExcelFile('path/to/your/file.xlsx', sheet_name=0) #import the first sheet
-	myotherfile = ExcelFile('path/to/your/file.xlsx', sheet_name=4) #import the fifth sheet
+	myfile = v.BatchFile('path/to/your/file.xlsx', sheet_name=0) #import the first sheet
+	myotherfile = v.BatchFile('path/to/your/file.xlsx', sheet_name=4) #import the fifth sheet
 
 ----------
 
-Save Your Calculations to an Excel File
-=======================================
-Once you have performed some calculations and have assigned their outputs to variables, you can write all of your data to an excel file. Let's assume you have imported a file and written it to a variable called `myfile`. You then performed two calculations: `calculate_dissolved_volatiles()` and `calculate_saturation_pressure()`. You've written those outputs to teh variables `dissolved` and `SatP`, respectively. Here's how you would save these data to an excel file. What gets created is a .xlsx file with the first sheet containing your originally input data, the second sheet containing the dissolved data, and the third sheet containing the SatP data.
+Save Your Calculations to an Excel or CSV File
+==============================================
+Once you have performed some calculations and have assigned their outputs to variables, you can write all of your data to an excel or CSV file or files. Let's assume you have imported a file and written it to a variable called `myfile`. You then performed two calculations: `calculate_dissolved_volatiles()` and `calculate_saturation_pressure()`. You've written those outputs to teh variables `dissolved` and `SatP`, respectively. Here's how you would save these data to an excel file. What gets created is a .xlsx file with the first sheet containing your originally input data, the second sheet containing the dissolved data, and the third sheet containing the SatP data.
 
 .. code-block:: python
 
-	myfile.save_excelfile("myoutput.xlsx", calculations=[dissolved, SatP])
+	myfile.save_excel("myoutput.xlsx", calculations=[dissolved, SatP])
 
 Optionally, you can tell VESIcal what to name your new sheets in your new excel file:
 
 .. code-block:: python
 
-	myfile.save_excelfile("myoutput.xlsx", calculations=[dissolved, SatP], sheet_name=["My dissolved data", "My saturation data"])
+	myfile.save_excel("myoutput.xlsx", calculations=[dissolved, SatP], sheet_name=["My dissolved data", "My saturation data"])
+
+If instead you wish to save these calculations to CSV files, you can do so as:
+
+.. code-block:: python
+
+	myfile.save_csv(filenames=[my_dissolved_output.csv", "my_SatP_output.csv"], calculations=[dissolved, SatP])
+
+Your calculations will be saved to two CSV files: one for each calculation.
 
 Normalize and Transform Data
 ============================
@@ -145,7 +157,7 @@ Normalization Function
 
 Use of VESIcal.normalize()
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-Normalize can take a single sample as a dict or pandas Series or multiple samples as a pandas DataFrame or VESIcal ExcelFile object. The object returned has the same type as the object passed to `sample`.
+Normalize can take a single sample as a dict or pandas Series or multiple samples as a pandas DataFrame or VESIcal BatchFile object. The object returned has the same type as the object passed to `sample`.
 
 .. code-block:: python
 
@@ -186,19 +198,19 @@ Normalizes oxides to 100% assuming the sample is volatile-free. If H2O or CO2  c
 
 Normalize an Extracted Sample Composition
 -----------------------------------------
-One might wish to normalize a composition that is pulled from an ExcelFile object. This can be done in one function call, passing `none` (the default), `standard`, `fixedvolatiles`, or `additionalvolatiles` to norm. For example:
+One might wish to normalize a composition that is pulled from an BatchFile object. This can be done in one function call, passing `none` (the default), `standard`, `fixedvolatiles`, or `additionalvolatiles` to norm. For example:
 
 .. code-block:: python
 
 	sample_10 = myfile.get_sample_oxide_comp('Sample10', norm='fixedvolatiles')
 
-where myfile is an ExcelFile object and 'Sample10' is the Label of a particular sample in myfile.
+where myfile is an BatchFile object and 'Sample10' is the Label of a particular sample in myfile.
 
 ----------
 
 Calculate Dissolved Volatile Concentrations
 ===========================================
-For an entire dataset, where `myfile` is an ExcelFile object:
+For an entire dataset, where `myfile` is an BatchFile object:
 
 .. code-block:: python
 
@@ -210,7 +222,7 @@ Or for a single sample, where `<your_sample>` is a variable (not a string):
 
 .. code-block:: python
 
-	calculate_dissolved_volatiles(sample=<your_sample>, 
+	v.calculate_dissolved_volatiles(sample=<your_sample>, 
 					temperature=<your_temp>, 
 					pressure=<your_pressure>, 
 					X_fluid=<your_X_fluid>).result
@@ -219,7 +231,7 @@ Or for a single sample, where `<your_sample>` is a variable (not a string):
 
 Calculate Equilibrium Fluid Compositions
 ========================================
-For an entire dataset, where `myfile` is an ExcelFile object:
+For an entire dataset, where `myfile` is an BatchFile object:
 
 .. code-block:: python
 
@@ -230,7 +242,7 @@ Or for a single sample, where `<your_sample>` is a variable (not a string):
 
 .. code-block:: python
 
-	calculate_equilibrium_fluid_comp(sample=<your_sample>, 
+	v.calculate_equilibrium_fluid_comp(sample=<your_sample>, 
 					temperature=<your_temp>, 
 					pressure=<your_pressure>).result
 
@@ -238,7 +250,7 @@ Or for a single sample, where `<your_sample>` is a variable (not a string):
 
 Calculate Saturation Pressures
 ==============================
-For an entire dataset, where `myfile` is an ExcelFile object:
+For an entire dataset, where `myfile` is an BatchFile object:
 
 .. code-block:: python
 
@@ -248,7 +260,7 @@ Or for a single sample, where `<your_sample>` is a variable (not a string):
 
 .. code-block:: python
 
-	calculate_saturation_pressure(sample=<your_sample>, 
+	v.calculate_saturation_pressure(sample=<your_sample>, 
 					temperature=<your_temp>).result
 
 ----------
@@ -268,13 +280,14 @@ Then, you can very easily plot your newly calculated isobars and isopleths, like
 
 .. code-block:: python
 
-	plot(isobars=isobars, isopleths=isopleths)
+	fig, ax = v.plot(isobars=isobars, isopleths=isopleths)
+	show()
 
 You may wish to do some custom plotting of your isobar and isopleth data without relying on our built-in plot function. However, the raw isobars and isopleths output by the calculate method are a bit messy. `plot_isobars_and_isopleths()` has curve smoothing built-in. We have also implemented the same smoothing in a separate method, called `smooth_isobars_and_isopleths()` which takes isobars and/or isopleths as inputs and returns a pandas DataFrame with smoothed data ready for plotting. Use that function like so:
 
-.. code-block:: puython
+.. code-block:: python
 
-	smooth_isobars_and_isopleths(isobars=isobars, isopleths=isopleths)
+	v.vplot.smooth_isobars_and_isopleths(isobars=isobars, isopleths=isopleths)
 
 ----------
 
@@ -288,7 +301,7 @@ This example shows the default degassing path, which is closed system degassing 
 
 .. code-block:: python
 
-	degass_closed = calculate_degassing_path(sample=<your_sample>,
+	degass_closed = v.calculate_degassing_path(sample=<your_sample>,
 					temperature=<your_temp>).result
 
 Closed-system with initial fluid
@@ -297,7 +310,7 @@ You might wish to calculate a degassing path for a closed-system, but where your
 
 .. code-block:: python
 
-	degass_init = calculate_degassing_path(sample=<your_sample>,
+	degass_init = v.calculate_degassing_path(sample=<your_sample>,
 					temperature=<your_temp>,
 					init_vapor=2.0).result
 
@@ -309,7 +322,7 @@ A completely open system, where `<your_sample>` is a variable (not a string):
 
 .. code-block:: python
 
-	degass_open = calculate_degassing_path(sample=<your_sample>,
+	degass_open = v.calculate_degassing_path(sample=<your_sample>,
 					temperature=<your_temp>,
 					fractionate_vapor=1.0).result
 
@@ -317,7 +330,7 @@ A partially open system, where 20% of vapor is fractionated at each calculation 
 
 .. code-block:: python
 
-	degass_partly_open = calculate_degassing_path(sample=<your_sample>,
+	degass_partly_open = v.calculate_degassing_path(sample=<your_sample>,
 					temperature=<your_temp>,
 					fractionate_vapor=0.2).result
 
@@ -325,8 +338,9 @@ You can then easily plot your newly calculated degassing paths like so:
 
 .. code-block:: python
 
-	plot(degassing_paths=[degass_closed, degass_init, degass_open, degass_partly_open],
-            degassing_path_labels=["Closed System", "2% Initial Fluid", "Open System", "Partly Open System"])
+	fig, ax = v.plot(degassing_paths=[degass_closed, degass_init, degass_open, degass_partly_open],
+            		degassing_path_labels=["Closed System", "2% Initial Fluid", "Open System", "Partly Open System"])
+    v.show()
 
 
 
