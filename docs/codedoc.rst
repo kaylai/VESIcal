@@ -205,7 +205,7 @@ VESIcal Plotting Functions
 ==========================
 Functions defined in VESIcal.vplot
 
-.. autofunction:: VESIcal.plot
+.. autofunction:: VESIcal.vplot.plot
 
 .. autofunction:: VESIcal.vplot.scatterplot
 

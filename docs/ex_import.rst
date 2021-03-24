@@ -1,6 +1,6 @@
-####################
-Import an Excel file
-####################
+##################
+Import a Data file
+##################
 .. contents::
 
 For any code using the VESIcal library, the library must be imported for use. Here we import VESIcal as `v`. Any time we wish to use a function from VESIcal, that function must be preceded by v.. Specific examples of this usage follow. Here we also import some other python libraries that we will be using in the worked examples below.
@@ -11,17 +11,17 @@ For any code using the VESIcal library, the library must be imported for use. He
 
 Import your excel file and view it
 ==================================
-You can import an excel file containing compositional data describing your samples using the `ExcelFile` class. Your file should have each sample in a separate row, with data in terms of oxides. You can find the 'example_data.xlsx'`' file in the 'manuscript' folder in the github repository.
+You can import an excel or csv file containing compositional data describing your samples using the `BatchFile` class. Your file should have each sample in a separate row, with data in terms of oxides. You can find the 'example_data.xlsx'`' file in the 'manuscript' folder in the github repository.
 
 .. code-block:: python
 
-	myfile = v.ExcelFile('example_data.xlsx')
+	myfile = v.BatchFile('example_data.xlsx')
 
-Once the ExcelFile object is created and assigned to a variable, the user can then access the data loaded from their file as `variable.data`. In this example, the variable corresponding to the `ExcelFile` object is named `myfile` and so the data in that file can be accessed with `myfile.data`. Below, `myfile.data` is saved to a variable we name `data`. The variable `data` is a pandas DataFrame object, which makes displaying the data itself quite simple and aesthetically pleasing, since pandas DataFrames mimic spreadsheets.
+Once the BatchFile object is created and assigned to a variable, the user can then access the data loaded from their file as `variable.get_data()`. In this example, the variable corresponding to the `BatchFile` object is named `myfile` and so the data in that file can be accessed with `myfile.get_data()`. Below, `myfile.get_data()` is saved to a variable we name `data`. The variable `data` is a pandas DataFrame object, which makes displaying the data itself quite simple and aesthetically pleasing, since pandas DataFrames mimic spreadsheets.
 
 .. code-block:: python
 
-	data = myfile.data
+	data = myfile.get_data()
 	data
 
 	|           Label    | SiO2  | TiO2   | Al2O3 | Fe2O3 | Cr2O3 | FeO    | MnO    | MgO    | NiO | CoO | CaO    | Na2O | K2O  | P2O5   | H2O      | CO2      | Press | Temp |
@@ -43,12 +43,12 @@ Once the ExcelFile object is created and assigned to a variable, the user can th
 
 Extract and view a single sample
 ================================
-Defined within the ExcelFile() class, the method get_sample_oxide_comp() allows for the extraction of a melt composition from a loaded excel file.
+Defined within the BatchFile() class, the method get_sample_composition() allows for the extraction of a melt composition from a loaded file.
 
 .. code-block:: python
 
 	SampleName = 'BT-ex'
-	extracted_bulk_comp = myfile.get_sample_oxide_comp(SampleName)
+	extracted_bulk_comp = myfile.get_sample_composition(SampleName)
 	extracted_bulk_comp
 
 	{'SiO2': 77.5,
@@ -67,3 +67,39 @@ Defined within the ExcelFile() class, the method get_sample_oxide_comp() allows 
 	 'P2O5': 0.0,
 	 'H2O': 5.5,
 	 'CO2': 0.05}
+
+In order to use this sample for VESIcal calculations, you'll need to create a Sample object to hold this compositional data. You can extract a single sample as a Sample object by changing the above example to:
+
+.. code-block:: python
+
+	SampleName = 'BT-ex'
+	extracted_bulk_comp = myfile.get_sample_composition(SampleName, asSampleClass=True)
+
+You can create any Sample object from a dict or pandas Series as:
+
+.. code-block:: python
+
+	mysample = v.Sample({'SiO2': 77.5,
+	 'TiO2': 0.08,
+	 'Al2O3': 12.5,
+	 'Fe2O3': 0.207,
+	 'Cr2O3': 0.0,
+	 'FeO': 0.473,
+	 'MnO': 0.0,
+	 'MgO': 0.03,
+	 'NiO': 0.0,
+	 'CoO': 0.0,
+	 'CaO': 0.43,
+	 'Na2O': 3.98,
+	 'K2O': 4.88,
+	 'P2O5': 0.0,
+	 'H2O': 5.5,
+	 'CO2': 0.05})
+
+or simply
+
+.. code-block:: python
+
+	mysample = v.Sample(extracted_bulk_comp)
+
+if extracted_bulk_comp is a dict or pandas Series.

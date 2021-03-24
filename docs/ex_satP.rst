@@ -40,13 +40,13 @@ If mutliple samples are passed as an ExcelFile object, a pandas DataFrame is ret
 
 For an entire dataset
 =====================
-Import an Excel file
---------------------
+Import a data file
+------------------
 
 .. code-block:: python
 
-	myfile = v.ExcelFile('example_data.xlsx')
-	myfile.data
+	myfile = v.BatchFile('example_data.xlsx')
+	myfile.get_data()
 
 .. csv-table:: Output
    :file: tables/example_data.csv
@@ -59,24 +59,6 @@ Do the calculation
 
 	satPs = myfile.calculate_saturation_pressure(temperature=925.0)
 	satPs
-
-.. code-block:: python
-
-	Calculating sample BT-ex
-	Calculating sample TVZMa-ex
-	Calculating sample TVZOh-ex
-	Calculating sample Oh48-FTIR1-MI1-a
-	Calculating sample Oh48-FTIR1-MI1-b
-	Calculating sample Oh48-FTIR1-MI1-IRc
-	Calculating sample Oh50-4.1
-	Calculating sample Oh50-4.2
-	Calculating sample Oh49-4.1
-	Calculating sample Oh49-4.2
-	Calculating sample Ma55-5a.1
-	Calculating sample Ma57-3b.2
-	Calculating sample Ma57-3c.1
-	Calculating sample Ma57-3c.2
-	Done!
 
 .. csv-table:: Output
    :file: tables/satP.csv
@@ -91,7 +73,7 @@ Extract a single sample from your dataset
 .. code-block:: python
 
 	SampleName = 'BT-ex'
-	extracted_bulk_comp = myfile.get_sample_oxide_comp(SampleName)
+	extracted_bulk_comp = myfile.get_sample_composition(SampleName, asSampleClass=True)
 
 Do the calculation
 ------------------

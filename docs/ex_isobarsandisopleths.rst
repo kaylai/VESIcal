@@ -37,14 +37,14 @@ The calculation is performed by iterating through possible concentrations of H2O
 **Calculated outputs:**
 The function returns two pandas DataFrames: the first has isobar data, and the second has isopleth data. Columns in the isobar dataframe are ‘Pressure’, ‘H2Omelt’, and ‘CO2melt’, correpsonding to pressure in bars and dissolved H2O and CO2 in the liquid in wt%. Columns in the isopleth dataframe are ‘XH2O_fl’, ‘H2O_liq’, and ‘CO2_liq’, corresponding to XH2Ofluid and dissolved H2O and CO2 in the liquid in wt%.
 
-Import an Excel file and extract a single sample
-------------------------------------------------
+Import a data file and extract a single sample
+----------------------------------------------
 
 .. code-block:: python
 
-	myfile = v.ExcelFile('../manuscript/example_data.xlsx')
+	myfile = v.BatchFile('../manuscript/example_data.xlsx')
 	SampleName = 'BT-ex'
-	extracted_bulk_comp = myfile.get_sample_oxide_comp(SampleName)
+	extracted_bulk_comp = myfile.get_sample_composition(SampleName, asSampleClass=True)
 
 Do the calculation
 ------------------
@@ -86,7 +86,8 @@ Plot your data
 
 .. code-block:: python
 
-	v.plot(isobars=isobars, isopleths=isopleths)
+	fig, ax = v.plot(isobars=isobars, isopleths=isopleths)
+	v.show()
 
 .. image:: img/ex_isobarsandisopleths_img1.png
    :width: 600
@@ -99,14 +100,14 @@ Following the example above, we could get smoothed isobars and/or isopleths with
 
 .. code-block:: python
 
-	smoothed_isobars, smoothed_isopleths = v.smooth_isobars_and_isopleths(isobars, isopleths)
+	smoothed_isobars, smoothed_isopleths = v.vplot.smooth_isobars_and_isopleths(isobars, isopleths)
 
 The method can also do isobars only or isopleths only, like:
 
 .. code-block:: python
 
-	smoothed_isobars = v.smooth_isobars_and_isopleths(isobars)
-	smoothed_isopleths = v.smooth_isobars_and_isopleths(isopleths=isopleths)
+	smoothed_isobars = v.vplot.smooth_isobars_and_isopleths(isobars)
+	smoothed_isopleths = v.vplot.smooth_isobars_and_isopleths(isopleths=isopleths)
 
 Below is essentially the same code that our `plot()` and `smooth_isobars_and_isopleths()` methods use to perform smoothing with numpy. Executing the code below will produce the same output as a call to `plot()`. Feel free to grab this code and edit it to customize to your hearts desire.
 

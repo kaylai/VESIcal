@@ -3,9 +3,9 @@ Normalizing and Transforming Data
 #################################
 .. contents::
 
-Before performing model calculations on your data, it may be desired to normalize the input composition to a total of 100 wt%. VESIcal has multiple methods for normalizing sample data using various routines. Normalization can be done automatically when retrieving a single sample from an Excel file, as detailed above. Each of the normalization routines can be accessed by the user at any time to normalize either a signle sample or all samples in an ExcelFile object.
+Before performing model calculations on your data, it may be desired to normalize the input composition to a total of 100 wt%. VESIcal has multiple methods for normalizing sample data using various routines. Each of the normalization routines can be accessed by the user at any time to normalize either a signle sample or all samples in a BatchFile object.
 
-All three normalization functions can take in either a single composition as a dictionary or multiple compositions either as an ExcelFile object or a pandas DataFrame object (e.g., `yourexcelfile` or `yourexcelfile.data`). The standard normalize functino returns the composition normalized to 100%, including any volatiles. The FixedVolatiles function normalizes the oxides to 100%, but volatiles remain fixed while other major element oxides are reduced proporitonally so that the total is 100 wt%. The AdditionalVolatiles function normalizes oxides to 100% assuming the sample is volatile-free. If H\ :subscript:`2`\ O or CO\ :subscript:`2` concentrations are passed to the function, their un-normalized values will be retained in addition to the normalized non-volatile oxides, summing to >100%.
+The standard normalization type returns the composition normalized to 100%, including any volatiles. The FixedVolatiles type the oxides to 100%, but volatiles remain fixed while other major element oxides are reduced proporitonally so that the total is 100 wt%. The AdditionalVolatiles type normalizes oxides to 100% assuming the sample is volatile-free. If H\ :subscript:`2`\ O or CO\ :subscript:`2` concentrations are passed to the function, their un-normalized values will be retained in addition to the normalized non-volatile oxides, summing to >100%.
 
 .. code-block:: python
 
@@ -43,6 +43,12 @@ The variable standards is a pandas DataFrame object, not a VESIcal.BatchFile obj
 .. code-block:: python
 
 	my_normalized_file = v.BatchFile_from_DataFrame(standard)
+
+or
+
+.. code-block:: python
+
+	my_normalized_file = v.BatchFile(filename=None, dataframe=standard)
 
 FixedVolatiles Normalization
 ----------------------------

@@ -36,14 +36,14 @@ Completely open-system, completely closed-system or partially open-system degass
 **Calculated outputs:**
 The function returns a pandas DataFrame with columns as: ‘Pressure_bars’, ‘H2O_liq’ and ‘CO2_liq’ (the concentration of H2O and CO2 in the liquid, in wt%), ‘XH2O_fl’ and ‘XCO2_fl’ (the composition of the H2O-CO2 fluid, in mol fraction), and ‘FluidProportion_wt’ (the proportion of fluid in the fluid-melt system, in wt%).
 
-Import an Excel file and extract a single sample
-------------------------------------------------
+Import a data file and extract a single sample
+----------------------------------------------
 
 .. code-block:: python
 
-	myfile = v.ExcelFile('../manuscript/example_data.xlsx')
+	myfile = v.BatchFile('../manuscript/example_data.xlsx')
 	SampleName = 'BT-ex'
-	extracted_bulk_comp = myfile.get_sample_oxide_comp(SampleName)
+	extracted_bulk_comp = myfile.get_sample_composition(SampleName, asSampleClass=True)
 
 Open system degassing calculation
 ---------------------------------
@@ -107,8 +107,9 @@ Plotting degassing paths from saturation pressure
 
 .. code-block:: python
 
-	v.plot(degassing_paths=[open_df, half_df, closed_df, exsolved_df],
+	fig, ax = v.plot(degassing_paths=[open_df, half_df, closed_df, exsolved_df],
            degassing_path_labels=["Open", "Half", "Closed", "Exsolved"])
+    v.show()
 
 .. image:: img/ex_degassing_img1.png
    :width: 500
@@ -119,7 +120,8 @@ Plotting degassing paths from 2000 bars
 
 .. code-block:: python
 
-	v.plot(degassing_paths=[start2000_df], degassing_path_labels=["2000 bars"])
+	fig, ax = v.plot(degassing_paths=[start2000_df], degassing_path_labels=["2000 bars"])
+	v.show()
 
 .. image:: img/ex_degassing_img2.png
    :width: 500

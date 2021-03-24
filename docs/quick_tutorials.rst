@@ -8,6 +8,7 @@ General Notes, Tips, and Tricks
 Start with this:
 
 .. code-block:: python
+
 	import VESIcal as v
 
 Single-sample vs. batch processing
@@ -150,35 +151,23 @@ Before performing model calculations on a dataset, it may be desired to normaliz
 
 In some cases, data transformations internal to model calculations (e.g., converting between wt% and mol fraction) in effect cause normalization of the input bulk composition anyways, and so normalizing ahead of time will make no difference in the final modeled result. For example, `calculate_dissolved_volatiles` is agnostic to any a priori normalization of the data since the volatiles are handled separately from the dry bulk. On the other hand, `calculate_saturation_pressure` depends very much on any normalization performed, since the calculated pressure depends directly and strongly on the proportion of volatiles in the bulk composition.
 
-Normalization Function
-----------------------
-
-.. autofunction:: VESIcal.normalize
-
-Use of VESIcal.normalize()
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-Normalize can take a single sample as a dict or pandas Series or multiple samples as a pandas DataFrame or VESIcal BatchFile object. The object returned has the same type as the object passed to `sample`.
-
-.. code-block:: python
-
-	normalize(sample)
-
-Normalization Types
--------------------
+Normalization
+-------------
 
 Standard normalization
 ^^^^^^^^^^^^^^^^^^^^^^
-Returns the composition normalized to 100%, including any volatiles. This is the default if nothing is passed to 'how'.
+Returns the composition normalized to 100%, including any volatiles. 
 
 .. code-block:: python
 
-	normalize(sample)
+	standard = mysample.get_composition(normalization="standard")
 
-produces the same result as:
+If you wish to update the composition in mysample to the normalized one, you can then do:
 
 .. code-block:: python
 
-	normalize(sample, how='standard')
+	mysample.change_composition(standard)
+
 
 FixedVolatiles Normalization
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -186,7 +175,8 @@ Normalizes the oxides to 100%, but volatiles remain fixed while other major elem
 
 .. code-block:: python
 
-	normalize(sample, how='fixedvolatiles')
+	fixed = mysample.get_composition(normalization="fixedvolatiles")
+	mysample.change_composition(fixed)
 
 AdditionalVolatiles Normalization
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -194,17 +184,19 @@ Normalizes oxides to 100% assuming the sample is volatile-free. If H2O or CO2  c
 
 .. code-block:: python
 
-	normalize(sample, how='additionalvolatiles')
+	additional = mysample.get_composition(normalization="additionalvolatiles")
+	mysample.change_composition(additional)
 
-Normalize an Extracted Sample Composition
------------------------------------------
-One might wish to normalize a composition that is pulled from an BatchFile object. This can be done in one function call, passing `none` (the default), `standard`, `fixedvolatiles`, or `additionalvolatiles` to norm. For example:
+Normalize a BatchFile object
+----------------------------
+One might wish to normalize all samples within a BatchFile object. To do so, you can extract and normalize all of the data from your BatchFile object and then create a new BatchFile object with the now normalized data:
 
 .. code-block:: python
 
-	sample_10 = myfile.get_sample_oxide_comp('Sample10', norm='fixedvolatiles')
+	my_normed_data = myfile.get_data(normalization="standard")
+	myNewData = v.BatchFile(filname=None, dataframe=my_normed_data)
 
-where myfile is an BatchFile object and 'Sample10' is the Label of a particular sample in myfile.
+The value for normalization can be any of "standard", "fixedvolatiles", or "additionalvolatiles".
 
 ----------
 
