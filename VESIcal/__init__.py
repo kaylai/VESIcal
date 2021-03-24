@@ -53,19 +53,28 @@ def get_model_names(model='all'):
 
 # -------------- PLOTTING DEFINITIONS ----- #
 def plot(**kwargs):
+	"""
+	Inherits from vplot.plot().
+	"""
     return vplot.plot(**kwargs)
 
 def calib_plot(**kwargs):
+	"""
+	Inherits from vplot.calib_plot()
+	"""
     return vplot.calib_plot(**kwargs)
 
 def show():
+	"""
+	Inherits from vplot.show()
+	"""
     return vplot.show()
 
 
 # -------------- SAMPLE PROCESSING ---------- #
 class Sample(sample_class.Sample):
     """
-    Provides methods for working with rock compositions.
+    Provides methods for working with rock compositions. Inherits from sample_class.Sample().
     """
     pass
 
@@ -95,13 +104,13 @@ def get_oxides(sample):
 # -------------- BATCH PROCESSING ------------ #
 class BatchFile(batchmodel.BatchFile):
     """
-    Provides methods for batch processing files of data.
+    Provides methods for batch processing files of data. Inherits from batchfile.BatchFile().
     """
     pass
 
 def BatchFile_from_DataFrame(dataframe, **kwargs):
     """
-    Provides method for creating a BatchFile object from an existing pandas DataFrame.
+    Provides method for creating a BatchFile object from an existing pandas DataFrame. Inherits from batchfile.BatchFile().
     """
     return batchmodel.BatchFile_from_DataFrame(dataframe, **kwargs)
 
