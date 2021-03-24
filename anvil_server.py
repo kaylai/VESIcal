@@ -26,7 +26,7 @@ def get_user_data():
 def import_ExcelFile(file):
 	global gMyFile
 	with anvil.media.TempFile(file) as filename:
-		gMyFile = v.ExcelFile(filename)
+		gMyFile = v.BatchFile(filename)
 
 	#gMyFile.data = gMyFile.data.reset_index().set_index('Label', drop=False) #turn Label column into normal column so that it's not lost
 	add_df_to_anvil_table(gMyFile.data, app_tables.user_data)
