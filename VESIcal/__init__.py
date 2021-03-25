@@ -53,21 +53,21 @@ def get_model_names(model='all'):
 
 # -------------- PLOTTING DEFINITIONS ----- #
 def plot(**kwargs):
-	"""
-	Inherits from vplot.plot().
-	"""
+    """
+    Inherits from vplot.plot().
+    """
     return vplot.plot(**kwargs)
 
 def calib_plot(**kwargs):
-	"""
-	Inherits from vplot.calib_plot()
-	"""
+    """
+    Inherits from vplot.calib_plot()
+    """
     return vplot.calib_plot(**kwargs)
 
 def show():
-	"""
-	Inherits from vplot.show()
-	"""
+    """
+    Inherits from vplot.show()
+    """
     return vplot.show()
 
 
