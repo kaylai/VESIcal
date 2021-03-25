@@ -220,6 +220,13 @@ class Sample(object):
             raise core.InputError("The units must be one of 'wtpt_oxides', 'mol_oxides', 'mol_cations', \
             or 'mol_singleO'.")
 
+        # Check that all recognized oxides have a value. If not, assign a value of 0.0
+        for oxide in core.oxides:
+            if oxide in final.index:
+                pass
+            else:
+                final[oxide] = 0.0
+
         if species == None:
             if asSampleClass == False:
                 return final
