@@ -165,21 +165,7 @@ class Sample(object):
         if units == None and species == None:
             units = self.default_units
 
-        # Check for a species being provided, if so, work out which units to return.
-        if isinstance(species,str):
-            if species in core.oxides:
-                if units in ['mol_cations, mol_singleO'] or units == None:
-                    units = 'wtpt_oxides'
-            elif species in core.cations_to_oxides:
-                if units in ['wtpt_oxides','mol_oxides'] or units == None:
-                    units = 'mol_cations'
-            else:
-                raise core.InputError(species + " was not recognised, check spelling, capitalization and stoichiometry.")
-            if normalization == None:
-                normalization = 'none'
-        elif species != None:
-            raise core.InputError("Species must be either a string or a NoneType.")
-
+        # Check wheher to exclude volatiles
         if exclude_volatiles == True:
             composition = self._composition.copy()
             if 'H2O' in composition.index:
@@ -188,6 +174,25 @@ class Sample(object):
                 composition = composition.drop(index='CO2')
         else:
             composition = self._composition.copy()
+
+        # Check for a species being provided, if so, work out which units to return.
+        if isinstance(species,str):
+            if species in composition.index: # if the requested species has a value, proceed
+                if species in core.oxides:
+                    if units in ['mol_cations, mol_singleO'] or units == None:
+                        units = 'wtpt_oxides'
+                elif species in core.cations_to_oxides:
+                    if units in ['wtpt_oxides','mol_oxides'] or units == None:
+                        units = 'mol_cations'
+                else:
+                    raise core.InputError(species + " was not recognised, check spelling, capitalization and stoichiometry.")
+                if normalization == None:
+                    normalization = 'none'
+            else:
+                return 0.0 # if the requested species has no set value, return a float of 0
+        elif species != None:
+            raise core.InputError("Species must be either a string or a NoneType.")
+
 
         # Do requested normalization
         if normalization == 'none':
