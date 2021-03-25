@@ -110,7 +110,7 @@ class Sample(object):
             raise core.InputError("The units must be one of 'wtpt_oxides','mol_oxides','mol_cations','mol_singleO'.")
 
 
-    def get_composition(self, species=None, normalization=None, units=None, exclude_volatiles=False):
+    def get_composition(self, species=None, normalization=None, units=None, exclude_volatiles=False, asSampleClass=False):
         """ Returns the composition in the format requested, normalized as requested.
 
         Parameters
@@ -149,9 +149,13 @@ class Sample(object):
             If True, volatiles will be excluded from the returned composition, prior to normalization and
             conversion.
 
+        asSampleClass:  bool
+            If True, the sample composition will be returned as a sample class, with default options. In this case
+            any normalization instructions will be ignored.
+
         Returns
         -------
-        pandas.Series or float
+        pandas.Series, float, or Sample class
             The sample composition, as specified.
         """
 
@@ -212,8 +216,14 @@ class Sample(object):
             or 'mol_singleO'.")
 
         if species == None:
-            return final
+            if asSampleClass == False:
+                return final
+            else:
+                return Sample(final)
         elif isinstance(species,str):
+            if asSampleClass == True:
+                w.warn("Cannot return single species as Sample class. Returning as float.",
+                    RuntimeWarning,stacklevel=2)
             return final[species]
 
     def change_composition(self, new_composition, units='wtpt_oxides', inplace=True):
