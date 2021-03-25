@@ -321,32 +321,32 @@ class TestGetComposition(unittest.TestCase):
         self.sample = v.Sample(self.majorsv)
 
     def test_default(self):
-        composition = self.sample.get_composition()
+        composition = self.sample.get_composition(exclude_zeros=True)
         for ox in composition.index:
             self.assertEqual(composition[ox],self.majorsv[ox])
 
     def test_wtptoxides_none(self):
-        composition = self.sample.get_composition(normalization='none')
+        composition = self.sample.get_composition(normalization='none', exclude_zeros=True)
         for ox in composition.index:
             self.assertEqual(composition[ox],self.majorsv[ox])
 
     def test_wtptoxides_none_exclV(self):
-        composition = self.sample.get_composition(normalization='none',exclude_volatiles=True)
+        composition = self.sample.get_composition(normalization='none',exclude_volatiles=True, exclude_zeros=True)
         for ox in composition.index:
             self.assertEqual(composition[ox],self.majors[ox])
 
     def test_wtptoxides_std(self):
-        composition = self.sample.get_composition(normalization='standard')
+        composition = self.sample.get_composition(normalization='standard', exclude_zeros=True)
         for ox in composition.index:
             self.assertEqual(np.round(composition[ox],2),np.round(self.majorsv_normed[ox],2))
 
     def test_wtptoxides_std_exclV(self):
-        composition = self.sample.get_composition(normalization='standard',exclude_volatiles=True)
+        composition = self.sample.get_composition(normalization='standard',exclude_volatiles=True, exclude_zeros=True)
         for ox in composition.index:
             self.assertEqual(np.round(composition[ox],2),np.round(self.majors_normed[ox],2))
 
     def test_wtptoxides_fixedVolatiles(self):
-        composition = self.sample.get_composition(normalization='fixedvolatiles')
+        composition = self.sample.get_composition(normalization='fixedvolatiles', exclude_zeros=True)
         for ox in composition.index:
             if ox not in ['CO2','H2O']:
                 self.assertEqual(np.round(composition[ox],2),np.round(self.majors_normed[ox]*(100-self.majorsv['CO2']-self.majorsv['H2O'])/100,2))
@@ -354,12 +354,12 @@ class TestGetComposition(unittest.TestCase):
                 self.assertEqual(np.round(composition[ox],2),np.round(self.majorsv[ox],2))
 
     def test_wtptoxides_fixedVolatiles_exclV(self):
-        composition = self.sample.get_composition(normalization='fixedvolatiles',exclude_volatiles=True)
+        composition = self.sample.get_composition(normalization='fixedvolatiles',exclude_volatiles=True, exclude_zeros=True)
         for ox in composition.index:
             self.assertEqual(np.round(composition[ox],2),np.round(self.majors_normed[ox],2))
 
     def test_wtptoxides_additionalVolatiles(self):
-        composition = self.sample.get_composition(normalization='additionalvolatiles')
+        composition = self.sample.get_composition(normalization='additionalvolatiles', exclude_zeros=True)
         for ox in composition.index:
             if ox not in ['CO2','H2O']:
                 self.assertEqual(np.round(composition[ox],2),np.round(self.majors_normed[ox],2))
@@ -367,37 +367,37 @@ class TestGetComposition(unittest.TestCase):
                 self.assertEqual(np.round(composition[ox],2),np.round(self.majorsv[ox],2))
 
     def test_wtptoxides_additionalVolatiles_exclV(self):
-        composition = self.sample.get_composition(normalization='additionalvolatiles',exclude_volatiles=True)
+        composition = self.sample.get_composition(normalization='additionalvolatiles',exclude_volatiles=True, exclude_zeros=True)
         for ox in composition.index:
             self.assertEqual(np.round(composition[ox],2),np.round(self.majors_normed[ox],2))
 
     def test_moloxides(self):
-        composition = self.sample.get_composition(units='mol_oxides')
+        composition = self.sample.get_composition(units='mol_oxides', exclude_zeros=True)
         for ox in composition.index:
             self.assertEqual(np.round(composition[ox],3),np.round(self.majorsv_moloxides[ox],3))
 
     def test_moloxides_exclV(self):
-        composition = self.sample.get_composition(units='mol_oxides',exclude_volatiles=True)
+        composition = self.sample.get_composition(units='mol_oxides',exclude_volatiles=True, exclude_zeros=True)
         for ox in composition.index:
             self.assertEqual(np.round(composition[ox],3),np.round(self.majors_moloxides[ox],3))
 
     def test_molcations(self):
-        composition = self.sample.get_composition(units='mol_cations')
+        composition = self.sample.get_composition(units='mol_cations', exclude_zeros=True)
         for el in composition.index:
             self.assertEqual(np.round(composition[el],3),np.round(self.majorsv_molcations[el],3))
 
     def test_molcations_exclV(self):
-        composition = self.sample.get_composition(units='mol_cations',exclude_volatiles=True)
+        composition = self.sample.get_composition(units='mol_cations',exclude_volatiles=True, exclude_zeros=True)
         for el in composition.index:
             self.assertEqual(np.round(composition[el],3),np.round(self.majors_molcations[el],3))
 
     def test_molsingleO(self):
-        composition = self.sample.get_composition(units='mol_singleO')
+        composition = self.sample.get_composition(units='mol_singleO', exclude_zeros=True)
         for el in composition.index:
             self.assertEqual(np.round(composition[el],3),np.round(self.majorsv_molSingleO[el],3))
 
     def test_molsingleO_exclV(self):
-        composition = self.sample.get_composition(units='mol_singleO',exclude_volatiles=True)
+        composition = self.sample.get_composition(units='mol_singleO',exclude_volatiles=True, exclude_zeros=True)
         for el in composition.index:
             self.assertEqual(np.round(composition[el],3),np.round(self.majors_molSingleO[el],3))
 

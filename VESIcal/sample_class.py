@@ -110,7 +110,7 @@ class Sample(object):
             raise core.InputError("The units must be one of 'wtpt_oxides','mol_oxides','mol_cations','mol_singleO'.")
 
 
-    def get_composition(self, species=None, normalization=None, units=None, exclude_volatiles=False, asSampleClass=False):
+    def get_composition(self, species=None, normalization=None, units=None, exclude_volatiles=False, exclude_zeros=False, asSampleClass=False):
         """ Returns the composition in the format requested, normalized as requested.
 
         Parameters
@@ -148,6 +148,10 @@ class Sample(object):
         exclude_volatiles   bool
             If True, volatiles will be excluded from the returned composition, prior to normalization and
             conversion.
+
+        exclude_zeros   bool
+            If True, any component with a value of 0.0 will be excluded from the returned composition, 
+            prior to normalization and conversion.
 
         asSampleClass:  bool
             If True, the sample composition will be returned as a sample class, with default options. In this case
@@ -207,6 +211,14 @@ class Sample(object):
             raise core.InputError("The normalization method must be one of 'none', 'standard', 'fixedvolatiles',\
              or 'additionalvolatiles'.")
 
+        # Check that all recognized oxides have a value. If not, assign a value of 0.0
+        if exclude_zeros == False:
+            for oxide in core.oxides:
+                if oxide in normed.index:
+                    pass
+                else:
+                    normed[oxide] = 0.0
+
         # Get the requested type of composition
         if units == 'wtpt_oxides':
             final = normed
@@ -219,13 +231,6 @@ class Sample(object):
         else:
             raise core.InputError("The units must be one of 'wtpt_oxides', 'mol_oxides', 'mol_cations', \
             or 'mol_singleO'.")
-
-        # Check that all recognized oxides have a value. If not, assign a value of 0.0
-        for oxide in core.oxides:
-            if oxide in final.index:
-                pass
-            else:
-                final[oxide] = 0.0
 
         if species == None:
             if asSampleClass == False:
