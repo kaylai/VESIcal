@@ -6,6 +6,7 @@ from VESIcal import core
 from VESIcal import fugacity_models
 from VESIcal import models
 from VESIcal import sample_class
+import numpy as np
 
 # THIS ROUTINE SHOULD BE REMOVED ONCE THE 'PROPER' TESTING ROUTINES HAVE BEEN IMPLEMENTED.
 def test():

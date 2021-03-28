@@ -84,7 +84,7 @@ class Sample(object):
             - 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
             volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
             be retained in addition to the normalized non-volatile oxides, summing to >100%.
-                
+
         """
         if default_normalization in ['none','standard','fixedvolatiles','additionalvolatiles']:
             self.default_normalization = default_normalization
@@ -194,32 +194,33 @@ class Sample(object):
         elif species != None:
             raise core.InputError("Species must be either a string or a NoneType.")
 
+        # Get the requested type of composition
+        if units == 'wtpt_oxides':
+            converted = composition
+        elif units == 'mol_oxides':
+            converted = self._wtpercentOxides_to_molOxides(composition)
+        elif units == 'mol_cations':
+            converted = self._wtpercentOxides_to_molCations(composition)
+        elif units == 'mol_singleO':
+            converted = self._wtpercentOxides_to_molSingleO(composition)
+        else:
+            raise core.InputError("The units must be one of 'wtpt_oxides', 'mol_oxides', 'mol_cations', \
+            or 'mol_singleO'.")
 
         # Do requested normalization
         if normalization == 'none':
-            normed = composition
+            final = converted
         elif normalization == 'standard':
-            normed = self._normalize_Standard(composition)
+            final = self._normalize_Standard(converted)
         elif normalization == 'fixedvolatiles':
-            normed = self._normalize_FixedVolatiles(composition)
+            final = self._normalize_FixedVolatiles(converted)
         elif normalization == 'additionalvolatiles':
-            normed = self._normalize_AdditionalVolatiles(composition)
+            final = self._normalize_AdditionalVolatiles(converted)
         else:
             raise core.InputError("The normalization method must be one of 'none', 'standard', 'fixedvolatiles',\
              or 'additionalvolatiles'.")
 
-        # Get the requested type of composition
-        if units == 'wtpt_oxides':
-            final = normed
-        elif units == 'mol_oxides':
-            final = self._wtpercentOxides_to_molOxides(normed)
-        elif units == 'mol_cations':
-            final = self._wtpercentOxides_to_molCations(normed)
-        elif units == 'mol_singleO':
-            final = self._wtpercentOxides_to_molSingleO(normed)
-        else:
-            raise core.InputError("The units must be one of 'wtpt_oxides', 'mol_oxides', 'mol_cations', \
-            or 'mol_singleO'.")
+
 
         if species == None:
             if asSampleClass == False:

@@ -260,7 +260,7 @@ class water(model_classes.Model):
         if all(sample.check_oxide(ox) for ox in ['K2O','Na2O','CaO','MgO','FeO','Al2O3','SiO2','TiO2']) == False:
             raise core.InputError("Sample must contain K2O, Na2O, CaO, MgO, FeO, Al2O3, SiO2, and TiO2.")
 
-        X = sample.get_composition(units='mol_oxides')
+        X = sample.get_composition(units='mol_oxides',normalization='additionalvolatiles')
 
         if 'Fe2O3' in X:
             Fe2O3 = X['Fe2O3']
@@ -384,7 +384,7 @@ class carbon(model_classes.Model):
         if fugacity == 0:
             return 0
 
-        molarProps = sample_h2o.get_composition(units='mol_oxides')
+        molarProps = sample_h2o.get_composition(units='mol_oxides',normalization='additionalvolatiles')
 
         if all(ox in molarProps for ox in ['Al2O3','CaO','K2O','Na2O','FeO','MgO','Na2O','K2O']) == False:
             raise core.InputError("sample must contain Al2O3, CaO, K2O, Na2O, FeO, MgO, Na2O, and K2O.")
@@ -516,7 +516,7 @@ class carbon(model_classes.Model):
         if all(sample.check_oxide(ox) for ox in ['K2O','Na2O','CaO','MgO','FeO','Al2O3','SiO2','TiO2']) == False:
             raise core.InputError("sample must contain K2O, Na2O, CaO, MgO, FeO, Al2O3, SiO2, and TiO2.")
 
-        X = sample.get_composition(units='mol_oxides')
+        X = sample.get_composition(units='mol_oxides',normalization='additionalvolatiles')
 
         if 'Fe2O3' in X:
             Fe2O3 = X['Fe2O3']
