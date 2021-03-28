@@ -58,7 +58,7 @@ class water(model_classes.Model):
             Use the hydrous or anhydrous NBO/O paramterisation (True for hydrous). Default is True.
         webapp_coeffs     bool
             If True, use the pre-review hydrous coefficients, as implemented in the IM webapp.
-            Default is False.
+            Default is True.
 
         Returns
         -------
