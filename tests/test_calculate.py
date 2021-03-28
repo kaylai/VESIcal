@@ -47,8 +47,8 @@ class TestDissolvedVolatiles(unittest.TestCase):
 
         self.magmasat_wtpt =            {'H2O_liq': 1.982045999,
                                         'CO2_liq': 0.044939669}
-        self.magmasat_molox =           {'H2O_liq': 0.066156818,
-                                        'CO2_liq': 0.000614178}
+        self.magmasat_molox =           {'H2O_liq': 0.06615768,
+                                        'CO2_liq': 0.000614167}
 
         self.allisonCarbon_wtpt             = 0.06101661
         self.allisonCarbon_molox            = 0.00089276
@@ -108,6 +108,122 @@ class TestDissolvedVolatiles(unittest.TestCase):
         for model in self.nonmixed_dict.keys():
             calcd_result = v.calculate_dissolved_volatiles(self.sample_molox, pressure=1000, temperature=1000, X_fluid=0.5, model=model, verbose=False).result
             known_result = self.nonmixed_dict[model]['mol_oxides']
+            self.assertAlmostEqual(calcd_result, known_result, places=4)
+
+class TestSaturationPressure(unittest.TestCase):
+    def setUp(self):
+        # Sample with units as wtpt_oxides
+        self.majors_wtpt = {'SiO2':    47.95,
+                         'TiO2':    1.67,
+                         'Al2O3':   17.32,
+                         'FeO':     10.24,
+                         'Fe2O3':   0.1,
+                         'MgO':     5.76,
+                         'CaO':     10.93,
+                         'Na2O':    3.45,
+                         'K2O':     1.99,
+                         'P2O5':    0.51,
+                         'MnO':     0.1,
+                         'H2O':     2.0,
+                         'CO2':     0.1}
+
+        # Set conditions of calculation
+        self.temperature = 1000
+
+        # create Sample object and set default units to wtpt_oxides
+        self.sample_wtpt = v.Sample(self.majors_wtpt)
+        self.sample_wtpt.set_default_units("wtpt_oxides")
+
+        # create sample and set default units to mol_oxides
+        self.sample_molox = v.Sample(self.majors_wtpt)
+        self.sample_molox.set_default_units("mol_oxides")
+
+        # saturation pressures calculated with VESIcal
+        self.shishkinaMixed =      1906.9487651401432 
+        self.dixonMixed =          1855.7737850170533
+        self.iaconomarzianoMixed = 1437.4446250186159
+        self.liuMixed =            2157.191497153953
+        self.magmasat =            1630
+
+        self.shishkinaCarbon           = 1511.477253594554
+        self.dixonCarbon               = 1380.9591717751564
+        self.iaconomarzianoCarbon      = 1215.0915904258195
+        self.allisonCarbon             = 821.9428189121331
+        self.allisonCarbon_sunset      = 1468.1852834512158
+        self.allisonCarbon_sfvf        = 1728.744343059253
+        self.allisonCarbon_erebus      = 1439.8801634549727
+        self.allisonCarbon_vesuvius    = 821.9428189121331
+        self.allisonCarbon_etna        = 1039.5129481979354
+        self.allisonCarbon_stromboli   = 1472.5760950857439
+        self.liuCarbon                 = 2246.2067748765
+
+        self.shishkinaWater            = 395.47151152814865
+        self.dixonWater                = 433.49839154202795
+        self.iaconomarzianoWater       = 459.72505692938915
+        self.mooreWater                = 366.8109434136937
+        self.liuWater                  = 374.4357814145504
+
+        self.mixed_dict =   {"ShishkinaIdealMixing": self.shishkinaMixed,
+                             "Dixon"               : self.dixonMixed,
+                             "IaconoMarziano"      : self.iaconomarzianoMixed,
+                             "Liu"                 : self.liuMixed,
+                             "MagmaSat"            : self.magmasat
+                             }
+
+        self.carbon_dict = {"ShishkinaCarbon"        : self.shishkinaCarbon,
+                           "DixonCarbon"             : self.dixonCarbon,
+                           "IaconoMarzianoCarbon"    : self.iaconomarzianoCarbon,
+                           "AllisonCarbon"           : self.allisonCarbon,
+                           "AllisonCarbon_sunset"    : self.allisonCarbon_sunset,
+                           'AllisonCarbon_sfvf'      : self.allisonCarbon_sfvf,
+                           'AllisonCarbon_erebus'    : self.allisonCarbon_erebus,
+                           'AllisonCarbon_vesuvius'  : self.allisonCarbon_vesuvius,
+                           'AllisonCarbon_etna'      : self.allisonCarbon_etna,
+                           'AllisonCarbon_stromboli' : self.allisonCarbon_stromboli,
+                           'LiuCarbon'               : self.liuCarbon
+                           }
+
+        self.water_dict = {"ShishkinaWater"       : self.shishkinaWater,
+                          "DixonWater"            : self.dixonWater,
+                          "IaconoMarzianoWater"   : self.iaconomarzianoWater,
+                          "MooreWater"            : self.mooreWater,
+                          "LiuWater"              : self.liuWater
+                          }
+
+    def test_calculate_wtpt_mixed(self):
+        for model in self.mixed_dict.keys():
+            calcd_result = v.calculate_saturation_pressure(self.sample_wtpt, temperature=self.temperature, model=model, verbose=False).result
+            known_result = self.mixed_dict[model]
+            self.assertAlmostEqual(calcd_result, known_result, places=4)
+
+    def test_calculate_wtpt_carbon(self):
+        for model in self.carbon_dict.keys():
+            calcd_result = v.calculate_saturation_pressure(self.sample_wtpt, temperature=self.temperature, model=model, verbose=False).result
+            known_result = self.carbon_dict[model]
+            self.assertAlmostEqual(calcd_result, known_result, places=4)
+
+    def test_calculate_wtpt_water(self):
+        for model in self.water_dict.keys():
+            calcd_result = v.calculate_saturation_pressure(self.sample_wtpt, temperature=self.temperature, model=model, verbose=False).result
+            known_result = self.water_dict[model]
+            self.assertAlmostEqual(calcd_result, known_result, places=4)
+
+    def test_calculation_molox_mixed(self):
+        for model in self.mixed_dict.keys():
+            calcd_result = v.calculate_saturation_pressure(self.sample_molox, temperature=self.temperature, model=model, verbose=False).result
+            known_result = self.mixed_dict[model]
+            self.assertAlmostEqual(calcd_result, known_result, places=4)
+
+    def test_calculate_molox_carbon(self):
+        for model in self.carbon_dict.keys():
+            calcd_result = v.calculate_saturation_pressure(self.sample_molox, temperature=self.temperature, model=model, verbose=False).result
+            known_result = self.carbon_dict[model]
+            self.assertAlmostEqual(calcd_result, known_result, places=4)
+
+    def test_calculate_molox_water(self):
+        for model in self.water_dict.keys():
+            calcd_result = v.calculate_saturation_pressure(self.sample_molox, temperature=self.temperature, model=model, verbose=False).result
+            known_result = self.water_dict[model]
             self.assertAlmostEqual(calcd_result, known_result, places=4)
 
 if __name__ == '__main__':

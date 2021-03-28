@@ -165,7 +165,8 @@ class Sample(object):
         if units == None and species == None:
             units = self.default_units
 
-        # Check wheher to exclude volatiles
+        # Check whether to exclude volatiles
+        # note that here composition is gotten as wtpt_oxides
         if exclude_volatiles == True:
             composition = self._composition.copy()
             if 'H2O' in composition.index:
