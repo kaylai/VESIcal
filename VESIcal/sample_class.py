@@ -211,16 +211,14 @@ class Sample(object):
         if normalization == 'none':
             final = converted
         elif normalization == 'standard':
-            final = self._normalize_Standard(converted)
+            final = self._normalize_Standard(converted, units=units)
         elif normalization == 'fixedvolatiles':
-            final = self._normalize_FixedVolatiles(converted)
+            final = self._normalize_FixedVolatiles(converted, units=units)
         elif normalization == 'additionalvolatiles':
-            final = self._normalize_AdditionalVolatiles(converted)
+            final = self._normalize_AdditionalVolatiles(converted, units=units)
         else:
             raise core.InputError("The normalization method must be one of 'none', 'standard', 'fixedvolatiles',\
              or 'additionalvolatiles'.")
-
-
 
         if species == None:
             if asSampleClass == False:
@@ -358,7 +356,7 @@ class Sample(object):
         return cation in self.get_composition(units='mol_cations')
 
 
-    def _normalize_Standard(self, composition):
+    def _normalize_Standard(self, composition, units='wtpt_oxides'):
         """
         Normalizes the given composition to 100 wt%, including volatiles. This method
         is intended only to be called by the get_composition() method.
@@ -366,7 +364,13 @@ class Sample(object):
         Parameters
         ----------
         composition:     pandas.Series
-            A rock composition with oxide names as keys and wt% concentrations as values.
+            A rock composition with oxide names as keys and concentrations as values.
+
+        units:      str
+            The units of composition. Should be one of:
+            - wtpt_oxides (default)
+            - mol_oxides
+            - mol_cations
 
         Returns
         -------
@@ -375,9 +379,17 @@ class Sample(object):
         """
         comp = composition.copy()
         comp = dict(comp)
-        return pd.Series({k: 100.0 * v / sum(comp.values()) for k, v in comp.items()})
 
-    def _normalize_FixedVolatiles(self, composition):
+        if units == 'wtpt_oxides':
+            normed = pd.Series({k: 100.0 * v / sum(comp.values()) for k, v in comp.items()})
+        elif units == 'mol_oxides' or units == 'mol_cations':
+            normed = pd.Series({k: v / sum(comp.values()) for k, v in comp.items()})
+        else:
+            raise core.InputError("Units must be one of 'wtpt_oxides', 'mol_oxides', or 'mol_cations'.")
+        
+        return normed
+
+    def _normalize_FixedVolatiles(self, composition, units='wtpt_oxides'):
         """
         Normalizes major element oxides to 100 wt%, including volatiles. The volatile
         wt% will remain fixed, whilst the other major element oxides are reduced proportionally
@@ -388,7 +400,13 @@ class Sample(object):
         Parameters
         ----------
         composition:     pandas Series
-            Major element oxides in wt%
+            Major element composition
+
+        units:      str
+            The units of composition. Should be one of:
+            - wtpt_oxides (default)
+            - mol_oxides
+            - mol_cations
 
         Returns
         -------
@@ -407,7 +425,12 @@ class Sample(object):
             if ox != 'H2O' and ox != 'CO2':
                 normalized[ox] = comp[ox]
 
-        normalized = normalized/np.sum(normalized)*(100-volatiles)
+        if units == 'wtpt_oxides':
+            normalized = normalized/np.sum(normalized)*(100-volatiles)
+        elif units == 'mol_oxides' or units == 'mol_cations':
+            normalized = normalized/np.sum(normalized)*(1-volatiles)
+        else:
+            raise core.InputError("Units must be one of 'wtpt_oxides', 'mol_oxides', or 'mol_cations'.")
 
         if 'CO2' in list(comp.index):
             normalized['CO2'] = comp['CO2']
@@ -416,7 +439,7 @@ class Sample(object):
 
         return normalized
 
-    def _normalize_AdditionalVolatiles(self, composition):
+    def _normalize_AdditionalVolatiles(self, composition, units='wtpt_oxides'):
         """
         Normalises major element oxide wt% to 100%, assuming it is volatile-free. If
         H2O or CO2 are passed to the function, their un-normalized values will be retained
@@ -426,8 +449,14 @@ class Sample(object):
 
         Parameters
         ----------
-        sample:     pandas.Series
-            Major element oxides in wt%
+        composition:     pandas.Series
+            Major element composition
+
+        units:      str
+            The units of composition. Should be one of:
+            - wtpt_oxides (default)
+            - mol_oxides
+            - mol_cations
 
         Returns
         -------
@@ -440,7 +469,13 @@ class Sample(object):
             if ox != 'H2O' and ox != 'CO2':
                 normalized[ox] = comp[ox]
 
-        normalized = normalized/np.sum(normalized)*100
+        if units == 'wtpt_oxides':
+            normalized = normalized/np.sum(normalized)*100
+        elif units == 'mol_oxides' or units == 'mol_cations':
+            normalized = normalized/np.sum(normalized)
+        else:
+           raise core.InputError("Units must be one of 'wtpt_oxides', 'mol_oxides', or 'mol_cations'.")
+            
         if 'H2O' in comp.index:
             normalized['H2O'] = comp['H2O']
         if 'CO2' in comp.index:
