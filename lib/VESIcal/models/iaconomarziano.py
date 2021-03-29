@@ -365,7 +365,7 @@ class carbon(model_classes.Model):
             NBO_O = self.NBO_O(sample=sample_h2o,hydrous_coeffs=True)
 
         else:
-            im_h2o_model = IaconoMarzianoWater()
+            im_h2o_model = water()
             h2o = im_h2o_model.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature-273.15,
                                                         sample=sample,X_fluid=1-X_fluid,**kwargs)
 

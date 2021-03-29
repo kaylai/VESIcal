@@ -1,19 +1,25 @@
-from VESIcal import activity_models
-from VESIcal import calibration_checks
 from VESIcal import core
-from VESIcal import fugacity_models
 from VESIcal import models
-from VESIcal import model_classes
 from VESIcal import sample_class
 from VESIcal import calculate_classes
-from VESIcal import vplot
 from VESIcal import batchfile
 
 import numpy as np
-import pandas as pd
 import warnings as w
 import sys
 w.filterwarnings("ignore", message="rubicon.objc.ctypes_patch has only been tested ")
+
+# -------------- MELTS preamble --------------- #
+from thermoengine import equilibrate
+# instantiate thermoengine equilibrate MELTS instance
+melts = equilibrate.MELTSmodel('1.2.0')
+
+# Suppress phases not required in the melts simulation
+phases = melts.get_phase_names()
+for phase in phases:
+    melts.set_phase_inclusion_status({phase: False})
+melts.set_phase_inclusion_status({'Fluid': True, 'Liquid': True})
+# --------------------------------------------- #
 
 # -------------- BATCH PROCESSING ----------- #
 class BatchFile(batchfile.BatchFile):
@@ -365,7 +371,7 @@ class BatchFile(batchfile.BatchFile):
         elif isinstance(temperature, float) or isinstance(temperature, int):
             file_has_temp = False
         else:
-            raise InputError("temp must be type str or float or int")
+            raise core.InputError("temp must be type str or float or int")
 
         if isinstance(pressure, str):
             file_has_press = True
@@ -373,7 +379,7 @@ class BatchFile(batchfile.BatchFile):
         elif isinstance(pressure, float) or isinstance(pressure, int) or type(pressure) == type(None):
             file_has_press = False
         else:
-            raise InputError("pressure must be type str or float or int")
+            raise core.InputError("pressure must be type str or float or int")
 
         H2Ovals = []
         CO2vals = []
@@ -519,7 +525,7 @@ class BatchFile(batchfile.BatchFile):
         elif isinstance(temperature, float) or isinstance(temperature, int):
             file_has_temp = False
         else:
-            raise InputError("temperature must be type str or float or int")
+            raise core.InputError("temperature must be type str or float or int")
 
         if model != 'MagmaSat':
             satP = []
@@ -534,7 +540,7 @@ class BatchFile(batchfile.BatchFile):
                 satP.append(calc.result)
                 warnings.append(calc.calib_check)
                 if model == 'Shishkina':
-                    piStar.append(default_models['Shishkina'].models[1].PiStar(bulk_comp))
+                    piStar.append(models.default_models['Shishkina'].models[1].PiStar(bulk_comp))
 
             satp_data["SaturationP_bars_VESIcal"] = satP
             if file_has_temp == False:

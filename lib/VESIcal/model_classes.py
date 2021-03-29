@@ -4,14 +4,11 @@ import pandas as pd
 import warnings as w
 from scipy.optimize import root_scalar
 from scipy.optimize import root
-from copy import copy
 from copy import deepcopy
 
 from VESIcal import activity_models
-from VESIcal import calibration_checks
 from VESIcal import core
 from VESIcal import fugacity_models
-
 
 
 class Model(object):
@@ -33,7 +30,7 @@ class Model(object):
         if type(volatile_species) == str:
             volatile_species = [volatile_species]
         elif type(volatile_species) != list:
-            raise InputError("volatile_species must be a str or list.")
+            raise core.InputError("volatile_species must be a str or list.")
         self.volatile_species = volatile_species
 
     def set_fugacity_model(self,fugacity_model):

@@ -66,8 +66,8 @@ class calculate_dissolved_volatiles(Calculate):
 
     Parameters
     ----------
-    sample:     dict or pandas Series
-        The major element oxides in wt%.
+    sample:    Sample class
+        The rock composition as a Sample object.
     pressure:   float
         Total pressure in bars.
     model:  string or Model object
@@ -104,31 +104,37 @@ class calculate_dissolved_volatiles(Calculate):
             bulk_comp = deepcopy(sample)
 
             # check if calculation result is H2O-only, CO2-only, or mixed H2O-CO2
-            if self.model_name in models.get_model_names(model='mixed'):
-                # set dissolved H2O and CO2 values. 
-                # this action assumes they are input as wt% but updates the composition in its default units.
-                bulk_comp.change_composition({'H2O': calc_result['H2O_liq'], 
-                                              'CO2': calc_result['CO2_liq']})
-                return {'H2O_liq': bulk_comp.get_composition(species='H2O', units=default_units),
-                        'CO2_liq': bulk_comp.get_composition(species='CO2', units=default_units)}
-            elif 'Water' in self.model_name:
-                bulk_comp.change_composition({'H2O': calc_result})
-                return bulk_comp.get_composition(species='H2O', units=default_units)
-            elif 'Carbon' in self.model_name:
-                bulk_comp.change_composition({'CO2': calc_result})
-                return bulk_comp.get_composition(species='CO2', units=default_units)
-            elif self.model_name == 'MagmaSat':
-                bulk_comp.change_composition({'H2O': calc_result['H2O_liq'], 
-                                              'CO2': calc_result['CO2_liq']})
-                if 'verbose' in kwargs and kwargs['verbose'] == True: # check if verbose method has been chosen
-                    return {'H2O_liq': bulk_comp.get_composition(species='H2O', units=default_units),
-                            'CO2_liq': bulk_comp.get_composition(species='CO2', units=default_units),
-                            'XH2O_fl': calc_result['XH2O_fl'],
-                            'XCO2_fl': calc_result['XCO2_fl'],
-                            'FluidProportion_wt': calc_result['FluidProportion_wt']}
-                else:
+            if isinstance(self.model_name, str):
+                if self.model_name in models.get_model_names(model='mixed'):
+                    # set dissolved H2O and CO2 values. 
+                    # this action assumes they are input as wt% but updates the composition in its default units.
+                    bulk_comp.change_composition({'H2O': calc_result['H2O_liq'], 
+                                                  'CO2': calc_result['CO2_liq']})
                     return {'H2O_liq': bulk_comp.get_composition(species='H2O', units=default_units),
                             'CO2_liq': bulk_comp.get_composition(species='CO2', units=default_units)}
+                elif 'Water' in self.model_name:
+                    bulk_comp.change_composition({'H2O': calc_result})
+                    return bulk_comp.get_composition(species='H2O', units=default_units)
+                elif 'Carbon' in self.model_name:
+                    bulk_comp.change_composition({'CO2': calc_result})
+                    return bulk_comp.get_composition(species='CO2', units=default_units)
+                elif self.model_name == 'MagmaSat':
+                    bulk_comp.change_composition({'H2O': calc_result['H2O_liq'], 
+                                                  'CO2': calc_result['CO2_liq']})
+                    if 'verbose' in kwargs and kwargs['verbose'] == True: # check if verbose method has been chosen
+                        return {'H2O_liq': bulk_comp.get_composition(species='H2O', units=default_units),
+                                'CO2_liq': bulk_comp.get_composition(species='CO2', units=default_units),
+                                'XH2O_fl': calc_result['XH2O_fl'],
+                                'XCO2_fl': calc_result['XCO2_fl'],
+                                'FluidProportion_wt': calc_result['FluidProportion_wt']}
+                    else:
+                        return {'H2O_liq': bulk_comp.get_composition(species='H2O', units=default_units),
+                                'CO2_liq': bulk_comp.get_composition(species='CO2', units=default_units)}
+            else: 
+            # if self.model_name is not a string, most likely this is a user-created model class, 
+            # and so we cannot interrogate it for model type (H2O, CO2, or mixed)
+            # TODO: create model type parameter so that we can ID model type this way instead of via strings in a list!
+                return calc_result
 
     def calculate(self,sample,pressure,**kwargs):
         dissolved = self.model.calculate_dissolved_volatiles(pressure=pressure,sample=sample,returndict=True,**kwargs)
@@ -157,8 +163,8 @@ class calculate_equilibrium_fluid_comp(Calculate):
 
     Parameters
     ----------
-    sample:     dict or pandas Series
-        The major element oxides in wt%.
+    sample:    Sample class
+        The rock composition as a Sample object.
     pressure:   float or None
         Total pressure in bars. If None, the saturation pressure will be used.
     model:  string or Model object
@@ -209,8 +215,8 @@ class calculate_isobars_and_isopleths(Calculate):
 
     Parameters
     ----------
-    sample:     dict or pandas Series
-        The major element oxides in wt%.
+    sample:    Sample class
+        The rock composition as a Sample object.
     pressure_list:   list
         List of all pressure values at which to calculate isobars, in bars.
     isopleth_list:   list
@@ -274,8 +280,8 @@ class calculate_saturation_pressure(Calculate):
 
     Parameters
     ----------
-    sample     pandas Series or dict
-        Major element oxides in wt% (including volatiles).
+    sample:    Sample class
+        The rock composition as a Sample object.
     model:  string or Model object
         Model to be used. If using one of the default models, this can be
         the string corresponding to the model in the default_models dict.
@@ -312,8 +318,8 @@ class calculate_degassing_path(Calculate):
 
     Parameters
     ----------
-    sample     pandas Series or dict
-        Major element oxides in wt% (including volatiles).
+    sample:    Sample class
+        The rock composition as a Sample object.
     pressure     string, float, int, list, or numpy array
         Defaults to 'saturation', the calculation will begin at the saturation pressure. If a number is passed
         as either a float or int, this will be the starting pressure. If a list of numpy array is passed, the

@@ -4,7 +4,6 @@ import warnings as w
 
 from VESIcal import core
 
-from copy import copy
 from copy import deepcopy
 
 
@@ -77,14 +76,15 @@ class Sample(object):
         ----------
         default_normalization:    str
             The type of normalization to apply to the data. One of:
-                - 'none' (no normalization)
-                - 'standard' (default): Normalizes an input composition to 100%.
-                - 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
-                The volatile wt% will remain fixed, whilst the other major element oxides are reduced
-                proportionally so that the total is 100 wt%.
-                - 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
-                volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
-                be retained in addition to the normalized non-volatile oxides, summing to >100%.
+            - 'none' (no normalization)
+            - 'standard' (default): Normalizes an input composition to 100%.
+            - 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
+            The volatile wt% will remain fixed, whilst the other major element oxides are reduced
+            proportionally so that the total is 100 wt%.
+            - 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
+            volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
+            be retained in addition to the normalized non-volatile oxides, summing to >100%.
+                
         """
         if default_normalization in ['none','standard','fixedvolatiles','additionalvolatiles']:
             self.default_normalization = default_normalization
@@ -125,14 +125,15 @@ class Sample(object):
             will be applied.
         normalization:     NoneType or str
             The type of normalization to apply to the data. One of:
-                - 'none' (no normalization)
-                - 'standard' (default): Normalizes an input composition to 100%.
-                - 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
-                The volatile wt% will remain fixed, whilst the other major element oxides are reduced
-                proportionally so that the total is 100 wt%.
-                - 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
-                volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
-                be retained in addition to the normalized non-volatile oxides, summing to >100%.
+            - 'none' (no normalization)
+            - 'standard' (default): Normalizes an input composition to 100%.
+            - 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
+            The volatile wt% will remain fixed, whilst the other major element oxides are reduced
+            proportionally so that the total is 100 wt%.
+            - 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
+            volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
+            be retained in addition to the normalized non-volatile oxides, summing to >100%.
+
             If NoneType is passed the default normalization option will be used (self.default_normalization).
 
         units:     NoneType or str
@@ -141,6 +142,7 @@ class Sample(object):
             - mol_oxides
             - mol_cations
             - mol_singleO
+
             If NoneType is passed the default units option will be used (self.default_type).
 
         exclude_volatiles   bool

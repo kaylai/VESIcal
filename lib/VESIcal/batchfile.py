@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 import os
 import sys
 import warnings as w
@@ -7,17 +6,14 @@ import warnings as w
 from VESIcal import core
 from VESIcal import sample_class
 
-from copy import deepcopy
-
 def rename_duplicates(df, suffix='-duplicate-'):
     appendents = (suffix + df.groupby(level=0).cumcount().astype(str).replace('0','')).replace(suffix, '')
     return df.set_index(df.index.astype(str) + appendents)
 
 class status_bar(object):
     """Various styles of status bars that display the progress of a calculation
-        within a loop
+    within a loop
     """
-
     def __init__():
         pass
 
@@ -71,10 +67,11 @@ class BatchFile(object):
             OPTIONAL. For Excel files. Default value is 0 which gets the first sheet in the batch spreadsheet file. This implements the pandas.
             read_excel() sheet_name parameter. But functionality to read in more than one sheet at a time (e.g., pandas.read_excel(sheet_name=None))
             is not yet imlpemented in VESIcal. From the pandas 1.0.4 documentation:
-                Available cases:
-                    - Defaults to 0: 1st sheet as a DataFrame
-                    - 1: 2nd sheet as a DataFrame
-                    - "Sheet1": Load sheet with name “Sheet1”
+            
+            Available cases:
+            - Defaults to 0: 1st sheet as a DataFrame
+            - 1: 2nd sheet as a DataFrame
+            - "Sheet1": Load sheet with name “Sheet1”
 
         file_type: str
             OPTIONAL. Default is 'excel', which denotes that passed file has extension .xlsx. Other option is 'csv', which denotes that
@@ -86,14 +83,14 @@ class BatchFile(object):
 
         default_normalization:     None or str
             The type of normalization to apply to the data by default. One of:
-                - None (no normalization)
-                - 'standard' (default): Normalizes an input composition to 100%.
-                - 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
-                The volatile wt% will remain fixed, whilst the other major element oxides are reduced
-                proportionally so that the total is 100 wt%.
-                - 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
-                volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
-                be retained in addition to the normalized non-volatile oxides, summing to >100%.
+            - None (no normalization)
+            - 'standard' (default): Normalizes an input composition to 100%.
+            - 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
+            The volatile wt% will remain fixed, whilst the other major element oxides are reduced
+            proportionally so that the total is 100 wt%.
+            - 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
+            volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
+            be retained in addition to the normalized non-volatile oxides, summing to >100%.
 
         default_units     str
             The type of composition to return by default, one of:
@@ -191,14 +188,15 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
         ----------
         default_normalization:    str
             The type of normalization to apply to the data. One of:
-                - 'none' (no normalization)
-                - 'standard' (default): Normalizes an input composition to 100%.
-                - 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
-                The volatile wt% will remain fixed, whilst the other major element oxides are reduced
-                proportionally so that the total is 100 wt%.
-                - 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
-                volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
-                be retained in addition to the normalized non-volatile oxides, summing to >100%.
+            - 'none' (no normalization)
+            - 'standard' (default): Normalizes an input composition to 100%.
+            - 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
+            The volatile wt% will remain fixed, whilst the other major element oxides are reduced
+            proportionally so that the total is 100 wt%.
+            - 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
+            volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
+            be retained in addition to the normalized non-volatile oxides, summing to >100%.
+
         """
         if default_normalization in ['none','standard','fixedvolatiles','additionalvolatiles']:
             self.default_normalization = default_normalization
@@ -239,14 +237,15 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
 
         normalization:     NoneType or str
             The type of normalization to apply to the data. One of:
-                - 'none' (no normalization)
-                - 'standard' (default): Normalizes an input composition to 100%.
-                - 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
-                The volatile wt% will remain fixed, whilst the other major element oxides are reduced
-                proportionally so that the total is 100 wt%.
-                - 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
-                volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
-                be retained in addition to the normalized non-volatile oxides, summing to >100%.
+            - 'none' (no normalization)
+            - 'standard' (default): Normalizes an input composition to 100%.
+            - 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
+            The volatile wt% will remain fixed, whilst the other major element oxides are reduced
+            proportionally so that the total is 100 wt%.
+            - 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
+            volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
+            be retained in addition to the normalized non-volatile oxides, summing to >100%.
+
             If NoneType is passed the default normalization option will be used (self.default_normalization).
 
         units:     NoneType or str
@@ -294,19 +293,33 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
 
         return return_frame
 
-    def get_data(self, units=None):
+    def get_data(self, normalization=None, units=None):
         """
         Returns all data stored in a BatchFile object (both compositional and other data). To return only the
         compositional data, use get_composition().
 
         Parameters
         ----------
+        normalization:     NoneType or str
+            The type of normalization to apply to the data. One of:
+            - 'none' (no normalization)
+            - 'standard' (default): Normalizes an input composition to 100%.
+            - 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
+            The volatile wt% will remain fixed, whilst the other major element oxides are reduced
+            proportionally so that the total is 100 wt%.
+            - 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
+            volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
+            be retained in addition to the normalized non-volatile oxides, summing to >100%.
+
+            If NoneType is passed the default normalization option will be used (self.default_normalization).
+
         units:     NoneType or str
             The units of composition to return, one of:
             - wtpt_oxides (default)
             - mol_oxides
             - mol_cations
             - mol_singleO
+
             If NoneType is passed the default units option will be used (self.default_type).
 
         Returns
@@ -321,7 +334,7 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
             units = self.default_units
 
         # Grab all compositional data
-        compositional_data = self.get_composition(units=units)
+        compositional_data = self.get_composition(normalization=normalization, units=units)
 
         # Grab all non-compositional data
         non_compositional_data = data.filter([col for col in data.columns if col not in core.oxides])
@@ -342,14 +355,15 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
 
         normalization: NoneType or str
             The type of normalization to apply to the data. One of:
-                - 'none' (no normalization)
-                - 'standard' (default): Normalizes an input composition to 100%.
-                - 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
-                The volatile wt% will remain fixed, whilst the other major element oxides are reduced
-                proportionally so that the total is 100 wt%.
-                - 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
-                volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
-                be retained in addition to the normalized non-volatile oxides, summing to >100%.
+            - 'none' (no normalization)
+            - 'standard' (default): Normalizes an input composition to 100%.
+            - 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
+            The volatile wt% will remain fixed, whilst the other major element oxides are reduced
+            proportionally so that the total is 100 wt%.
+            - 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
+            volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
+            be retained in addition to the normalized non-volatile oxides, summing to >100%.
+
             If NoneType is passed the default normalization option will be used (self.default_normalization).
 
         units:     NoneType or str
