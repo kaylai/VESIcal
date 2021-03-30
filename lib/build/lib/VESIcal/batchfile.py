@@ -220,7 +220,7 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
         else:
             raise core.InputError("The units must be one of 'wtpt_oxides','mol_oxides','mol_cations'.")
 
-    def get_composition(self, species=None, normalization=None, units=None, exclude_volatiles=False):
+    def get_composition(self, species=None, normalization=None, units=None, exclude_volatiles=False, asBatchFile=False):
         """ Returns a pandas DataFrame containing the compositional information for all samples
         in the BatchFile object
 
@@ -260,10 +260,13 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
             If True, volatiles will be excluded from the returned composition, prior to normalization and
             conversion.
 
+        asBatchFile:    bool
+            If True, returns a BatchFile object. If False, returns a pandas.DataFrame object.
+
         Returns
         -------
-        pandas.DataFrame
-            All sample compositions, as specified.
+        pandas.DataFrame or BatchFile object
+            All sample information.
         """
         data = self.data.copy()
 
@@ -291,9 +294,12 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
         else:
             return_frame = None
 
-        return return_frame
+        if asBatchFile == False:
+            return return_frame
+        else:
+            return BatchFile(filename=None, dataframe=return_frame, label=None)
 
-    def get_data(self, normalization=None, units=None):
+    def get_data(self, normalization=None, units=None, asBatchFile=False):
         """
         Returns all data stored in a BatchFile object (both compositional and other data). To return only the
         compositional data, use get_composition().
@@ -322,9 +328,12 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
 
             If NoneType is passed the default units option will be used (self.default_type).
 
+        asBatchFile:    bool
+            If True, returns a BatchFile object. If False, returns a pandas.DataFrame object.
+
         Returns
         -------
-        pandas.DataFrame
+        pandas.DataFrame or BatchFile object
             All sample information.
         """
         data = self.data.copy()
@@ -342,7 +351,10 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
         # concatenate both compositional and non-compositional dataframes into one
         return_frame = pd.concat([compositional_data, non_compositional_data], axis=1)
 
-        return return_frame
+        if asBatchFile == False:
+            return return_frame
+        else:
+            return BatchFile(filename=None, dataframe=return_frame, label=None)
 
     def get_sample_composition(self, samplename, species=None, normalization=None, units=None, asSampleClass=False):
         """

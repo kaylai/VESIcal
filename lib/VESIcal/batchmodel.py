@@ -192,7 +192,7 @@ class BatchFile(batchfile.BatchFile):
 
             return dissolved_data
 
-        elif model == 'MagmaSat':
+        elif model == 'MagmaSat' or model.model_type == 'MagmaSat':
             XH2Ovals = []
             XCO2vals = []
             FluidProportionvals = []
@@ -415,7 +415,7 @@ class BatchFile(batchfile.BatchFile):
             fluid_data["Warnings"] = warnings
 
             return fluid_data
-        elif model == 'MagmaSat':
+        elif model == 'MagmaSat' or model.model_type == 'MagmaSat':
             iterno = 0
             for index, row in fluid_data.iterrows():
                 iterno += 1
@@ -491,7 +491,7 @@ class BatchFile(batchfile.BatchFile):
 
             return fluid_data
 
-    def calculate_saturation_pressure(self, temperature, print_status=True, model='MagmaSat', **kwargs):
+    def calculate_saturation_pressure(self, temperature, print_status=None, model='MagmaSat', **kwargs):
         """
         Calculates the saturation pressure of multiple sample compositions in the BatchFile.
 
@@ -504,9 +504,9 @@ class BatchFile(batchfile.BatchFile):
             title in the passed BatchFile object.
 
         print_status: bool
-            OPTIONAL: The default value is True, in which case the progress of the calculation will be printed to the terminal.
-            If set to False, nothing will be printed. MagmaSat calculations tend to be slow, and so a value of True is recommended
-            more most use cases.
+            OPTIONAL: The default value for MagmaSat is True and the default for all other models is False. If set to True, the 
+            progress of the calculation will be printed to the terminal. If set to False, nothing will be printed. MagmaSat 
+            calculations tend to be slow, and so a value of True is recommended more most use cases.
 
         model: string
             OPTIONAL: Default is 'MagmaSat'. Any other model name can be passed here.
@@ -518,6 +518,13 @@ class BatchFile(batchfile.BatchFile):
             fluid present.
         """
         satp_data = self.data.copy()
+
+        # set default print_status to True for MagmaSat, False for other models if user doesn't pass any option
+        if print_status == None:
+            if model == 'MagmaSat' or model.model_type == 'MagmaSat':
+                print_status = True
+            else:
+                print_status = False
 
         if isinstance(temperature, str):
             file_has_temp = True
@@ -531,7 +538,12 @@ class BatchFile(batchfile.BatchFile):
             satP = []
             warnings = []
             piStar = []
+            iterno = 0
             for index, row in satp_data.iterrows():
+                iterno += 1
+                if print_status == True:
+                    percent = iterno/len(satp_data.index)
+                    batchfile.status_bar.status_bar(percent, index)
                 if file_has_temp == True:
                     temperature = row[temp_name]
                 bulk_comp = sample_class.Sample({oxide:  row[oxide] for oxide in core.oxides}, units='wtpt_oxides')
@@ -552,7 +564,7 @@ class BatchFile(batchfile.BatchFile):
 
             return satp_data
 
-        else:
+        elif model == 'MagmaSat' or model.model_type == 'MamgaSat':
             satP = []
             flmass = []
             flH2O = []

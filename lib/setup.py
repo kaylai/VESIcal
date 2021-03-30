@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="VESIcal",
-    version="0.9.9",
+    version="0.9.10",
     author="Kayla Iacovino, Simon Matthews, Penny Wieser",
     author_email="kaylaiacovino@gmail.com",
     description="A generalized python library for calculating and plotting various things related to mixed volatile (H2O-CO2) solubility in silicate melts.",

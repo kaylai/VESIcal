@@ -40,6 +40,8 @@ class MagmaSat(model_classes.Model):
                                      calibration_checks.CalibrationRange('temperature',[800,1400],calibration_checks.crf_Between,'oC','MagmaSat',
                                                        fail_msg=calibration_checks.crmsg_Between_fail, pass_msg=calibration_checks.crmsg_Between_pass,
                                                       description_msg=calibration_checks.crmsg_Between_description)])
+        self.normalization_type = 'none'
+        self.model_type = 'MagmaSat'
 
     def preprocess_sample(self,sample):
         """
@@ -56,13 +58,14 @@ class MagmaSat(model_classes.Model):
 
         """
         _sample = deepcopy(sample)
+        _sample = _sample.get_composition(units='wtpt_oxides', normalization=self.normalization_type, asSampleClass=True)
         for oxide in core.oxides:
             if oxide in _sample.get_composition():
                 pass
             else:
                 _sample.change_composition({oxide: 0.0})
 
-        self.bulk_comp_orig = _sample.get_composition(units=_sample.default_units)
+        self.bulk_comp_orig = _sample.get_composition(units='wtpt_oxides')
 
         return _sample
 

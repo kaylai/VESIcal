@@ -51,11 +51,8 @@ class carbon(model_classes.Model):
         if pressure == 0:
             return 0
 
-
-        Mr = sample.get_formulaweight(exclude_volatiles=True)
         XCO3 = self.molfrac_molecular(pressure=pressure,sample=sample,X_fluid=X_fluid,**kwargs)
-        # return (4400 * XCO3) / (36.6 - 44*XCO3)
-        return (4400 * XCO3) / (Mr - 44*XCO3)
+        return (4400 * XCO3) / (36.594- 44*XCO3) # Following Dixon 1997 setting Mr as constant
 
 
     def calculate_equilibrium_fluid_comp(self,pressure,sample,**kwargs):
@@ -129,7 +126,7 @@ class carbon(model_classes.Model):
         float
             Mole fraction of CO3(2-) dissolved."""
 
-        DeltaVr = 23.14 #cm3 mole-1
+        DeltaVr = 23 # Changed to match dixon spreadsheet.14 (cm3 mole-1)
         P0 = 1
         R = 83.15
         T0 = 1473.15
@@ -244,11 +241,8 @@ class water(model_classes.Model):
         XH2O = self.molfrac_molecular(pressure=pressure,sample=sample,X_fluid=X_fluid,**kwargs)
         XOH = self.XOH(pressure=pressure,sample=sample,X_fluid=X_fluid,**kwargs)
 
-        Mr = sample.get_formulaweight(exclude_volatiles=True)
-
         XB = XH2O + 0.5*XOH
-        # return 1801.5*XB/(36.6-18.6*XB)
-        return 1801.5*XB/(Mr-18.6*XB)
+        return 1801.5*XB/(36.594-18.579*XB) # Following Dixon spreadsheet
 
 
     def calculate_equilibrium_fluid_comp(self,pressure,sample,**kwargs):
