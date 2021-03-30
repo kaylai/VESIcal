@@ -17,18 +17,18 @@ Default normalizations and how to change them
 =============================================
 MagmaSat
 --------
-Currently, the only model that forces any kind of normalization of the sample composition is MagmaSat (the default model). MagmaSat normalizes any sample via the FixedVolatiles method before performing any calculation. To change the type of normalization performed, you must create a copy of the MagmaSat() model object, set its normalization type, and then use that model object for calculations, like so:
+Currently, no models force any kind of normalization onto samples. For testing purposes, MagmaSat (the default model) has an attribute called 'normalization_type'. By default, this is set to 'none' such that no normalization is performed on samples. To change the type of normalization performed during all calculations, you can create a copy of the MagmaSat() model object, set its normalization type, and then use that model object for calculations, like so:
 
 .. code-block:: python
 
 	# make a copy of the MagmaSat() model object and give it a name
-	magmasatNoNorm = v.models.magmasat.MagmaSat()
+	magmasatNorm = v.models.magmasat.MagmaSat()
 
-	# set normalization_type to be whatever you want. Let's say 'none'.
-	magmasatNoNorm.normalization_type = 'none'
+	# set normalization_type to be whatever you want. Let's say 'standard'.
+	magmasatNorm.normalization_type = 'standard'
 
-	# now you can do a calculation and set model=magmasatNoNorm
-	test_calc = v.calculate_saturation_pressure(sample=<your-sample>, temperature=<temperature>, model=magmasatNoNorm).result
+	# now you can do a calculation and set model=magmasatNorm
+	test_calc = v.calculate_saturation_pressure(sample=<your-sample>, temperature=<temperature>, model=magmasatNorm).result
 
 Normalizing an entire dataset
 =============================
