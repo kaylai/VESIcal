@@ -30,9 +30,9 @@ class TestDissolvedVolatiles(unittest.TestCase):
         self.shishkinaMixed_molox =     {'H2O_liq': 0.07415139,
                                         'CO2_liq': 0.000379788}
 
-        self.dixonMixed_wtpt =          {'H2O_liq': 2.061908389,
-                                        'CO2_liq': 0.035300022}
-        self.dixonMixed_molox =         {'H2O_liq': 0.068648519,
+        self.dixonMixed_wtpt =          {'H2O_liq': 2.06748958,
+                                        'CO2_liq': 0.035434893}
+        self.dixonMixed_molox =         {'H2O_liq': 0.0688214,
                                         'CO2_liq': 0.000481216}
 
         self.iaconomarzianoMixed_wtpt = {'H2O_liq': 2.06183390,
@@ -140,13 +140,13 @@ class TestSaturationPressure(unittest.TestCase):
 
         # saturation pressures calculated with VESIcal
         self.shishkinaMixed =      1906.9487651401432 
-        self.dixonMixed =          1855.7737850170533
+        self.dixonMixed =          1847.1637265676327
         self.iaconomarzianoMixed = 1655.6878345965608
         self.liuMixed =            2157.191497153953
         self.magmasat =            1630
 
         self.shishkinaCarbon           = 1511.477253594554
-        self.dixonCarbon               = 1380.9591717751564
+        self.dixonCarbon               = 1375.61109469857
         self.iaconomarzianoCarbon      = 1218.3338004284656
         self.allisonCarbon             = 821.9428189121331
         self.allisonCarbon_sunset      = 1468.1852834512158
@@ -158,7 +158,7 @@ class TestSaturationPressure(unittest.TestCase):
         self.liuCarbon                 = 2246.2067748765
 
         self.shishkinaWater            = 395.47151152814865
-        self.dixonWater                = 433.49839154202795
+        self.dixonWater                = 431.1140172567279
         self.iaconomarzianoWater       = 468.16584705092487
         self.mooreWater                = 366.8109434136937
         self.liuWater                  = 374.4357814145504
