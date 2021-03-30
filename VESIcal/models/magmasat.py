@@ -40,7 +40,8 @@ class MagmaSat(model_classes.Model):
                                      calibration_checks.CalibrationRange('temperature',[800,1400],calibration_checks.crf_Between,'oC','MagmaSat',
                                                        fail_msg=calibration_checks.crmsg_Between_fail, pass_msg=calibration_checks.crmsg_Between_pass,
                                                       description_msg=calibration_checks.crmsg_Between_description)])
-        self.normalization_type = 'fixedvolatiles'
+        self.normalization_type = 'none'
+        self.model_type = 'MagmaSat'
 
     def preprocess_sample(self,sample):
         """
