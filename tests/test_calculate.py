@@ -35,10 +35,10 @@ class TestDissolvedVolatiles(unittest.TestCase):
         self.dixonMixed_molox =         {'H2O_liq': 0.0688214,
                                         'CO2_liq': 0.000481216}
 
-        self.iaconomarzianoMixed_wtpt = {'H2O_liq': 2.06183390,
-                                        'CO2_liq': 0.040058946}
-        self.iaconomarzianoMixed_molox ={'H2O_liq': 0.06864175,
-                                        'CO2_liq': 0.000546056}
+        self.iaconomarzianoMixed_wtpt = {'H2O_liq': 2.08530635,
+                                        'CO2_liq': 0.049996963}
+        self.iaconomarzianoMixed_molox ={'H2O_liq': 0.06935959,
+                                        'CO2_liq': 0.000680900}
 
         self.liuMixed_wtpt =            {'H2O_liq': 2.293923234,
                                         'CO2_liq': 0.029485739}
@@ -141,13 +141,13 @@ class TestSaturationPressure(unittest.TestCase):
         # saturation pressures calculated with VESIcal
         self.shishkinaMixed =      1906.9487651401432 
         self.dixonMixed =          1847.1637265676327
-        self.iaconomarzianoMixed = 1655.6878345965608
+        self.iaconomarzianoMixed = 1437.4446250186159
         self.liuMixed =            2157.191497153953
-        self.magmasat =            1630
+        self.magmasat =            1590
 
         self.shishkinaCarbon           = 1511.477253594554
         self.dixonCarbon               = 1375.61109469857
-        self.iaconomarzianoCarbon      = 1218.3338004284656
+        self.iaconomarzianoCarbon      = 1215.0915904258195
         self.allisonCarbon             = 821.9428189121331
         self.allisonCarbon_sunset      = 1468.1852834512158
         self.allisonCarbon_sfvf        = 1728.744343059253
@@ -159,7 +159,7 @@ class TestSaturationPressure(unittest.TestCase):
 
         self.shishkinaWater            = 395.47151152814865
         self.dixonWater                = 431.1140172567279
-        self.iaconomarzianoWater       = 468.16584705092487
+        self.iaconomarzianoWater       = 459.72505692938915
         self.mooreWater                = 366.8109434136937
         self.liuWater                  = 374.4357814145504
 
