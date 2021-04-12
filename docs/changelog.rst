@@ -1,11 +1,11 @@
-**********************************
-ChangeLog: What's new in v 0.9.10?
-**********************************
+*******************************
+ChangeLog: What's new in v 0.9?
+*******************************
 
 In early 2021 the VESIcal code went through some major structural changes. From the user's perspective, not a lot of the funcationality has changed, except for loads of new features and some key changes to fundamental function calls. Those are detailed here.
 
-Upgrading your code to v 0.9.10
-###############################
+Upgrading your code to v 0.9
+############################
 In a couple of instances, code written with versions <0.9 will not execute properly in 0.9+. Major changes are few but key:
 
 	- ExcelFile() has changed to BatchFile()
@@ -41,4 +41,4 @@ As a first pass, simply try making these changes:
 		 'H2O': 5.5,
 		 'CO2': 0.05})
 
-If your code continues to throw errors, please refer to the guides in this documentation, which have been updated to reflect changes made for version 0.9.10. If all else fails, give us a shout: kayla.iacovino@nasa.gov.
+If your code continues to throw errors, please refer to the guides in this documentation, which have been updated to reflect changes made for version 0.9. If all else fails, give us a shout: kayla.iacovino@nasa.gov.
