@@ -146,6 +146,11 @@ class BatchFile(batchfile.BatchFile):
         else:
             raise core.InputError("X_fluid must be type str or float or int")
 
+        # Check if the model passed as the attribute "model_type"
+        # Currently only implemented for MagmaSat type models
+        if hasattr(model, 'model_type') is True:
+        	model = model.model_type
+
         H2Ovals = []
         CO2vals = []
         warnings = []
@@ -192,7 +197,7 @@ class BatchFile(batchfile.BatchFile):
 
             return dissolved_data
 
-        elif model == 'MagmaSat' or model.model_type == 'MagmaSat':
+        elif model == 'MagmaSat':
             XH2Ovals = []
             XCO2vals = []
             FluidProportionvals = []
@@ -365,6 +370,11 @@ class BatchFile(batchfile.BatchFile):
         """
         fluid_data = self.data.copy()
 
+        # Check if the model passed as the attribute "model_type"
+        # Currently only implemented for MagmaSat type models
+        if hasattr(model, 'model_type') is True:
+        	model = model.model_type
+
         if isinstance(temperature, str):
             file_has_temp = True
             temp_name = temperature
@@ -415,7 +425,7 @@ class BatchFile(batchfile.BatchFile):
             fluid_data["Warnings"] = warnings
 
             return fluid_data
-        elif model == 'MagmaSat' or model.model_type == 'MagmaSat':
+        elif model == 'MagmaSat':
             iterno = 0
             for index, row in fluid_data.iterrows():
                 iterno += 1
@@ -519,9 +529,14 @@ class BatchFile(batchfile.BatchFile):
         """
         satp_data = self.data.copy()
 
+        # Check if the model passed as the attribute "model_type"
+        # Currently only implemented for MagmaSat type models
+        if hasattr(model, 'model_type') is True:
+        	model = model.model_type
+
         # set default print_status to True for MagmaSat, False for other models if user doesn't pass any option
         if print_status == None:
-            if model == 'MagmaSat' or model.model_type == 'MagmaSat':
+            if model == 'MagmaSat':
                 print_status = True
             else:
                 print_status = False
@@ -564,7 +579,7 @@ class BatchFile(batchfile.BatchFile):
 
             return satp_data
 
-        elif model == 'MagmaSat' or model.model_type == 'MamgaSat':
+        elif model == 'MagmaSat':
             satP = []
             flmass = []
             flH2O = []
