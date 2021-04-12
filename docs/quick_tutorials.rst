@@ -59,7 +59,7 @@ You can then pass any one of those model names to any calculation, both for batc
 
 	v.calculate_saturation_pressure(sample=<your_sample>,
 					temperature=<your_temp>,
-					model='Shishkina').result
+					model='ShishkinaIdealMixing').result
 
 Pull arguments (P, T, X_fluid) from a file
 ------------------------------------------
