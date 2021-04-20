@@ -418,10 +418,12 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
 
         _sample = sample_class.Sample(sample_oxides)
 
+        # Get sample composition in terms of any species, units, and normalization passed
+        return_sample = _sample.get_composition(species=species, units=units, normalization=normalization)
+
         if asSampleClass == True:
-            return _sample
+            return sample_class.Sample(return_sample)
         else:
-            return_sample = _sample.get_composition(species=species, units=units, normalization=normalization)
             if species == None:
                 return dict(return_sample)
             elif isinstance(species, str):
