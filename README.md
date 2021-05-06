@@ -42,3 +42,8 @@ thermoengine is the ENKI implementation of MELTS (MagmaSat), which is the backbo
 Read all of our documentation, inlcuding quickstart guides here: https://vesical.readthedocs.io/en/latest/
 
 Check our our YouTube channel for videos on how to use VESIcal here: https://www.youtube.com/channel/UCpvCCs5KMXzOxXWm0seF8Qw
+
+## Contributing
+Issues are tracked on [GitHub](https://github.com/kaylai/VESIcal/issues).
+
+Patches may be submitted via a [Github pull request](https://github.com/kaylai/VESIcal/pulls). All changes should include tests (VESIcal uses python's unittest library) and pass [flake8](https://pypi.org/project/flake8/).
