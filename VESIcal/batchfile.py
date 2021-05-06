@@ -139,9 +139,10 @@ class BatchFile(object):
             else:
                 raise core.InputError("file_type must be one of \'excel\' or \'csv\'.")
 
-        data = rename_duplicates(data) #handle any duplicated sample names
-        data = data.dropna(how='all') #drop any rows that are all NaNs
-        data = data.fillna(0) #fill in any missing data with 0's
+        # Sanitize data inputs
+        data = rename_duplicates(data)  # handle any duplicated sample names
+        data = data.dropna(how='all')  # drop any rows that are all NaNs
+        data = data.fillna(0)  # fill in any missing data with 0's
 
         if 'model' in kwargs:
             w.warn("You don't need to pass a model here, so it will be ignored. You can specify a model when performing calculations on your dataset \
@@ -162,8 +163,9 @@ after import using normalize(BatchFileObject). See the documentation for more in
                             data.at[row.Index, "Fe2O3"] = 0.0
                             data.at[row.Index, "FeO"] = data.at[row.Index, name]
                 else:
-                    w.warn("Total iron column " + str(name) + " detected. This column will be treated as FeO. If Fe2O3 data are not given, Fe2O3 will be 0.0. \
-In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",RuntimeWarning,stacklevel=2)
+                    w.warn("Total iron column " + str(name) + " detected. This column will be treated as FeO. \
+If Fe2O3 data are not given, Fe2O3 will be 0.0. In future, an option to calcualte FeO/Fe2O3 based on fO2 will \
+be implemented.",RuntimeWarning,stacklevel=2)
                     data['FeO'] = data[name]
 
         if units == "wtpt_oxides":
@@ -178,6 +180,8 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
                 pass
             else:
                 data[oxide] = 0.0
+
+        data[data[core.oxides] < 0] = 0  # Check for any negative oxide values, set to 0
 
         self.data = data
 
