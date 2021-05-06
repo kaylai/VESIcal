@@ -116,7 +116,7 @@ class BatchFile(batchfile.BatchFile):
         pandas DataFrame
             Original data passed plus newly calculated values are returned.
         """
-        dissolved_data = self.get_data()
+        dissolved_data = self.get_data().copy()
 
         if isinstance(temperature, str):
             file_has_temp = True
@@ -167,8 +167,13 @@ class BatchFile(batchfile.BatchFile):
                     if file_has_X == True:
                         X_fluid = row[X_name]
 
-                    bulk_comp = self.get_sample_composition(index, asSampleClass=True)
+                    # Get sample comp as Sample class with defaults
+                    bulk_comp = self.get_sample_composition(index, 
+                                                            normalization=self.default_normalization, 
+                                                            units=self.default_units, 
+                                                            asSampleClass=True)
                     bulk_comp.set_default_units(self.default_units)
+                    bulk_comp.set_default_normalization(self.default_normalization)
                     calc = calculate_classes.calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature,
                                                                     X_fluid=(X_fluid, 1-X_fluid), model=model,
                                                                     silence_warnings=True, **kwargs)
@@ -256,8 +261,13 @@ class BatchFile(batchfile.BatchFile):
 
                 if temperature > 0 and pressure > 0 and X_fluid >=0 and X_fluid <=1:
                     try:
-                        bulk_comp = self.get_sample_composition(index, asSampleClass=True)
+                        # Get sample comp as Sample class with defaults
+                        bulk_comp = self.get_sample_composition(index, 
+                                                                normalization=self.default_normalization, 
+                                                                units=self.default_units, 
+                                                                asSampleClass=True)
                         bulk_comp.set_default_units(self.default_units)
+                        bulk_comp.set_default_normalization(self.default_normalization)
                         calc = calculate_classes.calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature,
                                                                         X_fluid=X_fluid, model=model, silence_warnings=True,
                                                                         verbose=True)
@@ -303,8 +313,13 @@ class BatchFile(batchfile.BatchFile):
                     pressure = row[press_name]
                 if file_has_X == True:
                     X_fluid = row[X_name]
-                bulk_comp = self.get_sample_composition(index, asSampleClass=True)
+                # Get sample comp as Sample class with defaults
+                bulk_comp = self.get_sample_composition(index, 
+                                                        normalization=self.default_normalization, 
+                                                        units=self.default_units, 
+                                                        asSampleClass=True)
                 bulk_comp.set_default_units(self.default_units)
+                bulk_comp.set_default_normalization(self.default_normalization)
                 if 'Water' in model:
                     try:
                         calc = calculate_classes.calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature,
@@ -368,7 +383,7 @@ class BatchFile(batchfile.BatchFile):
         pandas DataFrame
             Original data passed plus newly calculated values are returned.
         """
-        fluid_data = self.data.copy()
+        fluid_data = self.get_data().copy()
 
         # Check if the model passed as the attribute "model_type"
         # Currently only implemented for MagmaSat type models
@@ -401,7 +416,14 @@ class BatchFile(batchfile.BatchFile):
                         temperature = row[temp_name]
                     if file_has_press == True:
                         pressure = row[press_name]
-                    bulk_comp = sample_class.Sample({oxide:  row[oxide] for oxide in core.oxides}, units='wtpt_oxides')
+                    # Get sample comp as Sample class with defaults
+                    bulk_comp = self.get_sample_composition(index, 
+                                                            normalization=self.default_normalization, 
+                                                            units=self.default_units, 
+                                                            asSampleClass=True)
+                    bulk_comp.set_default_units(self.default_units)
+                    bulk_comp.set_default_normalization(self.default_normalization)
+
                     calc = calculate_classes.calculate_equilibrium_fluid_comp(sample=bulk_comp, pressure=pressure, temperature=temperature,
                                                             model=model, silence_warnings=True, **kwargs)
 
@@ -451,7 +473,14 @@ class BatchFile(batchfile.BatchFile):
 
                 if temperature > 0 and pressure > 0:
                     try:
-                        bulk_comp = sample_class.Sample({oxide:  row[oxide] for oxide in core.oxides}, units='wtpt_oxides')
+                        # Get sample comp as Sample class with defaults
+                        bulk_comp = self.get_sample_composition(index, 
+                                                                normalization=self.default_normalization, 
+                                                                units=self.default_units, 
+                                                                asSampleClass=True)
+                        bulk_comp.set_default_units(self.default_units)
+                        bulk_comp.set_default_normalization(self.default_normalization)
+
                         calc = calculate_classes.calculate_equilibrium_fluid_comp(sample=bulk_comp, pressure=pressure, temperature=temperature, model=model, silence_warnings=True)
 
                         H2Ovals.append(calc.result['H2O'])
@@ -484,7 +513,14 @@ class BatchFile(batchfile.BatchFile):
                         temperature = row[temp_name]
                     if file_has_press == True:
                         pressure = row[press_name]
-                    bulk_comp = sample_class.Sample({oxide:  row[oxide] for oxide in core.oxides}, units='wtpt_oxides')
+                    # Get sample comp as Sample class with defaults
+                    bulk_comp = self.get_sample_composition(index, 
+                                                            normalization=self.default_normalization, 
+                                                            units=self.default_units, 
+                                                            asSampleClass=True)
+                    bulk_comp.set_default_units(self.default_units)
+                    bulk_comp.set_default_normalization(self.default_normalization)
+
                     calc = calculate_classes.calculate_equilibrium_fluid_comp(sample=bulk_comp, pressure=pressure, temperature=temperature, model=model, silence_warnings=True)
                     saturated.append(calc.result)
                     warnings.append(calc.calib_check)
@@ -527,7 +563,7 @@ class BatchFile(batchfile.BatchFile):
             Values returned are saturation pressure in bars, the mass of fluid present, and the composition of the
             fluid present.
         """
-        satp_data = self.data.copy()
+        satp_data = self.get_data().copy()
 
         # Check if the model passed as the attribute "model_type"
         # Currently only implemented for MagmaSat type models
@@ -561,7 +597,14 @@ class BatchFile(batchfile.BatchFile):
                     batchfile.status_bar.status_bar(percent, index)
                 if file_has_temp == True:
                     temperature = row[temp_name]
-                bulk_comp = sample_class.Sample({oxide:  row[oxide] for oxide in core.oxides}, units='wtpt_oxides')
+                # Get sample comp as Sample class with defaults
+                bulk_comp = self.get_sample_composition(index, 
+                                                        normalization=self.default_normalization, 
+                                                        units=self.default_units, 
+                                                        asSampleClass=True)
+                bulk_comp.set_default_units(self.default_units)
+                bulk_comp.set_default_normalization(self.default_normalization)
+
                 calc = calculate_classes.calculate_saturation_pressure(sample=bulk_comp, temperature=temperature,
                                                      model=model, silence_warnings=True, **kwargs)
                 satP.append(calc.result)
@@ -606,8 +649,19 @@ class BatchFile(batchfile.BatchFile):
 
                 if temperature > 0:
                     try:
-                        bulk_comp = sample_class.Sample({oxide:  row[oxide] for oxide in core.oxides}, units='wtpt_oxides')
-                        calc = calculate_classes.calculate_saturation_pressure(sample=bulk_comp, temperature=temperature, model=model, verbose=True, silence_warnings=True)
+                        # Get sample comp as Sample class with defaults
+                        bulk_comp = self.get_sample_composition(index, 
+                                                                normalization=self.default_normalization, 
+                                                                units=self.default_units, 
+                                                                asSampleClass=True)
+                        bulk_comp.set_default_units(self.default_units)
+                        bulk_comp.set_default_normalization(self.default_normalization)
+
+                        calc = calculate_classes.calculate_saturation_pressure(sample=bulk_comp, 
+                                                                               temperature=temperature, 
+                                                                               model=model, 
+                                                                               verbose=True, 
+                                                                               silence_warnings=True)
                         satP.append(calc.result["SaturationP_bars"])
                         flmass.append(calc.result["FluidMass_grams"])
                         flsystem_wtper.append(calc.result["FluidProportion_wt"])

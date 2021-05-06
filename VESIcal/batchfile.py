@@ -342,6 +342,10 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
         if units == None:
             units = self.default_units
 
+        # Fetch the default normalization if not specified in the function call
+        if normalization == None:
+            normalization = self.default_normalization
+
         # Grab all compositional data
         compositional_data = self.get_composition(normalization=normalization, units=units)
 
