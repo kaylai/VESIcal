@@ -170,7 +170,7 @@ class BatchFile(batchfile.BatchFile):
                     # Get sample comp as Sample class with defaults
                     bulk_comp = self.get_sample_composition(index, 
                                                             normalization=self.default_normalization, 
-                                                            units=self.default_units, 
+                                                            units='wtpt_oxides', 
                                                             asSampleClass=True)
                     bulk_comp.set_default_units(self.default_units)
                     bulk_comp.set_default_normalization(self.default_normalization)
@@ -264,7 +264,7 @@ class BatchFile(batchfile.BatchFile):
                         # Get sample comp as Sample class with defaults
                         bulk_comp = self.get_sample_composition(index, 
                                                                 normalization=self.default_normalization, 
-                                                                units=self.default_units, 
+                                                                units='wtpt_oxides', 
                                                                 asSampleClass=True)
                         bulk_comp.set_default_units(self.default_units)
                         bulk_comp.set_default_normalization(self.default_normalization)
@@ -316,7 +316,7 @@ class BatchFile(batchfile.BatchFile):
                 # Get sample comp as Sample class with defaults
                 bulk_comp = self.get_sample_composition(index, 
                                                         normalization=self.default_normalization, 
-                                                        units=self.default_units, 
+                                                        units='wtpt_oxides', 
                                                         asSampleClass=True)
                 bulk_comp.set_default_units(self.default_units)
                 bulk_comp.set_default_normalization(self.default_normalization)
@@ -419,7 +419,7 @@ class BatchFile(batchfile.BatchFile):
                     # Get sample comp as Sample class with defaults
                     bulk_comp = self.get_sample_composition(index, 
                                                             normalization=self.default_normalization, 
-                                                            units=self.default_units, 
+                                                            units='wtpt_oxides', 
                                                             asSampleClass=True)
                     bulk_comp.set_default_units(self.default_units)
                     bulk_comp.set_default_normalization(self.default_normalization)
@@ -476,7 +476,7 @@ class BatchFile(batchfile.BatchFile):
                         # Get sample comp as Sample class with defaults
                         bulk_comp = self.get_sample_composition(index, 
                                                                 normalization=self.default_normalization, 
-                                                                units=self.default_units, 
+                                                                units='wtpt_oxides', 
                                                                 asSampleClass=True)
                         bulk_comp.set_default_units(self.default_units)
                         bulk_comp.set_default_normalization(self.default_normalization)
@@ -516,7 +516,7 @@ class BatchFile(batchfile.BatchFile):
                     # Get sample comp as Sample class with defaults
                     bulk_comp = self.get_sample_composition(index, 
                                                             normalization=self.default_normalization, 
-                                                            units=self.default_units, 
+                                                            units='wtpt_oxides', 
                                                             asSampleClass=True)
                     bulk_comp.set_default_units(self.default_units)
                     bulk_comp.set_default_normalization(self.default_normalization)
@@ -565,7 +565,7 @@ class BatchFile(batchfile.BatchFile):
         """
         satp_data = self.get_data().copy()
 
-        # Check if the model passed as the attribute "model_type"
+        # Check if the model passed has the attribute "model_type"
         # Currently only implemented for MagmaSat type models
         if hasattr(model, 'model_type') is True:
         	model = model.model_type
@@ -600,7 +600,7 @@ class BatchFile(batchfile.BatchFile):
                 # Get sample comp as Sample class with defaults
                 bulk_comp = self.get_sample_composition(index, 
                                                         normalization=self.default_normalization, 
-                                                        units=self.default_units, 
+                                                        units='wtpt_oxides',
                                                         asSampleClass=True)
                 bulk_comp.set_default_units(self.default_units)
                 bulk_comp.set_default_normalization(self.default_normalization)
@@ -609,8 +609,8 @@ class BatchFile(batchfile.BatchFile):
                                                      model=model, silence_warnings=True, **kwargs)
                 satP.append(calc.result)
                 warnings.append(calc.calib_check)
-                if model == 'Shishkina':
-                    piStar.append(models.default_models['Shishkina'].models[1].PiStar(bulk_comp))
+                if model == 'ShishkinaIdealMixing':
+                    piStar.append(models.default_models['ShishkinaIdealMixing'].models[1].PiStar(bulk_comp))
 
             satp_data["SaturationP_bars_VESIcal"] = satP
             if file_has_temp == False:
@@ -652,7 +652,7 @@ class BatchFile(batchfile.BatchFile):
                         # Get sample comp as Sample class with defaults
                         bulk_comp = self.get_sample_composition(index, 
                                                                 normalization=self.default_normalization, 
-                                                                units=self.default_units, 
+                                                                units='wtpt_oxides', 
                                                                 asSampleClass=True)
                         bulk_comp.set_default_units(self.default_units)
                         bulk_comp.set_default_normalization(self.default_normalization)
