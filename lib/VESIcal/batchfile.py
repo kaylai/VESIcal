@@ -6,6 +6,9 @@ import warnings as w
 from VESIcal import core
 from VESIcal import sample_class
 
+# Turn off chained assignment pandas warning
+pd.options.mode.chained_assignment = None  # default='warn'
+
 def rename_duplicates(df, suffix='-duplicate-'):
     appendents = (suffix + df.groupby(level=0).cumcount().astype(str).replace('0','')).replace(suffix, '')
     return df.set_index(df.index.astype(str) + appendents)
@@ -181,7 +184,10 @@ be implemented.",RuntimeWarning,stacklevel=2)
             else:
                 data[oxide] = 0.0
 
-        data = data.where(data[core.oxides] > 0, 0)  # Check for any negative oxide values, set to 0
+        #data = data.where(data[core.oxides] > 0, 0)  # Check for any negative oxide values, set to 0
+        for column in data:
+            if column in core.oxides:
+                data[column][data[column] < 0] = 0
 
         self.data = data
 
