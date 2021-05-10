@@ -17,11 +17,17 @@ Updated to reflect changes in v0.9+
 
 Introduction to running VESIcal on the ENKI server
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-NOT yet updated to reflect changes in v0.9+
+Updated to reflect changes in v0.9+
+
+**Useful files:**
+
+	* `Andesite_MI_SatPs.xlsx <https://github.com/kaylai/VESIcal/raw/27a5b5cd5bb2044268183d3e4371c87afa257d7a/You%20Tube%20Examples/Andesite_MI_SatPs.xlsx>`_
+	* `Cassidy2015_AndesiteMI_YouTubeDemo.xlsx <https://github.com/kaylai/VESIcal/raw/master/You%20Tube%20Examples/Cassidy2015_AndesiteMI_YouTubeDemo.xlsx>`_
+	* `Saturation_pressure_example.ipynb <https://github.com/kaylai/VESIcal/raw/master/You%20Tube%20Examples/Saturation_pressure_example.ipynb>`_ (right click and choose 'Save Link As...')
 
 .. raw:: html
 
-	<iframe width="560" height="315" src="https://www.youtube.com/embed/MyP-4DXF5WA" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+	<iframe width="560" height="315" src="https://www.youtube.com/embed/BuwUhu9YdG4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 ---------
 
