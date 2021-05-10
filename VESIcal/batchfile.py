@@ -181,7 +181,7 @@ be implemented.",RuntimeWarning,stacklevel=2)
             else:
                 data[oxide] = 0.0
 
-        data[data[core.oxides] < 0] = 0  # Check for any negative oxide values, set to 0
+        data = data.where(data[core.oxides] > 0, 0)  # Check for any negative oxide values, set to 0
 
         self.data = data
 
