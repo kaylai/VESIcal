@@ -1,3 +1,5 @@
+#!/opt/conda/bin/python
+
 import VESIcal as v
 import anvil.server
 import anvil.media
