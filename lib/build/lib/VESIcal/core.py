@@ -134,26 +134,3 @@ class SaturationError(Error):
 
 	def __init__(self, message):
 		self.message = message
-
-def get_oxides(sample):
-	"""
-	Returns a sample composition with only compositional oxide data, removing any extranneous data.
-	Useful when passing a self-defined sample (e.g. dict or pandas Series) to a some VESIcal function.
-
-	Parameters
-	----------
-	sample: pandas Series or dictionary
-		A sample composition plus other sample information
-
-	Returns
-	-------
-	Same type as passed sample (pandas Series or dictionary)
-		Sample composition with extranneous information removed.
-	"""
-
-	clean = {oxide:  sample[oxide] for oxide in oxides}
-
-	if isinstance(sample, dict):
-		return clean
-	if isinstance(sample, pd.core.series.Series):
-		return pd.Series(clean)

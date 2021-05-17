@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 import os
 import sys
 import warnings as w
@@ -7,7 +6,8 @@ import warnings as w
 from VESIcal import core
 from VESIcal import sample_class
 
-from copy import deepcopy
+# Turn off chained assignment pandas warning
+pd.options.mode.chained_assignment = None  # default='warn'
 
 def rename_duplicates(df, suffix='-duplicate-'):
     appendents = (suffix + df.groupby(level=0).cumcount().astype(str).replace('0','')).replace(suffix, '')
@@ -15,9 +15,8 @@ def rename_duplicates(df, suffix='-duplicate-'):
 
 class status_bar(object):
     """Various styles of status bars that display the progress of a calculation
-        within a loop
+    within a loop
     """
-
     def __init__():
         pass
 
@@ -71,10 +70,11 @@ class BatchFile(object):
             OPTIONAL. For Excel files. Default value is 0 which gets the first sheet in the batch spreadsheet file. This implements the pandas.
             read_excel() sheet_name parameter. But functionality to read in more than one sheet at a time (e.g., pandas.read_excel(sheet_name=None))
             is not yet imlpemented in VESIcal. From the pandas 1.0.4 documentation:
-                Available cases:
-                    - Defaults to 0: 1st sheet as a DataFrame
-                    - 1: 2nd sheet as a DataFrame
-                    - "Sheet1": Load sheet with name “Sheet1”
+            
+            Available cases:
+            - Defaults to 0: 1st sheet as a DataFrame
+            - 1: 2nd sheet as a DataFrame
+            - "Sheet1": Load sheet with name “Sheet1”
 
         file_type: str
             OPTIONAL. Default is 'excel', which denotes that passed file has extension .xlsx. Other option is 'csv', which denotes that
@@ -86,14 +86,14 @@ class BatchFile(object):
 
         default_normalization:     None or str
             The type of normalization to apply to the data by default. One of:
-                - None (no normalization)
-                - 'standard' (default): Normalizes an input composition to 100%.
-                - 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
-                The volatile wt% will remain fixed, whilst the other major element oxides are reduced
-                proportionally so that the total is 100 wt%.
-                - 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
-                volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
-                be retained in addition to the normalized non-volatile oxides, summing to >100%.
+            - None (no normalization)
+            - 'standard' (default): Normalizes an input composition to 100%.
+            - 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
+            The volatile wt% will remain fixed, whilst the other major element oxides are reduced
+            proportionally so that the total is 100 wt%.
+            - 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
+            volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
+            be retained in addition to the normalized non-volatile oxides, summing to >100%.
 
         default_units     str
             The type of composition to return by default, one of:
@@ -142,9 +142,10 @@ class BatchFile(object):
             else:
                 raise core.InputError("file_type must be one of \'excel\' or \'csv\'.")
 
-        data = rename_duplicates(data) #handle any duplicated sample names
-        data = data.dropna(how='all') #drop any rows that are all NaNs
-        data = data.fillna(0) #fill in any missing data with 0's
+        # Sanitize data inputs
+        data = rename_duplicates(data)  # handle any duplicated sample names
+        data = data.dropna(how='all')  # drop any rows that are all NaNs
+        data = data.fillna(0)  # fill in any missing data with 0's
 
         if 'model' in kwargs:
             w.warn("You don't need to pass a model here, so it will be ignored. You can specify a model when performing calculations on your dataset \
@@ -165,8 +166,9 @@ after import using normalize(BatchFileObject). See the documentation for more in
                             data.at[row.Index, "Fe2O3"] = 0.0
                             data.at[row.Index, "FeO"] = data.at[row.Index, name]
                 else:
-                    w.warn("Total iron column " + str(name) + " detected. This column will be treated as FeO. If Fe2O3 data are not given, Fe2O3 will be 0.0. \
-In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",RuntimeWarning,stacklevel=2)
+                    w.warn("Total iron column " + str(name) + " detected. This column will be treated as FeO. \
+If Fe2O3 data are not given, Fe2O3 will be 0.0. In future, an option to calcualte FeO/Fe2O3 based on fO2 will \
+be implemented.",RuntimeWarning,stacklevel=2)
                     data['FeO'] = data[name]
 
         if units == "wtpt_oxides":
@@ -182,6 +184,11 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
             else:
                 data[oxide] = 0.0
 
+        #data = data.where(data[core.oxides] > 0, 0)  # Check for any negative oxide values, set to 0
+        for column in data:
+            if column in core.oxides:
+                data[column][data[column] < 0] = 0
+
         self.data = data
 
     def set_default_normalization(self, default_normalization):
@@ -191,14 +198,15 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
         ----------
         default_normalization:    str
             The type of normalization to apply to the data. One of:
-                - 'none' (no normalization)
-                - 'standard' (default): Normalizes an input composition to 100%.
-                - 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
-                The volatile wt% will remain fixed, whilst the other major element oxides are reduced
-                proportionally so that the total is 100 wt%.
-                - 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
-                volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
-                be retained in addition to the normalized non-volatile oxides, summing to >100%.
+            - 'none' (no normalization)
+            - 'standard' (default): Normalizes an input composition to 100%.
+            - 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
+            The volatile wt% will remain fixed, whilst the other major element oxides are reduced
+            proportionally so that the total is 100 wt%.
+            - 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
+            volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
+            be retained in addition to the normalized non-volatile oxides, summing to >100%.
+
         """
         if default_normalization in ['none','standard','fixedvolatiles','additionalvolatiles']:
             self.default_normalization = default_normalization
@@ -222,7 +230,7 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
         else:
             raise core.InputError("The units must be one of 'wtpt_oxides','mol_oxides','mol_cations'.")
 
-    def get_composition(self, species=None, normalization=None, units=None, exclude_volatiles=False):
+    def get_composition(self, species=None, normalization=None, units=None, exclude_volatiles=False, asBatchFile=False):
         """ Returns a pandas DataFrame containing the compositional information for all samples
         in the BatchFile object
 
@@ -239,14 +247,15 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
 
         normalization:     NoneType or str
             The type of normalization to apply to the data. One of:
-                - 'none' (no normalization)
-                - 'standard' (default): Normalizes an input composition to 100%.
-                - 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
-                The volatile wt% will remain fixed, whilst the other major element oxides are reduced
-                proportionally so that the total is 100 wt%.
-                - 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
-                volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
-                be retained in addition to the normalized non-volatile oxides, summing to >100%.
+            - 'none' (no normalization)
+            - 'standard' (default): Normalizes an input composition to 100%.
+            - 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
+            The volatile wt% will remain fixed, whilst the other major element oxides are reduced
+            proportionally so that the total is 100 wt%.
+            - 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
+            volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
+            be retained in addition to the normalized non-volatile oxides, summing to >100%.
+
             If NoneType is passed the default normalization option will be used (self.default_normalization).
 
         units:     NoneType or str
@@ -261,10 +270,13 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
             If True, volatiles will be excluded from the returned composition, prior to normalization and
             conversion.
 
+        asBatchFile:    bool
+            If True, returns a BatchFile object. If False, returns a pandas.DataFrame object.
+
         Returns
         -------
-        pandas.DataFrame
-            All sample compositions, as specified.
+        pandas.DataFrame or BatchFile object
+            All sample information.
         """
         data = self.data.copy()
 
@@ -292,26 +304,46 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
         else:
             return_frame = None
 
-        return return_frame
+        if asBatchFile == False:
+            return return_frame
+        else:
+            return BatchFile(filename=None, dataframe=return_frame, label=None)
 
-    def get_data(self, units=None):
+    def get_data(self, normalization=None, units=None, asBatchFile=False):
         """
         Returns all data stored in a BatchFile object (both compositional and other data). To return only the
         compositional data, use get_composition().
 
         Parameters
         ----------
+        normalization:     NoneType or str
+            The type of normalization to apply to the data. One of:
+            - 'none' (no normalization)
+            - 'standard' (default): Normalizes an input composition to 100%.
+            - 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
+            The volatile wt% will remain fixed, whilst the other major element oxides are reduced
+            proportionally so that the total is 100 wt%.
+            - 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
+            volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
+            be retained in addition to the normalized non-volatile oxides, summing to >100%.
+
+            If NoneType is passed the default normalization option will be used (self.default_normalization).
+
         units:     NoneType or str
             The units of composition to return, one of:
             - wtpt_oxides (default)
             - mol_oxides
             - mol_cations
             - mol_singleO
+
             If NoneType is passed the default units option will be used (self.default_type).
+
+        asBatchFile:    bool
+            If True, returns a BatchFile object. If False, returns a pandas.DataFrame object.
 
         Returns
         -------
-        pandas.DataFrame
+        pandas.DataFrame or BatchFile object
             All sample information.
         """
         data = self.data.copy()
@@ -320,8 +352,12 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
         if units == None:
             units = self.default_units
 
+        # Fetch the default normalization if not specified in the function call
+        if normalization == None:
+            normalization = self.default_normalization
+
         # Grab all compositional data
-        compositional_data = self.get_composition(units=units)
+        compositional_data = self.get_composition(normalization=normalization, units=units)
 
         # Grab all non-compositional data
         non_compositional_data = data.filter([col for col in data.columns if col not in core.oxides])
@@ -329,7 +365,10 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
         # concatenate both compositional and non-compositional dataframes into one
         return_frame = pd.concat([compositional_data, non_compositional_data], axis=1)
 
-        return return_frame
+        if asBatchFile == False:
+            return return_frame
+        else:
+            return BatchFile(filename=None, dataframe=return_frame, label=None)
 
     def get_sample_composition(self, samplename, species=None, normalization=None, units=None, asSampleClass=False):
         """
@@ -342,14 +381,15 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
 
         normalization: NoneType or str
             The type of normalization to apply to the data. One of:
-                - 'none' (no normalization)
-                - 'standard' (default): Normalizes an input composition to 100%.
-                - 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
-                The volatile wt% will remain fixed, whilst the other major element oxides are reduced
-                proportionally so that the total is 100 wt%.
-                - 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
-                volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
-                be retained in addition to the normalized non-volatile oxides, summing to >100%.
+            - 'none' (no normalization)
+            - 'standard' (default): Normalizes an input composition to 100%.
+            - 'fixedvolatiles': Normalizes major element oxides to 100 wt%, including volatiles.
+            The volatile wt% will remain fixed, whilst the other major element oxides are reduced
+            proportionally so that the total is 100 wt%.
+            - 'additionalvolatiles': Normalises major element oxide wt% to 100%, assuming it is
+            volatile-free. If H2O or CO2 are passed to the function, their un-normalized values will
+            be retained in addition to the normalized non-volatile oxides, summing to >100%.
+
             If NoneType is passed the default normalization option will be used (self.default_normalization).
 
         units:     NoneType or str
@@ -392,10 +432,12 @@ In future, an option to calcualte FeO/Fe2O3 based on fO2 will be implemented.",R
 
         _sample = sample_class.Sample(sample_oxides)
 
+        # Get sample composition in terms of any species, units, and normalization passed
+        return_sample = _sample.get_composition(species=species, units=units, normalization=normalization)
+
         if asSampleClass == True:
-            return _sample
+            return sample_class.Sample(return_sample)
         else:
-            return_sample = _sample.get_composition(species=species, units=units, normalization=normalization)
             if species == None:
                 return dict(return_sample)
             elif isinstance(species, str):

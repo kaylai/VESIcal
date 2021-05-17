@@ -58,7 +58,7 @@ class water(model_classes.Model):
             Use the hydrous or anhydrous NBO/O paramterisation (True for hydrous). Default is True.
         webapp_coeffs     bool
             If True, use the pre-review hydrous coefficients, as implemented in the IM webapp.
-            Default is False.
+            Default is True.
 
         Returns
         -------
@@ -74,8 +74,6 @@ class water(model_classes.Model):
             raise core.InputError("Pressure must be positive.")
         if X_fluid < 0 or X_fluid > 1:
             raise core.InputError("X_fluid must have a value between 0 and 1.")
-
-        # sample_normed = normalize(sample.copy(), how='additionalvolatiles')
 
         if pressure == 0:
             return 0
@@ -260,7 +258,8 @@ class water(model_classes.Model):
         if all(sample.check_oxide(ox) for ox in ['K2O','Na2O','CaO','MgO','FeO','Al2O3','SiO2','TiO2']) == False:
             raise core.InputError("Sample must contain K2O, Na2O, CaO, MgO, FeO, Al2O3, SiO2, and TiO2.")
 
-        X = sample.get_composition(units='mol_oxides',normalization='additionalvolatiles')
+        # X = sample.get_composition(units='mol_oxides',normalization='additionalvolatiles')
+        X = sample.get_composition(units='mol_oxides')
 
         if 'Fe2O3' in X:
             Fe2O3 = X['Fe2O3']
@@ -386,7 +385,8 @@ class carbon(model_classes.Model):
         if fugacity == 0:
             return 0
 
-        molarProps = sample_h2o.get_composition(units='mol_oxides',normalization='additionalvolatiles')
+        # molarProps = sample_h2o.get_composition(units='mol_oxides',normalization='additionalvolatiles')
+        molarProps = sample_h2o.get_composition(units='mol_oxides')
 
         if all(ox in molarProps for ox in ['Al2O3','CaO','K2O','Na2O','FeO','MgO','Na2O','K2O']) == False:
             raise core.InputError("sample must contain Al2O3, CaO, K2O, Na2O, FeO, MgO, Na2O, and K2O.")
@@ -518,7 +518,8 @@ class carbon(model_classes.Model):
         if all(sample.check_oxide(ox) for ox in ['K2O','Na2O','CaO','MgO','FeO','Al2O3','SiO2','TiO2']) == False:
             raise core.InputError("sample must contain K2O, Na2O, CaO, MgO, FeO, Al2O3, SiO2, and TiO2.")
 
-        X = sample.get_composition(units='mol_oxides',normalization='additionalvolatiles')
+        # X = sample.get_composition(units='mol_oxides',normalization='additionalvolatiles')
+        X = sample.get_composition(units='mol_oxides')
 
         if 'Fe2O3' in X:
             Fe2O3 = X['Fe2O3']

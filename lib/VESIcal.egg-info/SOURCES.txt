@@ -12,6 +12,11 @@ VESIcal/fugacity_models.py
 VESIcal/model_classes.py
 VESIcal/sample_class.py
 VESIcal/vplot.py
+VESIcal.egg-info/PKG-INFO
+VESIcal.egg-info/SOURCES.txt
+VESIcal.egg-info/dependency_links.txt
+VESIcal.egg-info/requires.txt
+VESIcal.egg-info/top_level.txt
 VESIcal/models/__init__.py
 VESIcal/models/allison.py
 VESIcal/models/dixon.py
@@ -23,8 +28,3 @@ VESIcal/models/moore.py
 VESIcal/models/shishkina.py
 VESIcal/tasplot/__init__.py
 VESIcal/tasplot/setup.py
-VESIcal_dev_kaylai.egg-info/PKG-INFO
-VESIcal_dev_kaylai.egg-info/SOURCES.txt
-VESIcal_dev_kaylai.egg-info/dependency_links.txt
-VESIcal_dev_kaylai.egg-info/requires.txt
-VESIcal_dev_kaylai.egg-info/top_level.txt

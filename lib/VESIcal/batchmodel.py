@@ -1,19 +1,25 @@
-from VESIcal import activity_models
-from VESIcal import calibration_checks
 from VESIcal import core
-from VESIcal import fugacity_models
 from VESIcal import models
-from VESIcal import model_classes
 from VESIcal import sample_class
 from VESIcal import calculate_classes
-from VESIcal import vplot
 from VESIcal import batchfile
 
 import numpy as np
-import pandas as pd
 import warnings as w
 import sys
 w.filterwarnings("ignore", message="rubicon.objc.ctypes_patch has only been tested ")
+
+# -------------- MELTS preamble --------------- #
+from thermoengine import equilibrate
+# instantiate thermoengine equilibrate MELTS instance
+melts = equilibrate.MELTSmodel('1.2.0')
+
+# Suppress phases not required in the melts simulation
+phases = melts.get_phase_names()
+for phase in phases:
+    melts.set_phase_inclusion_status({phase: False})
+melts.set_phase_inclusion_status({'Fluid': True, 'Liquid': True})
+# --------------------------------------------- #
 
 # -------------- BATCH PROCESSING ----------- #
 class BatchFile(batchfile.BatchFile):
@@ -110,7 +116,7 @@ class BatchFile(batchfile.BatchFile):
         pandas DataFrame
             Original data passed plus newly calculated values are returned.
         """
-        dissolved_data = self.get_data()
+        dissolved_data = self.get_data().copy()
 
         if isinstance(temperature, str):
             file_has_temp = True
@@ -140,6 +146,11 @@ class BatchFile(batchfile.BatchFile):
         else:
             raise core.InputError("X_fluid must be type str or float or int")
 
+        # Check if the model passed as the attribute "model_type"
+        # Currently only implemented for MagmaSat type models
+        if hasattr(model, 'model_type') is True:
+        	model = model.model_type
+
         H2Ovals = []
         CO2vals = []
         warnings = []
@@ -156,8 +167,13 @@ class BatchFile(batchfile.BatchFile):
                     if file_has_X == True:
                         X_fluid = row[X_name]
 
-                    bulk_comp = self.get_sample_composition(index, asSampleClass=True)
+                    # Get sample comp as Sample class with defaults
+                    bulk_comp = self.get_sample_composition(index, 
+                                                            normalization=self.default_normalization, 
+                                                            units='wtpt_oxides', 
+                                                            asSampleClass=True)
                     bulk_comp.set_default_units(self.default_units)
+                    bulk_comp.set_default_normalization(self.default_normalization)
                     calc = calculate_classes.calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature,
                                                                     X_fluid=(X_fluid, 1-X_fluid), model=model,
                                                                     silence_warnings=True, **kwargs)
@@ -245,8 +261,13 @@ class BatchFile(batchfile.BatchFile):
 
                 if temperature > 0 and pressure > 0 and X_fluid >=0 and X_fluid <=1:
                     try:
-                        bulk_comp = self.get_sample_composition(index, asSampleClass=True)
+                        # Get sample comp as Sample class with defaults
+                        bulk_comp = self.get_sample_composition(index, 
+                                                                normalization=self.default_normalization, 
+                                                                units='wtpt_oxides', 
+                                                                asSampleClass=True)
                         bulk_comp.set_default_units(self.default_units)
+                        bulk_comp.set_default_normalization(self.default_normalization)
                         calc = calculate_classes.calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature,
                                                                         X_fluid=X_fluid, model=model, silence_warnings=True,
                                                                         verbose=True)
@@ -292,8 +313,13 @@ class BatchFile(batchfile.BatchFile):
                     pressure = row[press_name]
                 if file_has_X == True:
                     X_fluid = row[X_name]
-                bulk_comp = self.get_sample_composition(index, asSampleClass=True)
+                # Get sample comp as Sample class with defaults
+                bulk_comp = self.get_sample_composition(index, 
+                                                        normalization=self.default_normalization, 
+                                                        units='wtpt_oxides', 
+                                                        asSampleClass=True)
                 bulk_comp.set_default_units(self.default_units)
+                bulk_comp.set_default_normalization(self.default_normalization)
                 if 'Water' in model:
                     try:
                         calc = calculate_classes.calculate_dissolved_volatiles(sample=bulk_comp, pressure=pressure, temperature=temperature,
@@ -357,7 +383,12 @@ class BatchFile(batchfile.BatchFile):
         pandas DataFrame
             Original data passed plus newly calculated values are returned.
         """
-        fluid_data = self.data.copy()
+        fluid_data = self.get_data().copy()
+
+        # Check if the model passed as the attribute "model_type"
+        # Currently only implemented for MagmaSat type models
+        if hasattr(model, 'model_type') is True:
+        	model = model.model_type
 
         if isinstance(temperature, str):
             file_has_temp = True
@@ -365,7 +396,7 @@ class BatchFile(batchfile.BatchFile):
         elif isinstance(temperature, float) or isinstance(temperature, int):
             file_has_temp = False
         else:
-            raise InputError("temp must be type str or float or int")
+            raise core.InputError("temp must be type str or float or int")
 
         if isinstance(pressure, str):
             file_has_press = True
@@ -373,7 +404,7 @@ class BatchFile(batchfile.BatchFile):
         elif isinstance(pressure, float) or isinstance(pressure, int) or type(pressure) == type(None):
             file_has_press = False
         else:
-            raise InputError("pressure must be type str or float or int")
+            raise core.InputError("pressure must be type str or float or int")
 
         H2Ovals = []
         CO2vals = []
@@ -385,7 +416,14 @@ class BatchFile(batchfile.BatchFile):
                         temperature = row[temp_name]
                     if file_has_press == True:
                         pressure = row[press_name]
-                    bulk_comp = sample_class.Sample({oxide:  row[oxide] for oxide in core.oxides}, units='wtpt_oxides')
+                    # Get sample comp as Sample class with defaults
+                    bulk_comp = self.get_sample_composition(index, 
+                                                            normalization=self.default_normalization, 
+                                                            units='wtpt_oxides', 
+                                                            asSampleClass=True)
+                    bulk_comp.set_default_units(self.default_units)
+                    bulk_comp.set_default_normalization(self.default_normalization)
+
                     calc = calculate_classes.calculate_equilibrium_fluid_comp(sample=bulk_comp, pressure=pressure, temperature=temperature,
                                                             model=model, silence_warnings=True, **kwargs)
 
@@ -435,7 +473,14 @@ class BatchFile(batchfile.BatchFile):
 
                 if temperature > 0 and pressure > 0:
                     try:
-                        bulk_comp = sample_class.Sample({oxide:  row[oxide] for oxide in core.oxides}, units='wtpt_oxides')
+                        # Get sample comp as Sample class with defaults
+                        bulk_comp = self.get_sample_composition(index, 
+                                                                normalization=self.default_normalization, 
+                                                                units='wtpt_oxides', 
+                                                                asSampleClass=True)
+                        bulk_comp.set_default_units(self.default_units)
+                        bulk_comp.set_default_normalization(self.default_normalization)
+
                         calc = calculate_classes.calculate_equilibrium_fluid_comp(sample=bulk_comp, pressure=pressure, temperature=temperature, model=model, silence_warnings=True)
 
                         H2Ovals.append(calc.result['H2O'])
@@ -468,7 +513,14 @@ class BatchFile(batchfile.BatchFile):
                         temperature = row[temp_name]
                     if file_has_press == True:
                         pressure = row[press_name]
-                    bulk_comp = sample_class.Sample({oxide:  row[oxide] for oxide in core.oxides}, units='wtpt_oxides')
+                    # Get sample comp as Sample class with defaults
+                    bulk_comp = self.get_sample_composition(index, 
+                                                            normalization=self.default_normalization, 
+                                                            units='wtpt_oxides', 
+                                                            asSampleClass=True)
+                    bulk_comp.set_default_units(self.default_units)
+                    bulk_comp.set_default_normalization(self.default_normalization)
+
                     calc = calculate_classes.calculate_equilibrium_fluid_comp(sample=bulk_comp, pressure=pressure, temperature=temperature, model=model, silence_warnings=True)
                     saturated.append(calc.result)
                     warnings.append(calc.calib_check)
@@ -485,7 +537,7 @@ class BatchFile(batchfile.BatchFile):
 
             return fluid_data
 
-    def calculate_saturation_pressure(self, temperature, print_status=True, model='MagmaSat', **kwargs):
+    def calculate_saturation_pressure(self, temperature, print_status=None, model='MagmaSat', **kwargs):
         """
         Calculates the saturation pressure of multiple sample compositions in the BatchFile.
 
@@ -498,9 +550,9 @@ class BatchFile(batchfile.BatchFile):
             title in the passed BatchFile object.
 
         print_status: bool
-            OPTIONAL: The default value is True, in which case the progress of the calculation will be printed to the terminal.
-            If set to False, nothing will be printed. MagmaSat calculations tend to be slow, and so a value of True is recommended
-            more most use cases.
+            OPTIONAL: The default value for MagmaSat is True and the default for all other models is False. If set to True, the 
+            progress of the calculation will be printed to the terminal. If set to False, nothing will be printed. MagmaSat 
+            calculations tend to be slow, and so a value of True is recommended more most use cases.
 
         model: string
             OPTIONAL: Default is 'MagmaSat'. Any other model name can be passed here.
@@ -511,7 +563,19 @@ class BatchFile(batchfile.BatchFile):
             Values returned are saturation pressure in bars, the mass of fluid present, and the composition of the
             fluid present.
         """
-        satp_data = self.data.copy()
+        satp_data = self.get_data().copy()
+
+        # Check if the model passed has the attribute "model_type"
+        # Currently only implemented for MagmaSat type models
+        if hasattr(model, 'model_type') is True:
+        	model = model.model_type
+
+        # set default print_status to True for MagmaSat, False for other models if user doesn't pass any option
+        if print_status == None:
+            if model == 'MagmaSat':
+                print_status = True
+            else:
+                print_status = False
 
         if isinstance(temperature, str):
             file_has_temp = True
@@ -519,22 +583,34 @@ class BatchFile(batchfile.BatchFile):
         elif isinstance(temperature, float) or isinstance(temperature, int):
             file_has_temp = False
         else:
-            raise InputError("temperature must be type str or float or int")
+            raise core.InputError("temperature must be type str or float or int")
 
         if model != 'MagmaSat':
             satP = []
             warnings = []
             piStar = []
+            iterno = 0
             for index, row in satp_data.iterrows():
+                iterno += 1
+                if print_status == True:
+                    percent = iterno/len(satp_data.index)
+                    batchfile.status_bar.status_bar(percent, index)
                 if file_has_temp == True:
                     temperature = row[temp_name]
-                bulk_comp = sample_class.Sample({oxide:  row[oxide] for oxide in core.oxides}, units='wtpt_oxides')
+                # Get sample comp as Sample class with defaults
+                bulk_comp = self.get_sample_composition(index, 
+                                                        normalization=self.default_normalization, 
+                                                        units='wtpt_oxides',
+                                                        asSampleClass=True)
+                bulk_comp.set_default_units(self.default_units)
+                bulk_comp.set_default_normalization(self.default_normalization)
+
                 calc = calculate_classes.calculate_saturation_pressure(sample=bulk_comp, temperature=temperature,
                                                      model=model, silence_warnings=True, **kwargs)
                 satP.append(calc.result)
                 warnings.append(calc.calib_check)
-                if model == 'Shishkina':
-                    piStar.append(default_models['Shishkina'].models[1].PiStar(bulk_comp))
+                if model == 'ShishkinaIdealMixing':
+                    piStar.append(models.default_models['ShishkinaIdealMixing'].models[1].PiStar(bulk_comp))
 
             satp_data["SaturationP_bars_VESIcal"] = satP
             if file_has_temp == False:
@@ -546,7 +622,7 @@ class BatchFile(batchfile.BatchFile):
 
             return satp_data
 
-        else:
+        elif model == 'MagmaSat':
             satP = []
             flmass = []
             flH2O = []
@@ -573,8 +649,19 @@ class BatchFile(batchfile.BatchFile):
 
                 if temperature > 0:
                     try:
-                        bulk_comp = sample_class.Sample({oxide:  row[oxide] for oxide in core.oxides}, units='wtpt_oxides')
-                        calc = calculate_classes.calculate_saturation_pressure(sample=bulk_comp, temperature=temperature, model=model, verbose=True, silence_warnings=True)
+                        # Get sample comp as Sample class with defaults
+                        bulk_comp = self.get_sample_composition(index, 
+                                                                normalization=self.default_normalization, 
+                                                                units='wtpt_oxides', 
+                                                                asSampleClass=True)
+                        bulk_comp.set_default_units(self.default_units)
+                        bulk_comp.set_default_normalization(self.default_normalization)
+
+                        calc = calculate_classes.calculate_saturation_pressure(sample=bulk_comp, 
+                                                                               temperature=temperature, 
+                                                                               model=model, 
+                                                                               verbose=True, 
+                                                                               silence_warnings=True)
                         satP.append(calc.result["SaturationP_bars"])
                         flmass.append(calc.result["FluidMass_grams"])
                         flsystem_wtper.append(calc.result["FluidProportion_wt"])
