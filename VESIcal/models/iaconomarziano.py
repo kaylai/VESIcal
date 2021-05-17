@@ -306,7 +306,7 @@ class carbon(model_classes.Model):
         self.set_solubility_dependence(True)
 
     def calculate_dissolved_volatiles(self,pressure,temperature,sample,X_fluid=1,
-                                      hydrous_coeffs=True, **kwargs):
+                                      hydrous_coeffs=True, webapp_coeffs=True, **kwargs):
         """
         Calculates the dissolved CO2 concentration, using Eq (12) of Iacono-Marziano et al. (2012).
         If using the hydrous parameterization, it will use the scipy.root_scalar routine to find the
@@ -324,6 +324,8 @@ class carbon(model_classes.Model):
             Mole fraction of H2O in the fluid. Default is 1.0.
         hydrous_coeffs     bool
             Use the hydrous or anhydrous NBO/O paramterisation (True for hydrous). Default is True.
+        webapp_coeffs   bool
+            Use the webapp coefficients for calculating dissolved H2O. Default is True.
 
         Returns
         -------
@@ -352,7 +354,7 @@ class carbon(model_classes.Model):
 
             im_h2o_model = water()
             h2o = im_h2o_model.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature-273.15,
-                                                        sample=sample,X_fluid=1-X_fluid,**kwargs)
+                                                        sample=sample,X_fluid=1-X_fluid,webapp_coeffs=webapp_coeffs,**kwargs)
 
             sample_h2o = sample.change_composition({'H2O':h2o}, inplace=False)
 
@@ -367,7 +369,7 @@ class carbon(model_classes.Model):
         else:
             im_h2o_model = water()
             h2o = im_h2o_model.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature-273.15,
-                                                        sample=sample,X_fluid=1-X_fluid,**kwargs)
+                                                        sample=sample,X_fluid=1-X_fluid,webapp_coeffs=webapp_coeffs,**kwargs)
 
             sample_h2o = sample.change_composition({'H2O':h2o}, inplace=False)
 
