@@ -205,7 +205,7 @@
 # 		"""
 # 		temperature = temperature + 273.15 #translate T from C to K
 #
-# 		if all(ox in sample for ox in ['MgO','CaO','FeO','Na2O','K2O','MnO','Al2O3','Fe2O3','SiO2','TiO2','P2O5']) == False:
+# 		if all(ox in sample for ox in ['MgO','CaO','FeO','Na2O','K2O','MnO','Al2O3','Fe2O3','SiO2','TiO2','P2O5']) is False:
 # 			raise core.InputError("sample must contain MgO, CaO, FeO, Na2O, K2O, MnO, Al2O3, Fe2O3, SiO3, TiO2, and P2O5.")
 # 		if X_fluid < 0 or X_fluid > 1:
 # 			raise core.InputError("X_fluid must have a value between 0 and 1.")

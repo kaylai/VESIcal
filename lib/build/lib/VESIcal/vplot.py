@@ -333,9 +333,9 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 	check_inputs(custom_H2O=custom_H2O, custom_CO2=custom_CO2)
 	use_colors = check_colors(custom_colors=custom_colors)
 
-	if smooth_isobars == True:
+	if smooth_isobars:
 		isobars = smooth_isobars_and_isopleths(isobars=isobars)
-	if smooth_isopleths == True:
+	if smooth_isopleths:
 		isopleths = smooth_isobars_and_isopleths(isopleths=isopleths)
 
 	## -------- CREATE FIGURE -------- ##
@@ -365,7 +365,7 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 				Pxs = [item[1] for item in isobars_lists if item[0] == pressure]
 				Pys = [item[2] for item in isobars_lists if item[0] == pressure]
 
-				if extend_isobars_to_zero == True:
+				if extend_isobars_to_zero:
 					try:
 						Pxs, Pys = calc_extend_isobars_to_zero(Pxs, Pys)
 					except:
@@ -434,7 +434,7 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 		#degassing_colors.reverse()
 		iterno = 0
 		for i in range(len(degassing_paths)):
-			if degassing_path_labels == None:
+			if degassing_path_labels is None:
 				iterno += 1
 				labels.append('Path%s' %iterno)
 				ax.plot(degassing_paths[i]["H2O_liq"], degassing_paths[i]["CO2_liq"], ls='dotted', color=degassing_colors[i])
@@ -454,14 +454,14 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 		if isinstance(custom_CO2, pd.DataFrame):
 			custom_CO2 = [custom_CO2]
 
-		if custom_symbols == None:
+		if custom_symbols is None:
 			use_marker = ['o'] * len(custom_H2O)
 		else:
 			use_marker = custom_symbols
 
 		iterno = 0
 		for i in range(len(custom_H2O)):
-			if custom_labels == None:
+			if custom_labels is None:
 				iterno +=1
 				labels.append('Custom%s' %iterno)
 				ax.plot(custom_H2O[i], custom_CO2[i], use_marker[i], color=use_colors[i], markersize=markersize)
@@ -480,14 +480,14 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
 			if isinstance(custom_y, pd.core.series.Series):
 				custom_y = [list(custom_y.values)]
 
-			if custom_symbols == None:
+			if custom_symbols is None:
 				use_marker = ['o'] * len(custom_x)
 			else:
 				use_marker = custom_symbols
 
 			iterno = 0
 			for i in range(len(custom_x)):
-				if custom_labels == None:
+				if custom_labels is None:
 					iterno +=1
 					labels.append('Custom%s' %iterno)
 					ax.plot(custom_x[i], custom_y[i], use_marker[i], color=use_colors[i], markersize=markersize)
@@ -605,7 +605,7 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, figsize=
 	"""
 
 	#Get x and y axis limits, if user passed them
-	if zoom == None:
+	if zoom is None:
 		user_xmin = 35
 		user_xmax = 100
 		user_ymin = 0
@@ -642,13 +642,13 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, figsize=
 		ax1.set_ylim([user_ymin, user_ymax]) # adjust y limits here
 		plt.xlabel('SiO$_2$, wt%', fontdict=font, labelpad = 15)
 		plt.ylabel('Na$_2$O+K$_2$O, wt%', fontdict=font, labelpad = 15)
-		if zoom == None:
+		if zoom is None:
 			add_LeMaitre_fields(ax1)
 	elif plot_type == 'xy':
 		if 'x' in kwargs and 'y' in kwargs:
 			x = kwargs['x']
 			y = kwargs['y']
-			if zoom != None:
+			if zoom is not None:
 				ax1.set_xlim([user_xmin, user_xmax])
 				ax1.set_ylim([user_ymin, user_ymax])
 			plt.xlabel(str(x)+", wt%", fontdict=font, labelpad = 15)
@@ -679,12 +679,12 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, figsize=
 	if isinstance(model, list):
 		for modelname in model:
 			model_type = calibrations.return_calibration_type(modelname)
-			if model_type['H2O'] == True:
+			if model_type['H2O']:
 				h2o_legend = True
-			if model_type['CO2'] == True or model_type['Mixed'] == True:
+			if model_type['CO2'] == True or model_type['Mixed']:
 				co2_h2oco2_legend = True
 
-		if h2o_legend == True:
+		if h2o_legend:
 			plt.scatter([], [], marker='', label=r"$\bf{Pure \ H_2O:}$")
 
 			for modelname in model:
@@ -693,7 +693,7 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, figsize=
 				if isinstance(calibdata, str):
 					w.warn(calibdata)
 				else:
-					if model_type['H2O'] == True:
+					if model_type['H2O']:
 						if plot_type == 'TAS':
 							try:
 								plt.scatter(calibdata['H2O']['SiO2'], calibdata['H2O']['Na2O'] + calibdata['H2O']['K2O'],
@@ -708,10 +708,10 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, figsize=
 							except:
 								w.warn("The requested oxides were not found in the calibration dataset for " + str(modelname) + ".")
 
-			if co2_h2oco2_legend == True:
+			if co2_h2oco2_legend:
 				plt.scatter([], [], marker='', label=r"${\ }$")
 
-		if co2_h2oco2_legend == True:
+		if co2_h2oco2_legend:
 			plt.scatter([], [], marker='', label=r"$\bf{\ CO_2 \ and \ H_2O\!-\!CO_2:}$")
 
 		for modelname in model:
@@ -720,7 +720,7 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, figsize=
 			if isinstance(calibdata, str):
 				w.warn(calibdata)
 			else:
-				if model_type['CO2'] == True and model_type['Mixed'] == True:
+				if model_type['CO2'] == True and model_type['Mixed']:
 					frames = [calibdata['CO2'], calibdata['Mixed']]
 					co2_and_mixed = pd.concat(frames)
 					if plot_type == 'TAS':
@@ -736,10 +736,10 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, figsize=
 									marker='d', facecolors=calibdata['facecolor'], edgecolors='k', label=str(modelname))
 						except:
 							w.warn("The requested oxides were not found in the calibration dataset for " + str(modelname) + ".")
-				elif model_type['CO2'] == True or model_type['Mixed'] == True:
-					if model_type['CO2'] == True:
+				elif model_type['CO2'] == True or model_type['Mixed']:
+					if model_type['CO2']:
 						thistype = 'CO2'
-					if model_type['Mixed'] == True:
+					if model_type['Mixed']:
 						thistype = 'Mixed'
 					if plot_type == 'TAS':
 						try:
@@ -780,7 +780,7 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None, figsize=
 						s=150, edgecolors='w', facecolors='red', marker='P',
 						label = 'User Data')
 
-	if legend == True:
+	if legend:
 		plt.legend(bbox_to_anchor=(1.04,1), loc="upper left")
 	fig.tight_layout()
 	if isinstance(save_fig, str):

@@ -158,13 +158,13 @@ class BatchFile(batchfile.BatchFile):
         if model in models.get_model_names(model='mixed'):
             for index, row in dissolved_data.iterrows():
                 try:
-                    if file_has_temp == True:
+                    if file_has_temp:
                         temperature = row[temp_name]
 
-                    if file_has_press == True:
+                    if file_has_press:
                         pressure = row[press_name]
 
-                    if file_has_X == True:
+                    if file_has_X:
                         X_fluid = row[X_name]
 
                     # Get sample comp as Sample class with defaults
@@ -189,15 +189,15 @@ class BatchFile(batchfile.BatchFile):
             dissolved_data["H2O_liq_VESIcal"] = H2Ovals
             dissolved_data["CO2_liq_VESIcal"] = CO2vals
 
-            if file_has_temp == False:
+            if file_has_temp is False:
                 dissolved_data["Temperature_C_VESIcal"] = temperature
-            if file_has_press == False:
+            if file_has_press is False:
                 dissolved_data["Pressure_bars_VESIcal"] = pressure
-            if file_has_X == False:
+            if file_has_X is False:
                 dissolved_data["X_fluid_input_VESIcal"] = X_fluid
             dissolved_data["Model"] = model
             dissolved_data["Warnings"] = warnings
-            if record_errors == True:
+            if record_errors:
                 dissolved_data["Errors"] = errors
 
             return dissolved_data
@@ -209,11 +209,11 @@ class BatchFile(batchfile.BatchFile):
             iterno = 0
             for index, row in dissolved_data.iterrows():
                 iterno += 1
-                if print_status == True:
+                if print_status:
                     percent = iterno/len(dissolved_data.index)
                     batchfile.status_bar.status_bar(percent, index)
 
-                if file_has_temp == True:
+                if file_has_temp:
                     temperature = row[temp_name]
                 if temperature <= 0:
                     H2Ovals.append(np.nan)
@@ -225,7 +225,7 @@ class BatchFile(batchfile.BatchFile):
                     errors.append(sys.exc_info()[0])
                     w.warn("Temperature for sample " + str(index) + " is <=0. Skipping sample.", stacklevel=2)
 
-                if file_has_press == True:
+                if file_has_press:
                     pressure = row[press_name]
                 if temperature >0 and pressure <= 0:
                     H2Ovals.append(np.nan)
@@ -237,7 +237,7 @@ class BatchFile(batchfile.BatchFile):
                     errors.append(sys.exc_info()[0])
                     w.warn("Pressure for sample " + str(index) + " is <=0. Skipping sample.", stacklevel=2)
 
-                if file_has_X == True:
+                if file_has_X:
                     X_fluid = row[X_name]
                 if temperature >0 and pressure >0 and X_fluid <0:
                     H2Ovals.append(np.nan)
@@ -289,15 +289,15 @@ class BatchFile(batchfile.BatchFile):
             dissolved_data["H2O_liq_VESIcal"] = H2Ovals
             dissolved_data["CO2_liq_VESIcal"] = CO2vals
 
-            if file_has_temp == False:
+            if file_has_temp is False:
                 dissolved_data["Temperature_C_VESIcal"] = temperature
-            if file_has_press == False:
+            if file_has_press is False:
                 dissolved_data["Pressure_bars_VESIcal"] = pressure
-            if file_has_X == False:
+            if file_has_X is False:
                 dissolved_data["X_fluid_input_VESIcal"] = X_fluid
             dissolved_data["Model"] = model
             dissolved_data["Warnings"] = warnings
-            if record_errors == True:
+            if record_errors:
                 dissolved_data["Errors"] = errors
 
             return dissolved_data
@@ -307,11 +307,11 @@ class BatchFile(batchfile.BatchFile):
             XCO2vals = []
             FluidProportionvals = []
             for index, row in dissolved_data.iterrows():
-                if file_has_temp == True:
+                if file_has_temp:
                     temperature = row[temp_name]
-                if file_has_press == True:
+                if file_has_press:
                     pressure = row[press_name]
-                if file_has_X == True:
+                if file_has_X:
                     X_fluid = row[X_name]
                 # Get sample comp as Sample class with defaults
                 bulk_comp = self.get_sample_composition(index,
@@ -343,11 +343,11 @@ class BatchFile(batchfile.BatchFile):
                 dissolved_data["H2O_liq_VESIcal"] = H2Ovals
             if 'Carbon' in model:
                 dissolved_data["CO2_liq_VESIcal"] = CO2vals
-            if file_has_temp == False:
+            if file_has_temp is False:
                 dissolved_data["Temperature_C_VESIcal"] = temperature
-            if file_has_press == False:
+            if file_has_press is False:
                 dissolved_data["Pressure_bars_VESIcal"] = pressure
-            if file_has_X == False:
+            if file_has_X is False:
                 dissolved_data["X_fluid_input_VESIcal"] = X_fluid
             dissolved_data["Model"] = model
             dissolved_data["Warnings"] = warnings
@@ -412,9 +412,9 @@ class BatchFile(batchfile.BatchFile):
         if model in  models.get_model_names(model='mixed') or model == "MooreWater":
             for index, row in fluid_data.iterrows():
                 try:
-                    if file_has_temp == True:
+                    if file_has_temp:
                         temperature = row[temp_name]
-                    if file_has_press == True:
+                    if file_has_press:
                         pressure = row[press_name]
                     # Get sample comp as Sample class with defaults
                     bulk_comp = self.get_sample_composition(index,
@@ -439,9 +439,9 @@ class BatchFile(batchfile.BatchFile):
                     warnings.append("Calculation Failed.")
             fluid_data["XH2O_fl_VESIcal"] = H2Ovals
             fluid_data["XCO2_fl_VESIcal"] = CO2vals
-            if file_has_temp == False:
+            if file_has_temp is False:
                 fluid_data["Temperature_C_VESIcal"] = temperature
-            if file_has_press == False:
+            if file_has_press is False:
                 fluid_data["Pressure_bars_VESIcal"] = pressure
             fluid_data["Model"] = model
             fluid_data["Warnings"] = warnings
@@ -451,11 +451,11 @@ class BatchFile(batchfile.BatchFile):
             iterno = 0
             for index, row in fluid_data.iterrows():
                 iterno += 1
-                if print_status == True:
+                if print_status:
                     percent = iterno/len(fluid_data.index)
                     batchfile.status_bar.status_bar(percent, index)
 
-                if file_has_temp == True:
+                if file_has_temp:
                     temperature = row[temp_name]
                 if temperature <= 0:
                     H2Ovals.append(np.nan)
@@ -463,7 +463,7 @@ class BatchFile(batchfile.BatchFile):
                     warnings.append("Calculation skipped. Bad temperature.")
                     w.warn("Temperature for sample " + str(index) + " is <=0. Skipping sample.", stacklevel=2)
 
-                if file_has_press == True:
+                if file_has_press:
                     pressure = row[press_name]
                 if temperature >0 and pressure <= 0:
                     H2Ovals.append(np.nan)
@@ -496,9 +496,9 @@ class BatchFile(batchfile.BatchFile):
 
             fluid_data["XH2O_fl_VESIcal"] = H2Ovals
             fluid_data["XCO2_fl_VESIcal"] = CO2vals
-            if file_has_temp == False:
+            if file_has_temp is False:
                 fluid_data["Temperature_C_VESIcal"] = temperature
-            if file_has_press == False:
+            if file_has_press is False:
                 fluid_data["Pressure_bars_VESIcal"] = pressure
             fluid_data["Model"] = model
             fluid_data["Warnings"] = warnings
@@ -509,9 +509,9 @@ class BatchFile(batchfile.BatchFile):
             saturated = []
             for index, row in fluid_data.iterrows():
                 try:
-                    if file_has_temp == True:
+                    if file_has_temp:
                         temperature = row[temp_name]
-                    if file_has_press == True:
+                    if file_has_press:
                         pressure = row[press_name]
                     # Get sample comp as Sample class with defaults
                     bulk_comp = self.get_sample_composition(index,
@@ -528,9 +528,9 @@ class BatchFile(batchfile.BatchFile):
                     saturated.append(np.nan)
                     warnings.append("Calculation Failed.")
             fluid_data["Saturated_VESIcal"] = saturated
-            if file_has_temp == False:
+            if file_has_temp is False:
                 fluid_data["Temperature_C_VESIcal"] = temperature
-            if file_has_press == False:
+            if file_has_press is False:
                 fluid_data["Pressure_bars_VESIcal"] = pressure
             fluid_data["Model"] = model
             fluid_data["Warnings"] = warnings
@@ -571,7 +571,7 @@ class BatchFile(batchfile.BatchFile):
         	model = model.model_type
 
         # set default print_status to True for MagmaSat, False for other models if user doesn't pass any option
-        if print_status == None:
+        if print_status is None:
             if model == 'MagmaSat':
                 print_status = True
             else:
@@ -592,10 +592,10 @@ class BatchFile(batchfile.BatchFile):
             iterno = 0
             for index, row in satp_data.iterrows():
                 iterno += 1
-                if print_status == True:
+                if print_status:
                     percent = iterno/len(satp_data.index)
                     batchfile.status_bar.status_bar(percent, index)
-                if file_has_temp == True:
+                if file_has_temp:
                     temperature = row[temp_name]
                 # Get sample comp as Sample class with defaults
                 bulk_comp = self.get_sample_composition(index,
@@ -613,7 +613,7 @@ class BatchFile(batchfile.BatchFile):
                     piStar.append(models.default_models['ShishkinaIdealMixing'].models[1].PiStar(bulk_comp))
 
             satp_data["SaturationP_bars_VESIcal"] = satP
-            if file_has_temp == False:
+            if file_has_temp is False:
                 satp_data["Temperature_C_VESIcal"] = temperature
             satp_data["Model"] = model
             satp_data["Warnings"] = warnings
@@ -632,11 +632,11 @@ class BatchFile(batchfile.BatchFile):
             iterno = 0
             for index, row in satp_data.iterrows():
                 iterno += 1
-                if print_status == True:
+                if print_status:
                     percent = iterno/len(satp_data.index)
                     batchfile.status_bar.status_bar(percent, index)
 
-                if file_has_temp == True:
+                if file_has_temp:
                     temperature = row[temp_name]
                 if temperature <= 0:
                     satP.append(np.nan)
@@ -677,7 +677,7 @@ class BatchFile(batchfile.BatchFile):
                         warnings.append("Calculation Failed")
 
             satp_data["SaturationP_bars_VESIcal"] = satP
-            if file_has_temp == False:
+            if file_has_temp is False:
                 satp_data["Temperature_C_VESIcal"] = temperature
             satp_data["XH2O_fl_VESIcal"] = flH2O
             satp_data["XCO2_fl_VESIcal"] = flCO2

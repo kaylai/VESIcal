@@ -68,7 +68,7 @@ class water(model_classes.Model):
 
         temperature = temperature + 273.15 #translate T from C to K
 
-        if isinstance(sample,sample_class.Sample) == False:
+        if isinstance(sample,sample_class.Sample) is False:
             raise core.InputError("Sample must be an instance of the Sample class.")
         if pressure < 0:
             raise core.InputError("Pressure must be positive.")
@@ -78,7 +78,7 @@ class water(model_classes.Model):
         if pressure == 0:
             return 0
 
-        if hydrous_coeffs == True:
+        if hydrous_coeffs:
             if X_fluid==0:
                 return 0
             H2O = root_scalar(self.root_dissolved_volatiles,args=(pressure,temperature,sample,X_fluid,webapp_coeffs,kwargs),
@@ -145,9 +145,9 @@ class water(model_classes.Model):
             Calculated saturation pressure in bars.
         """
 
-        if isinstance(sample,sample_class.Sample) == False:
+        if isinstance(sample,sample_class.Sample) is False:
             raise core.InputError("Sample must be an instance of the Sample class.")
-        if sample.check_oxide('H2O') == False:
+        if sample.check_oxide('H2O') is False:
             raise core.InputError("sample must contain H2O.")
         if sample.get_composition('H2O') < 0.0:
             raise core.InputError("Dissolved H2O must be greater than 0 wt%.")
@@ -218,7 +218,7 @@ class water(model_classes.Model):
             Difference between H2O guessed and the H2O calculated.
         """
 
-        if webapp_coeffs == False:
+        if webapp_coeffs is False:
             a = 0.53
             b = 2.35
             B = -3.37
@@ -253,9 +253,9 @@ class water(model_classes.Model):
         float
             NBO/O.
         """
-        if isinstance(sample,sample_class.Sample) == False:
+        if isinstance(sample,sample_class.Sample) is False:
             raise core.InputError("Sample must be an instance of the Sample class.")
-        if all(sample.check_oxide(ox) for ox in ['K2O','Na2O','CaO','MgO','FeO','Al2O3','SiO2','TiO2']) == False:
+        if all(sample.check_oxide(ox) for ox in ['K2O','Na2O','CaO','MgO','FeO','Al2O3','SiO2','TiO2']) is False:
             raise core.InputError("Sample must contain K2O, Na2O, CaO, MgO, FeO, Al2O3, SiO2, and TiO2.")
 
         # X = sample.get_composition(units='mol_oxides',normalization='additionalvolatiles')
@@ -269,7 +269,7 @@ class water(model_classes.Model):
         NBO = 2*(X['K2O']+X['Na2O']+X['CaO']+X['MgO']+X['FeO']+2*Fe2O3-X['Al2O3'])
         O = 2*X['SiO2']+2*X['TiO2']+3*X['Al2O3']+X['MgO']+X['FeO']+2*Fe2O3+X['CaO']+X['Na2O']+X['K2O']
 
-        if hydrous_coeffs == True:
+        if hydrous_coeffs:
             if 'H2O' not in X:
                 raise core.InputError("sample must contain H2O if using the hydrous parameterization.")
             NBO = NBO + 2*X['H2O']
@@ -331,7 +331,7 @@ class carbon(model_classes.Model):
         """
         temperature = temperature + 273.15 #translate T from C to K
 
-        if isinstance(sample,sample_class.Sample) == False:
+        if isinstance(sample,sample_class.Sample) is False:
             raise core.InputError("Sample must be an instance of the Sample class.")
         if pressure < 0:
             raise core.InputError("Pressure must be positive.")
@@ -343,7 +343,7 @@ class carbon(model_classes.Model):
         if pressure == 0:
             return 0
 
-        if hydrous_coeffs == True:
+        if hydrous_coeffs:
             # if 'H2O' not in sample:
             #     raise InputError("sample must contain H2O if using the hydrous parameterization.")
             # if sample['H2O'] < 0:
@@ -386,7 +386,7 @@ class carbon(model_classes.Model):
         # molarProps = sample_h2o.get_composition(units='mol_oxides',normalization='additionalvolatiles')
         molarProps = sample_h2o.get_composition(units='mol_oxides')
 
-        if all(ox in molarProps for ox in ['Al2O3','CaO','K2O','Na2O','FeO','MgO','Na2O','K2O']) == False:
+        if all(ox in molarProps for ox in ['Al2O3','CaO','K2O','Na2O','FeO','MgO','Na2O','K2O']) is False:
             raise core.InputError("sample must contain Al2O3, CaO, K2O, Na2O, FeO, MgO, Na2O, and K2O.")
         if 'Fe2O3' in molarProps:
             Fe2O3 = molarProps['Fe2O3']
@@ -454,9 +454,9 @@ class carbon(model_classes.Model):
 
         if temperature <= 0:
             raise core.InputError("Temperature must be greater than 0K.")
-        if isinstance(sample,sample_class.Sample) == False:
+        if isinstance(sample,sample_class.Sample) is False:
             raise core.InputError("Sample must be an instance of the Sample class.")
-        if sample.check_oxide('CO2') == False:
+        if sample.check_oxide('CO2') is False:
             raise core.InputError("sample must contain CO2")
         if sample.get_composition('CO2') < 0:
             raise core.InputError("Dissolved CO2 must be greater than 0 wt%.")
@@ -511,9 +511,9 @@ class carbon(model_classes.Model):
         float
             NBO/O.
         """
-        if isinstance(sample,sample_class.Sample) == False:
+        if isinstance(sample,sample_class.Sample) is False:
             raise core.InputError("Sample must be an instance of the Sample class.")
-        if all(sample.check_oxide(ox) for ox in ['K2O','Na2O','CaO','MgO','FeO','Al2O3','SiO2','TiO2']) == False:
+        if all(sample.check_oxide(ox) for ox in ['K2O','Na2O','CaO','MgO','FeO','Al2O3','SiO2','TiO2']) is False:
             raise core.InputError("sample must contain K2O, Na2O, CaO, MgO, FeO, Al2O3, SiO2, and TiO2.")
 
         # X = sample.get_composition(units='mol_oxides',normalization='additionalvolatiles')
@@ -527,7 +527,7 @@ class carbon(model_classes.Model):
         NBO = 2*(X['K2O']+X['Na2O']+X['CaO']+X['MgO']+X['FeO']+2*Fe2O3-X['Al2O3'])
         O = 2*X['SiO2']+2*X['TiO2']+3*X['Al2O3']+X['MgO']+X['FeO']+2*Fe2O3+X['CaO']+X['Na2O']+X['K2O']
 
-        if hydrous_coeffs == True:
+        if hydrous_coeffs:
             if 'H2O' not in X:
                 raise core.InputError("sample must contain H2O if using the hydrous parameterization.")
             NBO = NBO + 2*X['H2O']

@@ -88,7 +88,7 @@ class MagmaSat(model_classes.Model):
         """
         s = ''
         for cr in self.calibration_ranges:
-            if cr.check(parameters) == False:
+            if cr.check(parameters) is False:
                 s += cr.string(parameters,report_nonexistance=False)
             if 'notsaturated' in kwargs:
                 s += "Sample not saturated at these conditions."
@@ -341,13 +341,13 @@ class MagmaSat(model_classes.Model):
 
         XH2O_fluid = H2O_fl
 
-        if verbose == True:
+        if verbose:
             return {"temperature": temperature, "pressure": pressure,
                     "H2O_liq": H2O_liq, "CO2_liq": CO2_liq,
                     "XH2O_fl": H2O_fl, "XCO2_fl": CO2_fl,
                     "FluidProportion_wt": 100*fluid_mass/system_mass}
 
-        if verbose == False:
+        if verbose is False:
             return {"CO2_liq": CO2_liq, "H2O_liq": H2O_liq}
 
     def calculate_equilibrium_fluid_comp(self, sample, temperature, pressure, verbose=False, **kwargs):
@@ -390,16 +390,16 @@ class MagmaSat(model_classes.Model):
         #Check if only single volatile species is passed. If so, can skip calculations.
         if bulk_comp_dict["H2O"] == 0:
             if bulk_comp_dict["CO2"] == 0:
-                if verbose == False:
+                if verbose is False:
                     return {'CO2': 0.0, 'H2O': 0.0}
-                if verbose == True:
+                if verbose:
                     return {'CO2': 0.0, 'H2O': 0.0, 'FluidMass_grams': 0.0, 'FluidProportion_wt': 0.0}
             else:
-                if verbose == False:
+                if verbose is False:
                     return {'CO2': 1.0, 'H2O': 0.0}
         else:
             if bulk_comp_dict["CO2"] == 0:
-                if verbose == False:
+                if verbose is False:
                     return {'CO2': 0.0, 'H2O': 1.0}
 
         pressureMPa = pressure / 10.0
@@ -421,10 +421,10 @@ class MagmaSat(model_classes.Model):
 
         feasible = melts.set_bulk_composition(self.bulk_comp_orig) #reset
 
-        if verbose == False:
+        if verbose is False:
             return {'CO2': fluid_comp_CO2, 'H2O': fluid_comp_H2O}
 
-        if verbose == True:
+        if verbose:
             return {'CO2': fluid_comp_CO2, 'H2O': fluid_comp_H2O, 'FluidMass_grams': fluid_mass, 'FluidProportion_wt': flsystem_wtper}
 
     def calculate_saturation_pressure(self, sample, temperature, verbose=False, **kwargs):
@@ -558,14 +558,14 @@ class MagmaSat(model_classes.Model):
 
         feasible = melts.set_bulk_composition(self.bulk_comp_orig)  # this needs to be reset always!
 
-        if verbose == False:
+        if verbose is False:
             try:
                 w.warn(warnmessage)
             except:
                 pass
             return satP
 
-        elif verbose == True:
+        elif verbose:
             try:
                 w.warn(warnmessage)
             except:
@@ -621,7 +621,7 @@ class MagmaSat(model_classes.Model):
         else:
             raise core.InputError("pressure_list must be a single float (1000.0), int (1000), or list of those [1000, 2000.0, 3000].")
 
-        if isopleth_list == None:
+        if isopleth_list is None:
             pass
         elif isinstance(isopleth_list, list):
             iso_vals = isopleth_list
@@ -642,13 +642,13 @@ class MagmaSat(model_classes.Model):
         # Calculate equilibrium phase assemblage for all P/T conditions, check if saturated in fluid...
         for i in P_vals:
             guess = 0.0
-            if print_status == True:
+            if print_status:
                 print("Calculating isobar at " + str(i) + " bars")
             X_iter = 0
             for X in all_iso_vals:
                 X_iter += 1
-                if print_status == True:
-                    if isopleth_list != None and X in iso_vals:
+                if print_status:
+                    if isopleth_list is not None and X in iso_vals:
                         sys.stdout.write("\r Calculating isopleth at XH2Ofluid = " + str(X) + "               ")
                     if X not in iso_vals:
                         sys.stdout.write("\r Calculating isobar control point at XH2Ofluid = " + str(X) + "               ")
@@ -663,7 +663,7 @@ class MagmaSat(model_classes.Model):
 
                 guess = saturated_vols['H2O_liq']
 
-        if print_status == True:
+        if print_status:
             print("Done!")
 
         isobars_df = pd.DataFrame(isobar_data, columns=['Pressure', 'H2O_liq', 'CO2_liq'])
@@ -671,13 +671,13 @@ class MagmaSat(model_classes.Model):
 
         feasible = melts.set_bulk_composition(self.bulk_comp_orig) #reset
 
-        if smooth_isobars == True:
+        if smooth_isobars:
             isobars_smoothed = vplot.smooth_isobars_and_isopleths(isobars=isobars_df)
             res_isobars = isobars_smoothed.copy()
         else:
             res_isobars = isobars_df.copy()
 
-        if smooth_isopleths == True:
+        if smooth_isopleths:
             isopleths_smoothed = vplot.smooth_isobars_and_isopleths(isopleths=isopleths_df)
             res_isopleths = isopleths_smoothed.copy()
         else:

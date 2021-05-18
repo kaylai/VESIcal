@@ -48,9 +48,9 @@ class status_bar(object):
             sample_string = str(sample_name)[0:max_name_length-1] + "..."
 
         # Write out sample name and trailing spaces to cover contents of previous sample names left over on line
-        if sample_name != None:
+        if sample_name is not None:
             sys.stdout.write("  Working on sample " + sample_string + "                            ")
-        if btext != None:
+        if btext is not None:
             sys.stdout.write(" " + str(btext))
         if percent == 1.0:
             sys.stdout.write("\n")
@@ -116,7 +116,7 @@ class BatchFile(object):
         self.set_default_normalization(default_normalization)
         self.set_default_units(default_units)
 
-        if filename != None:
+        if filename is not None:
             file_name, file_extension = os.path.splitext(filename)
             if file_extension == '.xlsx' or file_extension == '.xls':
                 file_type = 'excel'
@@ -281,9 +281,9 @@ be implemented.",RuntimeWarning,stacklevel=2)
         data = self.data.copy()
 
         # Fetch the default return types if not specified in function call
-        if normalization == None and species == None:
+        if normalization is None and species is None:
             normalization = self.default_normalization
-        if units == None and species == None:
+        if units is None and species is None:
             units = self.default_units
 
         new_compositions = []
@@ -304,7 +304,7 @@ be implemented.",RuntimeWarning,stacklevel=2)
         else:
             return_frame = None
 
-        if asBatchFile == False:
+        if asBatchFile is False:
             return return_frame
         else:
             return BatchFile(filename=None, dataframe=return_frame, label=None)
@@ -349,11 +349,11 @@ be implemented.",RuntimeWarning,stacklevel=2)
         data = self.data.copy()
 
         # Fetch the default return units if not specified in function call
-        if units == None:
+        if units is None:
             units = self.default_units
 
         # Fetch the default normalization if not specified in the function call
-        if normalization == None:
+        if normalization is None:
             normalization = self.default_normalization
 
         # Grab all compositional data
@@ -365,7 +365,7 @@ be implemented.",RuntimeWarning,stacklevel=2)
         # concatenate both compositional and non-compositional dataframes into one
         return_frame = pd.concat([compositional_data, non_compositional_data], axis=1)
 
-        if asBatchFile == False:
+        if asBatchFile is False:
             return return_frame
         else:
             return BatchFile(filename=None, dataframe=return_frame, label=None)
@@ -410,9 +410,9 @@ be implemented.",RuntimeWarning,stacklevel=2)
             Composition of the sample as oxides
         """
         # Fetch the default return types if not specified in function call
-        if normalization == None and species == None:
+        if normalization is None and species is None:
             normalization = self.default_normalization
-        if units == None and species == None:
+        if units is None and species is None:
             units = self.default_units
 
         # Check that normalization being chosen is one of the possible options
@@ -435,10 +435,10 @@ be implemented.",RuntimeWarning,stacklevel=2)
         # Get sample composition in terms of any species, units, and normalization passed
         return_sample = _sample.get_composition(species=species, units=units, normalization=normalization)
 
-        if asSampleClass == True:
+        if asSampleClass:
             return sample_class.Sample(return_sample)
         else:
-            if species == None:
+            if species is None:
                 return dict(return_sample)
             elif isinstance(species, str):
                 return return_sample
@@ -496,7 +496,7 @@ be implemented.",RuntimeWarning,stacklevel=2)
                     label_found = True
                     w.warn("No Label column given, so column '" + str(col) + "' was chosen for you. To choose your own, set label='<column-name>'.",RuntimeWarning,stacklevel=2)
                     break
-            if label_found == False:
+            if label_found is False:
                 _dataframe.index.name = 'Label'
                 w.warn("No Label column given, so one was created for you. To choose your own, set label='<column-name>'.",RuntimeWarning,stacklevel=2)
 
@@ -550,7 +550,7 @@ be implemented.",RuntimeWarning,stacklevel=2)
                 pass
             else:
                 raise core.InputError("If calculations is passed as list, sheet_names must also be list of same length")
-        elif calculations == None:
+        elif calculations is None:
             pass
         else:
             calculations = [calculations]
@@ -576,7 +576,7 @@ be implemented.",RuntimeWarning,stacklevel=2)
                             calculations[i].to_excel(writer, sheet_names[i])
                         else:
                             raise core.InputError("if sheet_names is passed, it must be list of strings")
-            elif calculations == None:
+            elif calculations is None:
                 pass
         return print("Saved " + str(filename))
 

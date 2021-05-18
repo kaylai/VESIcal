@@ -45,7 +45,7 @@ class carbon(model_classes.Model):
             raise core.InputError("Pressure must be positive.")
         # if type(sample) != dict and type(sample) != pd.core.series.Series:
         #     raise core.InputError("sample must be a dict or pandas Series")
-        if sample.check_oxide('SiO2') == False:
+        if sample.check_oxide('SiO2') is False:
             raise core.InputError("sample must contain SiO2.")
 
         if pressure == 0:
@@ -94,9 +94,9 @@ class carbon(model_classes.Model):
         float
             Calculated saturation pressure in bars.
         """
-        if isinstance(sample,sample_class.Sample) == False:
+        if isinstance(sample,sample_class.Sample) is False:
             raise core.InputError("Sample must be an instance of the Sample class.")
-        if sample.check_oxide('CO2') == False:
+        if sample.check_oxide('CO2') is False:
             raise core.InputError("sample must contain CO2.")
         if sample.get_composition('CO2') < 0:
             raise core.InputError("Dissolved CO2 concentration must be greater than 0 wt%.")
@@ -226,9 +226,9 @@ class water(model_classes.Model):
         float
             The H2O concentration in wt%.
         """
-        if isinstance(sample,sample_class.Sample) == False:
+        if isinstance(sample,sample_class.Sample) is False:
             raise core.InputError("Sample must be an instance of the Sample class.")
-        if sample.check_oxide('SiO2') == False:
+        if sample.check_oxide('SiO2') is False:
             raise core.InputError("sample must contain SiO2.")
         if pressure < 0:
             raise core.InputError("Pressure must be positive")
@@ -284,7 +284,7 @@ class water(model_classes.Model):
         float
             Calculated saturation pressure in bars.
         """
-        if sample.check_oxide('H2O') == False:
+        if sample.check_oxide('H2O') is False:
             raise core.InputError("sample must contain H2O")
         if sample.get_composition('H2O') < 0:
             raise core.InputError("H2O concentration must be greater than 0 wt%.")

@@ -49,7 +49,7 @@ class carbon(model_classes.Model):
 
         _mols = sample.get_composition(units='mol_cations')
 
-        if all(cation in _mols for cation in ['Ca','K','Na','Mg','Fe','Si','Al']) == False:
+        if all(cation in _mols for cation in ['Ca','K','Na','Mg','Fe','Si','Al']) is False:
             raise core.InputError("To calculate PiStar, values for CaO, K2O, Na2O, MgO, FeO, SiO2, and Al2O3\
                                 must be provided in sample.")
 
@@ -131,7 +131,7 @@ class carbon(model_classes.Model):
             Saturation pressure in bar
         """
 
-        if sample.check_oxide('CO2') == False:
+        if sample.check_oxide('CO2') is False:
             raise core.InputError("sample must contain CO2.")
         if sample.get_composition('CO2') < 0:
             raise core.InputError("CO2 concentration must be greater than 0 wt%.")
@@ -210,10 +210,10 @@ class water(model_classes.Model):
         float
             The H2O concentration in wt%
         """
-        if isinstance(sample,sample_class.Sample) == False:
+        if isinstance(sample,sample_class.Sample) is False:
             raise core.InputError("Sample must be an instance of the Sample class.")
 
-        if sample.check_oxide('Na2O') == False or sample.check_oxide('K2O') == False:
+        if sample.check_oxide('Na2O') == False or sample.check_oxide('K2O') is False:
             raise core.InputError("Na2O and K2O must be present in sample.")
 
         if pressure < 0:
@@ -272,7 +272,7 @@ class water(model_classes.Model):
         float
             Saturation pressure in bar
         """
-        if sample.check_oxide('H2O') == False:
+        if sample.check_oxide('H2O') is False:
             raise core.InputError("sample must contain H2O")
         if sample.get_composition('H2O') < 0:
             raise core.InputError("H2O concentration must be greater than 0 wt%.")

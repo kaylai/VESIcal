@@ -169,9 +169,9 @@ class carbon(model_classes.Model):
 
         if X_fluid < 0 or X_fluid > 1:
             raise core.InputError("X_fluid must have a value between 0 and 1.")
-        if isinstance(sample,sample_class.Sample) == False:
+        if isinstance(sample,sample_class.Sample) is False:
             raise core.InputError("Sample must be an instance of the Sample class.")
-        if sample.check_oxide('CO2') == False:
+        if sample.check_oxide('CO2') is False:
             raise core.InputError("sample must contain CO2.")
         if sample.get_composition('CO2') < 0.0:
             raise core.InputError("Dissolved CO2 concentration must be greater than 0 wt%.")

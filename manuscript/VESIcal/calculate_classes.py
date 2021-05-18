@@ -47,7 +47,7 @@ class Calculate(object):
         self.result = self.calculate(sample=self.sample,**kwargs)
         self.calib_check = self.check_calibration_range(sample=self.sample,**kwargs)
 
-        if self.calib_check is not None and silence_warnings == False:
+        if self.calib_check is not None and silence_warnings is False:
             if self.calib_check != '':
                 w.warn(self.calib_check,RuntimeWarning)
 
@@ -121,7 +121,7 @@ class calculate_dissolved_volatiles(Calculate):
                 elif self.model_name == 'MagmaSat':
                     bulk_comp.change_composition({'H2O': calc_result['H2O_liq'], 
                                                   'CO2': calc_result['CO2_liq']})
-                    if 'verbose' in kwargs and kwargs['verbose'] == True: # check if verbose method has been chosen
+                    if 'verbose' in kwargs and kwargs['verbose']: # check if verbose method has been chosen
                         return {'H2O_liq': bulk_comp.get_composition(species='H2O', units=default_units),
                                 'CO2_liq': bulk_comp.get_composition(species='CO2', units=default_units),
                                 'XH2O_fl': calc_result['XH2O_fl'],
