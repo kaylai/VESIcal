@@ -6,25 +6,25 @@
 import pandas as pd
 
 model_names = ['AllisonCarbon',
-			   'Dixon',
-			   'DixonCarbon',
-			   'DixonWater',
-			   'IaconoMarziano',
-			   'IaconoMarzianoCarbon',
-			   'IaconoMarzianoWater',
-			   'Liu',
-			   'LiuWater',
-			   'LiuCarbon',
-			   'MagmaSat',
-			   'MagmaSatCarbon',
-			   'MagmaSatWater',
-			   'MagmaSatMixed'
-			   'MooreWater',
-			   'ShishkinaCarbon',
-			   'ShishkinaWater',
-			   'Shishkina',
-			   #'EguchiCarbon',
-			   ]
+               'Dixon',
+               'DixonCarbon',
+               'DixonWater',
+               'IaconoMarziano',
+               'IaconoMarzianoCarbon',
+               'IaconoMarzianoWater',
+               'Liu',
+               'LiuWater',
+               'LiuCarbon',
+               'MagmaSat',
+               'MagmaSatCarbon',
+               'MagmaSatWater',
+               'MagmaSatMixed'
+               'MooreWater',
+               'ShishkinaCarbon',
+               'ShishkinaWater',
+               'Shishkina',
+               #'EguchiCarbon',
+               ]
 
 # These hard-coded pandas DataFrames are generated in the 'generage_hardcoded_calibrations.py' script.
 
@@ -212,130 +212,130 @@ df_Shishkina_CO2H2O = pd.DataFrame({
  })
 
 def return_calibration_type(model_name):
-	"""
-	Returns metadata for the calibration dataset for specified model
+    """
+    Returns metadata for the calibration dataset for specified model
 
-	Parameters
-	----------
-	model: string
-		String of model name.
+    Parameters
+    ----------
+    model: string
+        String of model name.
 
-	Returns
-	-------
-	dict
-		Metadata on the dataset. A dict is returned with parameters CO2, H2O, or mixed set to True or False.
-		True indicates that experiments where performed using that fluid type. For example, a model may be
-		able to calculate mixed H2O-CO2 solubilities, but it's dataset may be made up only of pure-CO2 and
-		pure-H2O data. In this case, a model's metadata would be {'CO2': True, 'H2O': True, 'Mixed': False}.
+    Returns
+    -------
+    dict
+        Metadata on the dataset. A dict is returned with parameters CO2, H2O, or mixed set to True or False.
+        True indicates that experiments where performed using that fluid type. For example, a model may be
+        able to calculate mixed H2O-CO2 solubilities, but it's dataset may be made up only of pure-CO2 and
+        pure-H2O data. In this case, a model's metadata would be {'CO2': True, 'H2O': True, 'Mixed': False}.
 
-		This value expresses whether experiments used to parameterized models are pure-CO2, pure-H2O, or
-		mixed H2O-CO2 experiments. In many cases, pure-CO2 experiments cannot be distinguished from
-		mixed H2O-CO2 experiments, in which case the experiments are classified as 'Mixed'.
-	"""
+        This value expresses whether experiments used to parameterized models are pure-CO2, pure-H2O, or
+        mixed H2O-CO2 experiments. In many cases, pure-CO2 experiments cannot be distinguished from
+        mixed H2O-CO2 experiments, in which case the experiments are classified as 'Mixed'.
+    """
 
-	if model_name == 'AllisonCarbon':
-		return {'CO2': False, 'H2O': False, 'Mixed': True}
+    if model_name == 'AllisonCarbon':
+        return {'CO2': False, 'H2O': False, 'Mixed': True}
 
-	if model_name == 'Dixon':
-		return {'CO2': True, 'H2O': True, 'Mixed': False}
+    if model_name == 'Dixon':
+        return {'CO2': True, 'H2O': True, 'Mixed': False}
 
-	if model_name == 'DixonCarbon':
-		return {'CO2': True, 'H2O': False, 'Mixed': False}
+    if model_name == 'DixonCarbon':
+        return {'CO2': True, 'H2O': False, 'Mixed': False}
 
-	if model_name == 'DixonWater':
-		return {'CO2': False, 'H2O': True, 'Mixed': False}
+    if model_name == 'DixonWater':
+        return {'CO2': False, 'H2O': True, 'Mixed': False}
 
-	if model_name == 'IaconoMarziano':
-		return {'CO2': False, 'H2O': True, 'Mixed': True}
+    if model_name == 'IaconoMarziano':
+        return {'CO2': False, 'H2O': True, 'Mixed': True}
 
-	if model_name == 'IaconoMarzianoCarbon':
-		return {'CO2': False, 'H2O': False, 'Mixed': True}
+    if model_name == 'IaconoMarzianoCarbon':
+        return {'CO2': False, 'H2O': False, 'Mixed': True}
 
-	if model_name == 'IaconoMarzianoWater':
-		return {'CO2': False, 'H2O': True, 'Mixed': False}
+    if model_name == 'IaconoMarzianoWater':
+        return {'CO2': False, 'H2O': True, 'Mixed': False}
 
-	if model_name == 'Liu':
-		return {'CO2': False, 'H2O': True, 'Mixed': True}
+    if model_name == 'Liu':
+        return {'CO2': False, 'H2O': True, 'Mixed': True}
 
-	if model_name == 'LiuCarbon':
-		return {'CO2': False, 'H2O': False, 'Mixed': True}
+    if model_name == 'LiuCarbon':
+        return {'CO2': False, 'H2O': False, 'Mixed': True}
 
-	if model_name == 'LiuWater':
-		return {'CO2': False, 'H2O': True, 'Mixed': False}
+    if model_name == 'LiuWater':
+        return {'CO2': False, 'H2O': True, 'Mixed': False}
 
-	if model_name == 'MagmaSat':
-		return{'CO2': True, 'H2O': True, 'Mixed': True}
+    if model_name == 'MagmaSat':
+        return{'CO2': True, 'H2O': True, 'Mixed': True}
 
-	if model_name == 'MooreWater':
-		return {'CO2': False, 'H2O': False, 'Mixed': True}
+    if model_name == 'MooreWater':
+        return {'CO2': False, 'H2O': False, 'Mixed': True}
 
-	if model_name == 'Shishkina':
-		return {'CO2': False, 'H2O': True, 'Mixed': True}
+    if model_name == 'Shishkina':
+        return {'CO2': False, 'H2O': True, 'Mixed': True}
 
-	if model_name == 'ShishkinaCarbon':
-		return {'CO2': False, 'H2O': False, 'Mixed': True}
+    if model_name == 'ShishkinaCarbon':
+        return {'CO2': False, 'H2O': False, 'Mixed': True}
 
-	if model_name == 'ShishkinaWater':
-		return {'CO2': False, 'H2O': True, 'Mixed': False}
+    if model_name == 'ShishkinaWater':
+        return {'CO2': False, 'H2O': True, 'Mixed': False}
 
 
 def return_calibration(model_name):
-	"""
-	Returns the calibration dataset for specified model
+    """
+    Returns the calibration dataset for specified model
 
-	Parameters
-	----------
-	model: string
-		String of model name.
+    Parameters
+    ----------
+    model: string
+        String of model name.
 
-	Returns
-	-------
-	dict
-		Dictionary with keys 'CO2', 'H2O', and 'Mixed' and corresponding datasets. If a dataset
-		for a particular key is nonexistent, None will be returned for that value.
-	"""
+    Returns
+    -------
+    dict
+        Dictionary with keys 'CO2', 'H2O', and 'Mixed' and corresponding datasets. If a dataset
+        for a particular key is nonexistent, None will be returned for that value.
+    """
 
-	if model_name == 'AllisonCarbon':
-		return {'Mixed': df_Allison_CO2, 'marker':'d', 'facecolor':'yellow'}
+    if model_name == 'AllisonCarbon':
+        return {'Mixed': df_Allison_CO2, 'marker':'d', 'facecolor':'yellow'}
 
-	if model_name == 'Dixon':
-		return {'CO2': df_Dixon_CO2, 'H2O': df_Dixon_H2O, 'marker':'d', 'facecolor':'blue'}
+    if model_name == 'Dixon':
+        return {'CO2': df_Dixon_CO2, 'H2O': df_Dixon_H2O, 'marker':'d', 'facecolor':'blue'}
 
-	if model_name == 'DixonCarbon':
-		return {'CO2': df_Dixon_CO2,'marker':'d', 'facecolor':'blue'}
+    if model_name == 'DixonCarbon':
+        return {'CO2': df_Dixon_CO2,'marker':'d', 'facecolor':'blue'}
 
-	if model_name == 'DixonWater':
-		return {'H2O': df_Dixon_H2O, 'marker':'s', 'facecolor':'blue'}
+    if model_name == 'DixonWater':
+        return {'H2O': df_Dixon_H2O, 'marker':'s', 'facecolor':'blue'}
 
-	if model_name == 'IaconoMarziano':
-		return {'H2O': df_Iacono_H2O, 'Mixed': df_Iacono_CO2H2O, 'marker':'d', 'facecolor':'magenta'}
+    if model_name == 'IaconoMarziano':
+        return {'H2O': df_Iacono_H2O, 'Mixed': df_Iacono_CO2H2O, 'marker':'d', 'facecolor':'magenta'}
 
-	if model_name == 'IaconoMarzianoCarbon':
-		return "No CO2-only data for this model. Try 'IaconoMarziano' or 'IaconoMarzianoWater'"
+    if model_name == 'IaconoMarzianoCarbon':
+        return "No CO2-only data for this model. Try 'IaconoMarziano' or 'IaconoMarzianoWater'"
 
-	if model_name == 'IaconoMarzianoWater':
-		return {'H2O': df_Iacono_H2O, 'marker':'s', 'facecolor':'magenta'}
+    if model_name == 'IaconoMarzianoWater':
+        return {'H2O': df_Iacono_H2O, 'marker':'s', 'facecolor':'magenta'}
 
-	if model_name == 'Liu':
-		return {'Mixed': df_Liu_CO2H2O, 'H2O': df_Liu_H2O, 'marker':'d', 'facecolor':'deepskyblue'}
+    if model_name == 'Liu':
+        return {'Mixed': df_Liu_CO2H2O, 'H2O': df_Liu_H2O, 'marker':'d', 'facecolor':'deepskyblue'}
 
-	if model_name == 'LiuCarbon':
-		return {'Mixed': df_Liu_CO2H2O, 'marker':'o', 'facecolor':'deepskyblue'}
+    if model_name == 'LiuCarbon':
+        return {'Mixed': df_Liu_CO2H2O, 'marker':'o', 'facecolor':'deepskyblue'}
 
-	if model_name == 'LiuWater':
-		return {'H2O': df_Liu_H2O, 'marker':'s', 'facecolor':'deepskyblue'}
+    if model_name == 'LiuWater':
+        return {'H2O': df_Liu_H2O, 'marker':'s', 'facecolor':'deepskyblue'}
 
-	if model_name == 'MagmaSat':
-		return {'CO2': df_MagmaSat_CO2, 'H2O': df_MagmaSat_H2O, 'Mixed': df_MagmaSat_CO2H2O, 'marker':'d', 'facecolor':'silver'}
+    if model_name == 'MagmaSat':
+        return {'CO2': df_MagmaSat_CO2, 'H2O': df_MagmaSat_H2O, 'Mixed': df_MagmaSat_CO2H2O, 'marker':'d', 'facecolor':'silver'}
 
-	if model_name == 'MooreWater':
-		return {'Mixed': df_Moore_H2O, 'marker':'s', 'facecolor':'lime'}
+    if model_name == 'MooreWater':
+        return {'Mixed': df_Moore_H2O, 'marker':'s', 'facecolor':'lime'}
 
-	if model_name == 'ShishkinaCarbon':
-		return {'Mixed': df_Shishkina_CO2H2O, 'marker':'d', 'facecolor':'darkorange'}
+    if model_name == 'ShishkinaCarbon':
+        return {'Mixed': df_Shishkina_CO2H2O, 'marker':'d', 'facecolor':'darkorange'}
 
-	if model_name == 'ShishkinaWater':
-		return {'H2O': df_Shishkina_H2O, 'marker':'s', 'facecolor':'darkorange'}
+    if model_name == 'ShishkinaWater':
+        return {'H2O': df_Shishkina_H2O, 'marker':'s', 'facecolor':'darkorange'}
 
-	if model_name == 'Shishkina':
-		return {'H2O': df_Shishkina_H2O, 'Mixed': df_Shishkina_CO2H2O, 'marker':'d', 'facecolor':'darkorange'}
+    if model_name == 'Shishkina':
+        return {'H2O': df_Shishkina_H2O, 'Mixed': df_Shishkina_CO2H2O, 'marker':'d', 'facecolor':'darkorange'}

@@ -149,7 +149,7 @@ class BatchFile(batchfile.BatchFile):
         # Check if the model passed as the attribute "model_type"
         # Currently only implemented for MagmaSat type models
         if hasattr(model, 'model_type') is True:
-        	model = model.model_type
+            model = model.model_type
 
         H2Ovals = []
         CO2vals = []
@@ -388,7 +388,7 @@ class BatchFile(batchfile.BatchFile):
         # Check if the model passed as the attribute "model_type"
         # Currently only implemented for MagmaSat type models
         if hasattr(model, 'model_type') is True:
-        	model = model.model_type
+            model = model.model_type
 
         if isinstance(temperature, str):
             file_has_temp = True
@@ -568,7 +568,7 @@ class BatchFile(batchfile.BatchFile):
         # Check if the model passed has the attribute "model_type"
         # Currently only implemented for MagmaSat type models
         if hasattr(model, 'model_type') is True:
-        	model = model.model_type
+            model = model.model_type
 
         # set default print_status to True for MagmaSat, False for other models if user doesn't pass any option
         if print_status is None:

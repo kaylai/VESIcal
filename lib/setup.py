@@ -14,12 +14,12 @@ setuptools.setup(
     url="https://github.com/kaylai/VESIcal",
     packages=setuptools.find_packages(),
     install_requires=[
-    		'pandas',
-    		'numpy',
-    		'matplotlib',
-    		'cycler',
-    		'scipy',
-    		'sympy'],
+            'pandas',
+            'numpy',
+            'matplotlib',
+            'cycler',
+            'scipy',
+            'sympy'],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
