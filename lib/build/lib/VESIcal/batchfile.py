@@ -70,7 +70,7 @@ class BatchFile(object):
             OPTIONAL. For Excel files. Default value is 0 which gets the first sheet in the batch spreadsheet file. This implements the pandas.
             read_excel() sheet_name parameter. But functionality to read in more than one sheet at a time (e.g., pandas.read_excel(sheet_name=None))
             is not yet imlpemented in VESIcal. From the pandas 1.0.4 documentation:
-            
+
             Available cases:
             - Defaults to 0: 1st sheet as a DataFrame
             - 1: 2nd sheet as a DataFrame

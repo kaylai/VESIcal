@@ -1,6 +1,6 @@
 # Indentation and formatting script for VESIcal
 
-if test ! -d VESIcal -o ! -d tests ; then
+if test ! -d VESIcal -o ! -d lib -o ! -d tests ; then
   echo "*** This script must be run from the top-level directory of VESIcal."
   exit 1
 fi
@@ -12,7 +12,7 @@ echo "--- Indenting all VESIcal header and source files"
 
 
 # remove execute permission on source files:
-find VESIcal tests \( -name '*.py' \) -not -path "VESIcal/tasplot/*" -print | xargs -n 50 -P 10 chmod -x
+find VESIcal lib tests \( -name '*.py' \) -not -path "VESIcal/tasplot/*" -print | xargs -n 50 -P 10 chmod -x
 
 # convert dos formatted files to unix file format by stripping out
 # carriage returns (15=0x0D):
@@ -24,7 +24,7 @@ dos_to_unix()
     rm -f $f.tmp
 }
 export -f dos_to_unix
-find VESIcal tests \( -name '*.py' \) -not -path "VESIcal/tasplot/*" -print | xargs -n 1 -P 10 -I {} bash -c 'dos_to_unix "$@"' _ {}
+find VESIcal lib tests \( -name '*.py' \) -not -path "VESIcal/tasplot/*" -print | xargs -n 1 -P 10 -I {} bash -c 'dos_to_unix "$@"' _ {}
 
 
 # Remove trailing whitespace from files
@@ -38,7 +38,7 @@ remove_trailing_whitespace()
     rm -f $f.tmp
 }
 export -f remove_trailing_whitespace
-find VESIcal tests \( -name '*.bash' -o -name '*.py' -o -name '*.txt' -o -name '*.tex' \) -not -path "VESIcal/tasplot/*" -print | xargs -n 1 -P 10 -I {} bash -c 'remove_trailing_whitespace "$@"' _ {}
+find VESIcal lib tests \( -name '*.bash' -o -name '*.py' -o -name '*.txt' -o -name '*.tex' \) -not -path "VESIcal/tasplot/*" -print | xargs -n 1 -P 10 -I {} bash -c 'remove_trailing_whitespace "$@"' _ {}
 
 # Ensure only a single newline at end of files
 ensure_single_trailing_newline()
@@ -64,6 +64,6 @@ ensure_single_trailing_newline()
   rm -f $f.tmp $f.tmpi
 }
 export -f ensure_single_trailing_newline
-find VESIcal tests \( -name '*.bash' -o -name '*.py' -o -name '*.txt' -o -name '*.tex' \) -not -path "VESIcal/tasplot/*" -print | xargs -n 1 -P 10 -I {} bash -c 'ensure_single_trailing_newline "$@"' _ {}
+find VESIcal lib tests \( -name '*.bash' -o -name '*.py' -o -name '*.txt' -o -name '*.tex' \) -not -path "VESIcal/tasplot/*" -print | xargs -n 1 -P 10 -I {} bash -c 'ensure_single_trailing_newline "$@"' _ {}
 
 exit 0

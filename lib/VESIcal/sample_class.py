@@ -386,7 +386,7 @@ class Sample(object):
             normed = pd.Series({k: v / sum(comp.values()) for k, v in comp.items()})
         else:
             raise core.InputError("Units must be one of 'wtpt_oxides', 'mol_oxides', or 'mol_cations'.")
-        
+
         return normed
 
     def _normalize_FixedVolatiles(self, composition, units='wtpt_oxides'):
@@ -475,7 +475,7 @@ class Sample(object):
             normalized = normalized/np.sum(normalized)
         else:
            raise core.InputError("Units must be one of 'wtpt_oxides', 'mol_oxides', or 'mol_cations'.")
-            
+
         if 'H2O' in comp.index:
             normalized['H2O'] = comp['H2O']
         if 'CO2' in comp.index:
