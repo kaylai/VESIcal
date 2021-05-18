@@ -168,9 +168,9 @@ class BatchFile(batchfile.BatchFile):
                         X_fluid = row[X_name]
 
                     # Get sample comp as Sample class with defaults
-                    bulk_comp = self.get_sample_composition(index, 
-                                                            normalization=self.default_normalization, 
-                                                            units='wtpt_oxides', 
+                    bulk_comp = self.get_sample_composition(index,
+                                                            normalization=self.default_normalization,
+                                                            units='wtpt_oxides',
                                                             asSampleClass=True)
                     bulk_comp.set_default_units(self.default_units)
                     bulk_comp.set_default_normalization(self.default_normalization)
@@ -262,9 +262,9 @@ class BatchFile(batchfile.BatchFile):
                 if temperature > 0 and pressure > 0 and X_fluid >=0 and X_fluid <=1:
                     try:
                         # Get sample comp as Sample class with defaults
-                        bulk_comp = self.get_sample_composition(index, 
-                                                                normalization=self.default_normalization, 
-                                                                units='wtpt_oxides', 
+                        bulk_comp = self.get_sample_composition(index,
+                                                                normalization=self.default_normalization,
+                                                                units='wtpt_oxides',
                                                                 asSampleClass=True)
                         bulk_comp.set_default_units(self.default_units)
                         bulk_comp.set_default_normalization(self.default_normalization)
@@ -301,7 +301,7 @@ class BatchFile(batchfile.BatchFile):
                 dissolved_data["Errors"] = errors
 
             return dissolved_data
-        
+
         else:
             XH2Ovals = []
             XCO2vals = []
@@ -314,9 +314,9 @@ class BatchFile(batchfile.BatchFile):
                 if file_has_X == True:
                     X_fluid = row[X_name]
                 # Get sample comp as Sample class with defaults
-                bulk_comp = self.get_sample_composition(index, 
-                                                        normalization=self.default_normalization, 
-                                                        units='wtpt_oxides', 
+                bulk_comp = self.get_sample_composition(index,
+                                                        normalization=self.default_normalization,
+                                                        units='wtpt_oxides',
                                                         asSampleClass=True)
                 bulk_comp.set_default_units(self.default_units)
                 bulk_comp.set_default_normalization(self.default_normalization)
@@ -417,9 +417,9 @@ class BatchFile(batchfile.BatchFile):
                     if file_has_press == True:
                         pressure = row[press_name]
                     # Get sample comp as Sample class with defaults
-                    bulk_comp = self.get_sample_composition(index, 
-                                                            normalization=self.default_normalization, 
-                                                            units='wtpt_oxides', 
+                    bulk_comp = self.get_sample_composition(index,
+                                                            normalization=self.default_normalization,
+                                                            units='wtpt_oxides',
                                                             asSampleClass=True)
                     bulk_comp.set_default_units(self.default_units)
                     bulk_comp.set_default_normalization(self.default_normalization)
@@ -474,9 +474,9 @@ class BatchFile(batchfile.BatchFile):
                 if temperature > 0 and pressure > 0:
                     try:
                         # Get sample comp as Sample class with defaults
-                        bulk_comp = self.get_sample_composition(index, 
-                                                                normalization=self.default_normalization, 
-                                                                units='wtpt_oxides', 
+                        bulk_comp = self.get_sample_composition(index,
+                                                                normalization=self.default_normalization,
+                                                                units='wtpt_oxides',
                                                                 asSampleClass=True)
                         bulk_comp.set_default_units(self.default_units)
                         bulk_comp.set_default_normalization(self.default_normalization)
@@ -514,9 +514,9 @@ class BatchFile(batchfile.BatchFile):
                     if file_has_press == True:
                         pressure = row[press_name]
                     # Get sample comp as Sample class with defaults
-                    bulk_comp = self.get_sample_composition(index, 
-                                                            normalization=self.default_normalization, 
-                                                            units='wtpt_oxides', 
+                    bulk_comp = self.get_sample_composition(index,
+                                                            normalization=self.default_normalization,
+                                                            units='wtpt_oxides',
                                                             asSampleClass=True)
                     bulk_comp.set_default_units(self.default_units)
                     bulk_comp.set_default_normalization(self.default_normalization)
@@ -550,8 +550,8 @@ class BatchFile(batchfile.BatchFile):
             title in the passed BatchFile object.
 
         print_status: bool
-            OPTIONAL: The default value for MagmaSat is True and the default for all other models is False. If set to True, the 
-            progress of the calculation will be printed to the terminal. If set to False, nothing will be printed. MagmaSat 
+            OPTIONAL: The default value for MagmaSat is True and the default for all other models is False. If set to True, the
+            progress of the calculation will be printed to the terminal. If set to False, nothing will be printed. MagmaSat
             calculations tend to be slow, and so a value of True is recommended more most use cases.
 
         model: string
@@ -598,8 +598,8 @@ class BatchFile(batchfile.BatchFile):
                 if file_has_temp == True:
                     temperature = row[temp_name]
                 # Get sample comp as Sample class with defaults
-                bulk_comp = self.get_sample_composition(index, 
-                                                        normalization=self.default_normalization, 
+                bulk_comp = self.get_sample_composition(index,
+                                                        normalization=self.default_normalization,
                                                         units='wtpt_oxides',
                                                         asSampleClass=True)
                 bulk_comp.set_default_units(self.default_units)
@@ -650,17 +650,17 @@ class BatchFile(batchfile.BatchFile):
                 if temperature > 0:
                     try:
                         # Get sample comp as Sample class with defaults
-                        bulk_comp = self.get_sample_composition(index, 
-                                                                normalization=self.default_normalization, 
-                                                                units='wtpt_oxides', 
+                        bulk_comp = self.get_sample_composition(index,
+                                                                normalization=self.default_normalization,
+                                                                units='wtpt_oxides',
                                                                 asSampleClass=True)
                         bulk_comp.set_default_units(self.default_units)
                         bulk_comp.set_default_normalization(self.default_normalization)
 
-                        calc = calculate_classes.calculate_saturation_pressure(sample=bulk_comp, 
-                                                                               temperature=temperature, 
-                                                                               model=model, 
-                                                                               verbose=True, 
+                        calc = calculate_classes.calculate_saturation_pressure(sample=bulk_comp,
+                                                                               temperature=temperature,
+                                                                               model=model,
+                                                                               verbose=True,
                                                                                silence_warnings=True)
                         satP.append(calc.result["SaturationP_bars"])
                         flmass.append(calc.result["FluidMass_grams"])
