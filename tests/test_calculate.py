@@ -1,5 +1,5 @@
 import unittest
-import VESIcal as v 
+import VESIcal as v
 
 class TestDissolvedVolatiles(unittest.TestCase):
     def setUp(self):
@@ -25,16 +25,22 @@ class TestDissolvedVolatiles(unittest.TestCase):
         self.sample_molox.set_default_units("mol_oxides")
 
         # BatchFile with test sample as defined above in wtpt_oxides
-        self.batch_wtpt = v.BatchFile('BatchTest.xlsx', units='wtpt_oxides')
+        try:
+            self.batch_wtpt = v.BatchFile('BatchTest.xlsx', units='wtpt_oxides')
+        except:
+            self.batch_wtpt = v.BatchFile('tests/BatchTest.xlsx', units='wtpt_oxides')
         self.batch_wtpt.set_default_units("wtpt_oxides")
 
         # BatchFile with test sample as defined above in mol_oxides
-        self.batch_molox = v.BatchFile('BatchTest.xlsx')
+        try:
+            self.batch_molox = v.BatchFile('BatchTest.xlsx')
+        except:
+            self.batch_molox = v.BatchFile('tests/BatchTest.xlsx')
         self.batch_molox.set_default_units("mol_oxides")
 
         # solubilities calculated with VESIcal in wt% and translated externally to mol fraction
         self.shishkinaMixed_wtpt =      {'H2O_liq': 2.24019,
-                                        'CO2_liq': 0.028022292} 
+                                        'CO2_liq': 0.028022292}
         self.shishkinaMixed_molox =     {'H2O_liq': 0.07415139,
                                         'CO2_liq': 0.000379788}
 
@@ -72,7 +78,7 @@ class TestDissolvedVolatiles(unittest.TestCase):
         self.allisonCarbon_etna_molox       = 0.00070234
         self.allisonCarbon_stromboli_wtpt   = 0.03216744
         self.allisonCarbon_stromboli_molox  = 0.00047085
-        self.mooreWater_wtpt                = 2.24337989
+        self.mooreWater_wtpt                = 2.24343860
         self.mooreWater_molox               = 0.07427734
 
         self.mixed_dict =   {"ShishkinaIdealMixing": {'wtpt_oxides': self.shishkinaMixed_wtpt, 'mol_oxides': self.shishkinaMixed_molox},
@@ -154,23 +160,29 @@ class TestSaturationPressure(unittest.TestCase):
         self.sample_molox.set_default_units("mol_oxides")
 
         # BatchFile with test sample as defined above in wtpt_oxides
-        self.batch_wtpt = v.BatchFile('BatchTest.xlsx', units='wtpt_oxides')
+        try:
+            self.batch_wtpt = v.BatchFile('BatchTest.xlsx', units='wtpt_oxides')
+        except:
+            self.batch_wtpt = v.BatchFile('tests/BatchTest.xlsx', units='wtpt_oxides')
         self.batch_wtpt.set_default_units("wtpt_oxides")
 
         # BatchFile with test sample as defined above in mol_oxides
-        self.batch_molox = v.BatchFile('BatchTest.xlsx')
+        try:
+            self.batch_molox = v.BatchFile('BatchTest.xlsx')
+        except:
+            self.batch_molox = v.BatchFile('tests/BatchTest.xlsx')
         self.batch_molox.set_default_units("mol_oxides")
 
         # saturation pressures calculated with VESIcal
-        self.shishkinaMixed =      1906.9487651401432 
+        self.shishkinaMixed =      1906.9975561897566
         self.dixonMixed =          1847.1637265676327
-        self.iaconomarzianoMixed = 1437.4446250186159
+        self.iaconomarzianoMixed = 1437.490938990306
         self.liuMixed =            2157.191497153953
         self.magmasat =            1630  # Generated with MagmaSat app
 
-        self.shishkinaCarbon           = 1511.477253594554
+        self.shishkinaCarbon           = 1511.525453548577
         self.dixonCarbon               = 1375.61109469857
-        self.iaconomarzianoCarbon      = 1215.0915904258195
+        self.iaconomarzianoCarbon      = 1215.1280584478134
         self.allisonCarbon             = 821.9428189121331
         self.allisonCarbon_sunset      = 1468.1852834512158
         self.allisonCarbon_sfvf        = 1728.744343059253
@@ -180,10 +192,10 @@ class TestSaturationPressure(unittest.TestCase):
         self.allisonCarbon_stromboli   = 1472.5760950857439
         self.liuCarbon                 = 2246.2067748765
 
-        self.shishkinaWater            = 395.47151152814865
+        self.shishkinaWater            = 395.4721026237296
         self.dixonWater                = 431.1140172567279
-        self.iaconomarzianoWater       = 459.72505692938915
-        self.mooreWater                = 366.8109434136937
+        self.iaconomarzianoWater       = 459.73677498208133
+        self.mooreWater                = 366.7939178950552
         self.liuWater                  = 374.4357814145504
 
         self.mixed_dict =   {"ShishkinaIdealMixing": self.shishkinaMixed,
@@ -323,7 +335,7 @@ class TestEquilibriumFluidComp(unittest.TestCase):
         self.sample_molox.set_default_units("mol_oxides")
 
         # equilibrium fluid comps calculated with VESIcal
-        self.shishkinaMixed =      {'H2O': 0.7158408854774682, 'CO2': 0.28415911452253184} 
+        self.shishkinaMixed =      {'H2O': 0.7158408854774682, 'CO2': 0.28415911452253184}
         self.dixonMixed =          {'H2O': 0.7750859842655139, 'CO2': 0.2249140157344861}
         self.iaconomarzianoMixed = {'H2O': 0.8103141353709358, 'CO2': 0.18968586462906423}
         self.liuMixed =            {'H2O': 0.7066707740811572, 'CO2': 0.2933292259188428}
@@ -382,7 +394,8 @@ class TestEquilibriumFluidComp(unittest.TestCase):
                                                               model=model,
                                                               verbose=False).result
             known_result = self.mixed_dict[model]
-            self.assertAlmostEqual(calcd_result, known_result, places=4)
+            for key in known_result.keys():
+                self.assertAlmostEqual(calcd_result[key], known_result[key], places=4)
 
     def test_calculate_wtpt_carbon(self):
         for model in self.carbon_dict.keys():
@@ -407,12 +420,13 @@ class TestEquilibriumFluidComp(unittest.TestCase):
     def test_calculation_molox_mixed(self):
         for model in self.mixed_dict.keys():
             calcd_result = v.calculate_equilibrium_fluid_comp(self.sample_molox,
-                temperature=self.temperature,
+                                                              temperature=self.temperature,
                                                               pressure=self.pressure,
                                                               model=model,
                                                               verbose=False).result
             known_result = self.mixed_dict[model]
-            self.assertAlmostEqual(calcd_result, known_result, places=4)
+            for key in known_result.keys():
+                self.assertAlmostEqual(calcd_result[key], known_result[key], places=4)
 
     def test_calculate_molox_carbon(self):
         for model in self.carbon_dict.keys():
@@ -436,8 +450,3 @@ class TestEquilibriumFluidComp(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
-
-
-
-
