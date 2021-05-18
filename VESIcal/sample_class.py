@@ -4,7 +4,7 @@ import warnings as w
 
 from VESIcal import core
 
-from copy import deepcopy
+from copy import deepcopy, copy
 
 
 class Sample(object):
@@ -110,7 +110,8 @@ class Sample(object):
             raise core.InputError("The units must be one of 'wtpt_oxides','mol_oxides','mol_cations','mol_singleO'.")
 
 
-    def get_composition(self, species=None, normalization=None, units=None, exclude_volatiles=False, asSampleClass=False):
+    def get_composition(self, species=None, normalization=None, units=None, exclude_volatiles=False,
+                        asSampleClass=False, oxide_masses = {}):
         """ Returns the composition in the format requested, normalized as requested.
 
         Parameters
@@ -153,11 +154,24 @@ class Sample(object):
             If True, the sample composition will be returned as a sample class, with default options. In this case
             any normalization instructions will be ignored.
 
+        oxide_masses:  dict
+            Specify here any oxide masses that should be changed from the VESIcal default. This
+            might be useful for recreating other implementations of models that use slightly
+            different molecular masses. The default values in VESIcal are given to 3 dp.
+
         Returns
         -------
         pandas.Series, float, or Sample class
             The sample composition, as specified.
         """
+        # Process the oxide_masses variable, if necessary:
+        oxideMass = copy(core.oxideMass)
+        for ox in oxide_masses:
+            if ox in oxideMass:
+                oxideMass[ox] = oxide_masses[ox]
+            else:
+                raise core.InputError("The oxide name provided in oxide_masses is not recognised.")
+
 
         # Fetch the default return types if not specified in function call
         if normalization == None and species == None:
@@ -198,11 +212,11 @@ class Sample(object):
         if units == 'wtpt_oxides':
             converted = composition
         elif units == 'mol_oxides':
-            converted = self._wtpercentOxides_to_molOxides(composition)
+            converted = self._wtpercentOxides_to_molOxides(composition, oxideMass = oxideMass)
         elif units == 'mol_cations':
-            converted = self._wtpercentOxides_to_molCations(composition)
+            converted = self._wtpercentOxides_to_molCations(composition, oxideMass = oxideMass)
         elif units == 'mol_singleO':
-            converted = self._wtpercentOxides_to_molSingleO(composition)
+            converted = self._wtpercentOxides_to_molSingleO(composition, oxideMass = oxideMass)
         else:
             raise core.InputError("The units must be one of 'wtpt_oxides', 'mol_oxides', 'mol_cations', \
             or 'mol_singleO'.")
@@ -386,7 +400,7 @@ class Sample(object):
             normed = pd.Series({k: v / sum(comp.values()) for k, v in comp.items()})
         else:
             raise core.InputError("Units must be one of 'wtpt_oxides', 'mol_oxides', or 'mol_cations'.")
-        
+
         return normed
 
     def _normalize_FixedVolatiles(self, composition, units='wtpt_oxides'):
@@ -475,7 +489,7 @@ class Sample(object):
             normalized = normalized/np.sum(normalized)
         else:
            raise core.InputError("Units must be one of 'wtpt_oxides', 'mol_oxides', or 'mol_cations'.")
-            
+
         if 'H2O' in comp.index:
             normalized['H2O'] = comp['H2O']
         if 'CO2' in comp.index:
@@ -483,7 +497,7 @@ class Sample(object):
 
         return normalized
 
-    def _wtpercentOxides_to_molOxides(self, composition):
+    def _wtpercentOxides_to_molOxides(self, composition, oxideMass = core.oxideMass):
         """
         Converts a wt% oxide composition to mol oxides, normalised to 1 mol.
 
@@ -493,6 +507,9 @@ class Sample(object):
         ----------
         composition:    pandas.Series
             Major element oxides in wt%
+
+        oxideMass:  dict
+            The molar mass of the oxides. Default is the VESIcal default molar masses.
 
         Returns
         -------
@@ -504,14 +521,14 @@ class Sample(object):
         oxideslist = list(comp.index)
 
         for ox in oxideslist:
-            molOxides[ox] = comp[ox]/core.oxideMass[ox]
+            molOxides[ox] = comp[ox]/oxideMass[ox]
 
         molOxides = pd.Series(molOxides)
         molOxides = molOxides/molOxides.sum()
 
         return molOxides
 
-    def _wtpercentOxides_to_molCations(self, composition):
+    def _wtpercentOxides_to_molCations(self, composition, oxideMass = core.oxideMass):
         """
         Converts a wt% oxide composition to molar proportions of cations (normalised to 1).
 
@@ -521,6 +538,9 @@ class Sample(object):
         ----------
         composition        pandas.Series
             Major element oxides in wt%.
+
+        oxideMass:  dict
+            The molar mass of the oxides. Default is the VESIcal default molar masses.
 
         Returns
         -------
@@ -533,14 +553,14 @@ class Sample(object):
 
         for ox in oxideslist:
             cation = core.oxides_to_cations[ox]
-            molCations[cation] = core.CationNum[ox]*comp[ox]/core.oxideMass[ox]
+            molCations[cation] = core.CationNum[ox]*comp[ox]/oxideMass[ox]
 
         molCations = pd.Series(molCations)
         molCations = molCations/molCations.sum()
 
         return molCations
 
-    def _wtpercentOxides_to_molSingleO(self, composition):
+    def _wtpercentOxides_to_molSingleO(self, composition, oxideMass = core.oxideMass):
         """
         Constructs the chemical formula, on a single oxygen basis, from wt% oxides.
 
@@ -550,6 +570,9 @@ class Sample(object):
         ----------
         composition        pandas.Series
             Major element oxides in wt%
+
+        oxideMass:  dict
+            The molar mass of the oxides. Default is the VESIcal default molar masses.
 
         Returns
         -------
@@ -565,15 +588,15 @@ class Sample(object):
         total_O = 0.0
         for ox in oxideslist:
             cation = core.oxides_to_cations[ox]
-            molCations[cation] = core.CationNum[ox]*comp[ox]/core.oxideMass[ox]
-            total_O += core.OxygenNum[ox]*comp[ox]/core.oxideMass[ox]
+            molCations[cation] = core.CationNum[ox]*comp[ox]/oxideMass[ox]
+            total_O += core.OxygenNum[ox]*comp[ox]/oxideMass[ox]
 
         molCations = pd.Series(molCations)
         molCations = molCations/total_O
 
         return molCations
 
-    def _molOxides_to_wtpercentOxides(self, composition):
+    def _molOxides_to_wtpercentOxides(self, composition, oxideMass = core.oxideMass):
         """
         Converts mol oxides to wt% oxides. Returned composition is normalized to 100 wt%.
 
@@ -581,6 +604,9 @@ class Sample(object):
         ----------
         composition:     pandas.Series
             mol fraction oxides
+
+        oxideMass:  dict
+            The molar mass of the oxides. Default is the VESIcal default molar masses.
 
         Returns
         -------
@@ -592,7 +618,7 @@ class Sample(object):
         wtpt = {}
 
         for ox in composition.index:
-            wtpt[ox] = comp[ox]*core.oxideMass[ox]
+            wtpt[ox] = comp[ox]*oxideMass[ox]
 
         wtpt = pd.Series(wtpt)
         wtpt = wtpt/wtpt.sum()*100
@@ -626,7 +652,7 @@ class Sample(object):
 
         return molcations
 
-    def _molCations_to_wtpercentOxides(self, composition):
+    def _molCations_to_wtpercentOxides(self, composition, oxideMass = core.oxideMass):
         """
         Converts mole fraction cations to wt% oxides, normalized to 100 wt%.
 
@@ -634,6 +660,9 @@ class Sample(object):
         ----------
         composition:     pandas.Series
             Mole fraction cations
+
+        oxideMass:  dict
+            The molar mass of the oxides. Default is the VESIcal default molar masses.
 
         Returns
         -------
@@ -646,7 +675,7 @@ class Sample(object):
 
         for el in comp.index:
             wtpt[core.cations_to_oxides[el]] = comp[el]/core.CationNum[core.cations_to_oxides[el]]*\
-            core.oxideMass[core.cations_to_oxides[el]]
+            oxideMass[core.cations_to_oxides[el]]
 
         wtpt = pd.Series(wtpt)
         wtpt = wtpt/wtpt.sum()*100

@@ -49,9 +49,9 @@ class TestDissolvedVolatiles(unittest.TestCase):
         self.dixonMixed_molox =         {'H2O_liq': 0.0688214,
                                         'CO2_liq': 0.000481216}
 
-        self.iaconomarzianoMixed_wtpt = {'H2O_liq': 2.08530635,
-                                        'CO2_liq': 0.049996963}
-        self.iaconomarzianoMixed_molox ={'H2O_liq': 0.06935959,
+        self.iaconomarzianoMixed_wtpt = {'H2O_liq': 2.1250085,
+                                        'CO2_liq': 0.05023343}
+        self.iaconomarzianoMixed_molox ={'H2O_liq': 0.07058493,
                                         'CO2_liq': 0.000680900}
 
         self.liuMixed_wtpt =            {'H2O_liq': 2.293923234,
@@ -176,13 +176,13 @@ class TestSaturationPressure(unittest.TestCase):
         # saturation pressures calculated with VESIcal
         self.shishkinaMixed =      1906.9975561897566
         self.dixonMixed =          1847.1637265676327
-        self.iaconomarzianoMixed = 1437.490938990306
+        self.iaconomarzianoMixed = 1424.7842590648454
         self.liuMixed =            2157.191497153953
         self.magmasat =            1630  # Generated with MagmaSat app
 
         self.shishkinaCarbon           = 1511.525453548577
         self.dixonCarbon               = 1375.61109469857
-        self.iaconomarzianoCarbon      = 1215.1280584478134
+        self.iaconomarzianoCarbon      = 1215.0221712464863
         self.allisonCarbon             = 821.9428189121331
         self.allisonCarbon_sunset      = 1468.1852834512158
         self.allisonCarbon_sfvf        = 1728.744343059253
@@ -194,7 +194,7 @@ class TestSaturationPressure(unittest.TestCase):
 
         self.shishkinaWater            = 395.4721026237296
         self.dixonWater                = 431.1140172567279
-        self.iaconomarzianoWater       = 459.73677498208133
+        self.iaconomarzianoWater       = 447.9472361904811
         self.mooreWater                = 366.7939178950552
         self.liuWater                  = 374.4357814145504
 
@@ -337,7 +337,7 @@ class TestEquilibriumFluidComp(unittest.TestCase):
         # equilibrium fluid comps calculated with VESIcal
         self.shishkinaMixed =      {'H2O': 0.7158408854774682, 'CO2': 0.28415911452253184}
         self.dixonMixed =          {'H2O': 0.7750859842655139, 'CO2': 0.2249140157344861}
-        self.iaconomarzianoMixed = {'H2O': 0.8103141353709358, 'CO2': 0.18968586462906423}
+        self.iaconomarzianoMixed = {'H2O': 0.8001512048063274, 'CO2': 0.1998487951936726}
         self.liuMixed =            {'H2O': 0.7066707740811572, 'CO2': 0.2933292259188428}
         self.magmasat =            {'CO2': 0.219354223233457, 'H2O': 0.780645776766543}
 
