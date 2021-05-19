@@ -231,7 +231,7 @@ class water(model_classes.Model):
             Difference between H2O guessed and the H2O calculated.
         """
 
-        if coeffs == 'WebApp2020':
+        if coeffs == 'WebApp2021':
             a = 0.53
             b = 2.35
             B = -3.37
