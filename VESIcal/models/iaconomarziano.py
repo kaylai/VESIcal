@@ -14,7 +14,8 @@ class water(model_classes.Model):
     """
     Implementation of the Iacono-Marziano et al. (2012) water solubility model, as a Model class. Three
     calibrations are provided- the one incorporating the H2O content as a parameter (hydrous), and the
-    one that does not (anhydrous), in addition to pre-review coefficient values as implemented in the web app.
+    one that does not (anhydrous), in addition to the coefficient values given in the manuscript, which are
+    incorrect and do not align with the web versions of the model.
     Which model should be used is specified when the methods are called. The default choice is the hydrous model.
     """
 
@@ -42,7 +43,7 @@ class water(model_classes.Model):
 
 
     def calculate_dissolved_volatiles(self, pressure, temperature, sample, X_fluid=1.0,
-                                      coeffs='WebApp2020', **kwargs):
+                                      coeffs='webapp', **kwargs):
         """
         Calculates the dissolved H2O concentration, using Eq (13) of Iacono-Marziano et al. (2012).
         If using the hydrous parameterization, it will use the scipy.root_scalar routine to find the
@@ -60,11 +61,10 @@ class water(model_classes.Model):
             Mole fraction of H2O in the fluid. Default is 1.0.
         coeffs  str
             Which set of coefficients should be used in the calculations:
-            - 'WebApp2020' (default) for the hydrous NBO/O parameterisation coefficients used in
-              the Iacono-Marziano webapp available in 2020.
-            - 'WebApp2021' for the hydrous NBO/O parameterisation coefficients given in the
-              Iacono-Marziano et al. (2012) manuscript and used in the newer webapp
-              available in 2021.
+            - 'webapp' (default) for the hydrous NBO/O parameterisation coefficients used in
+              the Iacono-Marziano webapp.
+            - 'manuscript' for the hydrous NBO/O parameterisation coefficients given in the
+              Iacono-Marziano et al. (2012) manuscript, but were incorrect (pers.comm.).
             - 'anhydrous' for the anhydrous NBO/O parameterisation coefficients given in the
               Iacono-Marziano et al. (2012) manuscript.
 
@@ -74,8 +74,8 @@ class water(model_classes.Model):
             Dissolved H2O concentration in wt%.
         """
 
-        if coeffs not in ['WebApp2020','WebApp2021','anhydrous']:
-            raise core.InputError("The coeffs argument must be one of 'WebApp2020', 'WebApp2021', or 'anhydrous'")
+        if coeffs not in ['webapp','manuscript','anhydrous']:
+            raise core.InputError("The coeffs argument must be one of 'webapp', 'manuscript', or 'anhydrous'")
 
         temperature = temperature + 273.15 #translate T from C to K
 
@@ -89,7 +89,7 @@ class water(model_classes.Model):
         if pressure == 0:
             return 0
 
-        if coeffs == 'WebApp2020' or coeffs == 'WebApp2021':
+        if coeffs == 'webapp' or coeffs == 'manuscript':
             if X_fluid==0:
                 return 0
             H2O = root_scalar(self.root_dissolved_volatiles,args=(pressure,temperature,sample,X_fluid,coeffs,kwargs),
@@ -221,7 +221,7 @@ class water(model_classes.Model):
         X_fluid     float
             Mole fraction of H2O in the fluid.
         coeffs  str
-            One of 'WebApp2020','WebApp2021','anhydrous'.
+            One of 'webapp','manuscript','anhydrous'.
         kwargs     dictionary
             Keyword arguments
 
@@ -231,7 +231,7 @@ class water(model_classes.Model):
             Difference between H2O guessed and the H2O calculated.
         """
 
-        if coeffs == 'WebApp2021':
+        if coeffs == 'manuscript':
             a = 0.53
             b = 2.35
             B = -3.37
@@ -250,7 +250,7 @@ class water(model_classes.Model):
 
         return h2o - np.exp(a*np.log(fugacity) + b*NBO_O + B + C*pressure/(temperature+273.15))
 
-    def NBO_O(self,sample,coeffs='WebApp2020'):
+    def NBO_O(self,sample,coeffs='webapp'):
         """
         Calculates NBO/O according to Appendix A.1. of Iacono-Marziano et al. (2012). NBO/O
         is calculated on either a hydrous or anhyrous basis, as set when initialising the
@@ -263,7 +263,7 @@ class water(model_classes.Model):
 
         coeffs  str
             One of:
-            - 'WebApp2020' or 'WebApp2021' to include H2O in NBO/O
+            - 'webapp' or 'manuscript' to include H2O in NBO/O
             - 'anhydrous' to exclude H2O from NBO/O
 
         Returns
@@ -286,7 +286,7 @@ class water(model_classes.Model):
         NBO = 2*(X['K2O']+X['Na2O']+X['CaO']+X['MgO']+X['FeO']+2*Fe2O3-X['Al2O3'])
         O = 2*X['SiO2']+2*X['TiO2']+3*X['Al2O3']+X['MgO']+X['FeO']+2*Fe2O3+X['CaO']+X['Na2O']+X['K2O']
 
-        if coeffs == 'WebApp2020' or coeffs == 'WebApp2021':
+        if coeffs == 'webapp' or coeffs == 'manuscript':
             if 'H2O' not in X:
                 raise core.InputError("sample must contain H2O if using the hydrous parameterization.")
             NBO = NBO + 2*X['H2O']
@@ -297,10 +297,7 @@ class water(model_classes.Model):
 
 class carbon(model_classes.Model):
     """
-    Implementation of the Iacono-Marziano et al. (2012) carbon solubility model, as a Model class. Two
-    calibrations are provided- the one incorporating the H2O content as a parameter (hydrous), and the
-    one that does not (anhydrous), in addition to pre-review coefficient values as implemented in the web app.
-    Which model should be used is specified when the methods are called. The default choice is the hydrous model.
+    Implementation of the Iacono-Marziano et al. (2012) carbon solubility model, as a Model class.
     """
 
     def __init__(self):
@@ -326,7 +323,7 @@ class carbon(model_classes.Model):
                                'SiO2': 60.09, 'TiO2': 79.9, 'H2O': 18.01}
 
     def calculate_dissolved_volatiles(self,pressure,temperature,sample,X_fluid=1,
-                                      coeffs='WebApp2020', **kwargs):
+                                      coeffs='webapp', **kwargs):
         """
         Calculates the dissolved CO2 concentration, using Eq (12) of Iacono-Marziano et al. (2012).
         If using the hydrous parameterization, it will use the scipy.root_scalar routine to find the
@@ -344,11 +341,10 @@ class carbon(model_classes.Model):
             Mole fraction of H2O in the fluid. Default is 1.0.
         coeffs  str
             Which set of coefficients should be used for H2O calculations:
-            - 'WebApp2020' (default) for the hydrous NBO/O parameterisation coefficients used in
-              the Iacono-Marziano webapp available in 2020.
-            - 'WebApp2021' for the hydrous NBO/O parameterisation coefficients given in the
-              Iacono-Marziano et al. (2012) manuscript and used in the newer webapp
-              available in 2021.
+            - 'webapp' (default) for the hydrous NBO/O parameterisation coefficients used in
+              the Iacono-Marziano webapp.
+            - 'manuscript' for the hydrous NBO/O parameterisation coefficients given in the
+              Iacono-Marziano et al. (2012) manuscript.
             - 'anhydrous' for the anhydrous NBO/O parameterisation coefficients given in the
               Iacono-Marziano et al. (2012) manuscript.
 
@@ -358,8 +354,8 @@ class carbon(model_classes.Model):
             Dissolved H2O concentration in wt%.
         """
 
-        if coeffs not in ['WebApp2020','WebApp2021','anhydrous']:
-            raise core.InputError("The coeffs argument must be one of 'WebApp2020', 'WebApp2021', or 'anhydrous'")
+        if coeffs not in ['webapp','manuscript','anhydrous']:
+            raise core.InputError("The coeffs argument must be one of 'webapp', 'manuscript', or 'anhydrous'")
 
         temperature = temperature + 273.15 #translate T from C to K
 
@@ -375,7 +371,7 @@ class carbon(model_classes.Model):
         if pressure == 0:
             return 0
 
-        if coeffs == 'WebApp2020' or coeffs == 'WebApp2021':
+        if coeffs == 'webapp' or coeffs == 'manuscript':
             im_h2o_model = water()
             h2o = im_h2o_model.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature-273.15,
                                                         sample=sample,X_fluid=1-X_fluid,coeffs=coeffs,**kwargs)
@@ -521,7 +517,7 @@ class carbon(model_classes.Model):
         return sample.get_composition('CO2') - self.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,sample=sample,**kwargs)
 
 
-    def NBO_O(self,sample,coeffs='WebApp2020'):
+    def NBO_O(self,sample,coeffs='webapp'):
         """
         Calculates NBO/O according to Appendix A.1. of Iacono-Marziano et al. (2012). NBO/O
         is calculated on either a hydrous or anhyrous basis, as set when initialising the
@@ -534,7 +530,7 @@ class carbon(model_classes.Model):
 
         coeffs  str
             One of:
-            - 'WebApp2020' or 'WebApp2021' to include H2O in NBO/O
+            - 'webapp' or 'manuscript' to include H2O in NBO/O
             - 'anhydrous' to exclude H2O from NBO/O
 
         Returns
@@ -557,7 +553,7 @@ class carbon(model_classes.Model):
         NBO = 2*(X['K2O']+X['Na2O']+X['CaO']+X['MgO']+X['FeO']+2*Fe2O3-X['Al2O3'])
         O = 2*X['SiO2']+2*X['TiO2']+3*X['Al2O3']+X['MgO']+X['FeO']+2*Fe2O3+X['CaO']+X['Na2O']+X['K2O']
 
-        if coeffs == 'WebApp2020' or coeffs == 'WebApp2021':
+        if coeffs == 'webapp' or coeffs == 'manuscript':
             if 'H2O' not in X:
                 raise core.InputError("sample must contain H2O if using the hydrous parameterization.")
             NBO = NBO + 2*X['H2O']
