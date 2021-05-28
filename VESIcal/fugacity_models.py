@@ -27,7 +27,7 @@ class FugacityModel(object):
     def check_calibration_range(self,parameters,report_nonexistance=True):
         s = ''
         for cr in self.calibration_ranges:
-            if cr.check(parameters) == False:
+            if cr.check(parameters) is False:
                 s += cr.string(parameters,report_nonexistance)
         return s
 

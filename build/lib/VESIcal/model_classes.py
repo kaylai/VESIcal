@@ -71,11 +71,11 @@ class Model(object):
         for var in variable_names:
             found_var = False
             for cr in self.calibration_ranges:
-                if found_var == False:
+                if found_var is False:
                     if cr.parameter_name == var:
                         found_var = True
                         calibration_values.append(cr.value)
-            if found_var == False:
+            if found_var is False:
                 calibration_values.append(np.nan)
 
         return calibration_values
@@ -117,13 +117,13 @@ class Model(object):
         """
         s = ''
         for cr in self.calibration_ranges:
-            if cr.check(parameters) == False:
+            if cr.check(parameters) is False:
                 s += cr.string(parameters,report_nonexistance)
         for cr in self.fugacity_model.calibration_ranges:
-            if cr.check(parameters) == False:
+            if cr.check(parameters) is False:
                 s += cr.string(parameters,report_nonexistance)
         for cr in self.activity_model.calibration_ranges:
-            if cr.check(parameters) == False:
+            if cr.check(parameters) is False:
                 s += cr.string(parameters,report_nonexistance)
         return s
 
@@ -259,7 +259,7 @@ class MixedFluid(Model):
         else:
             raise core.InputError("The solubility dependence of the models is not currently supported by the MixedFluid model.")
 
-        if returndict == True:
+        if returndict:
             resultsdict = {}
             for i,v in zip(range(len(self.volatile_species)),self.volatile_species):
                 resultsdict.update({v+'_liq':result[i]})
@@ -308,7 +308,7 @@ class MixedFluid(Model):
             satP = self.calculate_saturation_pressure(sample,**kwargs)
 
             if satP < pressure:
-                if return_dict == True:
+                if return_dict:
                     return {self.volatile_species[0]:0,self.volatile_species[1]:0}
                 else:
                     return (0,0)
@@ -326,7 +326,7 @@ class MixedFluid(Model):
                 except:
                     raise core.SaturationError("Equilibrium fluid not found. Likely an issue with the numerical solver.")
 
-        if return_dict == True:
+        if return_dict:
             return {self.volatile_species[0]:Xv0,self.volatile_species[1]:Xv1}
         else:
             return Xv0, Xv1
@@ -363,7 +363,7 @@ class MixedFluid(Model):
             x0 = 0
             for model in self.models:
                 xx0 = model.calculate_saturation_pressure(sample=sample,**kwargs)
-                if np.isnan(xx0) == False:
+                if np.isnan(xx0) is False:
                     x0 += xx0
 
             try:
@@ -434,7 +434,7 @@ class MixedFluid(Model):
             isobars.append(dissolved)
 
 
-        if has_isopleths == True:
+        if has_isopleths:
             isopleths_df = pd.DataFrame(columns=['XH2O_fl','H2O_liq','CO2_liq'])
             isopleths = []
             for isopleth in isopleth_list:
@@ -449,13 +449,13 @@ class MixedFluid(Model):
                     isopleths_df = isopleths_df.append({'XH2O_fl':[isopleth,1-isopleth][H2O_id],'H2O_liq':dissolved[H2O_id,i],'CO2_liq':dissolved[CO2_id,i]},ignore_index=True)
                 isopleths.append(dissolved)
 
-        if return_dfs == True:
-            if has_isopleths == True:
+        if return_dfs:
+            if has_isopleths:
                 return (isobars_df, isopleths_df)
             else:
                 return isobars_df
         else:
-            if has_isopleths == True:
+            if has_isopleths:
                 return (isobars, isopleths)
             else:
                 return isobars
@@ -550,7 +550,7 @@ class MixedFluid(Model):
                 Xv[:,i] = [np.nan]*np.shape(Xv)[0]
                 wtm[:,i] = wtm[:,i-1]
 
-        if return_dfs == True:
+        if return_dfs:
             exsolved_degassing_df = pd.DataFrame()
             exsolved_degassing_df['Pressure_bars'] = pressures
             exsolved_degassing_df['H2O_liq'] = wtm[self.volatile_species.index('H2O'),:]
@@ -662,13 +662,13 @@ class MixedFluid(Model):
         s = ''
         for model in self.models:
             for cr in model.calibration_ranges:
-                if cr.check(parameters) == False:
+                if cr.check(parameters) is False:
                     s += cr.string(parameters,report_nonexistance)
             for cr in model.fugacity_model.calibration_ranges:
-                if cr.check(parameters) == False:
+                if cr.check(parameters) is False:
                     s += cr.string(parameters,report_nonexistance)
             for cr in model.activity_model.calibration_ranges:
-                if cr.check(parameters) == False:
+                if cr.check(parameters) is False:
                     s += cr.string(parameters,report_nonexistance)
         return s
 

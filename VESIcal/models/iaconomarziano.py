@@ -79,7 +79,7 @@ class water(model_classes.Model):
 
         temperature = temperature + 273.15 #translate T from C to K
 
-        if isinstance(sample,sample_class.Sample) == False:
+        if isinstance(sample,sample_class.Sample) is False:
             raise core.InputError("Sample must be an instance of the Sample class.")
         if pressure < 0:
             raise core.InputError("Pressure must be positive.")
@@ -156,9 +156,9 @@ class water(model_classes.Model):
             Calculated saturation pressure in bars.
         """
 
-        if isinstance(sample,sample_class.Sample) == False:
+        if isinstance(sample,sample_class.Sample) is False:
             raise core.InputError("Sample must be an instance of the Sample class.")
-        if sample.check_oxide('H2O') == False:
+        if sample.check_oxide('H2O') is False:
             raise core.InputError("sample must contain H2O.")
         if sample.get_composition('H2O') < 0.0:
             raise core.InputError("Dissolved H2O must be greater than 0 wt%.")
@@ -271,9 +271,9 @@ class water(model_classes.Model):
         float
             NBO/O.
         """
-        if isinstance(sample,sample_class.Sample) == False:
+        if isinstance(sample,sample_class.Sample) is False:
             raise core.InputError("Sample must be an instance of the Sample class.")
-        if all(sample.check_oxide(ox) for ox in ['K2O','Na2O','CaO','MgO','FeO','Al2O3','SiO2','TiO2']) == False:
+        if all(sample.check_oxide(ox) for ox in ['K2O','Na2O','CaO','MgO','FeO','Al2O3','SiO2','TiO2']) is False:
             raise core.InputError("Sample must contain K2O, Na2O, CaO, MgO, FeO, Al2O3, SiO2, and TiO2.")
 
         X = sample.get_composition(units='mol_oxides', oxide_masses=self.IM_oxideMasses)
@@ -359,7 +359,7 @@ class carbon(model_classes.Model):
 
         temperature = temperature + 273.15 #translate T from C to K
 
-        if isinstance(sample,sample_class.Sample) == False:
+        if isinstance(sample,sample_class.Sample) is False:
             raise core.InputError("Sample must be an instance of the Sample class.")
         if pressure < 0:
             raise core.InputError("Pressure must be positive.")
@@ -408,7 +408,7 @@ class carbon(model_classes.Model):
 
         molarProps = sample_h2o.get_composition(units='mol_oxides', oxide_masses=self.IM_oxideMasses)
 
-        if all(ox in molarProps for ox in ['Al2O3','CaO','K2O','Na2O','FeO','MgO','Na2O','K2O']) == False:
+        if all(ox in molarProps for ox in ['Al2O3','CaO','K2O','Na2O','FeO','MgO','Na2O','K2O']) is False:
             raise core.InputError("sample must contain Al2O3, CaO, K2O, Na2O, FeO, MgO, Na2O, and K2O.")
         if 'Fe2O3' in molarProps:
             Fe2O3 = molarProps['Fe2O3']
@@ -476,9 +476,9 @@ class carbon(model_classes.Model):
 
         if temperature <= 0:
             raise core.InputError("Temperature must be greater than 0K.")
-        if isinstance(sample,sample_class.Sample) == False:
+        if isinstance(sample,sample_class.Sample) is False:
             raise core.InputError("Sample must be an instance of the Sample class.")
-        if sample.check_oxide('CO2') == False:
+        if sample.check_oxide('CO2') is False:
             raise core.InputError("sample must contain CO2")
         if sample.get_composition('CO2') < 0:
             raise core.InputError("Dissolved CO2 must be greater than 0 wt%.")
@@ -538,9 +538,9 @@ class carbon(model_classes.Model):
         float
             NBO/O.
         """
-        if isinstance(sample,sample_class.Sample) == False:
+        if isinstance(sample,sample_class.Sample) is False:
             raise core.InputError("Sample must be an instance of the Sample class.")
-        if all(sample.check_oxide(ox) for ox in ['K2O','Na2O','CaO','MgO','FeO','Al2O3','SiO2','TiO2']) == False:
+        if all(sample.check_oxide(ox) for ox in ['K2O','Na2O','CaO','MgO','FeO','Al2O3','SiO2','TiO2']) is False:
             raise core.InputError("sample must contain K2O, Na2O, CaO, MgO, FeO, Al2O3, SiO2, and TiO2.")
 
         X = sample.get_composition(units='mol_oxides', oxide_masses=self.IM_oxideMasses)

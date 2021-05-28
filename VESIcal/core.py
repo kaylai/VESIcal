@@ -28,109 +28,109 @@ cations_to_oxides = {'Si': 'SiO2', 'Mg': 'MgO', 'Fe': 'FeO', 'Ca': 'CaO', 'Al': 
 
 # ---------- DATA TRANSFORMATION FOR PANDAS DATAFRAMES --------- #
 def fluid_molfrac_to_wt(data, H2O_colname='XH2O_fl_VESIcal', CO2_colname='XCO2_fl_VESIcal'):
-	"""
-	Takes in a pandas dataframe object and converts only the fluid composition from mole fraction to wt%, leaving the melt composition
-	in tact. The user must specify the names of the XH2O_fl and XCO2_fl columns.
+    """
+    Takes in a pandas dataframe object and converts only the fluid composition from mole fraction to wt%, leaving the melt composition
+    in tact. The user must specify the names of the XH2O_fl and XCO2_fl columns.
 
-	Parameters
-	----------
-	data: pandas DataFrame
-		Sample composition(s) containing columns for H2O and CO2 concentrations in the fluid.
+    Parameters
+    ----------
+    data: pandas DataFrame
+        Sample composition(s) containing columns for H2O and CO2 concentrations in the fluid.
 
-	H2O_colname: str
-		OPTIONAL. The default value is 'XH2O_fl', which is what is returned by BatchFile() core calculations.
-		String containing the name of the column corresponding to the H2O concentration in the fluid, in mol fraction.
+    H2O_colname: str
+        OPTIONAL. The default value is 'XH2O_fl', which is what is returned by BatchFile() core calculations.
+        String containing the name of the column corresponding to the H2O concentration in the fluid, in mol fraction.
 
-	CO2_colname: str
-		OPTIONAL. The default value is 'XCO2_fl', which is what is returned by BatchFile() core calculations.
-		String containing the name of the column corresponding to the CO2 concentration in the fluid, in mol fraction.
+    CO2_colname: str
+        OPTIONAL. The default value is 'XCO2_fl', which is what is returned by BatchFile() core calculations.
+        String containing the name of the column corresponding to the CO2 concentration in the fluid, in mol fraction.
 
-	Returns
-	-------
-	pandas DataFrame
-		Original data passed plus newly calculated values are returned.
-	"""
-	convData = data.copy()
+    Returns
+    -------
+    pandas DataFrame
+        Original data passed plus newly calculated values are returned.
+    """
+    convData = data.copy()
 
-	MPO_H2O_list = []
-	MPO_CO2_list = []
-	for index, row in convData.iterrows():
-		MPO_H2O_list.append(row[H2O_colname] * oxideMass["H2O"])
-		MPO_CO2_list.append(row[CO2_colname] * oxideMass["CO2"])
+    MPO_H2O_list = []
+    MPO_CO2_list = []
+    for index, row in convData.iterrows():
+        MPO_H2O_list.append(row[H2O_colname] * oxideMass["H2O"])
+        MPO_CO2_list.append(row[CO2_colname] * oxideMass["CO2"])
 
-	convData["MPO_H2O"] = MPO_H2O_list
-	convData["MPO_CO2"] = MPO_CO2_list
-	convData["H2O_fl_wt"] = 100 * convData["MPO_H2O"] / (convData["MPO_H2O"] + convData["MPO_CO2"])
-	convData["CO2_fl_wt"] = 100 * convData["MPO_CO2"] / (convData["MPO_H2O"] + convData["MPO_CO2"])
+    convData["MPO_H2O"] = MPO_H2O_list
+    convData["MPO_CO2"] = MPO_CO2_list
+    convData["H2O_fl_wt"] = 100 * convData["MPO_H2O"] / (convData["MPO_H2O"] + convData["MPO_CO2"])
+    convData["CO2_fl_wt"] = 100 * convData["MPO_CO2"] / (convData["MPO_H2O"] + convData["MPO_CO2"])
 
-	del convData["MPO_H2O"]
-	del convData["MPO_CO2"]
+    del convData["MPO_H2O"]
+    del convData["MPO_CO2"]
 
-	return convData
+    return convData
 
 def fluid_wt_to_molfrac(data, H2O_colname='H2O_fl_wt', CO2_colname='CO2_fl_wt'):
-	"""
-	Takes in a pandas dataframe object and converts only the fluid composition from wt% to mole fraction, leaving the melt composition
-	in tact. The user must specify the names of the H2O_fl_wt and CO2_fl_wt columns.
+    """
+    Takes in a pandas dataframe object and converts only the fluid composition from wt% to mole fraction, leaving the melt composition
+    in tact. The user must specify the names of the H2O_fl_wt and CO2_fl_wt columns.
 
-	Parameters
-	----------
-	data: pandas DataFrame
-		DataFrame containing columns for H2O and CO2 concentrations in the fluid.
+    Parameters
+    ----------
+    data: pandas DataFrame
+        DataFrame containing columns for H2O and CO2 concentrations in the fluid.
 
-	H2O_colname: str
-		OPTIONAL. The default value is 'H2O_fl_wt', which is what is returned by BatchFile() core calculations.
-		String containing the name of the column corresponding to the H2O concentration in the fluid, in wt%.
+    H2O_colname: str
+        OPTIONAL. The default value is 'H2O_fl_wt', which is what is returned by BatchFile() core calculations.
+        String containing the name of the column corresponding to the H2O concentration in the fluid, in wt%.
 
-	CO2_colname: str
-		OPTIONAL. The default value is 'CO2_fl_wt', which is what is returned by BatchFile() core calculations.
-		String containing the name of the column corresponding to the CO2 concentration in the fluid, in wt%.
+    CO2_colname: str
+        OPTIONAL. The default value is 'CO2_fl_wt', which is what is returned by BatchFile() core calculations.
+        String containing the name of the column corresponding to the CO2 concentration in the fluid, in wt%.
 
-	Returns
-	-------
-	pandas DataFrame
-		Original data passed plus newly calculated values are returned.
-	"""
-	convData = data.copy()
+    Returns
+    -------
+    pandas DataFrame
+        Original data passed plus newly calculated values are returned.
+    """
+    convData = data.copy()
 
-	MPO_H2O_list = []
-	MPO_CO2_list = []
-	for index, row in convData.iterrows():
-		MPO_H2O_list.append(row[H2O_colname] / oxideMass["H2O"])
-		MPO_CO2_list.append(row[CO2_colname] / oxideMass["CO2"])
+    MPO_H2O_list = []
+    MPO_CO2_list = []
+    for index, row in convData.iterrows():
+        MPO_H2O_list.append(row[H2O_colname] / oxideMass["H2O"])
+        MPO_CO2_list.append(row[CO2_colname] / oxideMass["CO2"])
 
-	convData["MPO_H2O"] = MPO_H2O_list
-	convData["MPO_CO2"] = MPO_CO2_list
-	convData["XH2O_fl"] = convData["MPO_H2O"] / (convData["MPO_H2O"] + convData["MPO_CO2"])
-	convData["XCO2_fl"] = convData["MPO_CO2"] / (convData["MPO_H2O"] + convData["MPO_CO2"])
+    convData["MPO_H2O"] = MPO_H2O_list
+    convData["MPO_CO2"] = MPO_CO2_list
+    convData["XH2O_fl"] = convData["MPO_H2O"] / (convData["MPO_H2O"] + convData["MPO_CO2"])
+    convData["XCO2_fl"] = convData["MPO_CO2"] / (convData["MPO_H2O"] + convData["MPO_CO2"])
 
-	del convData["MPO_H2O"]
-	del convData["MPO_CO2"]
+    del convData["MPO_H2O"]
+    del convData["MPO_CO2"]
 
-	return convData
+    return convData
 
 class Error(Exception):
-	"""Base class for exceptions in this module."""
-	pass
+    """Base class for exceptions in this module."""
+    pass
 
 class InputError(Error):
-	"""Exception raised for errors in the input.
+    """Exception raised for errors in the input.
 
-	Attributes:
-		expression -- input expression in which the error occurred
-		message -- explanation of the error
-	"""
+    Attributes:
+        expression -- input expression in which the error occurred
+        message -- explanation of the error
+    """
 
-	def __init__(self, message):
-		self.message = message
+    def __init__(self, message):
+        self.message = message
 
 class SaturationError(Error):
-	"""Exception raised for errors thrown when a sample does not reach saturation.
+    """Exception raised for errors thrown when a sample does not reach saturation.
 
-	Attributes:
-		expression -- input expression in which the error occurred
-		message -- explanation of the error
-	"""
+    Attributes:
+        expression -- input expression in which the error occurred
+        message -- explanation of the error
+    """
 
-	def __init__(self, message):
-		self.message = message
+    def __init__(self, message):
+        self.message = message

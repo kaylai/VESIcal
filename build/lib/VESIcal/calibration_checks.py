@@ -41,7 +41,7 @@ class CalibrationRange(object):
             return self.description_msg[0].format(**msgdict)
         else:
             check = self.check(parameters)
-            if check == True:
+            if check:
                 msgdict = self.pass_msg[1]
                 msgdict['param_val'] = parameters[self.parameter_name]
                 if type(self.value) == float or type(self.value) == int:
@@ -56,7 +56,7 @@ class CalibrationRange(object):
                 if 'model_name' not in msgdict:
                     msgdict['model_name'] = self.model_name
                 return self.pass_msg[0].format(**msgdict)
-            elif check == False:
+            elif check is False:
                 msgdict = self.fail_msg[1]
                 msgdict['param_val'] = parameters[self.parameter_name]
                 if type(self.value) == float or type(self.value) == int:
@@ -72,7 +72,7 @@ class CalibrationRange(object):
                     msgdict['model_name'] = self.model_name
                 return self.fail_msg[0].format(**msgdict)
             else:
-                if report_nonexistance == True:
+                if report_nonexistance:
                     return "A value for {} was not provided.".format(self.parameter_name)
                 else:
                     return ''

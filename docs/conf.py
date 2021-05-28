@@ -34,16 +34,16 @@ release = '0.0.1'
 master_doc = 'index'
 
 extensions = ['sphinx.ext.autodoc',
-				'sphinx.ext.napoleon', 
-				'sphinx.ext.imgmath',
-				'sphinx.ext.intersphinx',
-			    'sphinx.ext.todo',
-			    'sphinx.ext.coverage',
-			    'sphinx.ext.mathjax',
-			    'sphinx.ext.ifconfig',
-			    'sphinx.ext.viewcode',
-			    'sphinx.ext.githubpages',
-			    'nbsphinx']
+                'sphinx.ext.napoleon', 
+                'sphinx.ext.imgmath',
+                'sphinx.ext.intersphinx',
+                'sphinx.ext.todo',
+                'sphinx.ext.coverage',
+                'sphinx.ext.mathjax',
+                'sphinx.ext.ifconfig',
+                'sphinx.ext.viewcode',
+                'sphinx.ext.githubpages',
+                'nbsphinx']
 
 autodoc_mock_imports = ["thermoengine"]
 

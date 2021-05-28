@@ -53,7 +53,7 @@ class Sample(object):
 
         if isinstance(composition, dict):
             composition = pd.Series(composition, dtype='float64')
-        elif isinstance(composition, pd.Series) == False:
+        elif isinstance(composition, pd.Series) is False:
             raise core.InputError("The composition must be given as either a dictionary or a pandas Series.")
 
         if units == 'wtpt_oxides':
@@ -160,14 +160,14 @@ class Sample(object):
         """
 
         # Fetch the default return types if not specified in function call
-        if normalization == None and species == None:
+        if normalization is None and species is None:
             normalization = self.default_normalization
-        if units == None and species == None:
+        if units is None and species is None:
             units = self.default_units
 
         # Check whether to exclude volatiles
         # note that here composition is gotten as wtpt_oxides
-        if exclude_volatiles == True:
+        if exclude_volatiles:
             composition = self._composition.copy()
             if 'H2O' in composition.index:
                 composition = composition.drop(index='H2O')
@@ -180,18 +180,18 @@ class Sample(object):
         if isinstance(species,str):
             if species in composition.index: # if the requested species has a value, proceed
                 if species in core.oxides:
-                    if units in ['mol_cations, mol_singleO'] or units == None:
+                    if units in ['mol_cations, mol_singleO'] or units is None:
                         units = 'wtpt_oxides'
                 elif species in core.cations_to_oxides:
-                    if units in ['wtpt_oxides','mol_oxides'] or units == None:
+                    if units in ['wtpt_oxides','mol_oxides'] or units is None:
                         units = 'mol_cations'
                 else:
                     raise core.InputError(species + " was not recognised, check spelling, capitalization and stoichiometry.")
-                if normalization == None:
+                if normalization is None:
                     normalization = 'none'
             else:
                 return 0.0 # if the requested species has no set value, return a float of 0.0
-        elif species != None:
+        elif species is not None:
             raise core.InputError("Species must be either a string or a NoneType.")
 
         # Get the requested type of composition
@@ -220,13 +220,13 @@ class Sample(object):
             raise core.InputError("The normalization method must be one of 'none', 'standard', 'fixedvolatiles',\
              or 'additionalvolatiles'.")
 
-        if species == None:
-            if asSampleClass == False:
+        if species is None:
+            if asSampleClass is False:
                 return final
             else:
                 return Sample(final)
         elif isinstance(species,str):
-            if asSampleClass == True:
+            if asSampleClass:
                 w.warn("Cannot return single species as Sample class. Returning as float.",
                     RuntimeWarning,stacklevel=2)
             return final[species]
@@ -264,7 +264,7 @@ class Sample(object):
         if isinstance(new_composition, pd.Series):
             new_composition = dict(new_composition)
 
-        if inplace == False:
+        if inplace is False:
             newsample = deepcopy(self)
             return newsample.change_composition(new_composition, units=units)
 
@@ -386,7 +386,7 @@ class Sample(object):
             normed = pd.Series({k: v / sum(comp.values()) for k, v in comp.items()})
         else:
             raise core.InputError("Units must be one of 'wtpt_oxides', 'mol_oxides', or 'mol_cations'.")
-        
+
         return normed
 
     def _normalize_FixedVolatiles(self, composition, units='wtpt_oxides'):
@@ -475,7 +475,7 @@ class Sample(object):
             normalized = normalized/np.sum(normalized)
         else:
            raise core.InputError("Units must be one of 'wtpt_oxides', 'mol_oxides', or 'mol_cations'.")
-            
+
         if 'H2O' in comp.index:
             normalized['H2O'] = comp['H2O']
         if 'CO2' in comp.index:

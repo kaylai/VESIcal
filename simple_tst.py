@@ -219,7 +219,7 @@ nor does it check every possible iteration of methods and input types. It will c
 COMPLETELY broken the module.")
 
     #SET UP THE DATA
-    if filename == None:
+    if filename is None:
         fakedata = pd.DataFrame({'Label': ['Samp1', 'Samp2', 'Samp3'],
                                 'SiO2': [47.95, 69.02, 55.4],
                                 'TiO2': [1.67, 0.78, 1.01],
