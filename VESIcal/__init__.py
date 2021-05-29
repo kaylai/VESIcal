@@ -19,7 +19,7 @@ import pandas as pd
 # from cycler import cycler
 # from scipy.optimize import minimize
 
-from VESIcal.core import *
+import VESIcal.core
 import VESIcal.activity_models
 import VESIcal.batchfile
 import VESIcal.batchmodel
@@ -32,47 +32,47 @@ import VESIcal.sample_class
 import VESIcal.vplot
 
 # -------------- CALCULATION DEFINITIONS ----- #
-class calculate_dissolved_volatiles(calculate_classes.calculate_dissolved_volatiles):
+class calculate_dissolved_volatiles(VESIcal.calculate_classes.calculate_dissolved_volatiles):
     pass
 
-class calculate_equilibrium_fluid_comp(calculate_classes.calculate_equilibrium_fluid_comp):
+class calculate_equilibrium_fluid_comp(VESIcal.calculate_classes.calculate_equilibrium_fluid_comp):
     pass
 
-class calculate_isobars_and_isopleths(calculate_classes.calculate_isobars_and_isopleths):
+class calculate_isobars_and_isopleths(VESIcal.calculate_classes.calculate_isobars_and_isopleths):
     pass
 
-class calculate_saturation_pressure(calculate_classes.calculate_saturation_pressure):
+class calculate_saturation_pressure(VESIcal.calculate_classes.calculate_saturation_pressure):
     pass
 
-class calculate_degassing_path(calculate_classes.calculate_degassing_path):
+class calculate_degassing_path(VESIcal.calculate_classes.calculate_degassing_path):
     pass
 
 # -------------- ACCESS TO GET_MODEL_NAMES ----- #
 def get_model_names(model='all'):
-  return models.get_model_names(model=model)
+  return VESIcal.models.get_model_names(model=model)
 
 # -------------- PLOTTING DEFINITIONS ----- #
 def plot(**kwargs):
     """
     Inherits from vplot.plot().
     """
-    return vplot.plot(**kwargs)
+    return VESIcal.vplot.plot(**kwargs)
 
 def calib_plot(**kwargs):
     """
     Inherits from vplot.calib_plot()
     """
-    return vplot.calib_plot(**kwargs)
+    return VESIcal.vplot.calib_plot(**kwargs)
 
 def show():
     """
     Inherits from vplot.show()
     """
-    return vplot.show()
+    return VESIcal.vplot.show()
 
 
 # -------------- SAMPLE PROCESSING ---------- #
-class Sample(sample_class.Sample):
+class Sample(VESIcal.sample_class.Sample):
     """
     Provides methods for working with rock compositions. Inherits from sample_class.Sample().
     """
@@ -94,7 +94,7 @@ def get_oxides(sample):
     Sample composition with extranneous information removed.
   """
 
-  clean = {oxide:  sample[oxide] for oxide in oxides}
+  clean = {oxide:  sample[oxide] for oxide in VESIcal.core.oxides}
 
   if isinstance(sample, dict):
     return clean
@@ -102,7 +102,7 @@ def get_oxides(sample):
     return pd.Series(clean)
 
 # -------------- BATCH PROCESSING ------------ #
-class BatchFile(batchmodel.BatchFile):
+class BatchFile(VESIcal.batchmodel.BatchFile):
     """
     Provides methods for batch processing files of data. Inherits from batchfile.BatchFile().
     """
@@ -112,7 +112,7 @@ def BatchFile_from_DataFrame(dataframe, **kwargs):
     """
     Provides method for creating a BatchFile object from an existing pandas DataFrame. Inherits from batchfile.BatchFile().
     """
-    return batchmodel.BatchFile_from_DataFrame(dataframe, **kwargs)
+    return VESIcal.batchmodel.BatchFile_from_DataFrame(dataframe, **kwargs)
 
 
 

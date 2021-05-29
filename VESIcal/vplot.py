@@ -1,10 +1,10 @@
 from VESIcal import core
 from VESIcal import calibrations
-from VESIcal.tasplot import *
+from VESIcal.tasplot import add_LeMaitre_fields
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from matplotlib.pyplot import *
+# from matplotlib.pyplot import *
 import pandas as pd
 import numpy as np
 import warnings as w
@@ -339,7 +339,7 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None, cu
         isopleths = smooth_isobars_and_isopleths(isopleths=isopleths)
 
     ## -------- CREATE FIGURE -------- ##
-    fig, ax = subplots(figsize=figsize)
+    fig, ax = plt.subplots(figsize=figsize)
     if 'custom_x' in kwargs:
         ax.set(xlabel=kwargs['xlabel'], ylabel=kwargs['ylabel'])
     else:

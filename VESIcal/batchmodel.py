@@ -1,6 +1,5 @@
 from VESIcal import core
 from VESIcal import models
-from VESIcal import sample_class
 from VESIcal import calculate_classes
 from VESIcal import batchfile
 
@@ -58,7 +57,7 @@ class BatchFile(batchfile.BatchFile):
         bulk_comp = {oxide:  sample[oxide] for oxide in core.oxides}
         bulk_comp["H2O"] = H2O
         bulk_comp["CO2"] = CO2
-        feasible = melts.set_bulk_composition(bulk_comp)
+        melts.set_bulk_composition(bulk_comp)
 
         output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
         (status, temperature, pressureMPa, xmlout) = output[0]
@@ -181,7 +180,7 @@ class BatchFile(batchfile.BatchFile):
                     CO2vals.append(calc.result['CO2_liq'])
                     warnings.append(calc.calib_check)
                     errors.append('')
-                except Exception as inst:
+                except:
                     H2Ovals.append(np.nan)
                     CO2vals.append(np.nan)
                     warnings.append('Calculation Failed.')
@@ -278,7 +277,7 @@ class BatchFile(batchfile.BatchFile):
                         FluidProportionvals.append(calc.result['FluidProportion_wt'])
                         warnings.append(calc.calib_check)
                         errors.append('')
-                    except Exception as inst:
+                    except:
                         H2Ovals.append(np.nan)
                         CO2vals.append(np.nan)
                         XH2Ovals.append(np.nan)

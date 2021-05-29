@@ -1011,7 +1011,6 @@ class fugacity_HollowayBlank(FugacityModel):
 
         #Critical temperatures and pressures for CO2
         TR = TK/304.2
-        PR = pb/73.9
         PC = 73.9
 
         #Virial coeficients
@@ -1020,9 +1019,6 @@ class fugacity_HollowayBlank(FugacityModel):
         C = -1.8935*10**(-6)/TR - 1.1092*10**(-5)/TR**2 - 2.1892*10**(-5)/TR**3
         D = 5.0527*10**(-11)/TR - 6.3033*10**(-21)/TR**3
 
-        #Calculate molar volume
-        Z = A+B*PR+C*PR**2+D*PR**3
-        V = Z*83.0117*TK/pb
 
         #integrate from PO (4000 bars) to P to calculate ln fugacity
         LNF = A*np.log(pb/PO)+(B/PC)*(pb-PO)+(C/(2*PC**2))*(pb**2-PO**2)
@@ -1050,7 +1046,6 @@ class fugacity_HollowayBlank(FugacityModel):
         """
         #Define constants
         R = 82.05736
-        RR = 6732.2
         pb = 1.013*pressure
         PBLN = np.log(pb)
         TCEL = temperature-273.15
@@ -1195,7 +1190,6 @@ class fugacity_RedlichKwong(FugacityModel):
         temperatureK = temperature + 273.15
         R = 8.3145
 
-        fluid_species_names = ['CO2', 'H2O']
         critical_params = {'CO2':{  "cT":   304.15,
                             "cP":   73.8659,
                             "o":    0.225
@@ -1209,7 +1203,6 @@ class fugacity_RedlichKwong(FugacityModel):
         #Calculate a and b parameters (depend only on critical parameters)...
         a = 0.42748 * R**2.0 * critical_params[species]["cT"]**(2.5) / (critical_params[species]["cP"] * 10.0**5)
         b = 0.08664 * R * critical_params[species]["cT"] / (critical_params[species]["cP"] * 10.0**5)
-        kappa = 0.0
 
         #Calculate coefficients in the cubic equation of state...
         #coeffs: (C0, C1, C2, A, B)
@@ -1267,8 +1260,6 @@ class fugacity_RedlichKwong(FugacityModel):
 
         #Calculate Departure Functions
         gamma = np.exp(Z0 - 1.0 - np.log(Z0-B) - A * np.log(1.0+B/Z0)/B)
-        Hdep = R * temperatureK * (Z0 - 1.0 - 1.5*A*np.log(1.0+B/Z0)/B)
-        Sdep = R * (np.log(Z0-B) - 0.5*A*np.log(1.0+B/Z0)/B)
 
         return gamma
 

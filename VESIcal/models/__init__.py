@@ -1,4 +1,3 @@
-from VESIcal.models import magmasat
 from VESIcal.models import shishkina
 from VESIcal.models import dixon
 from VESIcal.models import iaconomarziano
