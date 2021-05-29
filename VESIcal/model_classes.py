@@ -363,7 +363,7 @@ class MixedFluid(Model):
             x0 = 0
             for model in self.models:
                 xx0 = model.calculate_saturation_pressure(sample=sample,**kwargs)
-                if np.isnan(xx0) is False:
+                if np.isnan(xx0) == False:
                     x0 += xx0
 
             try:
