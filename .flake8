@@ -1,0 +1,17 @@
+[flake8]
+exclude =
+    __pycache__,
+    .git,
+    .pytest_cache,
+    anvil,
+    build,
+    Calibration,
+    dist,
+    docs,
+    lib,
+    manuscript,
+    VESIcal.egg-info,
+    You Tube Examples,
+    anvil_server.py
+
+max-line-length = 99
