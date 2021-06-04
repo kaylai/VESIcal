@@ -134,3 +134,5 @@ testDataSets/~$cerro_negro.xlsx
 batch_test.xlsx
 
 manuscript/Supplement/JupyterNotebooks/Moore/~$output_moore.xlsx
+
+tests/~$ImportTest.xlsx
