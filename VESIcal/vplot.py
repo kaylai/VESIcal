@@ -713,6 +713,9 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None,
     elif isinstance(zoom, list):
         user_xmin, user_xmax = zoom[0]
         user_ymin, user_ymax = zoom[1]
+    else:
+        raise core.InputError('Trying to pass zoom coords? Pass as ' +
+                              '[(x, x), (y, y)]')
 
     # Create the figure
     fig, ax1 = plt.subplots(figsize=figsize)
@@ -728,12 +731,14 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None,
         # compostional space:
         ax1.set_xlim([user_xmin, user_xmax])
 
+        # add LeMaitre fields
+        add_LeMaitre_fields(ax1)
+
         # adjust y limits here
         ax1.set_ylim([user_ymin, user_ymax])
         plt.xlabel('SiO$_2$, wt%', fontdict=font, labelpad=15)
         plt.ylabel('Na$_2$O+K$_2$O, wt%', fontdict=font, labelpad=15)
-        if zoom is None:
-            add_LeMaitre_fields(ax1)
+
     elif plot_type == 'xy':
         if 'x' in kwargs and 'y' in kwargs:
             x = kwargs['x']
