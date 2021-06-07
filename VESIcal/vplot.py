@@ -768,6 +768,11 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None,
         model = [model]
 
     if isinstance(model, list):
+        # set legends to false
+        h2o_legend = False
+        co2_h2oco2_legend = False
+
+        # check which legends to turn to True
         for modelname in model:
             model_type = calibrations.return_calibration_type(modelname)
             if model_type['H2O']:
