@@ -639,8 +639,8 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None,
 
     Parameters
     ----------
-    user_data: BatchFile object, Sample object, pandas DataFrame, pandas Series, 
-        or dict. 
+    user_data: BatchFile object, Sample object, pandas DataFrame, pandas Series,
+        or dict.
         OPTIONAL. Default value is None, in which case only the model
         calibration set is plotted. User provided sample data describing the
         oxide composition of one or more samples. Multiple samples can be
