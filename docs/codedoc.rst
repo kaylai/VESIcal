@@ -211,7 +211,7 @@ Functions defined in VESIcal.vplot
 
 .. autofunction:: VESIcal.vplot.smooth_isobars_and_isopleths
 
-.. autofunction:: VESIcal.calib_plot
+.. autofunction:: VESIcal.vplot.calib_plot
 
 Data Transformation Functions
 =============================
