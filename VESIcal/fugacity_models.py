@@ -810,7 +810,7 @@ class fugacity_MRK_h2o(FugacityModel):
         Returns
         -------
         float
-            fugacity of CO2 in bars
+            fugacity of H2O in bars
         """
         fug = self.MRK(pressure, temperature+273.15)
         return fug*X_fluid

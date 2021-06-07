@@ -639,7 +639,8 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None,
 
     Parameters
     ----------
-    user_data: BatchFile object, pandas DataFrame, pandas Series, or dict
+    user_data: BatchFile object, Sample object, pandas DataFrame, pandas Series, 
+        or dict. 
         OPTIONAL. Default value is None, in which case only the model
         calibration set is plotted. User provided sample data describing the
         oxide composition of one or more samples. Multiple samples can be
@@ -712,6 +713,9 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None,
     elif isinstance(zoom, list):
         user_xmin, user_xmax = zoom[0]
         user_ymin, user_ymax = zoom[1]
+    else:
+        raise core.InputError('Trying to pass zoom coords? Pass as ' +
+                              '[(x, x), (y, y)]')
 
     # Create the figure
     fig, ax1 = plt.subplots(figsize=figsize)
@@ -727,12 +731,14 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None,
         # compostional space:
         ax1.set_xlim([user_xmin, user_xmax])
 
+        # add LeMaitre fields
+        add_LeMaitre_fields(ax1)
+
         # adjust y limits here
         ax1.set_ylim([user_ymin, user_ymax])
         plt.xlabel('SiO$_2$, wt%', fontdict=font, labelpad=15)
         plt.ylabel('Na$_2$O+K$_2$O, wt%', fontdict=font, labelpad=15)
-        if zoom is None:
-            add_LeMaitre_fields(ax1)
+
     elif plot_type == 'xy':
         if 'x' in kwargs and 'y' in kwargs:
             x = kwargs['x']
@@ -767,6 +773,11 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None,
         model = [model]
 
     if isinstance(model, list):
+        # set legends to false
+        h2o_legend = False
+        co2_h2oco2_legend = False
+
+        # check which legends to turn to True
         for modelname in model:
             model_type = calibrations.return_calibration_type(modelname)
             if model_type['H2O']:
@@ -889,7 +900,13 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None,
     else:
         if ((user_data.__class__.__module__, user_data.__class__.__name__) ==
            ('VESIcal', 'BatchFile')):
-            user_data = user_data.data
+            user_data = user_data.get_data()
+            # batchfile and VESIcal (__init__) are not imported to avoid
+            # circular imports
+            # use above notation to interrogate datatype
+        if ((user_data.__class__.__module__, user_data.__class__.__name__) ==
+           ('VESIcal', 'Sample')):
+            user_data = user_data.get_composition()
             # batchfile and VESIcal (__init__) are not imported to avoid
             # circular imports
             # use above notation to interrogate datatype
