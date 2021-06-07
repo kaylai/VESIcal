@@ -12,6 +12,9 @@ exclude =
     manuscript,
     VESIcal.egg-info,
     You Tube Examples,
-    anvil_server.py
+    anvil_server.py,
+    tests,
+    VESIcal/tasplot,
+    VESIcal/calibrations.py
 
 max-line-length = 99
