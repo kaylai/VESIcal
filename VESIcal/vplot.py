@@ -2,13 +2,13 @@ from VESIcal import core
 from VESIcal import calibrations
 from VESIcal.tasplot import add_LeMaitre_fields
 
-import matplotlib as mpl
-mpl.use('TKAgg')
-import matplotlib.pyplot as plt
-# from matplotlib.pyplot import *
 import pandas as pd
 import numpy as np
 import warnings as w
+import matplotlib as mpl
+mpl.use('TKAgg') # noqa E402
+import matplotlib.pyplot as plt
+
 
 # ---------- DEFINE CUSTOM PLOTTING FORMATTING ------------ #
 style = "seaborn-colorblind"
@@ -732,13 +732,14 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None,
         # compostional space:
         ax1.set_xlim([user_xmin, user_xmax])
 
-        # add LeMaitre fields
-        add_LeMaitre_fields(ax1)
-
         # adjust y limits here
         ax1.set_ylim([user_ymin, user_ymax])
         plt.xlabel('SiO$_2$, wt%', fontdict=font, labelpad=15)
         plt.ylabel('Na$_2$O+K$_2$O, wt%', fontdict=font, labelpad=15)
+
+        # add LeMaitre fields
+        if zoom is None:
+            add_LeMaitre_fields(ax1)
 
     elif plot_type == 'xy':
         if 'x' in kwargs and 'y' in kwargs:
@@ -932,7 +933,8 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None,
     if isinstance(save_fig, str):
         fig.savefig(save_fig)
 
-    return plt.show()
+    return fig, ax1
+
 
 def show():
     """
