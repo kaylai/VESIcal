@@ -60,6 +60,10 @@ class carbon(model_classes.Model):
             raise core.InputError("To calculate PiStar, values for CaO, K2O, Na2O, MgO, FeO,"
                                   " SiO2, and Al2O3 must be provided in sample.")
 
+        # Calculate assuming all Fe in Fe+2, as done during calibration
+        if 'Fe3' in _mols:
+            _mols['Fe'] += _mols['Fe3']
+
         _pi = ((_mols['Ca'] + 0.8*_mols['K'] + 0.7*_mols['Na'] + 0.4*_mols['Mg'] +
                0.4*_mols['Fe'])/(_mols['Si']+_mols['Al']))
 

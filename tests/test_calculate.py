@@ -40,7 +40,7 @@ class TestDissolvedVolatiles(unittest.TestCase):
 
         # solubilities calculated with VESIcal in wt% and translated externally to mol fraction
         self.shishkinaMixed_wtpt =      {'H2O_liq': 2.24019,
-                                        'CO2_liq': 0.028022292}
+                                        'CO2_liq': 0.028104173}
         self.shishkinaMixed_molox =     {'H2O_liq': 0.07415139,
                                         'CO2_liq': 0.000379788}
 
@@ -174,13 +174,13 @@ class TestSaturationPressure(unittest.TestCase):
         self.batch_molox.set_default_units("mol_oxides")
 
         # saturation pressures calculated with VESIcal
-        self.shishkinaMixed =      1906.9975561897566
+        self.shishkinaMixed =      1903.1192979127836
         self.dixonMixed =          1847.1637265676327
         self.iaconomarzianoMixed = 1437.268470833670
         self.liuMixed =            2157.191497153953
         self.magmasat =            1630  # Generated with MagmaSat app
 
-        self.shishkinaCarbon           = 1511.525453548577
+        self.shishkinaCarbon           = 1507.647195272281
         self.dixonCarbon               = 1375.61109469857
         self.iaconomarzianoCarbon      = 1215.0221712464863
         self.allisonCarbon             = 821.9428189121331
