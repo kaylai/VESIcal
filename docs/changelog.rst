@@ -1,11 +1,14 @@
 *******************************
-ChangeLog: What's new in v 0.9?
+ChangeLog: What's new in v 1.0?
 *******************************
 
+Some minor but important changes to the VESIcal code were made between version 0.9 and 1.0. These are mainly bug fixes and editing of the code itself to be fully flake8 compliant. We have also implemented much more rigorous testing routines, important if you are interested in forking and developing for VESIcal. No functionality changes were implemented during this upgrade, so if your code worked in version 0.9, it should continue to work in 1.0. If you are upgrading code originally written for a version <0.9, please see below for important updates.
+
+
+Upgrading your code to v 0.9+
+#############################
 In early 2021 the VESIcal code went through some major structural changes. From the user's perspective, not a lot of the funcationality has changed, except for loads of new features and some key changes to fundamental function calls. Those are detailed here.
 
-Upgrading your code to v 0.9
-############################
 In a couple of instances, code written with versions <0.9 will not execute properly in 0.9+. Major changes are few but key:
 
 	- ExcelFile() has changed to BatchFile()

@@ -4,18 +4,18 @@ About VESIcal
 
 VESIcal is an open-source thermodynamic model engine for mixed volatile (H2O-CO2) solubility in silicate melts. It was designed by Kayla Iacovino, Simon Matthews, Penny Wieser, Gordon Moore, and Florence Begue in 2021.
 
-Current Version 0.9.11 (version in press)
+Current Version 1.0.0 (version in press)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The VESIcal manuscript (currently in press) serves, along with this documentation, as a user's guide and introduction to VESIcal. The manuscript will be available as an executable jupyter notebook or as a static PDF published in the journal Earth and Space Science.
 
 	Iacovino K., Matthews S., Wieser P.E., Moore G.M., and Begue F. (in press) VESIcal Part I: An open-source thermodynamic model engine for mixed volatile (H2O-CO2) solubility in silicate melts, Earth and Space Sciences. (a link to the manuscript will be here once it is public)
 
-This version of VESIcal (v 0.9.11) is archived on zenodo with a citable doi at `https://zenodo.org/record/4652839 <https://zenodo.org/record/4652839>`_
+This version of VESIcal (v 1.0.0) is archived on zenodo with a citable doi at `https://zenodo.org/record/4914503 <https://zenodo.org/record/4914503>`_
 
 
 How to Cite VESIcal
 ^^^^^^^^^^^^^^^^^^^
-To cite computations done using VESIcal, please cite the in prep manuscript, the VESIcal version number, as well as the model(s) used. For example: “Calculations were performed using VESIcal (v. 0.9.11; Iacovino et al., 2021) with the models of Shishkina et al. (2014) and Dixon (1997; “VolatileCalc”).” The web-app always runs on the most up-to-date version of the VESIcal code, but it is best practice to note if the web-app was used (“Calculations were perforumed using the VESIcal web-app (v. 0.9.11; Iacovino et al., 2021)...”). We also encourage users to be as explicit as possible as to the conditions used for modelling. This includes stating the pressure, temperature, volatile concentration, and bulk magma composition used in modelling. In the best case, VESIcal users will provide their code (e.g., as a jupyter notebook or .py file) along with their publication such that it can be easily replicated.
+To cite computations done using VESIcal, please cite the in prep manuscript, the VESIcal version number, as well as the model(s) used. For example: “Calculations were performed using VESIcal (v. 1.0.0; Iacovino et al., 2021) with the models of Shishkina et al. (2014) and Dixon (1997; “VolatileCalc”).” The web-app always runs on the most up-to-date version of the VESIcal code, but it is best practice to note if the web-app was used (“Calculations were perforumed using the VESIcal web-app (v. 1.0.0; Iacovino et al., 2021)...”). We also encourage users to be as explicit as possible as to the conditions used for modelling. This includes stating the pressure, temperature, volatile concentration, and bulk magma composition used in modelling. In the best case, VESIcal users will provide their code (e.g., as a jupyter notebook or .py file) along with their publication such that it can be easily replicated.
 
 The full citation of the (in press) manuscript is:
 
@@ -23,7 +23,7 @@ The full citation of the (in press) manuscript is:
 
 To cite the zenodo archive of the current stable release:
 
-	Iacovino, Kayla, Matthews, Simon, Wieser, Penny E., Moore, Gordon M., & Begue, Florence. (2021, March 31). VESIcal v. 0.9.11. Zenodo. `https://doi.org/10.5281/zenodo.4291043 <https://doi.org/10.5281/zenodo.4652839>`_
+	Iacovino, Kayla, Matthews, Simon, Wieser, Penny E., Moore, Gordon M., & Begue, Florence. (2021, March 31). VESIcal v. 1.0.0. Zenodo. `https://doi.org/10.5281/zenodo.4914503 <https://doi.org/10.5281/zenodo.4914503>`_
 
 Please also cite whichever model(s) within VESIcal were used. If using the default model (if no model was specified, then you were using the default model), cite MagmaSat as:
 
