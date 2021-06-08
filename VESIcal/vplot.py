@@ -3,6 +3,7 @@ from VESIcal import calibrations
 from VESIcal.tasplot import add_LeMaitre_fields
 
 import matplotlib as mpl
+mpl.use('TKAgg')
 import matplotlib.pyplot as plt
 # from matplotlib.pyplot import *
 import pandas as pd
@@ -932,3 +933,9 @@ def calib_plot(user_data=None, model='all', plot_type='TAS', zoom=None,
         fig.savefig(save_fig)
 
     return plt.show()
+
+def show():
+    """
+    Local implementation of pyplot.show(). For displaying created plots.
+    """
+    plt.show()
