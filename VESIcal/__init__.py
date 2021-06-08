@@ -5,7 +5,7 @@ A generalized python library for calculating and plotting various things
 related to mixed volatile (H2O-CO2) solubility in silicate melts.
 """
 
-__version__ = "0.9.15"
+__version__ = "0.9.17"
 __author__ = 'Kayla Iacovino, Simon Matthews, and Penny Wieser'
 
 # ----------------- IMPORTS ----------------- #
@@ -14,6 +14,8 @@ import warnings as w
 import pandas as pd
 
 import VESIcal.core
+from VESIcal.core import oxides, anhydrous_oxides, volatiles # noqa F401
+from VESIcal.core import fluid_molfrac_to_wt, fluid_wt_to_molfrac # noqa F401
 import VESIcal.activity_models
 import VESIcal.batchfile
 import VESIcal.batchmodel
