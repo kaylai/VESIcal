@@ -147,15 +147,15 @@ class TestCreateSample(unittest.TestCase):
         self.assertEqual(sample.default_units,'mol_singleO')
 
     def test_setdefaults_garbageNorm(self):
-        with self.assertRaises(v.InputError):
+        with self.assertRaises(v.core.InputError):
             v.Sample(composition=self.majorsv,default_normalization='garbage')
 
     def test_setdefaults_garbageType(self):
-        with self.assertRaises(v.InputError):
+        with self.assertRaises(v.core.InputError):
             v.Sample(composition=self.majorsv,default_units='garbage')
 
     def test_type_garbage(self):
-        with self.assertRaises(v.InputError):
+        with self.assertRaises(v.core.InputError):
             v.Sample(composition=self.majorsv,units='garbage')
 
     def test_type_wtptoxides(self):

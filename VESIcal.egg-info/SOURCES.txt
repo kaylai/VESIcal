@@ -20,7 +20,6 @@ VESIcal.egg-info/top_level.txt
 VESIcal/models/__init__.py
 VESIcal/models/allison.py
 VESIcal/models/dixon.py
-VESIcal/models/eguchi.py
 VESIcal/models/iaconomarziano.py
 VESIcal/models/liu.py
 VESIcal/models/magmasat.py
@@ -30,4 +29,5 @@ VESIcal/tasplot/__init__.py
 VESIcal/tasplot/setup.py
 tests/__init__.py
 tests/test_calculate.py
+tests/test_importfile.py
 tests/test_sample.py

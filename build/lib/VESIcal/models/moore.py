@@ -23,13 +23,19 @@ class water(model_classes.Model):
         self.set_fugacity_model(fugacity_models.fugacity_HB_h2o())
         self.set_activity_model(activity_models.activity_idealsolution())
         self.set_solubility_dependence(False)
-        self.set_calibration_ranges([calibration_checks.CalibrationRange('pressure',3000.0,calibration_checks.crf_LessThan,'bar','Moore et al. (1998) water',
-                                                      fail_msg=calibration_checks.crmsg_LessThan_fail, pass_msg=calibration_checks.crmsg_LessThan_pass,
-                                                      description_msg=calibration_checks.crmsg_LessThan_description),
-                                     calibration_checks.CalibrationRange('temperature',[700.0,1200],calibration_checks.crf_Between,'oC','Moore et al. (1998) water',
-                                                       fail_msg=calibration_checks.crmsg_Between_fail, pass_msg=calibration_checks.crmsg_Between_pass,
-                                                      description_msg=calibration_checks.crmsg_Between_description)])
-
+        self.set_calibration_ranges([
+            calibration_checks.CalibrationRange(
+                'pressure', 3000.0, calibration_checks.crf_LessThan, 'bar',
+                'Moore et al. (1998) water',
+                fail_msg=calibration_checks.crmsg_LessThan_fail,
+                pass_msg=calibration_checks.crmsg_LessThan_pass,
+                description_msg=calibration_checks.crmsg_LessThan_description),
+            calibration_checks.CalibrationRange(
+                'temperature', [700.0, 1200], calibration_checks.crf_Between, 'oC',
+                'Moore et al. (1998) water',
+                fail_msg=calibration_checks.crmsg_Between_fail,
+                pass_msg=calibration_checks.crmsg_Between_pass,
+                description_msg=calibration_checks.crmsg_Between_description)])
 
     def calculate_dissolved_volatiles(self, sample, pressure, temperature, X_fluid=1.0, **kwargs):
         """
@@ -53,9 +59,10 @@ class water(model_classes.Model):
             Calculated dissolved H2O concentration in wt%.
         """
 
-        _sample = sample.change_composition({'H2O':0.0,'CO2':0.0},inplace=False)
+        _sample = sample.change_composition({'H2O': 0.0, 'CO2': 0.0}, inplace=False)
 
-        fH2O = self.fugacity_model.fugacity(pressure=pressure,temperature=temperature,X_fluid=X_fluid,**kwargs)
+        fH2O = self.fugacity_model.fugacity(pressure=pressure, temperature=temperature,
+                                            X_fluid=X_fluid, **kwargs)
         aParam = 2565.0
         bParam_Al2O3 = -1.997
         bParam_FeOt = -0.9275
@@ -68,19 +75,21 @@ class water(model_classes.Model):
         sample_molfrac = _sample.get_composition(units='mol_oxides')
         FeOtot = sample_molfrac['FeO'] + sample_molfrac['Fe2O3']*0.8998
 
-        b_x_sum = (bParam_Al2O3 * sample_molfrac['Al2O3']) + (bParam_FeOt * FeOtot) + (bParam_Na2O * sample_molfrac['Na2O'])
-        two_ln_XH2Omelt = (aParam / temperatureK) + b_x_sum * (pressure/temperatureK) + cParam * np.log(fH2O) + dParam
+        b_x_sum = ((bParam_Al2O3 * sample_molfrac['Al2O3']) + (bParam_FeOt * FeOtot) +
+                   (bParam_Na2O * sample_molfrac['Na2O']))
+        two_ln_XH2Omelt = ((aParam / temperatureK) + b_x_sum * (pressure/temperatureK) +
+                           cParam * np.log(fH2O) + dParam)
         ln_XH2Omelt = two_ln_XH2Omelt / 2.0
         XH2Omelt = np.exp(ln_XH2Omelt)
         sample_molfrac['H2O'] = XH2Omelt
 
-        #Normalize mol fractions to sum to 1, while preserving XH2O
+        # Normalize mol fractions to sum to 1, while preserving XH2O
         sample_molfrac = dict(sample_molfrac)
         for key, value in sample_molfrac.items():
             if key != 'H2O':
                 sample_molfrac.update({key: value/((1/(1-sample_molfrac['H2O'])))})
 
-        _sample.change_composition(sample_molfrac,units='mol_oxides')
+        _sample.change_composition(sample_molfrac, units='mol_oxides')
 
         return _sample.get_composition('H2O')
 
@@ -103,7 +112,7 @@ class water(model_classes.Model):
             Calculated equilibrium fluid concentration in XH2Ofluid mole fraction.
         """
 
-        sample_anhy = sample.change_composition({'H2O':0.0,'CO2':0.0}, inplace=False)
+        sample_anhy = sample.change_composition({'H2O': 0.0, 'CO2': 0.0}, inplace=False)
 
         aParam = 2565.0
         bParam_Al2O3 = -1.997
@@ -118,20 +127,20 @@ class water(model_classes.Model):
         sample_molfrac_hy = sample.get_composition(units='mol_oxides')
         FeOtot = sample_molfrac_anhy['FeO'] + sample_molfrac_anhy['Fe2O3']*0.8998
 
-        b_x_sum = (bParam_Al2O3 * sample_molfrac_anhy['Al2O3']) + (bParam_FeOt * FeOtot) + (bParam_Na2O * sample_molfrac_anhy['Na2O'])
-        ln_fH2O = (2 * np.log(sample_molfrac_hy['H2O']) - (aParam/temperatureK) - b_x_sum * (pressure/temperatureK) - dParam) / cParam
+        b_x_sum = ((bParam_Al2O3 * sample_molfrac_anhy['Al2O3']) + (bParam_FeOt * FeOtot) +
+                   (bParam_Na2O * sample_molfrac_anhy['Na2O']))
+        ln_fH2O = ((2 * np.log(sample_molfrac_hy['H2O']) - (aParam/temperatureK) -
+                   b_x_sum * (pressure/temperatureK) - dParam) / cParam)
         fH2O = np.exp(ln_fH2O)
         XH2O_fl = fH2O / pressure
 
-        # SM: I've changed this to return X_H2O only, as otherwise it doesn't conform to other single-volatile
-        # models. I'm not sure this is the best solution though.
-        # return (XCO2_fl, XH2O_fl)
         return XH2O_fl
 
-    def calculate_saturation_pressure(self,temperature,sample,X_fluid=1.0,**kwargs):
+    def calculate_saturation_pressure(self, temperature, sample, X_fluid=1.0, **kwargs):
         """
-        Calculates the pressure at which a an H2O-bearing fluid is saturated. Calls the scipy.root_scalar
-        routine, which makes repeated called to the calculate_dissolved_volatiles method.
+        Calculates the pressure at which a an H2O-bearing fluid is saturated. Calls the
+        scipy.root_scalar routine, which makes repeated called to the
+        calculate_dissolved_volatiles method.
 
         Parameters
         ----------
@@ -155,7 +164,7 @@ class water(model_classes.Model):
             raise core.InputError("Temperature must be greater than 0K.")
         if X_fluid < 0 or X_fluid > 1:
             raise core.InputError("X_fluid must have a value between 0 and 1.")
-        if isinstance(sample,sample_class.Sample) is False:
+        if isinstance(sample, sample_class.Sample) is False:
             raise core.InputError("Sample must be an instance of the Sample class.")
         if sample.check_oxide('H2O') is False:
             raise core.InputError("sample must contain H2O.")
@@ -163,14 +172,15 @@ class water(model_classes.Model):
             raise core.InputError("Dissolved H2O concentration must be greater than 0 wt%.")
 
         try:
-            satP = root_scalar(self.root_saturation_pressure,args=(temperature,sample,X_fluid,kwargs),
-                                x0=100.0,x1=2000.0).root
-        except:
-            w.warn("Saturation pressure not found.",RuntimeWarning,stacklevel=2)
+            satP = root_scalar(self.root_saturation_pressure,
+                               args=(temperature, sample, X_fluid, kwargs),
+                               x0=100.0, x1=2000.0).root
+        except Exception:
+            w.warn("Saturation pressure not found.", RuntimeWarning, stacklevel=2)
             satP = np.nan
         return np.real(satP)
 
-    def root_saturation_pressure(self,pressure,temperature,sample,X_fluid,kwargs):
+    def root_saturation_pressure(self, pressure, temperature, sample, X_fluid, kwargs):
         """ Function called by scipy.root_scalar when finding the saturation pressure using
         calculate_saturation_pressure.
 
@@ -183,13 +193,15 @@ class water(model_classes.Model):
         sample         Sample class
             Magma major element composition.
         kwargs         dictionary
-            Additional keyword arguments supplied to calculate_saturation_pressure. Might be required for
-            the fugacity or activity models.
+            Additional keyword arguments supplied to calculate_saturation_pressure. Might be
+            required for the fugacity or activity models.
 
         Returns
         -------
         float
-            The differece between the dissolved H2O at the pressure guessed, and the H2O concentration
-            passed in the sample variable.
+            The differece between the dissolved H2O at the pressure guessed, and the H2O
+            concentration passed in the sample variable.
         """
-        return self.calculate_dissolved_volatiles(pressure=pressure,temperature=temperature,sample=sample,X_fluid=X_fluid,**kwargs) - sample.get_composition('H2O')
+        return (self.calculate_dissolved_volatiles(pressure=pressure, temperature=temperature,
+                                                   sample=sample, X_fluid=X_fluid, **kwargs) -
+                sample.get_composition('H2O'))

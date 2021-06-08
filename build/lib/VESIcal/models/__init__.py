@@ -1,4 +1,3 @@
-from VESIcal.models import magmasat
 from VESIcal.models import shishkina
 from VESIcal.models import dixon
 from VESIcal.models import iaconomarziano
@@ -26,7 +25,8 @@ default_models = {'ShishkinaIdealMixing':     shishkina.mixed,
                   'MooreWater':               moore.water(),
                   'LiuWater':                 liu.water(),
                   'LiuCarbon':                liu.carbon()
-}
+                  }
+
 
 def get_models(model='all'):
     """
@@ -41,7 +41,9 @@ def get_models(model='all'):
     if model == 'all':
         return list(default_models.values())
     if model == 'mixed':
-        return [shishkina.mixed, dixon.mixed, iaconomarziano.mixed, liu.mixed] #MagmaSat not included here as it is treated separately
+        # MagmaSat not included here as it is treated separately
+        return [shishkina.mixed, dixon.mixed, iaconomarziano.mixed, liu.mixed]
+
 
 def get_model_names(model='all'):
     """
@@ -56,4 +58,5 @@ def get_model_names(model='all'):
     if model == 'all':
         return list(default_models.keys())
     if model == 'mixed':
-        return ['ShishkinaIdealMixing', 'Dixon', 'IaconoMarziano', 'Liu'] #MagmaSat not included here as it is treated separately
+        # MagmaSat not included here as it is treated separately
+        return ['ShishkinaIdealMixing', 'Dixon', 'IaconoMarziano', 'Liu']
