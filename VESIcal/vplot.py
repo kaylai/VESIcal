@@ -6,7 +6,6 @@ import pandas as pd
 import numpy as np
 import warnings as w
 import matplotlib as mpl
-mpl.use('TKAgg') # noqa E402
 import matplotlib.pyplot as plt
 
 
