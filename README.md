@@ -3,7 +3,7 @@ A generalized python library for calculating and plotting various things related
 
 [![Documentation Status](https://readthedocs.org/projects/vesical/badge/?version=latest)](https://vesical.readthedocs.io/en/latest/?badge=latest)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4914503.svg)](https://doi.org/10.5281/zenodo.4914503)
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/kaylai/vesical-binder/HEAD)
+[![Manuscript on Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/kaylai/vesical-binder/HEAD?filepath=Manuscript.ipynb)
 
 
 ## Installation
