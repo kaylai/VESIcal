@@ -6,6 +6,7 @@ A generalized python library for calculating and plotting various things related
 
 ## Use VESIcal online with no installation
 Use VESIcal in Binder!
+
 **Direct link to manuscript:**
 [![Manuscript on Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/kaylai/vesical-binder/HEAD?filepath=Manuscript.ipynb)
 
