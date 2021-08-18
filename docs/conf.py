@@ -19,11 +19,11 @@ sys.path.insert(0, os.path.abspath('../'))
 # -- Project information -----------------------------------------------------
 
 project = 'VESIcal'
-copyright = '2020, Kayla Iacovino and Simon Matthews'
+copyright = '2021, Kayla Iacovino and Simon Matthews'
 author = 'Kayla Iacovino and Simon Matthews'
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.1'
+release = '1.0.1'
 
 
 # -- General configuration ---------------------------------------------------
