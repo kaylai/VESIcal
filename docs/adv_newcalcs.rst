@@ -3,12 +3,20 @@ Writing new calculations for existing models
 ############################################
 .. contents::
 
-Download the Jupyter notebook `here <https://github.com/kaylai/VESIcal/blob/master/docs/jupyter_notebooks/adv_newcalcs.ipynb>`_.
+--------- 
 
-Any h2llo model within VESIcal can be duplicated and then modified. New calculation methods that rely on the pre-existing structure within VESIcal, can be easily added. An example is shown here for a new method, :py:meth:`calculate_dissolved_CO2()`. This method will be used to calculate the dissolved CO2 concentration, in wt%, of a mixed fluid (H2O-CO2) saturated magma with a known dissolved H2O concentration, pressure, temperature, and bulk composition. This magma would thus be undersaturated in pure H2O but saturated in mixed H2O-CO2 fluid.
+**Download the Jupyter notebook (Right click and "Save as...")** `here <https://github.com/kaylai/VESIcal/blob/master/docs/jupyter_notebooks/adv_newcalcs.ipynb>`_.
+
+--------- 
+
+Any model within VESIcal can be duplicated and then modified. New calculation methods that rely on the pre-existing structure within VESIcal, can be easily added. An example is shown here for a new method, :py:meth:`calculate_dissolved_CO2()`. This method will be used to calculate the dissolved CO2 concentration, in wt%, of a mixed fluid (H2O-CO2) saturated magma with a known dissolved H2O concentration, pressure, temperature, and bulk composition. This magma would thus be undersaturated in pure H2O but saturated in mixed H2O-CO2 fluid.
 
 Creating and modifying model objects
 ====================================
+
+.. code-block:: python
+
+	import VESIcal as v
 
 First, we duplicate the MagmaSat model object.
 
