@@ -9,9 +9,10 @@ VESIcal Quickstart
    install
    changelog
    about
-   quick_tutorials
    models
+   quick_tutorials
    tutorials
+   advanced_tutorials
    youtube
    codedoc
    faq
