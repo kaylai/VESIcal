@@ -9,4 +9,3 @@ ipynb
 scipy
 sympy
 mock
-Jinja2==2.1.1
