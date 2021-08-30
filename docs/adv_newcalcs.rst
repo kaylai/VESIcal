@@ -225,3 +225,84 @@ Some notes about our new calculation
 Notice that the final output dissolved H2O concentration matches our given H2O concentration of 2.0 wt% to within ~0.001 wt%. This final output value can be made to match much more closely to the given H2O concentration by adjusting one line of code. See comment "changing this value changes how close to the original known H2O value the resulting H2O_liquid wt% will be".
 
 
+Working with BatchFile objects
+==============================
+Surely, this function is most useful when it can be applied not only to single Sample objects but also to BatchFile objects, such that an entire dataset can be evaluated by the new method at once. In the future, VESIcal will have built-in functions for adding custom code to VESIcal's own batchmodel module. For now, we will demonstrated how to write a for loop to apply our custom `calculate_dissolved_CO2` function to each sample in a BatchFile.
+
+First, let's import a file as a BatchFile object. We are using the example_data.xlsx file published with the VESIcal manuscript. You can download the file `here <https://github.com/kaylai/VESIcal/tree/master/manuscript/Supplement/Datasets>`_.
+
+.. code-block:: python
+
+	# import our file and save it to object named myfile
+	myfile = v.BatchFile('example_data.xlsx')
+
+Next, let's construct the loop. We need to work with `myfile` as a pandas dataframe, so let's grab the data out of the BatchFile object.
+
+.. code-block:: python
+
+	mydata = myfile.get_data()
+
+	# I'm going to take only the first three rows of this file to speed things up
+	mydata = mydata.iloc[:3]
+	type(mydata)
+
+.. code-block:: python
+
+	pandas.core.frame.DataFrame
+
+Now, we can iterate over the dataframe following rules set by python pandas.
+
+.. code-block:: python
+
+	# first create an empty list to store our results
+	results = []
+
+	# next, iterate over the dataframe
+	for index, row in mydata.iterrows():
+	    currentsample = myfile.get_sample_composition(index, asSampleClass=True)
+	    currentresult = mymodel.calculate_dissolved_CO2(currentsample, 
+	                                                    pressure=5000.0, 
+	                                                    temperature=1000.0, 
+	                                                    H2O_liq=currentsample.get_composition()['H2O'], 
+	                                                    verbose=True)
+	    
+	    """ if you want to grab pressure or temperature values from the BatchFile object
+	     for example, if each sample has a "Pressure" and "Temperature" column, use:
+	     currentresult = mymodel.calculate_dissolved_CO2(currentsample, 
+	                                                    pressure=row["Pressure"], 
+	                                                    temperature=row["Temperature"], 
+	                                                    H2O_liq=testsample.get_composition()['H2O'], 
+	                                                    verbose=True)
+	    """
+	    
+	    # next, append the result to our empty list
+	    results.append(currentresult)
+
+	# To more easily work with this data outside of VESIcal,
+	# let's save our new data to a dataframe and export that
+	# to an xlsx file
+	results_frame = pd.DataFrame()
+	results_frame['Label'] = list(mydata.index)
+	results_frame['Modeled_Temperature(C)'] = [res['temperature'] for res in results]
+	results_frame['Modeled_Pressure(bars)'] = [res['pressure'] for res in results]
+	results_frame['H2O_liq'] = [res['H2O_liq'] for res in results]
+	results_frame['CO2_liq'] = [res['CO2_liq'] for res in results]
+	results_frame['XH2O_fl'] = [res['XH2O_fl'] for res in results]
+	results_frame['XCO2_fl'] = [res['XCO2_fl'] for res in results]
+	results_frame['FluidProportion_wt'] = [res['FluidProportion_wt'] for res in results]
+
+.. code-block:: python
+
+	# view the dataframe we just made
+	results_frame
+
+.. csv-table:: Output
+	:file: tables/adv_newcalcs_resultframe.csv
+	:header-rows: 1
+
+Finally, we can output this dataframe as an xlsx file.
+
+.. code-block:: python
+
+	# export that dataframe to an xlsx file
+	results_frame.to_excel("Modeling_Results.xlsx")
