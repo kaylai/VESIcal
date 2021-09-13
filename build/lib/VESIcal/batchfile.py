@@ -171,6 +171,9 @@ class BatchFile(object):
 
         # Sanitize data inputs
         data = rename_duplicates(data)  # handle any duplicated sample names
+        for column in data:  # convert all oxide columns to numeric
+            if column in core.oxides:
+                data[column] = data[column].apply(pd.to_numeric, errors='coerce')
         data = data.dropna(how='all')  # drop any rows that are all NaNs
         data = data.fillna(0)  # fill in any missing data with 0's
 

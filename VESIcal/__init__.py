@@ -5,7 +5,7 @@ A generalized python library for calculating and plotting various things
 related to mixed volatile (H2O-CO2) solubility in silicate melts.
 """
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 __author__ = 'Kayla Iacovino, Simon Matthews, and Penny Wieser'
 
 # ----------------- IMPORTS ----------------- #
