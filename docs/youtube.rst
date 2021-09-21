@@ -31,6 +31,16 @@ Updated to reflect changes in v0.9+
 
 ---------
 
+Intro 2: Sat Ps, Dissolved Volatiles, Degassing paths, Isobars
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Following on from "Introduction to the ENKI server" this video talks through some simple examples calculating saturation pressures,  dissolved volatiles, degassing paths and isobars for individual samples an entire excel spreadsheets. 
+
+.. raw:: html
+
+	<iframe width="560" height="315" src="https://www.youtube.com/embed/z6AnrjlDkPs" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+---------
+
 Accessing the ENKI software ecosystem
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Mark S. Ghiorso explains and demonstrates two simple ways to access the ENKI software ecosystem: (1) Production server, and (2) local Docker image.
@@ -48,15 +58,5 @@ NOT yet updated to reflect changes in v0.9+
 .. raw:: html
 
 	<iframe width="560" height="315" src="https://www.youtube.com/embed/f2n1CGMwDyg" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
----------
-
-Intro 2: Sat Ps, Dissolved Volatiles, Degassing paths, Isobars
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Following on from "Introduction to the ENKI server" this video talks through some simple examples calculating saturation pressures,  dissolved volatiles, degassing paths and isobars for individual samples an entire excel spreadsheets. 
-
-.. raw:: html
-
-	<iframe width="560" height="315" src="https://www.youtube.com/embed/z6AnrjlDkPs" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 ---------
