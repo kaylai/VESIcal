@@ -8,7 +8,7 @@ Current Version 1.0.1
 ^^^^^^^^^^^^^^^^^^^^^
 The VESIcal manuscript serves, along with this documentation, as a user's guide and introduction to VESIcal. The manuscript will be available as an executable jupyter notebook or as a static PDF published in the journal Earth and Space Science.
 
-	Iacovino K., Matthews S., Wieser P.E., Moore G.M., and Begue F. (2021) VESIcal Part I: An open-source thermodynamic model engine for mixed volatile (H2O-CO2) solubility in silicate melts, Earth and Space Sciences. (a link to the manuscript will be here once it is public)
+	Iacovino K., Matthews S., Wieser P.E., Moore G.M., and Begue F. (2021) VESIcal Part I: An open-source thermodynamic model engine for mixed volatile (H2O-CO2) solubility in silicate melts, Earth and Space Science, 8, e2020EA001584. https://doi.org/10.1029/2020EA001584.
 
 This version of VESIcal (v 1.0.1) is archived on zenodo with a citable doi at `https://zenodo.org/record/5095382 <https://zenodo.org/record/5095382>`_
 
