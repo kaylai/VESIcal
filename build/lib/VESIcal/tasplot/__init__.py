@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Filename: tasplot.py
- 
+
 ############################################################################
 #
 #  COPYRIGHT:  (C) 2015 John A Stevenson / @volcan01010
@@ -27,25 +27,25 @@ __all__ = ['add_LeMaitre_fields']
 class MissingModuleException(Exception):
     pass
 
- 
+
 # Plot LeMaitre lines
 def add_LeMaitre_fields(plot_axes, fontsize=8, color=(0.6, 0.6, 0.6)):
     """Add fields for geochemical classifications from LeMaitre et al (2002)
     to pre-existing axes.  If necessary, the axes object can be retrieved via
     plt.gca() command. e.g.
-    
+
     ax1 = plt.gca()
     add_LeMaitre_fields(ax1)
     ax1.plot(silica, total_alkalis, 'o')
-    
+
     Fontsize and color options can be used to change from the defaults.
-    
+
     It may be necessary to follow the command with plt.draw() to update
     the plot.
-    
+
     Le Maitre RW (2002) Igneous rocks : IUGS classification and glossary of
-        terms : recommendations of the International Union of Geological 
-        Sciences Subcommission on the Systematics of igneous rocks, 2nd ed. 
+        terms : recommendations of the International Union of Geological
+        Sciences Subcommission on the Systematics of igneous rocks, 2nd ed.
         Cambridge University Press, Cambridge
 """
 
@@ -55,11 +55,11 @@ def add_LeMaitre_fields(plot_axes, fontsize=8, color=(0.6, 0.6, 0.6)):
         raise MissingModuleException("""Matplotlib not imported.
         Matplotlib is installed as part of many scientific packages and is
         required to create plots.""")
-    
+
     # Check that plot_axis can plot
     if 'plot' not in dir(plot_axes):
         raise TypeError('plot_axes is not a matplotlib axes instance.')
-    
+
     # Prepare the field information
     from collections import namedtuple
     FieldLine = namedtuple('FieldLine', 'x1 y1 x2 y2')
