@@ -21,15 +21,15 @@ ExcelFile batch process:
 
 **Required inputs:**
 
-:py:meth:`sample`: *Only for single-sample calculations*. The composition of a sample. A single sample may be passed as a dictionary of values, with compositions of oxides in wt%.
+``sample``: *Only for single-sample calculations*. The composition of a sample. A single sample may be passed as a dictionary of values, with compositions of oxides in wt%.
 
-:py:meth:`temperature`, :py:meth:`pressure`: the temperature in degrees C and the pressure in bars. Temperature and pressure of the sample or samples must be passed unless an ExcelFile object with a column for temperature and/or pressure is passed to sample. If, alternatively, the user wishes to use temperature or pressure information in their ExcelFile object, the title of the column containing temperature or pressure data should be passed in quotes (as a string) to temperature or pressure respectively. Note for batch calculations that if temperature or pressure information exists in the ExcelFile but a single numerical value is defined for one or both of these variables, both the original information plus the values used for the calculations will be returned.
+``temperature``, ``pressure``: the temperature in degrees C and the pressure in bars. Temperature and pressure of the sample or samples must be passed unless an ExcelFile object with a column for temperature and/or pressure is passed to sample. If, alternatively, the user wishes to use temperature or pressure information in their ExcelFile object, the title of the column containing temperature or pressure data should be passed in quotes (as a string) to temperature or pressure respectively. Note for batch calculations that if temperature or pressure information exists in the ExcelFile but a single numerical value is defined for one or both of these variables, both the original information plus the values used for the calculations will be returned.
 
 **Optional inputs:**
 
-:py:meth:`verbose`: *Only for single-sample calculations.* Default value is False. If set to True, additional parameters are returned in a dictionary: H2O and CO2 concentrations in the fluid, mass of the fluid in grams, and proportion of the fluid in the system in wt%.
+``verbose``: Default value is False. If set to True, additional parameters are returned in a dictionary: H2O and CO2 concentrations in the fluid, mass of the fluid in grams, and proportion of the fluid in the system in wt%.
 
-:py:meth:`print_status`: *Only for ExcelFile batch calcualtions*. The default value is False. If True is passed, the progress of the calculation will be printed to the terminal. 
+``print_status``: *Only for ExcelFile batch calcualtions*. The default value is False. If True is passed, the progress of the calculation will be printed to the terminal. 
 
 **Calculated outputs:**
 If a single sample is passed to sample, a dictionary with keys ‘H2O’ and ‘CO2’ is returned (plus additional variables ‘FluidMass_grams’ and ‘FluidProportion_wtper’ if verbose is set to True).

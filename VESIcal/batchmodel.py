@@ -455,6 +455,9 @@ class BatchFile(batchfile.BatchFile):
         H2Ovals = []
         CO2vals = []
         warnings = []
+        if kwargs.get('verbose') is True:
+            FluidMass_grams_vals = []
+            FluidProportion_wt_vals = []
         if (model in models.get_model_names(model='mixed') or
            model == "MooreWater"):
             for index, row in fluid_data.iterrows():
@@ -541,10 +544,14 @@ class BatchFile(batchfile.BatchFile):
                             calculate_classes.calculate_equilibrium_fluid_comp(
                                            sample=bulk_comp, pressure=pressure,
                                            temperature=temperature,
-                                           model=model, silence_warnings=True))
+                                           model=model, silence_warnings=True,
+                                           **kwargs))
 
                         H2Ovals.append(calc.result['H2O'])
                         CO2vals.append(calc.result['CO2'])
+                        if kwargs.get('verbose') is True:
+                            FluidMass_grams_vals.append(calc.result['FluidMass_grams'])
+                            FluidProportion_wt_vals.append(calc.result['FluidProportion_wt'])
                         if calc.result['H2O'] == 0 and calc.result['CO2'] == 0:
                             warnings.append(calc.calib_check + "Sample not " +
                                             "saturated at these conditions")
@@ -554,9 +561,14 @@ class BatchFile(batchfile.BatchFile):
                         H2Ovals.append(np.nan)
                         CO2vals.append(np.nan)
                         warnings.append("Calculation Failed.")
-
+                        if kwargs.get('verbose') is True:
+                            FluidMass_grams_vals.append(np.nan)
+                            FluidProportion_wt_vals.append(np.nan)
             fluid_data["XH2O_fl_VESIcal"] = H2Ovals
             fluid_data["XCO2_fl_VESIcal"] = CO2vals
+            if kwargs.get('verbose') is True:
+                fluid_data["FluidMass_grams"] = FluidMass_grams_vals
+                fluid_data["FluidProportion_wt"] = FluidProportion_wt_vals
             if file_has_temp is False:
                 fluid_data["Temperature_C_VESIcal"] = temperature
             if file_has_press is False:
