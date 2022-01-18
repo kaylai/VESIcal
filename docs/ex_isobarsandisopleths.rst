@@ -22,17 +22,17 @@ The calculation is performed by iterating through possible concentrations of H2O
 
 **Required inputs:**
 
-:py:meth:`sample`: The composition of a sample. A single sample may be passed as a dictionary of values, with compositions of oxides in wt%.
+``sample``: The composition of a sample. A single sample may be passed as a dictionary of values, with compositions of oxides in wt%.
 
-:py:meth:`temperature`: The temperature in degres C. 
+``temperature``: The temperature in degres C. 
 
-:py:meth:`pressure_list`: A list of all pressures in bars at which to calculate isobars.
+``pressure_list``: A list of all pressures in bars at which to calculate isobars.
 
 **Optional inputs:**
 
-:py:meth:`isopleth_list`: The default value is None in which case only isobars will be calcualted. A list of all fluid composition values, in mole fraction H2O (XH2Ofluid), at which to calculate isopleths. Values can range from 0–1.
+``isopleth_list``: The default value is None in which case only isobars will be calcualted. A list of all fluid composition values, in mole fraction H2O (XH2Ofluid), at which to calculate isopleths. Values can range from 0–1.
 
-:py:meth:`print_status`: The default value is False. If True is passed, the progress of the calculation will be printed to the terminal. 
+``print_status``: The default value is False. If True is passed, the progress of the calculation will be printed to the terminal. 
 
 **Calculated outputs:**
 The function returns two pandas DataFrames: the first has isobar data, and the second has isopleth data. Columns in the isobar dataframe are ‘Pressure’, ‘H2Omelt’, and ‘CO2melt’, correpsonding to pressure in bars and dissolved H2O and CO2 in the liquid in wt%. Columns in the isopleth dataframe are ‘XH2O_fl’, ‘H2O_liq’, and ‘CO2_liq’, corresponding to XH2Ofluid and dissolved H2O and CO2 in the liquid in wt%.
@@ -74,9 +74,9 @@ Once isobars and isopleths are calculated, they can be plotted in an H2O versus 
 
 **Required inputs for plotting isobars and isopleths:**
 
-:py:meth:`isobars`: Pandas DataFrame object containing isobar information as calculated by calculate_isobars_and_isopleths.
+``isobars``: Pandas DataFrame object containing isobar information as calculated by calculate_isobars_and_isopleths.
 
-:py:meth:`isopleths`: Pandas DataFrame object containing isopleth information as calculated by calculate_isobars_and_isopleths.
+``isopleths``: Pandas DataFrame object containing isopleth information as calculated by calculate_isobars_and_isopleths.
 
 **Calculated outputs:**
 The function returns a matplotlib object with the x-axis as H2O wt% in the melt and y-axis as CO2 wt% in the melt. Isobars, or lines of constant pressure at which the sample magma composition is saturated, and isopleths, or lines of constant fluid composition at which the sample magma composition is saturated, are plotted.
