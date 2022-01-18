@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="VESIcal",
-    version="1.0.2",
+    version="1.0.3",
     author="Kayla Iacovino, Simon Matthews, Penny Wieser",
     author_email="kaylaiacovino@gmail.com",
     description=("A generalized python library for calculating and plotting various things "

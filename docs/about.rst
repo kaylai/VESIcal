@@ -4,13 +4,18 @@ About VESIcal
 
 VESIcal is an open-source thermodynamic model engine for mixed volatile (H2O-CO2) solubility in silicate melts. It was designed by Kayla Iacovino, Simon Matthews, Penny Wieser, Gordon Moore, and Florence Begue in 2021.
 
-Current Version 1.0.1
+Current Version 1.0.3
 ^^^^^^^^^^^^^^^^^^^^^
-The VESIcal manuscript serves, along with this documentation, as a user's guide and introduction to VESIcal. The manuscript will be available as an executable jupyter notebook or as a static PDF published in the journal Earth and Space Science.
+Changelog:
+ - Batch calculations for :py:meth:`calculate_equilibrium_fluid_comp()` with the MagmaSat (default) model can now take the ``verbose`` argument. If passed as ``verbose=True``, the calculation will return the mass and weight proportion of fluid in equilibrium with the system. Previously this only worked for single sample calculations.
+
+The VESIcal Manuscript
+^^^^^^^^^^^^^^^^^^^^^^
+The VESIcal manuscript serves, along with this documentation, as a user's guide and introduction to VESIcal. The manuscript is available as an executable jupyter notebook or as a static PDF published in the journal Earth and Space Science.
 
 	Iacovino K., Matthews S., Wieser P.E., Moore G.M., and Begue F. (2021) VESIcal Part I: An open-source thermodynamic model engine for mixed volatile (H2O-CO2) solubility in silicate melts, Earth and Space Science, 8, e2020EA001584. https://doi.org/10.1029/2020EA001584.
 
-This version of VESIcal (v 1.0.1) is archived on zenodo with a citable doi at `https://zenodo.org/record/5095382 <https://zenodo.org/record/5095382>`_
+The manuscript version of VESIcal (v 1.0.1) is archived on zenodo with a citable doi at `https://zenodo.org/record/5095382 <https://zenodo.org/record/5095382>`_
 
 
 How to Cite VESIcal
