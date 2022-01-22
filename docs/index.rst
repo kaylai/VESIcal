@@ -14,6 +14,7 @@ VESIcal Quickstart
    tutorials
    advanced_tutorials
    youtube
+   workshops
    codedoc
    faq
    support
