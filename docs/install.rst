@@ -2,6 +2,14 @@
 Installation
 ============
 
++--------------------------------------------+
+| Important! Thermoengine must be installed! |
++============================================+
+| Please see below for details on how to     |
+| install thermoengine, the python           |
+| implementation of MELTS/MagmaSat           |
++--------------------------------------------+
+
 First, obtain Python3.x if you do not already have it installed. If you are new to python, we recommend installing it via `anaconda3 <https://www.anaconda.com/products/individual>`_. VESIcal can be installed with one line. Open a terminal and type the following:
 
 .. code-block:: python
@@ -31,10 +39,15 @@ Dependencies that should automatically be installed for you are:
 
 If any warnings related to these libraries appear, try installing them as you did VESIcal: with 'pip install [package]'.
 
-thermoengine is the ENKI implementation of MELTS (MagmaSat), which is the backbone of the entire VESIcal library. VESIcal cannot be run without thermoengine at this time, however a VESIcal-lite that does not include MagmaSat is planned. To install thermoengine, please refer to the ENKI documentation here: `https://gitlab.com/ENKI-portal/ThermoEngine <https://gitlab.com/ENKI-portal/ThermoEngine>`_.
+Installing thermoengine
+#######################
+
+Thermoengine is the ENKI implementation of MELTS (MagmaSat), which is the default solubility model implemented in VESIcal. VESIcal cannot be run without thermoengine at this time, however a VESIcal-lite that does not include MagmaSat is planned. To install thermoengine, please refer to the ENKI documentation here: `https://gitlab.com/ENKI-portal/ThermoEngine <https://gitlab.com/ENKI-portal/ThermoEngine>`_.
+
+In almost all cases you will need to install thermoengine using docker. The thermoengine devs have kindly put together a docker image for you. We suggest you follow those instructions here: `https://gitlab.com/ENKI-portal/ThermoEngine/-/tree/master/#running-a-container-image-locally <https://gitlab.com/ENKI-portal/ThermoEngine/-/tree/master/#running-a-container-image-locally>`_.
 
 Updating
-========
+########
 
 To upgrade to the most recent version of VESIcal, type the following into terminal:
 
