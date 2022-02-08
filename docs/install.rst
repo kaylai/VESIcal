@@ -2,8 +2,15 @@
 Installation
 ============
 
-Many Ways to Use VESIcal
-########################
+In general, VESIcal can be accessed and used in a variety of ways. From most flexible (advanced) to least flexible (novice), these are:
+
+	- local installation of the VESIcal library
+	- through the ENKI server (recommended for most users)
+	- through a `jupyter notebook version of the VESIcal manuscript <https://mybinder.org/v2/gh/kaylai/vesical-binder/HEAD?filepath=Manuscript.ipynb>`_.
+	- via the web-app (`https://vesical.anvil.app/ <https://vesical.anvil.app/>`_)
+
+VESIcal on the ENKI server
+##########################
 VESIcal requires installation of not only the VESIcal library but also some other python libraries, one of which is a bit tricky to install (ENKI/thermoengine aka the engine behind MELTS). But, we have a solution! All dependencies and the latest version of VESIcal are all installed on the ENKI server, within a Jupyter Notebook Hub. Steps to use VESIcal on the ENKI server are:
 
 	1. Create a (free) GitLab account, which you'll use to sign into ENKI here: (`https://gitlab.com/users/sign_up <https://gitlab.com/users/sign_up>`_)
@@ -14,13 +21,11 @@ VESIcal requires installation of not only the VESIcal library but also some othe
 	6. Create a new notebook by clicking the blue plus button and then selecting Python3 under Notebook. Or select from the menu File > New > Notebook
 	7. Be sure to import VESIcal as v at the top of your file, and now you are ready to get to work!
 
-In general, VESIcal can be accessed and used in a variety of ways. From most flexible (advanced) to least flexible (novice), these are:
+See this video tutorial on accessing the ENKI server for more:
 
-	- local installation of the VESIcal library
-	- through a jupyter notebook hosted online (the VESIcal manuscript will be in the form of a jupyter notebook once published)
-	- via the web-app (`https://vesical.anvil.app/ <https://vesical.anvil.app/>`_)
+.. raw:: html
 
-This documentation mainly serves to help users interact with VESIcal as a python library. That is, the user will instal VESIcal onto their machine (or run VESIcal in a jupyter notebook) and type python code to execute VESIcal.
+	<iframe width="560" height="315" src="https://www.youtube.com/embed/jUshguhFpjk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Installing locally
 ##################
