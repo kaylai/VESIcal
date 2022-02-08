@@ -9,13 +9,28 @@ Current Version 1.0.3
 Changelog:
  - Batch calculations for :py:meth:`calculate_equilibrium_fluid_comp()` with the MagmaSat (default) model can now take the ``verbose`` argument. If passed as ``verbose=True``, the calculation will return the mass and weight proportion of fluid in equilibrium with the system. Previously this only worked for single sample calculations.
 
-The VESIcal Manuscript
-^^^^^^^^^^^^^^^^^^^^^^
-The VESIcal manuscript serves, along with this documentation, as a user's guide and introduction to VESIcal. The manuscript is available as an executable jupyter notebook or as a static PDF published in the journal Earth and Space Science.
+The VESIcal Manuscripts
+^^^^^^^^^^^^^^^^^^^^^^^
+Two VESIcal manuscripts serve, along with this documentation, as a user's guide and introduction to VESIcal. The Part I manuscript is available as an executable jupyter notebook or as a static PDF published in the journal Earth and Space Science. Part II is available as a PDF with jupyter notebooks as supplementary files.
+
+The manuscript version of VESIcal Part I (v 1.0.1) is archived on zenodo with a citable doi at `https://zenodo.org/record/5095382 <https://zenodo.org/record/5095382>`_
+
+Interactive versions of manuscripts
+-----------------------------------
+
+   - Direct link to interactive VESIcal Part I manuscript: `Manuscript on Binder <https://mybinder.org/v2/gh/kaylai/vesical-binder/HEAD?filepath=Manuscript.ipynb>`_
+   - Jupyter Notebook hub with VESIcal: `Jupyter hub on Binder <https://mybinder.org/v2/gh/kaylai/vesical-binder/HEAD>`_
+
+PDF versions of manuscripts
+---------------------------
+
+   - `VESIcal Part I: An Open-Source Thermodynamic Model Engine for Mixed Volatile (H2O-CO2) Solubility in Silicate Melts <https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2020EA001584>`_
 
 	Iacovino K., Matthews S., Wieser P.E., Moore G.M., and Begue F. (2021) VESIcal Part I: An open-source thermodynamic model engine for mixed volatile (H2O-CO2) solubility in silicate melts, Earth and Space Science, 8, e2020EA001584. https://doi.org/10.1029/2020EA001584.
-
-The manuscript version of VESIcal (v 1.0.1) is archived on zenodo with a citable doi at `https://zenodo.org/record/5095382 <https://zenodo.org/record/5095382>`_
+	
+   - `VESIcal Part II: A critical approach to volatile solubility modelling using an open-source Python3 engine <https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2021EA001932>`_
+	
+	Wieser P.E., Iacovino K., Matthews S., Moore G.M., Allison C.M. (2022) VESIcal Part II: A critical approach to volatile solubility modelling using an open-source Python3 engine, Earth and Space Science. https://doi.org/10.1029/2021EA001932
 
 
 How to Cite VESIcal
