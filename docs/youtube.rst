@@ -5,13 +5,13 @@ YouTube Tutorials
 
 Subscribe to `VESIcal on youtube <https://www.youtube.com/channel/UCpvCCs5KMXzOxXWm0seF8Qw>`_ to get notified when we create new tutorial videos. Or watch tutorials below.
 
-Verbose VESIcal Demo #1
-^^^^^^^^^^^^^^^^^^^^^^^
-Updated to reflect changes in v0.9+
+Accessing the ENKI software ecosystem
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Mark S. Ghiorso explains and demonstrates two simple ways to access the ENKI software ecosystem, from which you can run VESIcal: (1) Production server, and (2) local Docker image.
 
 .. raw:: html
 
-   <iframe width="560" height="315" src="https://www.youtube.com/embed/F9czuzPc5Kg" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+	<iframe width="560" height="315" src="https://www.youtube.com/embed/jUshguhFpjk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 ---------
 
@@ -31,6 +31,17 @@ Updated to reflect changes in v0.9+
 
 ---------
 
+Verbose VESIcal Demo #1
+^^^^^^^^^^^^^^^^^^^^^^^
+Updated to reflect changes in v0.9+
+
+.. raw:: html
+
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/F9czuzPc5Kg" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+---------
+
+
 Intro 2: Sat Ps, Dissolved Volatiles, Degassing paths, Isobars
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Following on from "Introduction to the ENKI server" this video talks through some simple examples calculating saturation pressures,  dissolved volatiles, degassing paths and isobars for individual samples an entire excel spreadsheets. 
@@ -42,16 +53,6 @@ Following on from "Introduction to the ENKI server" this video talks through som
 .. raw:: html
 
 	<iframe width="560" height="315" src="https://www.youtube.com/embed/z6AnrjlDkPs" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
----------
-
-Accessing the ENKI software ecosystem
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Mark S. Ghiorso explains and demonstrates two simple ways to access the ENKI software ecosystem: (1) Production server, and (2) local Docker image.
-
-.. raw:: html
-
-	<iframe width="560" height="315" src="https://www.youtube.com/embed/jUshguhFpjk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 ---------
 
