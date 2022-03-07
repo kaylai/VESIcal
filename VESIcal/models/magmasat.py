@@ -12,18 +12,23 @@ import numpy as np
 import pandas as pd
 import warnings as w
 import sys
+from contextlib import redirect_stdout
+import io
+
+# Variable to send H2O driver warnings into the void
+_f = io.StringIO()
 
 w.filterwarnings("ignore", message="rubicon.objc.ctypes_patch has only been tested ")
 
 # -------------- MELTS preamble --------------- #
 # instantiate thermoengine equilibrate MELTS instance
-melts = equilibrate.MELTSmodel('1.2.0')
+melts = equilibrate.MELTSmodel("1.2.0")
 
 # Suppress phases not required in the melts simulation
 phases = melts.get_phase_names()
 for phase in phases:
     melts.set_phase_inclusion_status({phase: False})
-melts.set_phase_inclusion_status({'Fluid': True, 'Liquid': True})
+melts.set_phase_inclusion_status({"Fluid": True, "Liquid": True})
 # --------------------------------------------- #
 
 
@@ -33,21 +38,36 @@ class MagmaSat(model_classes.Model):
     """
 
     def __init__(self):
-        self.melts_version = '1.2.0'  # just here so users can see which version is being used
+        self.melts_version = (
+            "1.2.0"  # just here so users can see which version is being used
+        )
 
-        self.set_volatile_species(['H2O', 'CO2'])
-        self.set_calibration_ranges([
-            calibration_checks.CalibrationRange(
-                'pressure', [0.0, 20000.0], calibration_checks.crf_Between, 'bar', 'MagmaSat',
-                fail_msg=calibration_checks.crmsg_Between_fail,
-                pass_msg=calibration_checks.crmsg_Between_pass,
-                description_msg=calibration_checks.crmsg_Between_description),
-            calibration_checks.CalibrationRange(
-                'temperature', [800, 1400], calibration_checks.crf_Between, 'oC', 'MagmaSat',
-                fail_msg=calibration_checks.crmsg_Between_fail,
-                pass_msg=calibration_checks.crmsg_Between_pass,
-                description_msg=calibration_checks.crmsg_Between_description)])
-        self.model_type = 'MagmaSat'
+        self.set_volatile_species(["H2O", "CO2"])
+        self.set_calibration_ranges(
+            [
+                calibration_checks.CalibrationRange(
+                    "pressure",
+                    [0.0, 20000.0],
+                    calibration_checks.crf_Between,
+                    "bar",
+                    "MagmaSat",
+                    fail_msg=calibration_checks.crmsg_Between_fail,
+                    pass_msg=calibration_checks.crmsg_Between_pass,
+                    description_msg=calibration_checks.crmsg_Between_description,
+                ),
+                calibration_checks.CalibrationRange(
+                    "temperature",
+                    [800, 1400],
+                    calibration_checks.crf_Between,
+                    "oC",
+                    "MagmaSat",
+                    fail_msg=calibration_checks.crmsg_Between_fail,
+                    pass_msg=calibration_checks.crmsg_Between_pass,
+                    description_msg=calibration_checks.crmsg_Between_description,
+                ),
+            ]
+        )
+        self.model_type = "MagmaSat"
 
     def preprocess_sample(self, sample):
         """
@@ -64,21 +84,23 @@ class MagmaSat(model_classes.Model):
 
         """
         _sample = deepcopy(sample)
-        _sample = _sample.get_composition(units='wtpt_oxides',
-                                          normalization=_sample.default_normalization,
-                                          asSampleClass=True)
+        _sample = _sample.get_composition(
+            units="wtpt_oxides",
+            normalization=_sample.default_normalization,
+            asSampleClass=True,
+        )
         for oxide in core.oxides:
             if oxide in _sample.get_composition():
                 pass
             else:
                 _sample.change_composition({oxide: 0.0})
 
-        self.bulk_comp_orig = _sample.get_composition(units='wtpt_oxides')
+        self.bulk_comp_orig = _sample.get_composition(units="wtpt_oxides")
 
         return _sample
 
     def check_calibration_range(self, parameters, **kwargs):
-        """ Checks whether supplied parameters and calculated results are within the calibration
+        """Checks whether supplied parameters and calculated results are within the calibration
         range of the model, defined by the CalibrationRange objects. An empty string will be
         returned if all parameters are within the calibration range. If a parameter is not within
         the calibration range, a description of the problem will be returned in the string.
@@ -95,23 +117,23 @@ class MagmaSat(model_classes.Model):
         str
             String description of any parameters falling outside of the calibration range.
         """
-        s = ''
+        s = ""
         for cr in self.calibration_ranges:
             if cr.check(parameters) is False:
                 s += cr.string(parameters, report_nonexistance=False)
-            if 'notsaturated' in kwargs:
+            if "notsaturated" in kwargs:
                 s += "Sample not saturated at these conditions."
         return s
 
     def get_calibration_range(self):
-        """ Returns a string describing the calibration ranges defined by the CalibrationRange
+        """Returns a string describing the calibration ranges defined by the CalibrationRange
         objects for the model.
 
         Returns
         -------
         str
             String description of the calibration range objects."""
-        s = ''
+        s = ""
         for cr in self.calibration_ranges:
             s += cr.string(None)
         return s
@@ -143,15 +165,16 @@ class MagmaSat(model_classes.Model):
         """
         pressureMPa = pressure / 10.0
 
-        bulk_comp_dict = sample.get_composition(units='wtpt_oxides')
-        bulk_comp_dict = {oxide:  bulk_comp_dict[oxide] for oxide in core.oxides}
+        bulk_comp_dict = sample.get_composition(units="wtpt_oxides")
+        bulk_comp_dict = {oxide: bulk_comp_dict[oxide] for oxide in core.oxides}
         bulk_comp_dict["H2O"] = H2O
         bulk_comp_dict["CO2"] = CO2
         melts.set_bulk_composition(bulk_comp_dict)
 
-        output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
+        with redirect_stdout(_f):
+            output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
         (status, temperature, pressureMPa, xmlout) = output[0]
-        fluid_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
+        fluid_mass = melts.get_mass_of_phase(xmlout, phase_name="Fluid")
 
         return fluid_mass
 
@@ -186,12 +209,16 @@ class MagmaSat(model_classes.Model):
         pressureMPa = pressure / 10.0
 
         _sample.change_composition({"H2O": H2O, "CO2": CO2})
-        melts.set_bulk_composition(_sample.get_composition(units='wtpt_oxides',
-                                                           normalization='none'))
+        melts.set_bulk_composition(
+            _sample.get_composition(units="wtpt_oxides", normalization="none")
+        )
 
-        output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
+        with redirect_stdout(_f):
+            output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
         (status, temperature, pressureMPa, xmlout) = output[0]
-        fluid_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid', mode='component')
+        fluid_comp = melts.get_composition_of_phase(
+            xmlout, phase_name="Fluid", mode="component"
+        )
         # NOTE mode='component' returns endmember component keys with values in mol fraction.
 
         if "Water" in fluid_comp:
@@ -201,8 +228,16 @@ class MagmaSat(model_classes.Model):
 
         return H2O_fl
 
-    def calculate_dissolved_volatiles(self, sample, temperature, pressure, X_fluid=1,
-                                      H2O_guess=0.0, verbose=False, **kwargs):
+    def calculate_dissolved_volatiles(
+        self,
+        sample,
+        temperature,
+        pressure,
+        X_fluid=1,
+        H2O_guess=0.0,
+        verbose=False,
+        **kwargs
+    ):
         """
         Calculates the amount of H2O and CO2 dissolved in a magma at saturation at the given P/T
         conditions and fluid composition. Fluid composition will be matched to within 0.0001 mole
@@ -249,9 +284,11 @@ class MagmaSat(model_classes.Model):
 
         if X_fluid != 0 and X_fluid != 1:
             if X_fluid < 0.001 or X_fluid > 0.999:
-                raise core.InputError("X_fluid is calculated to a precision of 0.0001 mole "
-                                      "fraction. Value for X_fluid must be between 0.0001 and "
-                                      "0.9999.")
+                raise core.InputError(
+                    "X_fluid is calculated to a precision of 0.0001 mole "
+                    "fraction. Value for X_fluid must be between 0.0001 and "
+                    "0.9999."
+                )
 
         H2O_val = H2O_guess
         CO2_val = 0.0
@@ -272,16 +309,26 @@ class MagmaSat(model_classes.Model):
                 # TODO this is what needs to be higher for higher XH2O. Slows down computation
                 # by a second or two
 
-            fluid_mass = self.get_fluid_mass(_sample, temperature, pressure, H2O_val, CO2_val)
+            fluid_mass = self.get_fluid_mass(
+                _sample, temperature, pressure, H2O_val, CO2_val
+            )
 
-        _sample.change_composition({'H2O': H2O_val, 'CO2': CO2_val}, units='wtpt_oxides')
-        melts.set_bulk_composition(_sample.get_composition(units='wtpt_oxides',
-                                                           normalization='none'))
+        _sample.change_composition(
+            {"H2O": H2O_val, "CO2": CO2_val}, units="wtpt_oxides"
+        )
+        melts.set_bulk_composition(
+            _sample.get_composition(units="wtpt_oxides", normalization="none")
+        )
 
-        output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
+        with redirect_stdout(_f):
+            output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
         (status, temperature, pressureMPa, xmlout) = output[0]
-        liquid_comp = melts.get_composition_of_phase(xmlout, phase_name='Liquid', mode='oxide_wt')
-        fluid_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid', mode='component')
+        liquid_comp = melts.get_composition_of_phase(
+            xmlout, phase_name="Liquid", mode="oxide_wt"
+        )
+        fluid_comp = melts.get_composition_of_phase(
+            xmlout, phase_name="Fluid", mode="component"
+        )
 
         if "Water" in fluid_comp:
             H2O_fl = fluid_comp["Water"]
@@ -293,50 +340,74 @@ class MagmaSat(model_classes.Model):
         # ------ Coarse Check ------ #
         while XH2O_fluid < X_fluid - 0.1:  # too low coarse check
             H2O_val += 0.2
-            XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
+            XH2O_fluid = self.get_XH2O_fluid(
+                sample, temperature, pressure, H2O_val, CO2_val
+            )
 
         while XH2O_fluid > X_fluid + 0.1:  # too high coarse check
             CO2_val += 0.1
-            XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
+            XH2O_fluid = self.get_XH2O_fluid(
+                sample, temperature, pressure, H2O_val, CO2_val
+            )
 
         # ------ Refinement 1 ------ #
         while XH2O_fluid < X_fluid - 0.01:  # too low refinement 1
             H2O_val += 0.05
-            XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
+            XH2O_fluid = self.get_XH2O_fluid(
+                sample, temperature, pressure, H2O_val, CO2_val
+            )
 
         while XH2O_fluid > X_fluid + 0.01:  # too high refinement 1
             CO2_val += 0.01
-            XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
+            XH2O_fluid = self.get_XH2O_fluid(
+                sample, temperature, pressure, H2O_val, CO2_val
+            )
 
         # ------ Refinement 2 ------ #
         while XH2O_fluid < X_fluid - 0.001:  # too low refinement 2
             H2O_val += 0.005
-            XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
+            XH2O_fluid = self.get_XH2O_fluid(
+                sample, temperature, pressure, H2O_val, CO2_val
+            )
 
         while XH2O_fluid > X_fluid + 0.001:  # too high refinement 2
             CO2_val += 0.001
-            XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
+            XH2O_fluid = self.get_XH2O_fluid(
+                sample, temperature, pressure, H2O_val, CO2_val
+            )
 
         # ------ Final refinement ------ #
         while XH2O_fluid < X_fluid - 0.0001:  # too low final refinement
             H2O_val += 0.001
-            XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
+            XH2O_fluid = self.get_XH2O_fluid(
+                sample, temperature, pressure, H2O_val, CO2_val
+            )
 
         while XH2O_fluid > X_fluid + 0.0001:  # too high final refinement
             CO2_val += 0.0001
-            XH2O_fluid = self.get_XH2O_fluid(sample, temperature, pressure, H2O_val, CO2_val)
+            XH2O_fluid = self.get_XH2O_fluid(
+                sample, temperature, pressure, H2O_val, CO2_val
+            )
 
         # ------ Get calculated values ------ #
-        _sample.change_composition({'H2O': H2O_val, 'CO2': CO2_val}, units='wtpt_oxides')
-        melts.set_bulk_composition(_sample.get_composition(units='wtpt_oxides',
-                                                           normalization='none'))
+        _sample.change_composition(
+            {"H2O": H2O_val, "CO2": CO2_val}, units="wtpt_oxides"
+        )
+        melts.set_bulk_composition(
+            _sample.get_composition(units="wtpt_oxides", normalization="none")
+        )
 
-        output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
+        with redirect_stdout(_f):
+            output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
         (status, temperature, pressureMPa, xmlout) = output[0]
-        fluid_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
-        system_mass = melts.get_mass_of_phase(xmlout, phase_name='System')
-        liquid_comp = melts.get_composition_of_phase(xmlout, phase_name='Liquid', mode='oxide_wt')
-        fluid_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid', mode='component')
+        fluid_mass = melts.get_mass_of_phase(xmlout, phase_name="Fluid")
+        system_mass = melts.get_mass_of_phase(xmlout, phase_name="System")
+        liquid_comp = melts.get_composition_of_phase(
+            xmlout, phase_name="Liquid", mode="oxide_wt"
+        )
+        fluid_comp = melts.get_composition_of_phase(
+            xmlout, phase_name="Fluid", mode="component"
+        )
 
         if "H2O" in liquid_comp:
             H2O_liq = liquid_comp["H2O"]
@@ -360,16 +431,22 @@ class MagmaSat(model_classes.Model):
         XH2O_fluid = H2O_fl
 
         if verbose:
-            return {"temperature": temperature, "pressure": pressure,
-                    "H2O_liq": H2O_liq, "CO2_liq": CO2_liq,
-                    "XH2O_fl": H2O_fl, "XCO2_fl": CO2_fl,
-                    "FluidProportion_wt": 100*fluid_mass/system_mass}
+            return {
+                "temperature": temperature,
+                "pressure": pressure,
+                "H2O_liq": H2O_liq,
+                "CO2_liq": CO2_liq,
+                "XH2O_fl": H2O_fl,
+                "XCO2_fl": CO2_fl,
+                "FluidProportion_wt": 100 * fluid_mass / system_mass,
+            }
 
         if verbose is False:
             return {"CO2_liq": CO2_liq, "H2O_liq": H2O_liq}
 
-    def calculate_equilibrium_fluid_comp(self, sample, temperature, pressure, verbose=False,
-                                         **kwargs):
+    def calculate_equilibrium_fluid_comp(
+        self, sample, temperature, pressure, verbose=False, **kwargs
+    ):
         """
         Returns H2O and CO2 concentrations in wt% in a fluid in equilibrium with the given sample
         at the given P/T condition.
@@ -395,7 +472,9 @@ class MagmaSat(model_classes.Model):
             A dictionary of fluid composition in wt% with keys 'H2O' and 'CO2' is returned.
         """
         _sample = self.preprocess_sample(sample)
-        bulk_comp_dict = _sample.get_composition(units='wtpt_oxides', normalization='none')
+        bulk_comp_dict = _sample.get_composition(
+            units="wtpt_oxides", normalization="none"
+        )
 
         if isinstance(temperature, float) or isinstance(temperature, int):
             pass
@@ -411,34 +490,42 @@ class MagmaSat(model_classes.Model):
         if bulk_comp_dict["H2O"] == 0:
             if bulk_comp_dict["CO2"] == 0:
                 if verbose is False:
-                    return {'CO2': 0.0, 'H2O': 0.0}
+                    return {"CO2": 0.0, "H2O": 0.0}
                 if verbose:
-                    return {'CO2': 0.0, 'H2O': 0.0,
-                            'FluidMass_grams': 0.0,
-                            'FluidProportion_wt': 0.0}
+                    return {
+                        "CO2": 0.0,
+                        "H2O": 0.0,
+                        "FluidMass_grams": 0.0,
+                        "FluidProportion_wt": 0.0,
+                    }
             else:
                 if verbose is False:
-                    return {'CO2': 1.0, 'H2O': 0.0}
+                    return {"CO2": 1.0, "H2O": 0.0}
         else:
             if bulk_comp_dict["CO2"] == 0:
                 if verbose is False:
-                    return {'CO2': 0.0, 'H2O': 1.0}
+                    return {"CO2": 0.0, "H2O": 1.0}
 
         pressureMPa = pressure / 10.0
 
         melts.set_bulk_composition(bulk_comp_dict)
 
-        output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
+        with redirect_stdout(_f):
+            output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
         (status, temperature, pressureMPa, xmlout) = output[0]
-        fluid_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
-        flsystem_wtper = 100 * fluid_mass / (fluid_mass +
-                                             melts.get_mass_of_phase(xmlout, phase_name='Liquid'))
+        fluid_mass = melts.get_mass_of_phase(xmlout, phase_name="Fluid")
+        flsystem_wtper = (
+            100
+            * fluid_mass
+            / (fluid_mass + melts.get_mass_of_phase(xmlout, phase_name="Liquid"))
+        )
 
         if fluid_mass > 0.0:
-            fluid_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid',
-                                                        mode='component')
-            fluid_comp_H2O = fluid_comp['Water']
-            fluid_comp_CO2 = fluid_comp['Carbon Dioxide']
+            fluid_comp = melts.get_composition_of_phase(
+                xmlout, phase_name="Fluid", mode="component"
+            )
+            fluid_comp_H2O = fluid_comp["Water"]
+            fluid_comp_CO2 = fluid_comp["Carbon Dioxide"]
         else:
             fluid_comp_H2O = 0
             fluid_comp_CO2 = 0
@@ -446,14 +533,19 @@ class MagmaSat(model_classes.Model):
         melts.set_bulk_composition(self.bulk_comp_orig)  # reset
 
         if verbose is False:
-            return {'CO2': fluid_comp_CO2, 'H2O': fluid_comp_H2O}
+            return {"CO2": fluid_comp_CO2, "H2O": fluid_comp_H2O}
 
         if verbose:
-            return {'CO2': fluid_comp_CO2, 'H2O': fluid_comp_H2O,
-                    'FluidMass_grams': fluid_mass,
-                    'FluidProportion_wt': flsystem_wtper}
+            return {
+                "CO2": fluid_comp_CO2,
+                "H2O": fluid_comp_H2O,
+                "FluidMass_grams": fluid_mass,
+                "FluidProportion_wt": flsystem_wtper,
+            }
 
-    def calculate_saturation_pressure(self, sample, temperature, verbose=False, **kwargs):
+    def calculate_saturation_pressure(
+        self, sample, temperature, verbose=False, **kwargs
+    ):
         """
         Calculates the saturation pressure of a sample composition.
 
@@ -479,16 +571,18 @@ class MagmaSat(model_classes.Model):
         """
         _sample = self.preprocess_sample(sample)
 
-        melts.set_bulk_composition(_sample.get_composition(units='wtpt_oxides',
-                                                           normalization='fixedvolatiles'))
+        melts.set_bulk_composition(
+            _sample.get_composition(units="wtpt_oxides", normalization="fixedvolatiles")
+        )
         # Coarse search
         # NOTE that pressure is in MPa for MagmaSat calculations but reported in bars.
         pressureMPa = 2000
 
         # Check if saturated at 2000 MPa (rare, for deep samples)
-        output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
+        with redirect_stdout(_f):
+            output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
         (status, temperature, pressureMPa, xmlout) = output[0]
-        fluid_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
+        fluid_mass = melts.get_mass_of_phase(xmlout, phase_name="Fluid")
 
         if fluid_mass <= 0:  # if not sat'd at 2000 MPa
             while fluid_mass <= 0:
@@ -496,9 +590,12 @@ class MagmaSat(model_classes.Model):
                 if pressureMPa <= 0:
                     break
 
-                output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
+                with redirect_stdout(_f):
+                    output = melts.equilibrate_tp(
+                        temperature, pressureMPa, initialize=True
+                    )
                 (status, temperature, pressureMPa, xmlout) = output[0]
-                fluid_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
+                fluid_mass = melts.get_mass_of_phase(xmlout, phase_name="Fluid")
 
             fluid_mass = 0
             pressureMPa += 100
@@ -507,18 +604,25 @@ class MagmaSat(model_classes.Model):
             while fluid_mass > 0:
                 pressureMPa += 100
 
-                melts.set_bulk_composition(_sample.get_composition(units='wtpt_oxides',
-                                                                   normalization='fixedvolatiles'))
-                output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
+                melts.set_bulk_composition(
+                    _sample.get_composition(
+                        units="wtpt_oxides", normalization="fixedvolatiles"
+                    )
+                )
+                with redirect_stdout(_f):
+                    output = melts.equilibrate_tp(
+                        temperature, pressureMPa, initialize=True
+                    )
                 (status, temperature, pressureMPa, xmlout) = output[0]
-                fluid_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
+                fluid_mass = melts.get_mass_of_phase(xmlout, phase_name="Fluid")
 
             fluid_mass = 1.0
             pressureMPa -= 100
 
         # Refined search 1
-        melts.set_bulk_composition(_sample.get_composition(units='wtpt_oxides',
-                                                           normalization='fixedvolatiles'))
+        melts.set_bulk_composition(
+            _sample.get_composition(units="wtpt_oxides", normalization="fixedvolatiles")
+        )
 
         if fluid_mass <= 0:  # proceed down pressure search
             while fluid_mass <= 0:
@@ -526,9 +630,12 @@ class MagmaSat(model_classes.Model):
                 if pressureMPa <= 0:
                     break
 
-                output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
+                with redirect_stdout(_f):
+                    output = melts.equilibrate_tp(
+                        temperature, pressureMPa, initialize=True
+                    )
                 (status, temperature, pressureMPa, xmlout) = output[0]
-                fluid_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
+                fluid_mass = melts.get_mass_of_phase(xmlout, phase_name="Fluid")
 
             fluid_mass = 0
             pressureMPa += 10
@@ -537,18 +644,25 @@ class MagmaSat(model_classes.Model):
             while fluid_mass > 0:
                 pressureMPa += 10
 
-                melts.set_bulk_composition(_sample.get_composition(units='wtpt_oxides',
-                                                                   normalization='fixedvolatiles'))
-                output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
+                melts.set_bulk_composition(
+                    _sample.get_composition(
+                        units="wtpt_oxides", normalization="fixedvolatiles"
+                    )
+                )
+                with redirect_stdout(_f):
+                    output = melts.equilibrate_tp(
+                        temperature, pressureMPa, initialize=True
+                    )
                 (status, temperature, pressureMPa, xmlout) = output[0]
-                fluid_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
+                fluid_mass = melts.get_mass_of_phase(xmlout, phase_name="Fluid")
 
             fluid_mass = 1.0
             pressureMPa -= 10
 
         # Refined search 2
-        melts.set_bulk_composition(_sample.get_composition(units='wtpt_oxides',
-                                                           normalization='fixedvolatiles'))
+        melts.set_bulk_composition(
+            _sample.get_composition(units="wtpt_oxides", normalization="fixedvolatiles")
+        )
 
         if fluid_mass <= 0:  # proceed down pressure search
             while fluid_mass <= 0:
@@ -556,32 +670,46 @@ class MagmaSat(model_classes.Model):
                 if pressureMPa <= 0:
                     break
 
-                output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
+                with redirect_stdout(_f):
+                    output = melts.equilibrate_tp(
+                        temperature, pressureMPa, initialize=True
+                    )
                 (status, temperature, pressureMPa, xmlout) = output[0]
-                fluid_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
+                fluid_mass = melts.get_mass_of_phase(xmlout, phase_name="Fluid")
 
         elif fluid_mass > 0:  # proceed upward pressure search
             while fluid_mass > 0:
                 pressureMPa += 1
 
-                melts.set_bulk_composition(_sample.get_composition(units='wtpt_oxides',
-                                                                   normalization='fixedvolatiles'))
-                output = melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
+                melts.set_bulk_composition(
+                    _sample.get_composition(
+                        units="wtpt_oxides", normalization="fixedvolatiles"
+                    )
+                )
+                with redirect_stdout(_f):
+                    output = melts.equilibrate_tp(
+                        temperature, pressureMPa, initialize=True
+                    )
                 (status, temperature, pressureMPa, xmlout) = output[0]
-                fluid_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
+                fluid_mass = melts.get_mass_of_phase(xmlout, phase_name="Fluid")
 
         if pressureMPa != np.nan:
-            satP = pressureMPa*10  # convert pressure to bars
+            satP = pressureMPa * 10  # convert pressure to bars
             flmass = fluid_mass
-            flsystem_wtper = (100 * fluid_mass / (fluid_mass +
-                              melts.get_mass_of_phase(xmlout, phase_name='Liquid')))
-            flcomp = melts.get_composition_of_phase(xmlout, phase_name='Fluid', mode='component')
+            flsystem_wtper = (
+                100
+                * fluid_mass
+                / (fluid_mass + melts.get_mass_of_phase(xmlout, phase_name="Liquid"))
+            )
+            flcomp = melts.get_composition_of_phase(
+                xmlout, phase_name="Fluid", mode="component"
+            )
             try:
-                flH2O = flcomp['Water']
+                flH2O = flcomp["Water"]
             except Exception:
                 flH2O = 0.0
             try:
-                flCO2 = flcomp['Carbon Dioxide']
+                flCO2 = flcomp["Carbon Dioxide"]
             except Exception:
                 flCO2 = 0.0
         else:
@@ -589,9 +717,11 @@ class MagmaSat(model_classes.Model):
             flsystem_wtper = np.nan
             flH2O = np.nan
             flCO2 = np.nan
-            warnmessage = 'Calculation failed.'
+            warnmessage = "Calculation failed."
 
-        melts.set_bulk_composition(self.bulk_comp_orig)  # this needs to be reset always!
+        melts.set_bulk_composition(
+            self.bulk_comp_orig
+        )  # this needs to be reset always!
 
         if verbose is False:
             try:
@@ -605,13 +735,25 @@ class MagmaSat(model_classes.Model):
                 w.warn(warnmessage)
             except Exception:
                 pass
-            return {"SaturationP_bars": satP, "FluidMass_grams": flmass,
-                    "FluidProportion_wt": flsystem_wtper,
-                    "XH2O_fl": flH2O, "XCO2_fl": flCO2}
+            return {
+                "SaturationP_bars": satP,
+                "FluidMass_grams": flmass,
+                "FluidProportion_wt": flsystem_wtper,
+                "XH2O_fl": flH2O,
+                "XCO2_fl": flCO2,
+            }
 
-    def calculate_isobars_and_isopleths(self, sample, temperature, pressure_list,
-                                        isopleth_list=None, smooth_isobars=True,
-                                        smooth_isopleths=True, print_status=True, **kwargs):
+    def calculate_isobars_and_isopleths(
+        self,
+        sample,
+        temperature,
+        pressure_list,
+        isopleth_list=None,
+        smooth_isobars=True,
+        smooth_isopleths=True,
+        print_status=True,
+        **kwargs
+    ):
         """
         Calculates isobars and isopleths at a constant temperature for a given sample. Isobars can
         be calculated for any number of pressures. Isobars are calculated using 5 XH2O values
@@ -663,8 +805,10 @@ class MagmaSat(model_classes.Model):
         elif isinstance(pressure_list, int) or isinstance(pressure_list, float):
             P_vals = [pressure_list]
         else:
-            raise core.InputError("pressure_list must be a single float (1000.0), int (1000), or "
-                                  "list of those [1000, 2000.0, 3000].")
+            raise core.InputError(
+                "pressure_list must be a single float (1000.0), int (1000), or "
+                "list of those [1000, 2000.0, 3000]."
+            )
 
         if isopleth_list is None:
             pass
@@ -695,32 +839,51 @@ class MagmaSat(model_classes.Model):
                 X_iter += 1
                 if print_status:
                     if isopleth_list is not None and X in iso_vals:
-                        sys.stdout.write("\r Calculating isopleth at XH2Ofluid = " + str(X) +
-                                         "               ")
+                        sys.stdout.write(
+                            "\r Calculating isopleth at XH2Ofluid = "
+                            + str(X)
+                            + "               "
+                        )
                     if X not in iso_vals:
-                        sys.stdout.write("\r Calculating isobar control point at XH2Ofluid = " +
-                                         str(X) + "               ")
+                        sys.stdout.write(
+                            "\r Calculating isobar control point at XH2Ofluid = "
+                            + str(X)
+                            + "               "
+                        )
                     if X_iter == len(all_iso_vals):
-                        sys.stdout.write("\r done.                                               "
-                                         "                                                       "
-                                         "                     \n")
-                saturated_vols = self.calculate_dissolved_volatiles(sample=_sample,
-                                                                    temperature=temperature,
-                                                                    pressure=i,
-                                                                    H2O_guess=guess, X_fluid=X)
+                        sys.stdout.write(
+                            "\r done.                                               "
+                            "                                                       "
+                            "                     \n"
+                        )
+                saturated_vols = self.calculate_dissolved_volatiles(
+                    sample=_sample,
+                    temperature=temperature,
+                    pressure=i,
+                    H2O_guess=guess,
+                    X_fluid=X,
+                )
 
                 if X in required_iso_vals:
-                    isobar_data.append([i, saturated_vols['H2O_liq'], saturated_vols['CO2_liq']])
+                    isobar_data.append(
+                        [i, saturated_vols["H2O_liq"], saturated_vols["CO2_liq"]]
+                    )
                 if X in iso_vals:
-                    isopleth_data.append([X, saturated_vols['H2O_liq'], saturated_vols['CO2_liq']])
+                    isopleth_data.append(
+                        [X, saturated_vols["H2O_liq"], saturated_vols["CO2_liq"]]
+                    )
 
-                guess = saturated_vols['H2O_liq']
+                guess = saturated_vols["H2O_liq"]
 
         if print_status:
             print("Done!")
 
-        isobars_df = pd.DataFrame(isobar_data, columns=['Pressure', 'H2O_liq', 'CO2_liq'])
-        isopleths_df = pd.DataFrame(isopleth_data, columns=['XH2O_fl', 'H2O_liq', 'CO2_liq'])
+        isobars_df = pd.DataFrame(
+            isobar_data, columns=["Pressure", "H2O_liq", "CO2_liq"]
+        )
+        isopleths_df = pd.DataFrame(
+            isopleth_data, columns=["XH2O_fl", "H2O_liq", "CO2_liq"]
+        )
 
         melts.set_bulk_composition(self.bulk_comp_orig)  # reset
 
@@ -731,15 +894,25 @@ class MagmaSat(model_classes.Model):
             res_isobars = isobars_df.copy()
 
         if smooth_isopleths:
-            isopleths_smoothed = vplot.smooth_isobars_and_isopleths(isopleths=isopleths_df)
+            isopleths_smoothed = vplot.smooth_isobars_and_isopleths(
+                isopleths=isopleths_df
+            )
             res_isopleths = isopleths_smoothed.copy()
         else:
             res_isopleths = isopleths_df.copy()
 
         return res_isobars, res_isopleths
 
-    def calculate_degassing_path(self, sample, temperature, pressure='saturation',
-                                 fractionate_vapor=0.0, init_vapor=0.0, steps=50, **kwargs):
+    def calculate_degassing_path(
+        self,
+        sample,
+        temperature,
+        pressure="saturation",
+        fractionate_vapor=0.0,
+        init_vapor=0.0,
+        steps=50,
+        **kwargs
+    ):
         """
         Calculates degassing path for one sample
 
@@ -785,11 +958,13 @@ class MagmaSat(model_classes.Model):
         pandas DataFrame object
 
         """
-        sys.stdout.write("Finding saturation point... ")  # print start of calculation to terminal
+        sys.stdout.write(
+            "Finding saturation point... "
+        )  # print start of calculation to terminal
         _sample = self.preprocess_sample(sample)
 
         # Normalize sample composition
-        _normed_comp = _sample.get_composition(normalization='standard')
+        _normed_comp = _sample.get_composition(normalization="standard")
         _sample.change_composition(_normed_comp)
         _sample_dict = _sample.get_composition()
 
@@ -797,22 +972,23 @@ class MagmaSat(model_classes.Model):
         # MELTS needs to be reloaded here. If an unfeasible composition gets set inside of MELTS,
         # which can happen when running open-system degassing path calcs, the following calls to
         # MELTS will fail. This prevents that from happening.
-        melts = equilibrate.MELTSmodel('1.2.0')
+        melts = equilibrate.MELTSmodel("1.2.0")
 
         # Suppress phases not required in the melts simulation
         phases = melts.get_phase_names()
         for phase in phases:
             melts.set_phase_inclusion_status({phase: False})
-        melts.set_phase_inclusion_status({'Fluid': True, 'Liquid': True})
+        melts.set_phase_inclusion_status({"Fluid": True, "Liquid": True})
 
         melts.set_bulk_composition(_sample_dict)
         # ------------------------- #
 
         # Get saturation pressure
-        data = self.calculate_saturation_pressure(sample=_sample, temperature=temperature,
-                                                  verbose=True)
+        data = self.calculate_saturation_pressure(
+            sample=_sample, temperature=temperature, verbose=True
+        )
 
-        if pressure == 'saturation' or pressure >= data["SaturationP_bars"]:
+        if pressure == "saturation" or pressure >= data["SaturationP_bars"]:
             SatP_MPa = data["SaturationP_bars"] / 10.0
         else:
             SatP_MPa = pressure / 10.0
@@ -827,22 +1003,25 @@ class MagmaSat(model_classes.Model):
         fl_wtper = data["FluidProportion_wt"]
 
         while fl_wtper <= init_vapor:
-            output = melts.equilibrate_tp(temperature, SatP_MPa, initialize=True)
+            with redirect_stdout(_f):
+                output = melts.equilibrate_tp(temperature, SatP_MPa, initialize=True)
             (status, temperature, p, xmlout) = output[0]
-            fl_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
-            liq_mass = melts.get_mass_of_phase(xmlout, phase_name='Liquid')
-            fl_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid')
-            fl_wtper = 100 * fl_mass / (fl_mass+liq_mass)
+            fl_mass = melts.get_mass_of_phase(xmlout, phase_name="Fluid")
+            liq_mass = melts.get_mass_of_phase(xmlout, phase_name="Liquid")
+            fl_comp = melts.get_composition_of_phase(xmlout, phase_name="Fluid")
+            fl_wtper = 100 * fl_mass / (fl_mass + liq_mass)
             try:
-                _sample_dict["H2O"] += fl_comp["H2O"]*0.0005
+                _sample_dict["H2O"] += fl_comp["H2O"] * 0.0005
             except Exception:
                 _sample_dict["H2O"] = _sample_dict["H2O"] * 1.1
             try:
-                _sample_dict["CO2"] += fl_comp["CO2"]*0.0005
+                _sample_dict["CO2"] += fl_comp["CO2"] * 0.0005
             except Exception:
                 _sample_dict["CO2"] = _sample_dict["CO2"] * 1.1
             _sample = sample_class.Sample(_sample_dict)
-            _sample_dict = _sample.get_composition(normalization='standard', units="wtpt_oxides")
+            _sample_dict = _sample.get_composition(
+                normalization="standard", units="wtpt_oxides"
+            )
             melts.set_bulk_composition(_sample_dict)  # reset MELTS
 
         pressure = []
@@ -856,18 +1035,23 @@ class MagmaSat(model_classes.Model):
         for i in P_array:
             # Handle status_bar
             iterno += 1
-            percent = iterno/len(P_array)
-            batchfile.status_bar.status_bar(percent, btext="Calculating degassing path...")
+            percent = iterno / len(P_array)
+            batchfile.status_bar.status_bar(
+                percent, btext="Calculating degassing path..."
+            )
 
             fl_mass = 0.0
             melts.set_bulk_composition(_sample_dict)
-            output = melts.equilibrate_tp(temperature, i, initialize=True)
+            with redirect_stdout(_f):
+                output = melts.equilibrate_tp(temperature, i, initialize=True)
             (status, temperature, p, xmlout) = output[0]
-            liq_comp = melts.get_composition_of_phase(xmlout, phase_name='Liquid')
-            fl_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid', mode='component')
-            liq_mass = melts.get_mass_of_phase(xmlout, phase_name='Liquid')
-            fl_mass = melts.get_mass_of_phase(xmlout, phase_name='Fluid')
-            fl_wtper = 100 * fl_mass / (fl_mass+liq_mass)
+            liq_comp = melts.get_composition_of_phase(xmlout, phase_name="Liquid")
+            fl_comp = melts.get_composition_of_phase(
+                xmlout, phase_name="Fluid", mode="component"
+            )
+            liq_mass = melts.get_mass_of_phase(xmlout, phase_name="Liquid")
+            fl_mass = melts.get_mass_of_phase(xmlout, phase_name="Fluid")
+            fl_wtper = 100 * fl_mass / (fl_mass + liq_mass)
 
             if fl_mass > 0:
                 pressure.append(p * 10.0)
@@ -890,23 +1074,36 @@ class MagmaSat(model_classes.Model):
                 fluid_wtper.append(fl_wtper)
 
                 try:
-                    _sample_dict["H2O"] = (liq_comp["H2O"] + (_sample_dict["H2O"] -
-                                           liq_comp["H2O"]) * (1.0-fractionate_vapor))
+                    _sample_dict["H2O"] = liq_comp["H2O"] + (
+                        _sample_dict["H2O"] - liq_comp["H2O"]
+                    ) * (1.0 - fractionate_vapor)
                 except Exception:
                     _sample_dict["H2O"] = 0
                 try:
-                    _sample_dict["CO2"] = (liq_comp["CO2"] + (_sample_dict["CO2"] -
-                                           liq_comp["CO2"]) * (1.0-fractionate_vapor))
+                    _sample_dict["CO2"] = liq_comp["CO2"] + (
+                        _sample_dict["CO2"] - liq_comp["CO2"]
+                    ) * (1.0 - fractionate_vapor)
                 except Exception:
                     _sample_dict["CO2"] = 0
             _sample = sample_class.Sample(_sample_dict)
-            _sample_dict = _sample.get_composition(normalization='standard', units='wtpt_oxides')
+            _sample_dict = _sample.get_composition(
+                normalization="standard", units="wtpt_oxides"
+            )
 
-        melts.set_bulk_composition(self.bulk_comp_orig)  # this needs to be reset always!
-        open_degassing_df = pd.DataFrame(list(zip(pressure, H2Oliq, CO2liq, H2Ofl,
-                                                  CO2fl, fluid_wtper)),
-                                         columns=['Pressure_bars', 'H2O_liq', 'CO2_liq',
-                                                  'XH2O_fl', 'XCO2_fl', 'FluidProportion_wt'])
+        melts.set_bulk_composition(
+            self.bulk_comp_orig
+        )  # this needs to be reset always!
+        open_degassing_df = pd.DataFrame(
+            list(zip(pressure, H2Oliq, CO2liq, H2Ofl, CO2fl, fluid_wtper)),
+            columns=[
+                "Pressure_bars",
+                "H2O_liq",
+                "CO2_liq",
+                "XH2O_fl",
+                "XCO2_fl",
+                "FluidProportion_wt",
+            ],
+        )
 
         open_degassing_df = open_degassing_df[open_degassing_df.CO2_liq > 0.000001]
         open_degassing_df = open_degassing_df[open_degassing_df.H2O_liq > 0.000001]

@@ -5,8 +5,8 @@ A generalized python library for calculating and plotting various things
 related to mixed volatile (H2O-CO2) solubility in silicate melts.
 """
 
-__version__ = "1.0.3"
-__author__ = 'Kayla Iacovino, Simon Matthews, and Penny Wieser'
+__version__ = "1.0.4"
+__author__ = "Kayla Iacovino, Simon Matthews, and Penny Wieser"
 
 # ----------------- IMPORTS ----------------- #
 
@@ -14,8 +14,8 @@ import warnings as w
 import pandas as pd
 
 import VESIcal.core
-from VESIcal.core import oxides, anhydrous_oxides, volatiles # noqa F401
-from VESIcal.core import fluid_molfrac_to_wt, fluid_wt_to_molfrac # noqa F401
+from VESIcal.core import oxides, anhydrous_oxides, volatiles  # noqa F401
+from VESIcal.core import fluid_molfrac_to_wt, fluid_wt_to_molfrac  # noqa F401
 import VESIcal.activity_models
 import VESIcal.batchfile
 import VESIcal.batchmodel
@@ -28,39 +28,41 @@ import VESIcal.sample_class
 import VESIcal.vplot
 
 # -------------- TURN OFF WARNINGS ------------- #
-w.filterwarnings("ignore",
-                 message="rubicon.objc.ctypes_patch has only been tested ")
+w.filterwarnings("ignore", message="rubicon.objc.ctypes_patch has only been tested ")
 w.filterwarnings("ignore", message="The handle")
 
 
 # -------------- CALCULATION DEFINITIONS ----- #
 class calculate_dissolved_volatiles(
-                      VESIcal.calculate_classes.calculate_dissolved_volatiles):
+    VESIcal.calculate_classes.calculate_dissolved_volatiles
+):
     pass
 
 
 class calculate_equilibrium_fluid_comp(
-                   VESIcal.calculate_classes.calculate_equilibrium_fluid_comp):
+    VESIcal.calculate_classes.calculate_equilibrium_fluid_comp
+):
     pass
 
 
 class calculate_isobars_and_isopleths(
-                    VESIcal.calculate_classes.calculate_isobars_and_isopleths):
+    VESIcal.calculate_classes.calculate_isobars_and_isopleths
+):
     pass
 
 
 class calculate_saturation_pressure(
-                      VESIcal.calculate_classes.calculate_saturation_pressure):
+    VESIcal.calculate_classes.calculate_saturation_pressure
+):
     pass
 
 
-class calculate_degassing_path(
-                           VESIcal.calculate_classes.calculate_degassing_path):
+class calculate_degassing_path(VESIcal.calculate_classes.calculate_degassing_path):
     pass
 
 
 # -------------- ACCESS TO GET_MODEL_NAMES ----- #
-def get_model_names(model='all'):
+def get_model_names(model="all"):
     return VESIcal.models.get_model_names(model=model)
 
 
@@ -248,7 +250,7 @@ def show():
 
 # -------------- SAMPLE PROCESSING ---------- #
 class Sample(VESIcal.sample_class.Sample):
-    """ The sample class stores compositional information for samples, and contains methods for
+    """The sample class stores compositional information for samples, and contains methods for
     normalization and other compositional calculations.
 
     The composition is stored as wtpt. If the composition is provided as wtpt, no
@@ -284,6 +286,7 @@ class Sample(VESIcal.sample_class.Sample):
         - mol_cations
         - mol_singleO
     """
+
     pass
 
 
@@ -304,7 +307,7 @@ def get_oxides(sample):
     Sample composition with extranneous information removed.
     """
 
-    clean = {oxide:  sample[oxide] for oxide in VESIcal.core.oxides}
+    clean = {oxide: sample[oxide] for oxide in VESIcal.core.oxides}
 
     if isinstance(sample, dict):
         return clean
@@ -379,6 +382,7 @@ class BatchFile(VESIcal.batchmodel.BatchFile):
             case set `dataframe` equal to the dataframe object being passed in.
             If using this option, pass None to filename.
     """
+
     pass
 
 
