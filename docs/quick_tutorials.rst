@@ -414,7 +414,7 @@ Optionally, you can tell VESIcal what to name your new sheets in your new excel 
 
 .. code-block:: python
 
-	myfile.save_excel("myoutput.xlsx", calculations=[dissolved, SatP], sheet_name=["My dissolved data", "My saturation data"])
+	myfile.save_excel("myoutput.xlsx", calculations=[dissolved, SatP], sheet_names=["My dissolved data", "My saturation data"])
 
 If instead you wish to save these calculations to CSV files, you can do so as:
 
