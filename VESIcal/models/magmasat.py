@@ -89,11 +89,20 @@ class MagmaSat(model_classes.Model):
             normalization=_sample.default_normalization,
             asSampleClass=True,
         )
-        for oxide in core.oxides:
+
+        # set any necessary magmasat oxides to 0 if no value given
+        for oxide in core.magmasat_oxides:
             if oxide in _sample.get_composition():
                 pass
             else:
                 _sample.change_composition({oxide: 0.0})
+
+        # remove any non-magmasat oxides
+        for oxide in _sample.get_composition().index:
+            if oxide in core.magmasat_oxides:
+                pass
+            else:
+                _sample.delete_oxide(oxide)
 
         self.bulk_comp_orig = _sample.get_composition(units="wtpt_oxides")
 
@@ -166,7 +175,8 @@ class MagmaSat(model_classes.Model):
         pressureMPa = pressure / 10.0
 
         bulk_comp_dict = sample.get_composition(units="wtpt_oxides")
-        bulk_comp_dict = {oxide: bulk_comp_dict[oxide] for oxide in core.oxides}
+        bulk_comp_dict = {oxide: bulk_comp_dict[oxide] for oxide in 
+                            core.magmasat_oxides}
         bulk_comp_dict["H2O"] = H2O
         bulk_comp_dict["CO2"] = CO2
         melts.set_bulk_composition(bulk_comp_dict)
