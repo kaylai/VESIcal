@@ -1,8 +1,8 @@
 # ---------- DEFINE SOME CONSTANTS ------------- #
 oxides = ['SiO2', 'TiO2', 'Al2O3', 'Fe2O3', 'Cr2O3', 'FeO', 'MnO', 'MgO', 'NiO', 'CoO', 'CaO',
-          'Na2O', 'K2O', 'P2O5', 'H2O', 'CO2']
+          'Na2O', 'K2O', 'P2O5', 'H2O', 'CO2', 'F2O']
 anhydrous_oxides = ['SiO2', 'TiO2', 'Al2O3', 'Fe2O3', 'Cr2O3', 'FeO', 'MnO', 'MgO', 'NiO', 'CoO',
-                    'CaO', 'Na2O', 'K2O', 'P2O5']
+                    'CaO', 'Na2O', 'K2O', 'P2O5', 'F2O']
 volatiles = ['H2O', 'CO2']
 oxideMass = {'SiO2':  28.085 + 15.999 * 2,
              'MgO':   24.305 + 15.999,
@@ -19,24 +19,26 @@ oxideMass = {'SiO2':  28.085 + 15.999 * 2,
              'CoO':   44.01,
              'Fe2O3': 55.845 * 2 + 15.999 * 3,
              'H2O':   18.02,
-             'CO2':   44.01}
+             'CO2':   44.01,
+             'F2O':   37.997,
+             'F':     18.998}
 
 CationNum = {'SiO2': 1, 'MgO': 1, 'FeO': 1, 'CaO': 1, 'Al2O3': 2, 'Na2O': 2,
              'K2O': 2, 'MnO': 1, 'TiO2': 1, 'P2O5': 2, 'Cr2O3': 2,
-             'NiO': 1, 'CoO': 1, 'Fe2O3': 2, 'H2O': 2, 'CO2': 1}
+             'NiO': 1, 'CoO': 1, 'Fe2O3': 2, 'H2O': 2, 'CO2': 1, 'F2O': 2}
 
 OxygenNum = {'SiO2': 2, 'MgO': 1, 'FeO': 1, 'CaO': 1, 'Al2O3': 3, 'Na2O': 1,
              'K2O': 1, 'MnO': 1, 'TiO2': 2, 'P2O5': 5, 'Cr2O3': 3,
-             'NiO': 1, 'CoO': 1, 'Fe2O3': 3, 'H2O': 1, 'CO2': 2}
+             'NiO': 1, 'CoO': 1, 'Fe2O3': 3, 'H2O': 1, 'CO2': 2, 'F2O': 1}
 
 CationCharge = {'SiO2': 4, 'MgO': 2, 'FeO': 2, 'CaO': 2, 'Al2O3': 3, 'Na2O': 1,
                 'K2O': 1, 'MnO': 2, 'TiO2': 4, 'P2O5': 5, 'Cr2O3': 3,
-                'NiO': 2, 'CoO': 2, 'Fe2O3': 3, 'H2O': 1, 'CO2': 4}
+                'NiO': 2, 'CoO': 2, 'Fe2O3': 3, 'H2O': 1, 'CO2': 4, 'F2O': 1}
 
 CationMass = {'SiO2': 28.085, 'MgO': 24.305, 'FeO': 55.845, 'CaO': 40.078, 'Al2O3': 26.982,
               'Na2O': 22.990, 'K2O': 39.098, 'MnO': 54.938, 'TiO2': 47.867, 'P2O5': 30.974,
               'Cr2O3': 51.996, 'NiO': 58.693, 'CoO': 28.01, 'Fe2O3': 55.845, 'H2O': 1.01,
-              'CO2': 12.011}
+              'CO2': 12.011, 'F2O': 18.998403}
 
 oxides_to_cations = {'SiO2': 'Si', 'MgO': 'Mg', 'FeO': 'Fe', 'CaO': 'Ca', 'Al2O3': 'Al',
                      'Na2O': 'Na', 'K2O': 'K', 'MnO': 'Mn', 'TiO2': 'Ti', 'P2O5': 'P',

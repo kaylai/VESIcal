@@ -26,6 +26,7 @@ import VESIcal.fugacity_models
 import VESIcal.models
 import VESIcal.sample_class
 import VESIcal.vplot
+import VESIcal.thermo
 
 # -------------- TURN OFF WARNINGS ------------- #
 w.filterwarnings("ignore", message="rubicon.objc.ctypes_patch has only been tested ")
@@ -58,6 +59,16 @@ class calculate_saturation_pressure(
 
 
 class calculate_degassing_path(VESIcal.calculate_classes.calculate_degassing_path):
+    pass
+
+class calculate_liquid_density(
+    VESIcal.thermo.thermo_calculate_classes.calculate_liquid_density
+):
+    pass
+
+class calculate_liquid_viscosity(
+    VESIcal.thermo.thermo_calculate_classes.calculate_liquid_viscosity
+):
     pass
 
 
