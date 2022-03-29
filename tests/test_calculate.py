@@ -1,6 +1,83 @@
 import unittest
 import VESIcal as v
 
+class TestLiquidDensity(unittest.TestCase):
+    def setUp(self):
+        # Sample with untis as wtpt_oxides
+        self.majors_wtpt = {'SiO2':    47.95,
+                         'TiO2':    1.67,
+                         'Al2O3':   17.32,
+                         'FeO':     10.24,
+                         'Fe2O3':   0.1,
+                         'MgO':     5.76,
+                         'CaO':     10.93,
+                         'Na2O':    3.45,
+                         'K2O':     1.99,
+                         'P2O5':    0.51,
+                         'MnO':     0.1,
+                         'H2O':     2.0,
+                         'CO2':     0.1}
+
+        # Set conditions of calculation
+        self.temperature = 1000
+        self.pressure = 1000
+
+        # create Sample object and set default units to wtpt_oxides
+        self.sample_wtpt = v.Sample(self.majors_wtpt)
+        self.sample_wtpt.set_default_units("wtpt_oxides")
+
+        # create sample and set default units to mol_oxides
+        self.sample_molox = v.Sample(self.majors_wtpt)
+        self.sample_molox.set_default_units("mol_oxides")
+
+        # BatchFile with test sample as defined above in wtpt_oxides
+        try:
+            self.batch_wtpt = v.BatchFile('BatchTest.xlsx', units='wtpt_oxides')
+        except:
+            self.batch_wtpt = v.BatchFile('tests/BatchTest.xlsx', 
+                                            units='wtpt_oxides')
+        self.batch_wtpt.set_default_units("wtpt_oxides")
+
+        # BatchFile with test sample as defined above in mol_oxides
+        try:
+            self.batch_molox = v.BatchFile('BatchTest.xlsx')
+        except:
+            self.batch_molox = v.BatchFile('tests/BatchTest.xlsx')
+        self.batch_molox.set_default_units("mol_oxides")
+        
+        # densities calculated with DensityX
+        self.densityx = 2620.8319106679364
+
+    def test_calculate_single_wtpt(self):
+        calcd_result = v.calculate_liquid_density(self.sample_wtpt,
+                                                  temperature=self.temperature, 
+                                                  pressure=self.pressure).result
+        known_result = self.densityx
+        self.assertAlmostEqual(calcd_result, known_result, places=4)
+
+    def test_calculate_batch_wtpt(self):
+        batch_result = self.batch_wtpt.calculate_liquid_density(
+                                            temperature=self.temperature,
+                                            pressure=self.pressure)
+        calcd_result = batch_result['Density_liq_VESIcal'].loc['test_samp']
+        known_result = self.densityx
+        self.assertAlmostEqual(calcd_result, known_result, places=4)
+
+    def test_calculate_single_molox(self):
+        calcd_result = v.calculate_liquid_density(self.sample_molox,
+                                                  temperature=self.temperature, 
+                                                  pressure=self.pressure).result
+        known_result = self.densityx
+        self.assertAlmostEqual(calcd_result, known_result, places=4)
+
+    def test_calculate_batch_molox(self):
+        batch_result = self.batch_molox.calculate_liquid_density(
+                                            temperature=self.temperature,
+                                            pressure=self.pressure)
+        calcd_result = batch_result['Density_liq_VESIcal'].loc['test_samp']
+        known_result = self.densityx
+        self.assertAlmostEqual(calcd_result, known_result, places=4)
+
 class TestDissolvedVolatiles(unittest.TestCase):
     def setUp(self):
         # Sample with units as wtpt_oxides
