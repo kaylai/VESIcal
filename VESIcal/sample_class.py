@@ -305,6 +305,35 @@ class Sample(object):
 
         return self
 
+    def delete_oxide(self, oxide, inplace=True):
+        """ Allows user to remove a given oxide from the Sample composition
+
+        Parameters
+        ----------
+        oxide:  str or list
+            Name or names of the oxide(s) to remove.
+
+        inplace:    bool
+            If True the object will be modified in place. If False, a copy of the Sample
+            object will be created, modified, and then returned.
+
+        Returns
+        -------
+        Sample class
+            Modified Sample class.
+        """
+        # if new_composition is pandas.Series, convert to dict
+        if isinstance(oxide, str):
+            oxide = [oxide]
+
+        if inplace is False:
+            newsample = deepcopy(self)
+            return newsample.delete_oxide(oxide)
+
+        self._composition.drop(index=oxide, inplace=True)
+
+        return self
+
     def get_formulaweight(self, exclude_volatiles=False):
         """ Converts major element oxides in wt% to the formula weight (on a 1 oxygen basis).
 
