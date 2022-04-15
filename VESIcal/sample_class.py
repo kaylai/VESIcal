@@ -71,6 +71,28 @@ class Sample(object):
         self.set_default_normalization(default_normalization)
         self.set_default_units(default_units)
 
+        # handle possibly passed FeOT values, convert to FeO and warn user
+        possible_FeOT_names = ['FeOT', 'FeO*', 'FeOtot', 'FeOt', 'FeOtotal',
+                                'FeOstar']
+
+        for name in possible_FeOT_names:
+            if name in composition:
+                if 'FeO' in composition:
+                    w.warn("FeO and " + str(name) + " oxides passed. Discarding " + str(name) +
+                        " oxide.", RuntimeWarning, stacklevel=2)
+                    if isinstance(composition, dict):
+                        del composition[name]
+                    if isinstance(composition, pd.Series):
+                        composition.drop(labels=[name], inplace=True)
+                else:
+                    w.warn(str(name) + " oxide found. Using " + str(name) + " for FeO value.",
+                        RuntimeWarning, stacklevel=2)
+                    composition['FeO'] = composition[name]
+                    if isinstance(composition, dict):
+                        del composition[name]
+                    if isinstance(composition, pd.Series):
+                        composition.drop(labels=[name], inplace=True)
+
     def set_default_normalization(self, default_normalization):
         """ Set the default type of normalization to use with the get_composition() method.
 
