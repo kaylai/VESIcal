@@ -69,6 +69,8 @@ Thermoengine is the ENKI implementation of MELTS (MagmaSat), which is the defaul
 
 In almost all cases you will need to install thermoengine using docker. The thermoengine devs have kindly put together a docker image for you. We suggest you follow those instructions here: `https://gitlab.com/ENKI-portal/ThermoEngine/-/tree/master/#running-a-container-image-locally <https://gitlab.com/ENKI-portal/ThermoEngine/-/tree/master/#running-a-container-image-locally>`_.
 
+Installing on Windows x64? Check out Liam Peterson's instructions on `Installing and Running thermoengine on Windows x64 <https://github.com/kaylai/VESIcal/raw/master/docs/thermoengine_local_install_Windowsx64.docx>`_
+
 Updating
 ########
 
