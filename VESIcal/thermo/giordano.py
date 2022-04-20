@@ -4,6 +4,19 @@ from VESIcal.thermo import thermo_core as tc
 import numpy as np
 from copy import copy
 
+giordano_oxide_mass = {'SiO2': 60.0843,
+                       'TiO2': 79.8658,
+                       'Al2O3': 101.961276,
+                       'FeO': 71.8444,
+                       'MnO': 70.937449,
+                       'MgO': 40.3044,
+                       'CaO': 56.0774,
+                       'Na2O': 61.97894,
+                       'K2O': 94.1960,
+                       'P2O5': 141.9446,
+                       'H2O': 18.01528,
+                       'F2O': 18.9984*2}
+
 def _normalize_Giordano(sample):
     """ Converts an input, not necessarily normalized composition to a
     composition in mol% oxides, using the normalization routine in the Giordano
@@ -20,20 +33,26 @@ def _normalize_Giordano(sample):
         Normalized major element composition in mol% oxides.
     """
 
-    _sample = sample.get_composition(units='wtpt_oxides', asSampleClass=True)
+    _sample = sample.get_composition(units='wtpt_oxides', 
+                                    oxide_masses=giordano_oxide_mass,
+                                    asSampleClass=True)
 
-    # convert FeO and Fe2O3 to FeOT
+    # convert FeO and Fe2O3 to FeOT as FeO
     _sample_FeOT = (_sample.get_composition(units='wtpt_oxides', 
+                                            oxide_masses=giordano_oxide_mass,
                                             species='FeO') +
                         0.8998*_sample.get_composition(units='wtpt_oxides', 
-                                                        species='Fe2O3'))
+                                            species='Fe2O3'))
     _sample.change_composition({'FeO':_sample_FeOT, 'Fe2O3': 0.0})
 
     # if passed, convert F to F2O
-    if 'F' in _sample.get_composition().keys:
-        _sample_F2O = (_sample.get_composition(units='wtpt_oxides',
-                                                species='F') * 
-                        core.oxideMass['F2O']/core.oxideMass['F'])
+    _sample_F2O = _sample.get_composition(units='wtpt_oxides', 
+                                            oxide_masses=giordano_oxide_mass,
+                                            species='F2O')
+    if 'F' in _sample.get_composition().keys():
+        _sample_F2O += (_sample.get_composition(units='wtpt_oxides',
+                                            species='F') * 
+                        giordano_oxide_mass['F2O']/core.oxideMass['F'])
     _sample.change_composition({'F2O': _sample_F2O})
 
     # ensure all necessary oxides are in sample
@@ -41,8 +60,10 @@ def _normalize_Giordano(sample):
                         'CaO', 'Na2O', 'K2O', 'P2O5', 'H2O', 'F2O']
     sample_wtper = {}
     for oxide in oxides_giordano:
-        if oxide in _sample.get_composition():
-            sample_wtper[oxide] = _sample.get_composition(species=oxide)
+        if oxide in _sample.get_composition().keys():
+            sample_wtper[oxide] = _sample.get_composition(units='wtpt_oxides',
+                                            oxide_masses=giordano_oxide_mass,
+                                            species=oxide)
         else:
             sample_wtper[oxide] = 0.0
 
@@ -55,16 +76,20 @@ def _normalize_Giordano(sample):
         if oxide == 'H2O':
             sample_wtper_norm[oxide] = sample_wtper['H2O']
         else:
-            sample_wtper_norm[oxide] = ((100-sample_wtper['H2O']) *
+            sample_wtper_norm[oxide] = ((100.0-sample_wtper['H2O']) *
                                     sample_wtper[oxide]/(orig_sample_sum_anhy))
 
-    GFW = (100/
+    GFW = (100.0/
             (sum([sample_wtper_norm[oxide]/core.oxideMass[oxide] for oxide
                 in oxides_giordano])))
     
     sample_moloxides_giordano = {oxide: GFW*sample_wtper_norm[oxide] / 
-                                    core.oxideMass[oxide] for oxide in 
+                                    giordano_oxide_mass[oxide] for oxide in 
                                     oxides_giordano}
+
+    print("GFW = " + str(GFW))
+    print("Sample wtper norm")
+    print(sample_wtper_norm)
 
     return sample_moloxides_giordano
 
@@ -86,13 +111,6 @@ def calculate_liquid_viscosity(sample, temperature, **kwargs):
     float
         Log viscosity of the liquid in Pa*s.
     """
-
-    # combine FeO and Fe2O3 into FeOT listed as 'FeO'
-    _FeOT_samp = copy(sample)
-    _FeOT_samp_FeOT = (_FeOT_samp.get_composition(species='FeO') +
-                        0.8998*_FeOT_samp.get_composition(species='Fe2O3'))
-    _FeOT_samp.change_composition({'FeO':_FeOT_samp_FeOT,
-                                    'Fe2O3': 0.0})
 
     # normalize using Giordano et al. (2008) spreadsheet routine
     comp_molpercent = _normalize_Giordano(sample)
@@ -171,6 +189,7 @@ def calculate_liquid_viscosity(sample, temperature, **kwargs):
                                 (comp['Al2O3']) * 
                                 (comp['Na2O']+comp['K2O']))
 
+        print(partial_B_value)
         return partial_B_value
 
     def _calculate_partial_C_value(bulk_comp, c_number):
@@ -230,6 +249,7 @@ def calculate_liquid_viscosity(sample, temperature, **kwargs):
                                 (comp['Na2O'] + comp['K2O'] + comp['H2O'] + 
                                     comp['F2O']))
 
+        print(partial_C_value)
         return partial_C_value
 
     b_numbers = [1, 2, 3, 4, 5, 6, 7, 11, 12, 13]
