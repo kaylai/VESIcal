@@ -1,6 +1,8 @@
 # ---------- DEFINE SOME CONSTANTS ------------- #
 oxides = ['SiO2', 'TiO2', 'Al2O3', 'Fe2O3', 'Cr2O3', 'FeO', 'MnO', 'MgO', 'NiO', 'CoO', 'CaO',
           'Na2O', 'K2O', 'P2O5', 'H2O', 'CO2', 'F2O']
+cations = ['Si', 'Ti', 'Al', 'Fe', 'Ca', 'Al', 'Na', 'K', 'Mn', 'Ti', 'P', 'Cr', 'Ni', 'Co',
+            'Fe3', 'H', 'C', 'F']
 magmasat_oxides = ['SiO2', 'TiO2', 'Al2O3', 'Fe2O3', 'Cr2O3', 'FeO', 'MnO', 'MgO', 'NiO', 'CoO', 'CaO',
           'Na2O', 'K2O', 'P2O5', 'H2O', 'CO2']
 anhydrous_oxides = ['SiO2', 'TiO2', 'Al2O3', 'Fe2O3', 'Cr2O3', 'FeO', 'MnO', 'MgO', 'NiO', 'CoO',
@@ -22,8 +24,7 @@ oxideMass = {'SiO2':  60.083,
              'Fe2O3': 159.687,
              'H2O':   18.02,
              'CO2':   44.01,
-             'F2O':   37.997,
-             'F':     18.998}
+             'F2O':   37.997}
 
 CationNum = {'SiO2': 1, 'MgO': 1, 'FeO': 1, 'CaO': 1, 'Al2O3': 2, 'Na2O': 2,
              'K2O': 2, 'MnO': 1, 'TiO2': 1, 'P2O5': 2, 'Cr2O3': 2,
