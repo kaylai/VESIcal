@@ -516,7 +516,6 @@ class TestLiquidViscosity(unittest.TestCase):
         self.giordano_default_viscosity = 2.1733
         self.batch_test_samp_viscosity = 0.7721
         self.batch_test_giordano_spreadsheet_default_comp = 2.1733
-        self.batch_test_test_w_F = 0.7457
 
         # Sample majors_Fe_Fe2O3_wtpt normalized w/Giordano spreadsheet
         # This is in terms of mol% oxides
@@ -524,7 +523,6 @@ class TestLiquidViscosity(unittest.TestCase):
                                     'TiO2':    0.391,
                                     'Al2O3':   11.150,
                                     'FeO':     4.310,
-                                    'Fe2O3':   0.0, 
                                     'MnO':     0.016,
                                     'MgO':     4.539,
                                     'CaO':     9.199,
@@ -555,12 +553,6 @@ class TestLiquidViscosity(unittest.TestCase):
         known_result_2 = self.batch_test_giordano_spreadsheet_default_comp
         self.assertAlmostEqual(calcd_result_2, known_result_2, places=3)
 
-    def test_calculate_batch_wtpt_3(self):
-        batch_result = self.batch_wtpt.calculate_liquid_viscosity(
-                                                temperature=self.temperature)
-        calcd_result_3 = batch_result['Viscosity_liq_VESIcal'].loc['test_w_F']
-        known_result_3 = self.batch_test_test_w_F
-        self.assertAlmostEqual(calcd_result_3, known_result_3, places=3)
 
     def test_calculate_single_molox(self):
         calcd_result = v.calculate_liquid_viscosity(self.sample_molox,
@@ -582,13 +574,6 @@ class TestLiquidViscosity(unittest.TestCase):
                                             'giordano_spreadsheet_default_comp']
         known_result_2 = self.batch_test_giordano_spreadsheet_default_comp
         self.assertAlmostEqual(calcd_result_2, known_result_2, places=3)
-
-    def test_calculate_batch_molox_3(self):
-        batch_result = self.batch_molox.calculate_liquid_viscosity(
-                                                temperature=self.temperature)
-        calcd_result_3 = batch_result['Viscosity_liq_VESIcal'].loc['test_w_F']
-        known_result_3 = self.batch_test_test_w_F
-        self.assertAlmostEqual(calcd_result_3, known_result_3, places=3)
 
     def test_normalize_giordano(self):
         known_result = self.giordano_normalized

@@ -132,8 +132,7 @@ class TestCreateSample(unittest.TestCase):
                                              'CoO':     0.02,
                                              'H2O':     2.00,
                                              'CO2':     0.12,
-                                             'F2O':     0.05,
-                                             'F':       0.05
+                                             'F2O':     0.05
                                                 })
 
         self.sample = v.Sample(self.majorsv)
