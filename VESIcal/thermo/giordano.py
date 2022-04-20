@@ -50,8 +50,7 @@ def _normalize_Giordano(sample):
                                             oxide_masses=giordano_oxide_mass,
                                             species='F2O')
     if 'F' in _sample.get_composition().keys():
-        _sample_F2O += (_sample.get_composition(units='wtpt_oxides',
-                                            species='F') * 
+        _sample_F2O += (_sample.get_composition()['F'] * 
                         giordano_oxide_mass['F2O']/core.oxideMass['F'])
     _sample.change_composition({'F2O': _sample_F2O})
 
@@ -86,10 +85,6 @@ def _normalize_Giordano(sample):
     sample_moloxides_giordano = {oxide: GFW*sample_wtper_norm[oxide] / 
                                     giordano_oxide_mass[oxide] for oxide in 
                                     oxides_giordano}
-
-    print("GFW = " + str(GFW))
-    print("Sample wtper norm")
-    print(sample_wtper_norm)
 
     return sample_moloxides_giordano
 
@@ -152,16 +147,16 @@ def calculate_liquid_viscosity(sample, temperature, **kwargs):
                         6: ['Na2O', 'H2O', 'F2O']}
 
         # known constant values (Table 1, Giordano et al., 2008)
-        b_number_to_constants = {1: 159.60,
-                                 2: -173.3,
-                                 3: 72.1,
-                                 4: 75.7,
-                                 5: -39.0,
-                                 6: -84.1,
-                                 7: 141.5,
+        b_number_to_constants = {1: 159.56,
+                                 2: -173.34,
+                                 3: 72.13,
+                                 4: 75.69,
+                                 5: -38.98,
+                                 6: -84.08,
+                                 7: 141.54,
                                  11: -2.43,
                                  12: -0.91,
-                                 13: 17.6}
+                                 13: 17.62}
 
         if b_number <=6:
             partial_B_value = (b_number_to_constants[b_number] * 
@@ -189,7 +184,6 @@ def calculate_liquid_viscosity(sample, temperature, **kwargs):
                                 (comp['Al2O3']) * 
                                 (comp['Na2O']+comp['K2O']))
 
-        print(partial_B_value)
         return partial_B_value
 
     def _calculate_partial_C_value(bulk_comp, c_number):
@@ -226,11 +220,11 @@ def calculate_liquid_viscosity(sample, temperature, **kwargs):
 
         # known constant values (Table 1, Giordano et al., 2008)
         c_number_to_constants = {1: 2.75,
-                                 2: 15.7,
-                                 3: 8.3,
-                                 4: 10.2,
-                                 5: -12.3,
-                                 6: -99.5,
+                                 2: 15.72,
+                                 3: 8.32,
+                                 4: 10.20,
+                                 5: -12.29,
+                                 6: -99.54,
                                  11: 0.30}
 
         if c_number <=5:
@@ -249,7 +243,6 @@ def calculate_liquid_viscosity(sample, temperature, **kwargs):
                                 (comp['Na2O'] + comp['K2O'] + comp['H2O'] + 
                                     comp['F2O']))
 
-        print(partial_C_value)
         return partial_C_value
 
     b_numbers = [1, 2, 3, 4, 5, 6, 7, 11, 12, 13]
