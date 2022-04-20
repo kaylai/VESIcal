@@ -61,7 +61,7 @@ class BatchFile(batchfile.BatchFile):
         """
         pressureMPa = pressure / 10.0
 
-        bulk_comp = {oxide:  sample[oxide] for oxide in core.oxides}
+        bulk_comp = {oxide:  sample[oxide] for oxide in core.magmasat_oxides}
         bulk_comp["H2O"] = H2O
         bulk_comp["CO2"] = CO2
         melts.set_bulk_composition(bulk_comp)
