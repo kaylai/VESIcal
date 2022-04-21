@@ -1,7 +1,22 @@
 *******************************
-ChangeLog: What's new in v 1.0?
+ChangeLog: What's new in v 1.1?
 *******************************
+New in version 1.1.0 is VESIcal's thermo package. This package begins to introduce more calculations that a user might wish to perform. In this version, we have added the ability to calculate the density of a liquid (using DensityX, Iacovino and Till, 2019) and the viscosity of a liquid (Giordano et al., 2008). Check out the tutorials to learn how to use these functions, which use the same syntax as all other core calculations.
 
+Previous version history
+########################
+
+Version 1.0.4
+^^^^^^^^^^^^^
+Diverted Duan H2O driver warnings to the void.
+
+Version 1.0.3
+^^^^^^^^^^^^^
+Batch calculations for :py:meth:`calculate_equilibrium_fluid_comp()` with the MagmaSat (default) model can now take the ``verbose`` argument. If passed as ``verbose=True``, the calculation will return the mass and weight proportion of fluid in equilibrium with the system. Previously this only worked for single sample calculations.
+
+
+Version 1.0
+###########
 Some minor but important changes to the VESIcal code were made between version 0.9 and 1.0. These are mainly bug fixes and editing of the code itself to be fully flake8 compliant. We have also implemented much more rigorous testing routines, important if you are interested in forking and developing for VESIcal. No functionality changes were implemented during this upgrade, so if your code worked in version 0.9, it should continue to work in 1.0. If you are upgrading code originally written for a version <0.9, please see below for important updates.
 
 

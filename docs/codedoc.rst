@@ -55,6 +55,16 @@ calculate_degassing_path(Calculate)
 .. autoclass:: VESIcal.calculate_classes.calculate_degassing_path
 	:members:
 
+calculate_liquid_density(Calculate)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autoclass:: VESIcal.thermo.thermo_calculate_classes.calculate_liquid_density
+	:members:
+
+calculate_liquid_viscosity(Calculate)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autoclass:: VESIcal.thermo.thermo_calculate_classes.calculate_liquid_viscosity
+	:members:
+
 batchfile module
 ================
 Functions defined in VESIcal.batchfile

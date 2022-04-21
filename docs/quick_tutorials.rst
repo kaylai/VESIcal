@@ -402,6 +402,45 @@ You can then easily plot your newly calculated degassing paths like so:
 
 ------------
 
+Running thermo Calculations
+===================================
+
+Calculate Liquid Density
+-------------------------------------------
+For an entire dataset, where `myfile` is an BatchFile object:
+
+.. code-block:: python
+
+	myfile.calculate_liquid_density(temperature=<your_temp>, 
+						pressure=<your_pressure>)
+
+Or for a single sample, where `<your_sample>` is a variable (not a string):
+
+.. code-block:: python
+
+	v.calculate_liquid_density(sample=<your_sample>, 
+					temperature=<your_temp>, 
+					pressure=<your_pressure>).result
+
+----------
+
+Calculate Liquid Viscosity
+-------------------------------------------
+For an entire dataset, where `myfile` is an BatchFile object:
+
+.. code-block:: python
+
+	myfile.calculate_liquid_viscosity(temperature=<your_temp>)
+
+Or for a single sample, where `<your_sample>` is a variable (not a string):
+
+.. code-block:: python
+
+	v.calculate_liquid_viscosity(sample=<your_sample>, 
+					temperature=<your_temp>).result
+
+----------
+
 Save Your Calculations to an Excel or CSV File
 ==============================================
 Once you have performed some calculations and have assigned their outputs to variables, you can write all of your data to an excel or CSV file or files. Let's assume you have imported a file and written it to a variable called `myfile`. You then performed two calculations: `calculate_dissolved_volatiles()` and `calculate_saturation_pressure()`. You've written those outputs to teh variables `dissolved` and `SatP`, respectively. Here's how you would save these data to an excel file. What gets created is a .xlsx file with the first sheet containing your originally input data, the second sheet containing the dissolved data, and the third sheet containing the SatP data.

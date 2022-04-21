@@ -15,7 +15,7 @@ Single sample:
 
 	def calculate_saturation_pressure(self, sample, temperature, verbose=False).result
 
-ExcelFile batch process:
+BatchFile process:
 
 .. code-block:: python
 
@@ -23,9 +23,9 @@ ExcelFile batch process:
 
 **Required inputs:**
 
-``sample``: *Only for single-sample calculations*. The composition of a sample. A single sample may be passed as a dictionary of values, with compositions of oxides in wt%.
+``sample``: *Only for single-sample calculations*. The composition of a sample as Sample class.
 
-``temperature``: The temperature in degres C. For ExcelFile batch calculations, if temperature information is present in the ExcelFile (e.g., as a column with unique temperature values for each sample), this can be accessed by passing the column name in quotes to the temperature variable.
+``temperature``: The temperature in degres C. For BatchFile calculations, if temperature information is present in the file (e.g., as a column with unique temperature values for each sample), this can be accessed by passing the column name in quotes to the temperature variable.
 
 **Optional inputs:**
 
@@ -36,7 +36,7 @@ ExcelFile batch process:
 **Calculated outputs:**
 If a single sample is passed to sample, the saturation pressure in bars is returned as a numerical value (float) (plus additional variables ‘XH2O_fl’, ‘XCO2_fl’, ‘FluidMass_grams’, and ‘FluidProportion_wtper’ if verbose is set to True).
 
-If mutliple samples are passed as an ExcelFile object, a pandas DataFrame is returned with sample information plus calculated saturation pressures, equilibrium fluid compositions, mass of the fluid in grams, and proportion of the fluid in the system in wt%. Temperature (in degrees C) is always returned.
+If mutliple samples are passed as a BatchFile object, a pandas DataFrame is returned with sample information plus calculated saturation pressures, equilibrium fluid compositions, mass of the fluid in grams, and proportion of the fluid in the system in wt%. Temperature (in degrees C) is always returned.
 
 For an entire dataset
 =====================
