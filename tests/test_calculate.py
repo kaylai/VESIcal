@@ -629,7 +629,7 @@ class TestLiquidDensity(unittest.TestCase):
         self.batch_molox.set_default_units("mol_oxides")
         
         # densities calculated with DensityX
-        self.densityx = 2620.8319106679364
+        self.densityx = 2620.832
 
     def test_calculate_single_wtpt(self):
         calcd_result = v.calculate_liquid_density(self.sample_wtpt,

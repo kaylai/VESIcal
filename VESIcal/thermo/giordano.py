@@ -104,7 +104,7 @@ def calculate_liquid_viscosity(sample, temperature, **kwargs):
     Returns
     -------
     float
-        Log viscosity of the liquid in Pa*s.
+        Log viscosity of the liquid in Pa*s, rounded to 4 dp.
     """
 
     # normalize using Giordano et al. (2008) spreadsheet routine
@@ -255,4 +255,4 @@ def calculate_liquid_viscosity(sample, temperature, **kwargs):
 
     log_nu_Pas = A_value + B_value/((temperature+273.15)-C_value)
 
-    return log_nu_Pas
+    return round(log_nu_Pas,4)

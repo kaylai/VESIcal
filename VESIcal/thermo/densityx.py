@@ -17,7 +17,7 @@ def calculate_liquid_density(sample, pressure, temperature, **kwargs):
 	Returns
 	-------
 	float
-		The density of the liquid in g/L.
+		The density of the liquid in g/L, rounded to 3 dp.
 	"""
 
 	comp_molfrac = sample.get_composition(units='mol_oxides')
@@ -38,4 +38,4 @@ def calculate_liquid_density(sample, pressure, temperature, **kwargs):
 	density_g_per_cm3 = Sum_X_MW/Vliq_sum
 	density_g_per_L = density_g_per_cm3*1000
 
-	return density_g_per_L
+	return round(density_g_per_L,3)
