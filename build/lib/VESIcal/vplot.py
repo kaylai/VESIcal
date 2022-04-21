@@ -490,24 +490,59 @@ def plot(isobars=None, isopleths=None, degassing_paths=None, custom_H2O=None,
 
         degassing_colors = color_list.copy()
         iterno = 0
+        plot_type = None
         for i in range(len(degassing_paths)):
+            # handle whether labels are passed
             if degassing_path_labels is None:
                 iterno += 1
                 labels.append('Path%s' % iterno)
-                ax.plot(degassing_paths[i]["H2O_liq"],
-                        degassing_paths[i]["CO2_liq"], ls='dotted',
-                        color=degassing_colors[i])
             else:
                 labels.append(degassing_path_labels[iterno])
-                ax.plot(degassing_paths[i]["H2O_liq"],
-                        degassing_paths[i]["CO2_liq"], ls='dotted',
-                        color=degassing_colors[i])
                 iterno += 1
 
-        for i in range(len(degassing_paths)):
-            ax.plot(degassing_paths[i]["H2O_liq"].max(),
-                    degassing_paths[i]["CO2_liq"].max(), 'o',
-                    color=degassing_colors[i])
+            # handle if only one volatile present
+            if (degassing_paths[i]["H2O_liq"].max() > 0 and
+                    degassing_paths[i]["CO2_liq"].max() > 0):
+                ax.plot(degassing_paths[i]["H2O_liq"],
+                        degassing_paths[i]["CO2_liq"],
+                        ls='dotted', color=degassing_colors[i])
+                ax.plot(degassing_paths[i]["H2O_liq"].max(),
+                        degassing_paths[i]["CO2_liq"].max(),
+                        'o', color=degassing_colors[i])
+                # warn user if trying to plot mixed types on same figure
+                if plot_type not in [None, "mixed"]:
+                    w.warn("Warning: you are trying to plot two different plot types on the same"
+                           " figure. Curves may not match axis labels.", stacklevel=2)
+                plot_type = "mixed"
+            elif (degassing_paths[i]["H2O_liq"].max() > 0 and
+                  degassing_paths[i]["CO2_liq"].max() <= 0):
+                ax.plot(degassing_paths[i]["Pressure_bars"],
+                        degassing_paths[i]["H2O_liq"],
+                        ls='dotted', color=degassing_colors[i])
+                ax.plot(degassing_paths[i]["Pressure_bars"].max(),
+                        degassing_paths[i]["H2O_liq"].max(),
+                        'o', color=degassing_colors[i])
+                ax.set(xlabel='Pressure (bars)', ylabel='H$_2$O wt%')
+                # warn user if trying to plot mixed types on same figure
+                if plot_type not in [None, "H2O"]:
+                    w.warn("Warning: you are trying to plot two different plot types on the same"
+                           " figure. Curves may not match axis labels.", stacklevel=2)
+                plot_type = "H2O"
+            elif (degassing_paths[i]["H2O_liq"].max() <= 0 and
+                  degassing_paths[i]["CO2_liq"].max() > 0):
+                ax.plot(degassing_paths[i]["Pressure_bars"],
+                        degassing_paths[i]["CO2_liq"],
+                        ls='dotted', color=degassing_colors[i])
+                ax.plot(degassing_paths[i]["Pressure_bars"].max(),
+                        degassing_paths[i]["CO2_liq"].max(),
+                        'o', color=degassing_colors[i])
+                ax.set(xlabel='Pressure (bars)', ylabel='CO$_2$ wt%')
+                # warn user if trying to plot mixed types on same figure
+                if plot_type not in [None, "CO2"]:
+                    w.warn("Warning: you are trying to plot two different plot types on the same"
+                           " figure. Curves may not match axis labels.", stacklevel=2)
+                plot_type = "CO2"
+
             labels.append('_nolegend_')
 
     # -------- PLOT CUSTOM H2O-CO2 -------- ##
