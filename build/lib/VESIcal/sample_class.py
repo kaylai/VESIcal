@@ -71,6 +71,28 @@ class Sample(object):
         self.set_default_normalization(default_normalization)
         self.set_default_units(default_units)
 
+        # handle possibly passed FeOT values, convert to FeO and warn user
+        possible_FeOT_names = ['FeOT', 'FeO*', 'FeOtot', 'FeOt', 'FeOtotal',
+                               'FeOstar']
+
+        for name in possible_FeOT_names:
+            if name in composition:
+                if 'FeO' in composition:
+                    w.warn("FeO and " + str(name) + " oxides passed. Discarding " + str(name) +
+                           " oxide.", RuntimeWarning, stacklevel=2)
+                    if isinstance(composition, dict):
+                        del composition[name]
+                    if isinstance(composition, pd.Series):
+                        composition.drop(labels=[name], inplace=True)
+                else:
+                    w.warn(str(name) + " oxide found. Using " + str(name) + " for FeO value.",
+                           RuntimeWarning, stacklevel=2)
+                    composition['FeO'] = composition[name]
+                    if isinstance(composition, dict):
+                        del composition[name]
+                    if isinstance(composition, pd.Series):
+                        composition.drop(labels=[name], inplace=True)
+
     def set_default_normalization(self, default_normalization):
         """ Set the default type of normalization to use with the get_composition() method.
 
@@ -302,6 +324,35 @@ class Sample(object):
         else:
             raise core.InputError("Units must be one of 'wtpt_oxides', 'mol_oxides', or "
                                   "'mol_cations'.")
+
+        return self
+
+    def delete_oxide(self, oxide, inplace=True):
+        """ Allows user to remove a given oxide from the Sample composition
+
+        Parameters
+        ----------
+        oxide:  str or list
+            Name or names of the oxide(s) to remove.
+
+        inplace:    bool
+            If True the object will be modified in place. If False, a copy of the Sample
+            object will be created, modified, and then returned.
+
+        Returns
+        -------
+        Sample class
+            Modified Sample class.
+        """
+        # if new_composition is pandas.Series, convert to dict
+        if isinstance(oxide, str):
+            oxide = [oxide]
+
+        if inplace is False:
+            newsample = deepcopy(self)
+            return newsample.delete_oxide(oxide)
+
+        self._composition.drop(index=oxide, inplace=True)
 
         return self
 

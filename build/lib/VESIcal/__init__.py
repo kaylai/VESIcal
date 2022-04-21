@@ -5,11 +5,10 @@ A generalized python library for calculating and plotting various things
 related to mixed volatile (H2O-CO2) solubility in silicate melts.
 """
 
-__version__ = "1.0.4"
+__version__ = "1.1.0"
 __author__ = "Kayla Iacovino, Simon Matthews, and Penny Wieser"
 
 # ----------------- IMPORTS ----------------- #
-
 import warnings as w
 import pandas as pd
 
@@ -26,6 +25,7 @@ import VESIcal.fugacity_models
 import VESIcal.models
 import VESIcal.sample_class
 import VESIcal.vplot
+import VESIcal.thermo
 
 # -------------- TURN OFF WARNINGS ------------- #
 w.filterwarnings("ignore", message="rubicon.objc.ctypes_patch has only been tested ")
@@ -58,6 +58,18 @@ class calculate_saturation_pressure(
 
 
 class calculate_degassing_path(VESIcal.calculate_classes.calculate_degassing_path):
+    pass
+
+
+class calculate_liquid_density(
+    VESIcal.thermo.thermo_calculate_classes.calculate_liquid_density
+):
+    pass
+
+
+class calculate_liquid_viscosity(
+    VESIcal.thermo.thermo_calculate_classes.calculate_liquid_viscosity
+):
     pass
 
 

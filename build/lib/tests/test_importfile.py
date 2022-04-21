@@ -34,9 +34,6 @@ class TestImportExcel(unittest.TestCase):
                      'MnO':   [0.1, 0.1],
                      'H2O':   [2.0, 2.0],
                      'CO2':   [0.1, 0.1],
-                     'Cr2O3': [0.0, 0.0],
-                     'NiO':   [0.0, 0.0],
-                     'CoO':   [0.0, 0.0],
                      'Notes': ['Normal sample', 'Duplicate sample']}
         
         self.df = pd.DataFrame(self.data_dict, 
@@ -47,4 +44,4 @@ class TestImportExcel(unittest.TestCase):
 
     def test_ImportExcel(self):
         self.assertEqual(self.df, self.myfile.get_data(), 
-                         'DataFrame are different')
+                         'DataFrames are different')

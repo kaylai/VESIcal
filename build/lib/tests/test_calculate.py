@@ -448,5 +448,218 @@ class TestEquilibriumFluidComp(unittest.TestCase):
             known_result = self.water_dict[model]
             self.assertAlmostEqual(calcd_result, known_result, places=4)
 
+class TestLiquidViscosity(unittest.TestCase):
+    def setUp(self):
+        # Sample with units as wtpt_oxides
+        # Default sample in Giordano excel spreadsheet
+        self.majors_wtpt = {'SiO2':    62.40,
+                            'TiO2':    0.55,
+                            'Al2O3':   20.01,
+                            'FeOT':    0.03,
+                            'MnO':     0.02,
+                            'MgO':     3.22,
+                            'CaO':     9.08,
+                            'Na2O':    3.52,
+                            'K2O':     0.93,
+                            'P2O5':    0.12,
+                            'H2O':     2.0,
+                            'F2O':     0.5}
+
+        self.majors_Fe_Fe2O3_wtpt = {'SiO2':   62.40,
+                                    'TiO2':    0.55,
+                                    'Al2O3':   20.01,
+                                    'FeO':     5.0,
+                                    'Fe2O3':   0.5, 
+                                    'MnO':     0.02,
+                                    'MgO':     3.22,
+                                    'CaO':     9.08,
+                                    'Na2O':    3.52,
+                                    'K2O':     0.93,
+                                    'P2O5':    0.12,
+                                    'H2O':     2.0,
+                                    'F2O':     0.5}
+
+        # Set conditions of calculation
+        self.temperature = 1200
+
+        # create Sample object and set default units to wtpt_oxides
+        self.sample_wtpt = v.Sample(self.majors_wtpt)
+        self.sample_wtpt.set_default_units("wtpt_oxides")
+        self.sample_Fe_Fe2O3_wtpt = v.Sample(self.majors_Fe_Fe2O3_wtpt)
+        self.sample_wtpt.set_default_units("wtpt_oxides")
+
+        # create sample and set default units to mol_oxides
+        self.sample_molox = v.Sample(self.majors_wtpt)
+        self.sample_molox.set_default_units("mol_oxides")
+
+        # BatchFile with test sample as defined above in wtpt_oxides
+        try:
+            self.batch_wtpt = v.BatchFile('BatchTest.xlsx', 
+                                          sheet_name='giordano_test',
+                                          units='wtpt_oxides')
+        except:
+            self.batch_wtpt = v.BatchFile('tests/BatchTest.xlsx',
+                                            sheet_name='giordano_test', 
+                                            units='wtpt_oxides')
+        self.batch_wtpt.set_default_units("wtpt_oxides")
+
+        # BatchFile with test sample as defined above in mol_oxides
+        try:
+            self.batch_molox = v.BatchFile('BatchTest.xlsx',
+                                            sheet_name='giordano_test')
+        except:
+            self.batch_molox = v.BatchFile('tests/BatchTest.xlsx',
+                                            sheet_name='giordano_test')
+        self.batch_molox.set_default_units("mol_oxides")
+        
+        # viscosities calculated with Giordano excel spreadsheet
+        self.giordano_default_viscosity = 2.1733
+        self.batch_test_samp_viscosity = 0.7721
+        self.batch_test_giordano_spreadsheet_default_comp = 2.1733
+
+        # Sample majors_Fe_Fe2O3_wtpt normalized w/Giordano spreadsheet
+        # This is in terms of mol% oxides
+        self.giordano_normalized = {'SiO2':    59.003,
+                                    'TiO2':    0.391,
+                                    'Al2O3':   11.150,
+                                    'FeO':     4.310,
+                                    'MnO':     0.016,
+                                    'MgO':     4.539,
+                                    'CaO':     9.199,
+                                    'Na2O':    3.227,
+                                    'K2O':     0.561,
+                                    'P2O5':    0.048,
+                                    'H2O':     6.809,
+                                    'F2O':     0.748}
+
+    def test_calculate_single_wtpt(self):
+        calcd_result = v.calculate_liquid_viscosity(self.sample_wtpt,
+                                            temperature=self.temperature).result
+        known_result = self.giordano_default_viscosity
+        self.assertAlmostEqual(calcd_result, known_result, places=3)
+
+    def test_calculate_batch_wtpt_1(self):
+        batch_result = self.batch_wtpt.calculate_liquid_viscosity(
+                                                temperature=self.temperature)
+        calcd_result_1 = batch_result['Viscosity_liq_VESIcal'].loc['test_samp']
+        known_result_1 = self.batch_test_samp_viscosity
+        self.assertAlmostEqual(calcd_result_1, known_result_1, places=3)
+
+    def test_calculate_batch_wtpt_2(self):
+        batch_result = self.batch_wtpt.calculate_liquid_viscosity(
+                                                temperature=self.temperature)
+        calcd_result_2 = batch_result['Viscosity_liq_VESIcal'].loc[
+                                            'giordano_spreadsheet_default_comp']
+        known_result_2 = self.batch_test_giordano_spreadsheet_default_comp
+        self.assertAlmostEqual(calcd_result_2, known_result_2, places=3)
+
+
+    def test_calculate_single_molox(self):
+        calcd_result = v.calculate_liquid_viscosity(self.sample_molox,
+                                            temperature=self.temperature).result
+        known_result = self.giordano_default_viscosity
+        self.assertAlmostEqual(calcd_result, known_result, places=3)
+
+    def test_calculate_batch_molox_1(self):
+        batch_result = self.batch_molox.calculate_liquid_viscosity(
+                                                temperature=self.temperature)
+        calcd_result_1 = batch_result['Viscosity_liq_VESIcal'].loc['test_samp']
+        known_result_1 = self.batch_test_samp_viscosity
+        self.assertAlmostEqual(calcd_result_1, known_result_1, places=3)
+
+    def test_calculate_batch_molox_2(self):
+        batch_result = self.batch_molox.calculate_liquid_viscosity(
+                                                temperature=self.temperature)
+        calcd_result_2 = batch_result['Viscosity_liq_VESIcal'].loc[
+                                            'giordano_spreadsheet_default_comp']
+        known_result_2 = self.batch_test_giordano_spreadsheet_default_comp
+        self.assertAlmostEqual(calcd_result_2, known_result_2, places=3)
+
+    def test_normalize_giordano(self):
+        known_result = self.giordano_normalized
+        calcd_result = {}
+        calculation = v.thermo.giordano._normalize_Giordano(
+                                                      self.sample_Fe_Fe2O3_wtpt)
+        for key, val in calculation.items():
+            calcd_result[key] = round(val,3)
+        self.assertDictEqual(calcd_result, known_result)
+
+class TestLiquidDensity(unittest.TestCase):
+    def setUp(self):
+        # Sample with units as wtpt_oxides
+        self.majors_wtpt = {'SiO2':    47.95,
+                         'TiO2':    1.67,
+                         'Al2O3':   17.32,
+                         'FeO':     10.24,
+                         'Fe2O3':   0.1,
+                         'MgO':     5.76,
+                         'CaO':     10.93,
+                         'Na2O':    3.45,
+                         'K2O':     1.99,
+                         'P2O5':    0.51,
+                         'MnO':     0.1,
+                         'H2O':     2.0,
+                         'CO2':     0.1}
+
+        # Set conditions of calculation
+        self.temperature = 1000
+        self.pressure = 1000
+
+        # create Sample object and set default units to wtpt_oxides
+        self.sample_wtpt = v.Sample(self.majors_wtpt)
+        self.sample_wtpt.set_default_units("wtpt_oxides")
+
+        # create sample and set default units to mol_oxides
+        self.sample_molox = v.Sample(self.majors_wtpt)
+        self.sample_molox.set_default_units("mol_oxides")
+
+        # BatchFile with test sample as defined above in wtpt_oxides
+        try:
+            self.batch_wtpt = v.BatchFile('BatchTest.xlsx', units='wtpt_oxides')
+        except:
+            self.batch_wtpt = v.BatchFile('tests/BatchTest.xlsx', 
+                                            units='wtpt_oxides')
+        self.batch_wtpt.set_default_units("wtpt_oxides")
+
+        # BatchFile with test sample as defined above in mol_oxides
+        try:
+            self.batch_molox = v.BatchFile('BatchTest.xlsx')
+        except:
+            self.batch_molox = v.BatchFile('tests/BatchTest.xlsx')
+        self.batch_molox.set_default_units("mol_oxides")
+        
+        # densities calculated with DensityX
+        self.densityx = 2620.832
+
+    def test_calculate_single_wtpt(self):
+        calcd_result = v.calculate_liquid_density(self.sample_wtpt,
+                                                  temperature=self.temperature, 
+                                                  pressure=self.pressure).result
+        known_result = self.densityx
+        self.assertAlmostEqual(calcd_result, known_result, places=4)
+
+    def test_calculate_batch_wtpt(self):
+        batch_result = self.batch_wtpt.calculate_liquid_density(
+                                            temperature=self.temperature,
+                                            pressure=self.pressure)
+        calcd_result = batch_result['Density_liq_VESIcal'].loc['test_samp']
+        known_result = self.densityx
+        self.assertAlmostEqual(calcd_result, known_result, places=4)
+
+    def test_calculate_single_molox(self):
+        calcd_result = v.calculate_liquid_density(self.sample_molox,
+                                                  temperature=self.temperature, 
+                                                  pressure=self.pressure).result
+        known_result = self.densityx
+        self.assertAlmostEqual(calcd_result, known_result, places=4)
+
+    def test_calculate_batch_molox(self):
+        batch_result = self.batch_molox.calculate_liquid_density(
+                                            temperature=self.temperature,
+                                            pressure=self.pressure)
+        calcd_result = batch_result['Density_liq_VESIcal'].loc['test_samp']
+        known_result = self.densityx
+        self.assertAlmostEqual(calcd_result, known_result, places=4)
+
 if __name__ == '__main__':
     unittest.main()

@@ -116,11 +116,33 @@ class TestCreateSample(unittest.TestCase):
                                              'H':    0.19747,
                                              'C':    0.00081})
 
+        self.majors_all_species = pd.Series({'SiO2':    47.95,
+                                             'TiO2':    1.67,
+                                             'Al2O3':   17.32,
+                                             'FeO':     10.24,
+                                             'Fe2O3':   0.1,
+                                             'MgO':     5.76,
+                                             'CaO':     10.93,
+                                             'Na2O':    3.45,
+                                             'K2O':     1.99,
+                                             'P2O5':    0.51,
+                                             'MnO':     0.1,
+                                             'Cr2O3':   0.05,
+                                             'NiO':     0.04,
+                                             'CoO':     0.02,
+                                             'H2O':     2.00,
+                                             'CO2':     0.12,
+                                             'F2O':     0.05
+                                                })
+
         self.sample = v.Sample(self.majorsv)
+        self.sample_all = v.Sample(self.majors_all_species)
 
     def test_createSample(self):
         for ox in self.majors.index:
             self.assertEqual(self.sample._composition[ox],self.majors[ox])
+        for ox in self.majors_all_species.index:
+            self.assertEqual(self.sample_all._composition[ox],self.majors_all_species[ox])
 
     def test_setdefault_noargs(self):
         self.assertEqual(self.sample.default_normalization,'none')

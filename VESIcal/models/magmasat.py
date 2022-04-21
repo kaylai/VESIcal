@@ -5,8 +5,6 @@ from VESIcal import sample_class
 from VESIcal import vplot
 from VESIcal import batchfile  # needed for status_bar functions
 
-from thermoengine import equilibrate
-
 from copy import deepcopy
 import numpy as np
 import pandas as pd
@@ -14,6 +12,8 @@ import warnings as w
 import sys
 from contextlib import redirect_stdout
 import io
+
+from thermoengine import equilibrate
 
 # Variable to send H2O driver warnings into the void
 _f = io.StringIO()

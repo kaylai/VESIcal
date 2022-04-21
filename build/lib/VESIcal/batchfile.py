@@ -154,6 +154,7 @@ class BatchFile(object):
                                   "type str or int. Currently, VESIcal cannot "
                                   "import more than one sheet at a time.")
 
+        # handle data if passed in as existing dataframe or as file
         if dataframe is not None:
             data = dataframe
             if label is not None:
@@ -223,12 +224,6 @@ class BatchFile(object):
             data = self._molOxides_to_wtpercentOxides(data)
         if units == "mol_cations":
             data = self._molCations_to_wtpercentOxides(data)
-
-        for oxide in core.oxides:
-            if oxide in data.columns:
-                pass
-            else:
-                data[oxide] = 0.0
 
         for column in data:
             if column in core.oxides:
@@ -595,27 +590,6 @@ class BatchFile(object):
                        RuntimeWarning, stacklevel=2)
 
         return _dataframe
-
-    def preprocess_sample(self, sample):
-        """
-        Adds 0.0 values to any oxide data not passed.
-
-        Parameters
-        ----------
-        sample: pandas DataFrame
-            self.data composition of samples in wt% oxides
-
-        Returns
-        -------
-        pandas DataFrame
-        """
-        for oxide in core.oxides:
-            if oxide in self.data.columns:
-                pass
-            else:
-                self.data[oxide] = 0.0
-
-        return sample
 
     def save_excel(self, filename, calculations, sheet_names=None):
         """
