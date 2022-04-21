@@ -815,10 +815,8 @@ class MagmaSat(model_classes.Model):
         elif isinstance(pressure_list, int) or isinstance(pressure_list, float):
             P_vals = [pressure_list]
         else:
-            raise core.InputError(
-                "pressure_list must be a single float (1000.0), int (1000), or "
-                "list of those [1000, 2000.0, 3000]."
-            )
+            raise core.InputError("pressure_list must be a single float (1000.0), int (1000), or "
+                                  "list of those [1000, 2000.0, 3000].")
 
         if isopleth_list is None:
             pass
@@ -875,25 +873,17 @@ class MagmaSat(model_classes.Model):
                 )
 
                 if X in required_iso_vals:
-                    isobar_data.append(
-                        [i, saturated_vols["H2O_liq"], saturated_vols["CO2_liq"]]
-                    )
+                    isobar_data.append([i, saturated_vols["H2O_liq"], saturated_vols["CO2_liq"]])
                 if X in iso_vals:
-                    isopleth_data.append(
-                        [X, saturated_vols["H2O_liq"], saturated_vols["CO2_liq"]]
-                    )
+                    isopleth_data.append([X, saturated_vols["H2O_liq"], saturated_vols["CO2_liq"]])
 
                 guess = saturated_vols["H2O_liq"]
 
         if print_status:
             print("Done!")
 
-        isobars_df = pd.DataFrame(
-            isobar_data, columns=["Pressure", "H2O_liq", "CO2_liq"]
-        )
-        isopleths_df = pd.DataFrame(
-            isopleth_data, columns=["XH2O_fl", "H2O_liq", "CO2_liq"]
-        )
+        isobars_df = pd.DataFrame(isobar_data, columns=["Pressure", "H2O_liq", "CO2_liq"])
+        isopleths_df = pd.DataFrame(isopleth_data, columns=["XH2O_fl", "H2O_liq", "CO2_liq"])
 
         melts.set_bulk_composition(self.bulk_comp_orig)  # reset
 
@@ -904,9 +894,7 @@ class MagmaSat(model_classes.Model):
             res_isobars = isobars_df.copy()
 
         if smooth_isopleths:
-            isopleths_smoothed = vplot.smooth_isobars_and_isopleths(
-                isopleths=isopleths_df
-            )
+            isopleths_smoothed = vplot.smooth_isobars_and_isopleths(isopleths=isopleths_df)
             res_isopleths = isopleths_smoothed.copy()
         else:
             res_isopleths = isopleths_df.copy()
@@ -999,6 +987,9 @@ class MagmaSat(model_classes.Model):
 
         P_array = np.arange(1.0, SatP_MPa, MPa_step)
         P_array = -np.sort(-P_array)
+        # add last few MPa steps
+        P_array = np.append(P_array, 0.5)
+        P_array = np.append(P_array, 0.1)
         fl_wtper = data["FluidProportion_wt"]
 
         while fl_wtper <= init_vapor:
