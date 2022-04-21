@@ -913,16 +913,8 @@ class MagmaSat(model_classes.Model):
 
         return res_isobars, res_isopleths
 
-    def calculate_degassing_path(
-        self,
-        sample,
-        temperature,
-        pressure="saturation",
-        fractionate_vapor=0.0,
-        init_vapor=0.0,
-        steps=50,
-        **kwargs
-    ):
+    def calculate_degassing_path(self, sample, temperature, pressure="saturation",
+                                 fractionate_vapor=0.0, init_vapor=0.0, steps=50, **kwargs):
         """
         Calculates degassing path for one sample
 
@@ -968,9 +960,7 @@ class MagmaSat(model_classes.Model):
         pandas DataFrame object
 
         """
-        sys.stdout.write(
-            "Finding saturation point... "
-        )  # print start of calculation to terminal
+        sys.stdout.write("Finding saturation point... ")  # print start of calculation to terminal
         _sample = self.preprocess_sample(sample)
 
         # Normalize sample composition
@@ -994,9 +984,8 @@ class MagmaSat(model_classes.Model):
         # ------------------------- #
 
         # Get saturation pressure
-        data = self.calculate_saturation_pressure(
-            sample=_sample, temperature=temperature, verbose=True
-        )
+        data = self.calculate_saturation_pressure(sample=_sample, temperature=temperature,
+                                                  verbose=True)
 
         if pressure == "saturation" or pressure >= data["SaturationP_bars"]:
             SatP_MPa = data["SaturationP_bars"] / 10.0
@@ -1029,9 +1018,7 @@ class MagmaSat(model_classes.Model):
             except Exception:
                 _sample_dict["CO2"] = _sample_dict["CO2"] * 1.1
             _sample = sample_class.Sample(_sample_dict)
-            _sample_dict = _sample.get_composition(
-                normalization="standard", units="wtpt_oxides"
-            )
+            _sample_dict = _sample.get_composition(normalization="standard", units="wtpt_oxides")
             melts.set_bulk_composition(_sample_dict)  # reset MELTS
 
         pressure = []
@@ -1046,9 +1033,7 @@ class MagmaSat(model_classes.Model):
             # Handle status_bar
             iterno += 1
             percent = iterno / len(P_array)
-            batchfile.status_bar.status_bar(
-                percent, btext="Calculating degassing path..."
-            )
+            batchfile.status_bar.status_bar(percent, btext="Calculating degassing path...")
 
             fl_mass = 0.0
             melts.set_bulk_composition(_sample_dict)
@@ -1056,9 +1041,7 @@ class MagmaSat(model_classes.Model):
                 output = melts.equilibrate_tp(temperature, i, initialize=True)
             (status, temperature, p, xmlout) = output[0]
             liq_comp = melts.get_composition_of_phase(xmlout, phase_name="Liquid")
-            fl_comp = melts.get_composition_of_phase(
-                xmlout, phase_name="Fluid", mode="component"
-            )
+            fl_comp = melts.get_composition_of_phase(xmlout, phase_name="Fluid", mode="component")
             liq_mass = melts.get_mass_of_phase(xmlout, phase_name="Liquid")
             fl_mass = melts.get_mass_of_phase(xmlout, phase_name="Fluid")
             fl_wtper = 100 * fl_mass / (fl_mass + liq_mass)
@@ -1084,38 +1067,31 @@ class MagmaSat(model_classes.Model):
                 fluid_wtper.append(fl_wtper)
 
                 try:
-                    _sample_dict["H2O"] = liq_comp["H2O"] + (
-                        _sample_dict["H2O"] - liq_comp["H2O"]
-                    ) * (1.0 - fractionate_vapor)
+                    _sample_dict["H2O"] = (liq_comp["H2O"] +
+                                           (_sample_dict["H2O"] - liq_comp["H2O"]) *
+                                           (1.0 - fractionate_vapor))
                 except Exception:
                     _sample_dict["H2O"] = 0
                 try:
-                    _sample_dict["CO2"] = liq_comp["CO2"] + (
-                        _sample_dict["CO2"] - liq_comp["CO2"]
-                    ) * (1.0 - fractionate_vapor)
+                    _sample_dict["CO2"] = (liq_comp["CO2"] +
+                                           (_sample_dict["CO2"] - liq_comp["CO2"]) *
+                                           (1.0 - fractionate_vapor))
                 except Exception:
                     _sample_dict["CO2"] = 0
             _sample = sample_class.Sample(_sample_dict)
-            _sample_dict = _sample.get_composition(
-                normalization="standard", units="wtpt_oxides"
-            )
+            _sample_dict = _sample.get_composition(normalization="standard", units="wtpt_oxides")
 
-        melts.set_bulk_composition(
-            self.bulk_comp_orig
-        )  # this needs to be reset always!
-        open_degassing_df = pd.DataFrame(
-            list(zip(pressure, H2Oliq, CO2liq, H2Ofl, CO2fl, fluid_wtper)),
-            columns=[
-                "Pressure_bars",
-                "H2O_liq",
-                "CO2_liq",
-                "XH2O_fl",
-                "XCO2_fl",
-                "FluidProportion_wt",
-            ],
-        )
+        melts.set_bulk_composition(self.bulk_comp_orig)  # this needs to be reset always!
+        open_degassing_df = pd.DataFrame(list(zip(pressure, H2Oliq, CO2liq, H2Ofl, CO2fl,
+                                                  fluid_wtper)),
+                                         columns=["Pressure_bars",
+                                                  "H2O_liq",
+                                                  "CO2_liq",
+                                                  "XH2O_fl",
+                                                  "XCO2_fl",
+                                                  "FluidProportion_wt"])
 
-        open_degassing_df = open_degassing_df[open_degassing_df.CO2_liq > 0.000001]
-        open_degassing_df = open_degassing_df[open_degassing_df.H2O_liq > 0.000001]
+        open_degassing_df = open_degassing_df[open_degassing_df.CO2_liq >= 0.0]
+        open_degassing_df = open_degassing_df[open_degassing_df.H2O_liq >= 0.0]
 
         return open_degassing_df
