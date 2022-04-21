@@ -175,8 +175,8 @@ class MagmaSat(model_classes.Model):
         pressureMPa = pressure / 10.0
 
         bulk_comp_dict = sample.get_composition(units="wtpt_oxides")
-        bulk_comp_dict = {oxide: bulk_comp_dict[oxide] for oxide in 
-                            core.magmasat_oxides}
+        bulk_comp_dict = {oxide: bulk_comp_dict[oxide] for oxide in
+                          core.magmasat_oxides}
         bulk_comp_dict["H2O"] = H2O
         bulk_comp_dict["CO2"] = CO2
         melts.set_bulk_composition(bulk_comp_dict)

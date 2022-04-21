@@ -3,8 +3,7 @@ from VESIcal import models
 from VESIcal import calculate_classes
 from VESIcal import batchfile
 
-from VESIcal.thermo import thermo_core, thermo_calculate_classes
-from VESIcal.thermo import densityx
+from VESIcal.thermo import thermo_calculate_classes
 
 import numpy as np
 import warnings as w
@@ -784,11 +783,11 @@ class BatchFile(batchfile.BatchFile):
 
             return satp_data
 
-    def calculate_liquid_density(self, temperature, pressure, 
+    def calculate_liquid_density(self, temperature, pressure,
                                  record_errors=False, **kwargs):
         """ Calculates the density of the liquid using the DensityX model. Using
         this interface will preprocess the sample, run the calculation, and then
-        check the calibration ranges. All parameters required by the chosen 
+        check the calibration ranges. All parameters required by the chosen
         model must be passed.
 
         Parameters
@@ -799,7 +798,7 @@ class BatchFile(batchfile.BatchFile):
             Alternatively, pressure information for each individual sample may
             already be present in the BatchFile object. If so, pass the str
             value corresponding to the column title in the BatchFile object.
-        
+
         temperature:  float, int, or str
             Temperature, in degrees C. Can be passed as float, in which case
             the passed value is used as the temperature for all samples.
@@ -848,8 +847,8 @@ class BatchFile(batchfile.BatchFile):
 
                 # Get sample comp as Sample class with defaults
                 bulk_comp = self.get_sample_composition(index,
-                                      normalization=self.default_normalization,
-                                      units='wtpt_oxides', asSampleClass=True)
+                                                        normalization=self.default_normalization,
+                                                        units='wtpt_oxides', asSampleClass=True)
                 bulk_comp.set_default_units(self.default_units)
                 bulk_comp.set_default_normalization(self.default_normalization)
                 calc = thermo_calculate_classes.calculate_liquid_density(
@@ -865,20 +864,21 @@ class BatchFile(batchfile.BatchFile):
         density_data["Density_liq_VESIcal"] = density_vals
 
         if file_has_temp is False:
-                density_data["Temperature_C_VESIcal"] = temperature
+            density_data["Temperature_C_VESIcal"] = temperature
         if file_has_press is False:
             density_data["Pressure_bars_VESIcal"] = pressure
         density_data["Model"] = "DensityX"
         density_data["Warnings"] = warnings
-        
+
         if record_errors:
             density_data["Errors"] = errors
 
         return density_data
 
     def calculate_liquid_viscosity(self, temperature, record_errors=False,
-        **kwargs):
-        """ Calculates the viscosity of the liquid using the Giordano et al. 
+                                   **kwargs):
+        """
+        Calculates the viscosity of the liquid using the Giordano et al.
         (2008) model. Using this interface will preprocess the sample, run the
         calculation, and then check the calibration ranges. All parameters
         required by the chosen model must be passed.
@@ -922,8 +922,8 @@ class BatchFile(batchfile.BatchFile):
 
                 # Get sample comp as Sample class with defaults
                 bulk_comp = self.get_sample_composition(index,
-                                      normalization=self.default_normalization,
-                                      units='wtpt_oxides', asSampleClass=True)
+                                                        normalization=self.default_normalization,
+                                                        units='wtpt_oxides', asSampleClass=True)
                 bulk_comp.set_default_units(self.default_units)
                 bulk_comp.set_default_normalization(self.default_normalization)
                 calc = thermo_calculate_classes.calculate_liquid_viscosity(
@@ -939,14 +939,15 @@ class BatchFile(batchfile.BatchFile):
         viscosity_data["Viscosity_liq_VESIcal"] = viscosity_vals
 
         if file_has_temp is False:
-                viscosity_data["Temperature_C_VESIcal"] = temperature
-        viscosity_data["Model"] = "Giordano et al. (2018)"
+            viscosity_data["Temperature_C_VESIcal"] = temperature
+        viscosity_data["Model"] = "Giordano et al. (2008)"
         viscosity_data["Warnings"] = warnings
-        
+
         if record_errors:
             viscosity_data["Errors"] = errors
 
         return viscosity_data
+
 
 def BatchFile_from_DataFrame(dataframe, units='wtpt_oxides', label=None):
     """

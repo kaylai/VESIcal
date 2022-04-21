@@ -73,20 +73,20 @@ class Sample(object):
 
         # handle possibly passed FeOT values, convert to FeO and warn user
         possible_FeOT_names = ['FeOT', 'FeO*', 'FeOtot', 'FeOt', 'FeOtotal',
-                                'FeOstar']
+                               'FeOstar']
 
         for name in possible_FeOT_names:
             if name in composition:
                 if 'FeO' in composition:
                     w.warn("FeO and " + str(name) + " oxides passed. Discarding " + str(name) +
-                        " oxide.", RuntimeWarning, stacklevel=2)
+                           " oxide.", RuntimeWarning, stacklevel=2)
                     if isinstance(composition, dict):
                         del composition[name]
                     if isinstance(composition, pd.Series):
                         composition.drop(labels=[name], inplace=True)
                 else:
                     w.warn(str(name) + " oxide found. Using " + str(name) + " for FeO value.",
-                        RuntimeWarning, stacklevel=2)
+                           RuntimeWarning, stacklevel=2)
                     composition['FeO'] = composition[name]
                     if isinstance(composition, dict):
                         del composition[name]

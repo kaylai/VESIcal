@@ -2,9 +2,9 @@
 oxides = ['SiO2', 'TiO2', 'Al2O3', 'Fe2O3', 'Cr2O3', 'FeO', 'MnO', 'MgO', 'NiO', 'CoO', 'CaO',
           'Na2O', 'K2O', 'P2O5', 'H2O', 'CO2', 'F2O']
 cations = ['Si', 'Ti', 'Al', 'Fe', 'Ca', 'Al', 'Na', 'K', 'Mn', 'Ti', 'P', 'Cr', 'Ni', 'Co',
-            'Fe3', 'H', 'C', 'F']
-magmasat_oxides = ['SiO2', 'TiO2', 'Al2O3', 'Fe2O3', 'Cr2O3', 'FeO', 'MnO', 'MgO', 'NiO', 'CoO', 'CaO',
-          'Na2O', 'K2O', 'P2O5', 'H2O', 'CO2']
+           'Fe3', 'H', 'C', 'F']
+magmasat_oxides = ['SiO2', 'TiO2', 'Al2O3', 'Fe2O3', 'Cr2O3', 'FeO', 'MnO', 'MgO', 'NiO', 'CoO',
+                   'CaO', 'Na2O', 'K2O', 'P2O5', 'H2O', 'CO2']
 anhydrous_oxides = ['SiO2', 'TiO2', 'Al2O3', 'Fe2O3', 'Cr2O3', 'FeO', 'MnO', 'MgO', 'NiO', 'CoO',
                     'CaO', 'Na2O', 'K2O', 'P2O5', 'F2O']
 volatiles = ['H2O', 'CO2']
