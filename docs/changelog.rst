@@ -3,6 +3,10 @@ ChangeLog: What's new in v 1.1?
 *******************************
 New in version 1.1.0 is VESIcal's thermo package. This package begins to introduce more calculations that a user might wish to perform. In this version, we have added the ability to calculate the density of a liquid (using DensityX, Iacovino and Till, 2019) and the viscosity of a liquid (Giordano et al., 2008). Check out the tutorials to learn how to use these functions, which use the same syntax as all other core calculations.
 
+Version 1.1.1
+^^^^^^^^^^^^^
+Fixed bug where users could not calculate or plot degassing paths for compositions with only one volatile. Fixed bug where degassing paths in MagmaSat were not calculated down to 1 bar.
+
 Previous version history
 ########################
 
