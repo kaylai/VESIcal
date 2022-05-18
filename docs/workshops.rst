@@ -1,8 +1,8 @@
-#########
-Workshops
-#########
+###########################
+Workshops and Presentations
+###########################
 
-Here we post resources and recorded lectures and demonstrations made during workshops.
+Here we post resources and recorded lectures and demonstrations made during workshops, conferences, and seminars.
 
 Virtual VMSG 2022
 ^^^^^^^^^^^^^^^^^
@@ -14,3 +14,10 @@ The exercises can also be run interactively on the cloud using myBinder
  :target: https://mybinder.org/v2/gh/simonwmatthews/VESIcal_Workshop_VMSG22/HEAD?labpath=01_Introduction.ipynb
 
 Videos for the lectures and demonstrations are available on `YouTube <https://www.youtube.com/playlist?list=PLDSC0wbXSKIzQuLHMc4x37smOgT-_j7kM>`_
+
+Poster: Volatiles from source to surface workshop 2022
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Click on the image below for the PDF.
+
+.. image:: img/Bozeman_VESIcal_poster.png
+   :target: _images/Bozeman_VESIcal_poster.pdf
