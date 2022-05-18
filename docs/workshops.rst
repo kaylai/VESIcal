@@ -20,4 +20,4 @@ Poster: Volatiles from source to surface workshop 2022
 Click on the image below for the PDF.
 
 .. image:: img/Bozeman_VESIcal_poster.png
-   :target: _images/Bozeman_VESIcal_poster.pdf
+   :target: _static/Bozeman_VESIcal_poster.pdf
