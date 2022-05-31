@@ -13,24 +13,16 @@ import sys
 from contextlib import redirect_stdout
 import io
 
-from thermoengine import equilibrate
+try:
+    from thermoengine import equilibrate
+catch ImportError:
+    equilibrate = None
 
-# Variable to send H2O driver warnings into the void
-_f = io.StringIO()
+gInititalized = false
 
-w.filterwarnings("ignore", message="rubicon.objc.ctypes_patch has only been tested ")
+def init:
 
-# -------------- MELTS preamble --------------- #
-# instantiate thermoengine equilibrate MELTS instance
-melts = equilibrate.MELTSmodel("1.2.0")
-
-# Suppress phases not required in the melts simulation
-phases = melts.get_phase_names()
-for phase in phases:
-    melts.set_phase_inclusion_status({phase: False})
-melts.set_phase_inclusion_status({"Fluid": True, "Liquid": True})
-# --------------------------------------------- #
-
+    gInitialized = true
 
 class MagmaSat(model_classes.Model):
     """
@@ -38,6 +30,26 @@ class MagmaSat(model_classes.Model):
     """
 
     def __init__(self):
+        
+        if equilibrate == None:
+            throw exception
+        
+        # Variable to send H2O driver warnings into the void
+        _f = io.StringIO()
+
+        w.filterwarnings("ignore", message="rubicon.objc.ctypes_patch has only been tested ")
+
+        # -------------- MELTS preamble --------------- #
+        # instantiate thermoengine equilibrate MELTS instance
+        melts = equilibrate.MELTSmodel("1.2.0")
+
+        # Suppress phases not required in the melts simulation
+        phases = melts.get_phase_names()
+        for phase in phases:
+            melts.set_phase_inclusion_status({phase: False})
+        melts.set_phase_inclusion_status({"Fluid": True, "Liquid": True})
+        # --------------------------------------------- #
+
         self.melts_version = (
             "1.2.0"  # just here so users can see which version is being used
         )
