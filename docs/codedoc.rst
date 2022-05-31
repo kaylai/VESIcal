@@ -61,7 +61,7 @@ calculate_liquid_density(Calculate)
 	:members:
 
 calculate_liquid_viscosity(Calculate)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autoclass:: VESIcal.thermo.thermo_calculate_classes.calculate_liquid_viscosity
 	:members:
 
