@@ -2,6 +2,8 @@
 VESIcal Quickstart
 ##################
 
+.. image:: img/header_transparent.png
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
