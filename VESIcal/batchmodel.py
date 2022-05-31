@@ -9,21 +9,21 @@ import numpy as np
 import warnings as w
 import sys
 
-from thermoengine import equilibrate
+# from thermoengine import equilibrate
 
-w.filterwarnings("ignore", message="rubicon.objc.ctypes_patch has only been "
-                                   "tested ")
+# w.filterwarnings("ignore", message="rubicon.objc.ctypes_patch has only been "
+#                                    "tested ")
 
-# -------------- MELTS preamble --------------- #
-# instantiate thermoengine equilibrate MELTS instance
-melts = equilibrate.MELTSmodel('1.2.0')
+# # -------------- MELTS preamble --------------- #
+# # instantiate thermoengine equilibrate MELTS instance
+# melts = equilibrate.MELTSmodel('1.2.0')
 
-# Suppress phases not required in the melts simulation
-phases = melts.get_phase_names()
-for phase in phases:
-    melts.set_phase_inclusion_status({phase: False})
-melts.set_phase_inclusion_status({'Fluid': True, 'Liquid': True})
-# --------------------------------------------- #
+# # Suppress phases not required in the melts simulation
+# phases = melts.get_phase_names()
+# for phase in phases:
+#     melts.set_phase_inclusion_status({phase: False})
+# melts.set_phase_inclusion_status({'Fluid': True, 'Liquid': True})
+# # --------------------------------------------- #
 
 
 # -------------- BATCH PROCESSING ----------- #
@@ -32,53 +32,53 @@ class BatchFile(batchfile.BatchFile):
     """
     pass
 
-    def get_XH2O_fluid(self, sample, temperature, pressure, H2O, CO2):
-        """An internally used function to calculate fluid composition.
+    # def get_XH2O_fluid(self, sample, temperature, pressure, H2O, CO2):
+    #     """An internally used function to calculate fluid composition.
 
-        Parameters
-        ----------
-        sample: dictionary
-            Sample composition in wt% oxides
+    #     Parameters
+    #     ----------
+    #     sample: dictionary
+    #         Sample composition in wt% oxides
 
-        temperature: float
-            Temperature in degrees C.
+    #     temperature: float
+    #         Temperature in degrees C.
 
-        pressure: float
-            Pressure in bars
+    #     pressure: float
+    #         Pressure in bars
 
-        H2O: float
-            wt% H2O in the system
+    #     H2O: float
+    #         wt% H2O in the system
 
-        CO2: float
-            wt% CO2 in the system
+    #     CO2: float
+    #         wt% CO2 in the system
 
-        Returns
-        -------
-        float
-            Mole fraction of H2O in the H2O-CO2 fluid
+    #     Returns
+    #     -------
+    #     float
+    #         Mole fraction of H2O in the H2O-CO2 fluid
 
-        """
-        pressureMPa = pressure / 10.0
+    #     """
+    #     pressureMPa = pressure / 10.0
 
-        bulk_comp = {oxide:  sample[oxide] for oxide in core.magmasat_oxides}
-        bulk_comp["H2O"] = H2O
-        bulk_comp["CO2"] = CO2
-        melts.set_bulk_composition(bulk_comp)
+    #     bulk_comp = {oxide:  sample[oxide] for oxide in core.magmasat_oxides}
+    #     bulk_comp["H2O"] = H2O
+    #     bulk_comp["CO2"] = CO2
+    #     melts.set_bulk_composition(bulk_comp)
 
-        output = melts.equilibrate_tp(temperature, pressureMPa,
-                                      initialize=True)
-        (status, temperature, pressureMPa, xmlout) = output[0]
-        fluid_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid',
-                                                    mode='component')
-        # NOTE mode='component' returns endmember component keys with values
-        # in mol fraction.
+    #     output = melts.equilibrate_tp(temperature, pressureMPa,
+    #                                   initialize=True)
+    #     (status, temperature, pressureMPa, xmlout) = output[0]
+    #     fluid_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid',
+    #                                                 mode='component')
+    #     # NOTE mode='component' returns endmember component keys with values
+    #     # in mol fraction.
 
-        if "Water" in fluid_comp:
-            H2O_fl = fluid_comp["Water"]
-        else:
-            H2O_fl = 0.0
+    #     if "Water" in fluid_comp:
+    #         H2O_fl = fluid_comp["Water"]
+    #     else:
+    #         H2O_fl = 0.0
 
-        return H2O_fl
+    #     return H2O_fl
 
     def calculate_dissolved_volatiles(self, temperature, pressure, X_fluid=1,
                                       print_status=True, model='MagmaSat',
