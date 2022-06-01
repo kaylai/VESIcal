@@ -1,6 +1,6 @@
 pandas
 numpy
 matplotlib
-cycler
 scipy
 sympy
+openpyxl

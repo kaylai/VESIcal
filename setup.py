@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="VESIcal",
-    version="1.1.1",
+    version="1.2.0",
     author="Kayla Iacovino, Simon Matthews, Penny Wieser",
     author_email="kaylaiacovino@gmail.com",
     description=("A generalized python library for calculating and plotting various things "
@@ -18,9 +18,9 @@ setuptools.setup(
             'pandas',
             'numpy',
             'matplotlib',
-            'cycler',
             'scipy',
-            'sympy'],
+            'sympy',
+            'openpyxl'],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

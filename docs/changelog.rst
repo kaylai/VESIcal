@@ -1,14 +1,20 @@
 *******************************
-ChangeLog: What's new in v 1.1?
+ChangeLog: What's new in v 1.2?
 *******************************
-New in version 1.1.0 is VESIcal's thermo package. This package begins to introduce more calculations that a user might wish to perform. In this version, we have added the ability to calculate the density of a liquid (using DensityX, Iacovino and Till, 2019) and the viscosity of a liquid (Giordano et al., 2008). Check out the tutorials to learn how to use these functions, which use the same syntax as all other core calculations.
+A small but mighty update comes to VESIcal v1.2.0. VESIcal can now be used without the installation of the thermoengine library (which can only be built from source on a mac or run via a docker image on a PC or linux machine). MagmaSat, VESIcal's default model, requires thermoengine to run. We chose MagmaSat as the default model for a reason (it's usually the best model to use), but there are plenty of cases where access to the other models and not to MagmaSat is desired.
+
+The usage of VESIcal remains unchanged in the new version. Simply install using pip (see :doc:`install`) and get to work. If you do not have thermoengine installed, remember to specify which model to use in each calculation performed.
+
+Previous version history
+########################
 
 Version 1.1.1
 ^^^^^^^^^^^^^
 Fixed bug where users could not calculate or plot degassing paths for compositions with only one volatile. Fixed bug where degassing paths in MagmaSat were not calculated down to 1 bar.
 
-Previous version history
-########################
+Version 1.1.0
+^^^^^^^^^^^^^
+New in version 1.1.0 is VESIcal's thermo package. This package begins to introduce more calculations that a user might wish to perform. In this version, we have added the ability to calculate the density of a liquid (using DensityX, Iacovino and Till, 2019) and the viscosity of a liquid (Giordano et al., 2008). Check out the tutorials to learn how to use these functions, which use the same syntax as all other core calculations.
 
 Version 1.0.4
 ^^^^^^^^^^^^^
@@ -36,7 +42,7 @@ In a couple of instances, code written with versions <0.9 will not execute prope
 	- To extract a sample from a BatchFile is now done as BatchFile.get_sample_composition() instead of ExcelFile.get_sample_oxide_comp()
 
 Try this first: Quick and dirty update
-**************************************
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 As a first pass, simply try making these changes:
 
 	1. Change all instances of ExcelFile to BatchFile

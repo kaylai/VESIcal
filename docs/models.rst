@@ -28,14 +28,14 @@ Models included in VESIcal are:
 
 	- ShishkinaWater and ShishkinaCarbon are available as pure-fluid models
 
-**7. AllisonCarbon:** (Allison et al. 2019, carbon only)
+**7. AllisonCarbon:** (Allison et al. 2019, carbon only). The Vesuvius calibraiton is used by default. For other AllisonCarbon model calibrations pass the argument `model_loc` as a string (can be one of 'vesuvius', 'sunset', 'sfvf', 'erebus', 'etna', or 'stromboli'). In the manuscript, Allison et al. describe both thermodynamic and power-law fits to their data. The thermodynamic fit is used by default, but you can choose to use their power fits by passing the `model_fit` argument as a string (can be either 'thermodynamic' or 'power').
 
 	- AllisonCarbon vesuvius (default; phonotephrite from Vesuvius, Italy)
 	- AllisonCarbon sunset (alkali basalt from Sunset Crater, AZ, USA)
 	- AllisonCarbon sfvf (basaltic andesite from San Francisco Volcanic Field, AZ, USA)
 	- AllisonCarbon erebus (phonotephrite from Erebus, Antarctica)
 	- AllisonCarbon etna (trachybasalt from Etna, Italy)
-	- AllisonCarbon etna (trachybasalt from Etna, Italy)
+	- AllisonCarbon stromboli (trachybasalt from Stromboli, Italy)
 
 A list of model names recognized by VESIcal can be retrieved by executing the command `v.get_model_names()`, assuming VESIcal has been imported as `v`. Note that the above model names are given in terms of how to call them within VESIcal (e.g., model='MooreWater'). Allison et al. (2019) provides unique model equations for each of the six alkali-rich mafic magmas investigated in their study. The default model in VESIcal is that calibrated for Vesuvius magmas, whose calibration has the widest pressure range of the study. Setting a model name of 'AllisonCarbon' within VESIcal will
 thus result in calculations using the AllisonCarbon vesuvius model equations. 
