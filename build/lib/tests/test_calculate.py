@@ -49,9 +49,9 @@ class TestDissolvedVolatiles(unittest.TestCase):
         self.dixonMixed_molox =         {'H2O_liq': 0.0688214,
                                         'CO2_liq': 0.000481216}
 
-        self.iaconomarzianoMixed_wtpt = {'H2O_liq': 2.0853469,
+        self.iaconomarzianoMixed_wtpt = {'H2O_liq': 2.077807,
                                         'CO2_liq': 0.0500067}
-        self.iaconomarzianoMixed_molox ={'H2O_liq': 0.0693591,
+        self.iaconomarzianoMixed_molox ={'H2O_liq':  0.069126,
                                         'CO2_liq': 0.000680900}
 
         self.liuMixed_wtpt =            {'H2O_liq': 2.293923234,
@@ -176,7 +176,7 @@ class TestSaturationPressure(unittest.TestCase):
         # saturation pressures calculated with VESIcal
         self.shishkinaMixed =      1903.1192979127836
         self.dixonMixed =          1847.1637265676327
-        self.iaconomarzianoMixed = 1437.268470833670
+        self.iaconomarzianoMixed = 1441.0510518841243
         self.liuMixed =            2157.191497153953
         self.magmasat =            1630  # Generated with MagmaSat app
 
@@ -194,7 +194,7 @@ class TestSaturationPressure(unittest.TestCase):
 
         self.shishkinaWater            = 395.4721026237296
         self.dixonWater                = 431.1140172567279
-        self.iaconomarzianoWater       = 459.7132843026062
+        self.iaconomarzianoWater       = 460.99510874007944
         self.mooreWater                = 366.7939178950552
         self.liuWater                  = 374.4357814145504
 
@@ -337,7 +337,7 @@ class TestEquilibriumFluidComp(unittest.TestCase):
         # equilibrium fluid comps calculated with VESIcal
         self.shishkinaMixed =      {'H2O': 0.7158408854774682, 'CO2': 0.28415911452253184}
         self.dixonMixed =          {'H2O': 0.7750859842655139, 'CO2': 0.2249140157344861}
-        self.iaconomarzianoMixed = {'H2O': 0.8103088488568084, 'CO2': 0.18969115114319157}
+        self.iaconomarzianoMixed = {'H2O': 0.811666221694067, 'CO2': 0.188333778305933}
         self.liuMixed =            {'H2O': 0.7066707740811572, 'CO2': 0.2933292259188428}
         self.magmasat =            {'CO2': 0.219354223233457, 'H2O': 0.780645776766543}
 
@@ -469,7 +469,7 @@ class TestLiquidViscosity(unittest.TestCase):
                                     'TiO2':    0.55,
                                     'Al2O3':   20.01,
                                     'FeO':     5.0,
-                                    'Fe2O3':   0.5, 
+                                    'Fe2O3':   0.5,
                                     'MnO':     0.02,
                                     'MgO':     3.22,
                                     'CaO':     9.08,
@@ -494,12 +494,12 @@ class TestLiquidViscosity(unittest.TestCase):
 
         # BatchFile with test sample as defined above in wtpt_oxides
         try:
-            self.batch_wtpt = v.BatchFile('BatchTest.xlsx', 
+            self.batch_wtpt = v.BatchFile('BatchTest.xlsx',
                                           sheet_name='giordano_test',
                                           units='wtpt_oxides')
         except:
             self.batch_wtpt = v.BatchFile('tests/BatchTest.xlsx',
-                                            sheet_name='giordano_test', 
+                                            sheet_name='giordano_test',
                                             units='wtpt_oxides')
         self.batch_wtpt.set_default_units("wtpt_oxides")
 
@@ -511,7 +511,7 @@ class TestLiquidViscosity(unittest.TestCase):
             self.batch_molox = v.BatchFile('tests/BatchTest.xlsx',
                                             sheet_name='giordano_test')
         self.batch_molox.set_default_units("mol_oxides")
-        
+
         # viscosities calculated with Giordano excel spreadsheet
         self.giordano_default_viscosity = 2.1733
         self.batch_test_samp_viscosity = 0.7721
@@ -617,7 +617,7 @@ class TestLiquidDensity(unittest.TestCase):
         try:
             self.batch_wtpt = v.BatchFile('BatchTest.xlsx', units='wtpt_oxides')
         except:
-            self.batch_wtpt = v.BatchFile('tests/BatchTest.xlsx', 
+            self.batch_wtpt = v.BatchFile('tests/BatchTest.xlsx',
                                             units='wtpt_oxides')
         self.batch_wtpt.set_default_units("wtpt_oxides")
 
@@ -627,13 +627,13 @@ class TestLiquidDensity(unittest.TestCase):
         except:
             self.batch_molox = v.BatchFile('tests/BatchTest.xlsx')
         self.batch_molox.set_default_units("mol_oxides")
-        
+
         # densities calculated with DensityX
         self.densityx = 2620.832
 
     def test_calculate_single_wtpt(self):
         calcd_result = v.calculate_liquid_density(self.sample_wtpt,
-                                                  temperature=self.temperature, 
+                                                  temperature=self.temperature,
                                                   pressure=self.pressure).result
         known_result = self.densityx
         self.assertAlmostEqual(calcd_result, known_result, places=4)
@@ -648,7 +648,7 @@ class TestLiquidDensity(unittest.TestCase):
 
     def test_calculate_single_molox(self):
         calcd_result = v.calculate_liquid_density(self.sample_molox,
-                                                  temperature=self.temperature, 
+                                                  temperature=self.temperature,
                                                   pressure=self.pressure).result
         known_result = self.densityx
         self.assertAlmostEqual(calcd_result, known_result, places=4)
