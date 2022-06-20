@@ -8,6 +8,14 @@ The usage of VESIcal remains unchanged in the new version. Simply install using 
 Previous version history
 ########################
 
+Version 1.2.1
+^^^^^^^^^^^^^
+Fixed small bug in the Iacono-Marziano model. In most cases this will result in either a very small difference to the calculated results or no difference at all.
+
+Version 1.2.0
+^^^^^^^^^^^^^
+VESIcal can now be installed without the thermoengine library. Note that the MagmaSat model will not work without thermoengine installed (which we recommend in most cases).
+
 Version 1.1.1
 ^^^^^^^^^^^^^
 Fixed bug where users could not calculate or plot degassing paths for compositions with only one volatile. Fixed bug where degassing paths in MagmaSat were not calculated down to 1 bar.
