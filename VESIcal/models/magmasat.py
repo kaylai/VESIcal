@@ -37,11 +37,12 @@ class MagmaSat(model_classes.Model):
 
     def __init__(self):
         if equilibrate is None:
-            raise core.Error("\n"
-                "ERROR: Thermoengine is not installed. MagmaSat model will not function. A " 
-                "model name must be given when performing any calculation as " 
+            raise core.Error(
+                "\n"
+                "ERROR: Thermoengine is not installed. MagmaSat model will not function. A "
+                "model name must be given when performing any calculation as "
                 "model=\'some-model-name\'."
-            )
+                )
 
         # -------------- MELTS preamble --------------- #
         # instantiate thermoengine equilibrate MELTS instance
@@ -1049,7 +1050,8 @@ class MagmaSat(model_classes.Model):
                 output = self.melts.equilibrate_tp(temperature, i, initialize=True)
             (status, temperature, p, xmlout) = output[0]
             liq_comp = self.melts.get_composition_of_phase(xmlout, phase_name="Liquid")
-            fl_comp = self.melts.get_composition_of_phase(xmlout, phase_name="Fluid", mode="component")
+            fl_comp = self.melts.get_composition_of_phase(xmlout, phase_name="Fluid",
+                                                          mode="component")
             liq_mass = self.melts.get_mass_of_phase(xmlout, phase_name="Liquid")
             fl_mass = self.melts.get_mass_of_phase(xmlout, phase_name="Fluid")
             fl_wtper = 100 * fl_mass / (fl_mass + liq_mass)

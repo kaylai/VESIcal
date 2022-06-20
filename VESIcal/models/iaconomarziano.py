@@ -265,7 +265,7 @@ class water(model_classes.Model):
 
         NBO_O = self.NBO_O(sample=sample_copy, coeffs=coeffs)
         fugacity = self.fugacity_model.fugacity(pressure=pressure, X_fluid=X_fluid,
-                                                temperature=temperature, **kwargs)
+                                                temperature=temperature - 273.15, **kwargs)
 
         return h2o - np.exp(a*np.log(fugacity) + b*NBO_O + B + C*pressure/(temperature))
 
