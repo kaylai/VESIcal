@@ -432,6 +432,19 @@ class BatchFile(batchfile.BatchFile):
         """
         fluid_data = self.get_data().copy()
 
+        # check if None is passed for pressure, if so calculate SatP
+        if pressure is None:
+            pressures = self.calculate_saturation_pressure(
+                                                       temperature=temperature,
+                                                       model=model,
+                                                       **kwargs)
+            # add calcd SatPs to fluid_data df
+            fluid_data["SaturationP_bars_VESIcal"] = (
+                                        pressures["SaturationP_bars_VESIcal"])
+
+            # push that to pressure argument
+            pressure = "SaturationP_bars_VESIcal"
+
         # Check if the model passed as the attribute "model_type"
         # Currently only implemented for MagmaSat type models
         if hasattr(model, 'model_type') is True:
@@ -524,6 +537,7 @@ class BatchFile(batchfile.BatchFile):
 
                 if file_has_press:
                     pressure = row[press_name]
+
                 if temperature > 0 and pressure <= 0:
                     H2Ovals.append(np.nan)
                     CO2vals.append(np.nan)
