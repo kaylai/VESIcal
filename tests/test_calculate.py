@@ -339,7 +339,7 @@ class TestEquilibriumFluidComp(unittest.TestCase):
         self.dixonMixed =          {'H2O': 0.7750859842655139, 'CO2': 0.2249140157344861}
         self.iaconomarzianoMixed = {'H2O': 0.811666221694067, 'CO2': 0.188333778305933}
         self.liuMixed =            {'H2O': 0.7066707740811572, 'CO2': 0.2933292259188428}
-        self.magmasat =            {'CO2': 0.219354223233457, 'H2O': 0.780645776766543}
+        self.magmasat =            {'CO2': 0.20391426033745, 'H2O': 0.79608573966255}
 
         self.shishkinaCarbon           = 1.0
         self.dixonCarbon               = 1.0
