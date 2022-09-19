@@ -196,9 +196,9 @@ class Sample(object):
                 raise core.InputError("The oxide name provided in oxide_masses is not recognised.")
 
         # Fetch the default return types if not specified in function call
-        if normalization is None and species is None:
+        if normalization is None:
             normalization = self.default_normalization
-        if units is None and species is None:
+        if units is None:
             units = self.default_units
 
         # Check whether to exclude volatiles
