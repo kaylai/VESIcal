@@ -915,7 +915,8 @@ class MagmaSat(model_classes.Model):
         return res_isobars, res_isopleths
 
     def calculate_degassing_path(self, sample, temperature, pressure="saturation",
-                                 fractionate_vapor=0.0, init_vapor=0.0, steps=50, **kwargs):
+                                 fractionate_vapor=0.0, init_vapor=0.0, steps=50, 
+                                 return_xmlout=False, **kwargs):
         """
         Calculates degassing path for one sample
 
@@ -955,6 +956,20 @@ class MagmaSat(model_classes.Model):
         steps: int
             OPTIONAL. Default value is 50. Specifies the number of steps in pressure space at
             which dissolved volatile concentrations are calculated.
+        
+        return_xmlout: bool
+            OPTIONAL. Default is False. If set to True, the xmlout variable produced by MELTS
+            thermoengine will be returned as the final column of the returned DataFrame. This
+            variable can be used to access all computed properties of the Fluid and Liquid phases.
+            To access, for example, the properties of each phase, the MELTS thermoengine must be
+            imported (from thermoengine import equilibrate), and the melts model must be defined
+            (melts = equilibrate.MELTSmodel("1.2.0")), then use
+            melts.get_property_of_phase(xmlout, phase_name, property_name), where xmlout is the
+            xmlout variable produced by MELTS thermoengine (an xml document tree of the type
+            xml.etree.ElementTree.). phase_name can be one of "Liquid" or "Fluid".
+            property_name can be one of 'Mass', 'GibbsFreeEnergy', 'Enthalpy', 'Entropy',
+            'HeatCapacity', 'DcpDt', 'Volume', 'DvDt', 'DvDp', 'D2vDt2', 'D2vDtDp', 'D2vDp2',
+            'Density', 'Alpha', 'Beta', 'K', "K'", 'Gamma'.
 
         Returns
         -------
@@ -1031,6 +1046,8 @@ class MagmaSat(model_classes.Model):
         H2Ofl = []
         CO2fl = []
         fluid_wtper = []
+        fluid_volper = []
+        xmlout_list = []
         iterno = 0
         sys.stdout.write("\r")  # carriage return to remove previous printed text
         for i in P_array:
@@ -1051,6 +1068,17 @@ class MagmaSat(model_classes.Model):
             fl_mass = self.melts.get_mass_of_phase(xmlout, phase_name="Fluid")
             fl_wtper = 100 * fl_mass / (fl_mass + liq_mass)
 
+            # get volumes of fluid and liquid
+            liq_vol = self.melts.get_property_of_phase(xmlout, phase_name='Liquid',
+                                                       property_name='Volume')
+            fl_vol = self.melts.get_property_of_phase(xmlout, phase_name='Fluid',
+                                                       property_name='Volume')
+            fl_volper = 100 * fl_vol / (fl_vol + liq_vol)
+
+            # save xmlout for access by user later
+            # this allows access to properties calculated by MagmaSat
+            xmlout_list.append(xmlout)
+
             if fl_mass > 0:
                 pressure.append(p * 10.0)
                 try:
@@ -1070,6 +1098,7 @@ class MagmaSat(model_classes.Model):
                 except Exception:
                     CO2fl.append(0)
                 fluid_wtper.append(fl_wtper)
+                fluid_volper.append(fl_volper)
 
                 try:
                     _sample_dict["H2O"] = (liq_comp["H2O"] +
@@ -1088,13 +1117,15 @@ class MagmaSat(model_classes.Model):
 
         self.melts.set_bulk_composition(self.bulk_comp_orig)  # this needs to be reset always!
         open_degassing_df = pd.DataFrame(list(zip(pressure, H2Oliq, CO2liq, H2Ofl, CO2fl,
-                                                  fluid_wtper)),
+                                                  fluid_wtper, fluid_volper, xmlout_list)),
                                          columns=["Pressure_bars",
                                                   "H2O_liq",
                                                   "CO2_liq",
                                                   "XH2O_fl",
                                                   "XCO2_fl",
-                                                  "FluidProportion_wt"])
+                                                  "FluidProportion_wt",
+                                                  "FluidProportion_vol",
+                                                  "xmlout"])
 
         open_degassing_df = open_degassing_df[open_degassing_df.CO2_liq >= 0.0]
         open_degassing_df = open_degassing_df[open_degassing_df.H2O_liq >= 0.0]

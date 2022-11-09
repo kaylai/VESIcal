@@ -423,8 +423,8 @@ class calculate_degassing_path(Calculate):
     Calculate object
         Calculate object, access results by fetching the result property.
         A DataFrame with columns 'Pressure', 'H2O_liq', 'CO2_liq',
-        'H2O_fl', 'CO2_fl', and 'FluidProportion_wt', is returned. Dissolved
-        volatiles are in wt%, the proportions of volatiles in the fluid are
+        'H2O_fl', 'CO2_fl', 'FluidProportion_wt', and 'FluidProportion_vol' is returned.
+        Dissolved volatiles are in wt%, the proportions of volatiles in the fluid are
         in mole fraction.
     """
     def calculate(self, sample, pressure='saturation', fractionate_vapor=0.0,
