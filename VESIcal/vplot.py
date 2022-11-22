@@ -10,8 +10,28 @@ import matplotlib.pyplot as plt
 
 
 # ---------- DEFINE CUSTOM PLOTTING FORMATTING ------------ #
-style = "seaborn-colorblind"
-plt.style.use(style)
+try:
+    style = "seaborn-colorblind" # old style name
+    plt.style.use(style)
+    
+    # Define color cycler based on plot style set here
+    # get style formatting set by plt.style.use():
+    the_rc = plt.style.library[style]
+    # list of colors by hex code:
+    color_list = the_rc['axes.prop_cycle'].by_key()['color'] * 10
+    color_cyler = the_rc['axes.prop_cycle']  # get the cycler
+
+except:
+    style = "seaborn-v0_8-colorblind" # new style name as of 3.6.0
+    plt.style.use(style)
+    
+    # Define color cycler based on plot style set here
+    # get style formatting set by plt.style.use():
+    the_rc = plt.style.library[style]
+    # list of colors by hex code:
+    color_list = the_rc['axes.prop_cycle'].by_key()['color'] * 10
+    color_cyler = the_rc['axes.prop_cycle']  # get the cycler
+
 plt.rcParams["mathtext.default"] = "regular"
 plt.rcParams["mathtext.fontset"] = "dejavusans"
 mpl.rcParams['patch.linewidth'] = 1
@@ -22,14 +42,6 @@ plt.rcParams['xtick.labelsize'] = 14
 plt.rcParams['ytick.labelsize'] = 14
 plt.rcParams['legend.fontsize'] = 14
 mpl.rcParams['lines.markersize'] = 10
-
-# Define color cycler based on plot style set here
-# get style formatting set by plt.style.use():
-the_rc = plt.style.library[style]
-# list of colors by hex code:
-color_list = the_rc['axes.prop_cycle'].by_key()['color'] * 10
-color_cyler = the_rc['axes.prop_cycle']  # get the cycler
-
 
 # ----------- MAGMASAT PLOTTING FUNCTIONS ----------- #
 def smooth_isobars_and_isopleths(isobars=None, isopleths=None):
