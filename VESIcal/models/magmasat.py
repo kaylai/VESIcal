@@ -966,10 +966,13 @@ class MagmaSat(model_classes.Model):
             (melts = equilibrate.MELTSmodel("1.2.0")), then use
             melts.get_property_of_phase(xmlout, phase_name, property_name), where xmlout is the
             xmlout variable produced by MELTS thermoengine (an xml document tree of the type
-            xml.etree.ElementTree.). phase_name can be one of "Liquid" or "Fluid".
-            property_name can be one of 'Mass', 'GibbsFreeEnergy', 'Enthalpy', 'Entropy',
-            'HeatCapacity', 'DcpDt', 'Volume', 'DvDt', 'DvDp', 'D2vDt2', 'D2vDtDp', 'D2vDp2',
-            'Density', 'Alpha', 'Beta', 'K', "K'", 'Gamma'.
+            xml.etree.ElementTree.).
+            - phase_name can be one of "Liquid" or "Fluid".
+            - property_name can be one of 'Mass' (grams), 'GibbsFreeEnergy' (J), 'Enthalpy' (J),
+            'Entropy' (J/K), 'HeatCapacity' (J/K), 'DcpDt' (J/K^2), 'Volume' (J/bar, translate to
+            cm^3 by multiplying by 10), 'DvDt' (J/bar-K), 'DvDp' (J/bar^2), 'D2vDt2' (J/bar-K^2),
+            'D2vDtDp' (J/bar^2-K), 'D2vDp2' (J/bar^2), 'Density' (g/cm^3), 'Alpha' (1/K),
+            'Beta' (1/bar), 'K' (GPa), "K'" (none), 'Gamma' (none).
 
         Returns
         -------
