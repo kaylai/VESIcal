@@ -142,3 +142,7 @@ Debugging.ipynb
 H2O_CO2_SensitivityTesting.xlsx
 
 ~$BatchTest.xlsx
+
+dist/VESIcal-1.2.1-py3-none-any.whl
+
+dist/VESIcal-1.2.1.tar.gz
