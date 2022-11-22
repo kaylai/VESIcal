@@ -8,6 +8,10 @@ The usage of VESIcal remains unchanged in the new version. Simply install using 
 Previous version history
 ########################
 
+Version 1.2.3
+^^^^^^^^^^^^^
+Critical bug fix. With the update to matplotlib v3.6.0, styles were renamed. Namely, the "seaborn-colorblind" style used in VESIcal was updated to "seaborn-v0_8-colorblind". This change caused VESIcal to not import at all if matplotlib >=3.6.0 was installed. Try/Except block was added to first try "seaborn-colorblind" and then except to use "seaborn-v0_8-colorblind" in order to prevent VESIcal from breaking if older or newer versions of matplotlib are used.
+
 Version 1.2.2
 ^^^^^^^^^^^^^
 Fixed bug in MagmaSat model. To be internally consistent between MagmaSat calculations and between MagmaSat and other models, we now force "fixedvolatiles" normalization on any sample when performing MagmaSat calculations. This makes VESIcal's behavior consistent with the behavior of the MagmaSat app, which may treat input H2O and CO2 contents as either dissolved in the melt or in the system (melt + fluid). This fixes a bug where a user might calculate the saturation pressure, then when calculating the equilibrium fluid composition at that pressure, VESIcal would say the composition is undersaturated. Results in very small differences to the equilibrium_fluid_comp() results, within error of the model (on the order of 0.01 mole fraction difference for H2O or CO2 in the fluid). The saturation pressure results are unchanged as they already performed a "fixedvolatiles" normalization.
