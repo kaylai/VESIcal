@@ -10,6 +10,10 @@ import warnings as w
 import sympy
 from scipy.optimize import root_scalar
 
+crmsg_0bar_fail = ("{param_name} ({param_val:.1f} {units}) is less than 0 bars. ")
+crmsg_5000bar_fail = ("{param_name} exceeds 5000 bar, which is the recommended upper calibration"
+                      " limit of rht Liu et al. (2005) model. ")
+
 
 class water(model_classes.Model):
     """
@@ -39,17 +43,28 @@ class water(model_classes.Model):
 
         self.set_calibration_ranges([
             calibration_checks.CalibrationRange(
-                'pressure', [0, 5000.0], calibration_checks.crf_Between, 'bar',
+                'pressure', 0, calibration_checks.crf_GreaterThan, 'bar',
                 'Liu et al. (2005) water',
-                fail_msg=calibration_checks.crmsg_Between_fail,
-                pass_msg=calibration_checks.crmsg_Between_pass,
-                description_msg=calibration_checks.crmsg_Between_description),
+                fail_msg=crmsg_0bar_fail,
+                pass_msg=calibration_checks.crmsg_GreaterThan_pass,
+                description_msg=calibration_checks.crmsg_GreaterThan_description),
             calibration_checks.CalibrationRange(
-                'temperature', [700.0, 1200], calibration_checks.crf_Between, 'oC',
+                'pressure', 5000, calibration_checks.crf_LessThan, 'bar',
                 'Liu et al. (2005) water',
-                fail_msg=calibration_checks.crmsg_Between_fail,
-                pass_msg=calibration_checks.crmsg_Between_pass,
-                description_msg=calibration_checks.crmsg_Between_description),
+                fail_msg=crmsg_5000bar_fail,
+                pass_msg=calibration_checks.crmsg_LessThan_pass,
+                description_msg=calibration_checks.crmsg_LessThan_description),
+            #     'pressure', [0, 5000.0], calibration_checks.crf_Between, 'bar',
+            #     'Liu et al. (2005) water',
+            #     fail_msg=calibration_checks.crmsg_Between_fail,
+            #     pass_msg=calibration_checks.crmsg_Between_pass,
+            #     description_msg=calibration_checks.crmsg_Between_description),
+            # calibration_checks.CalibrationRange(
+            #     'temperature', [700.0, 1200], calibration_checks.crf_Between, 'oC',
+            #     'Liu et al. (2005) water',
+            #     fail_msg=calibration_checks.crmsg_Between_fail,
+            #     pass_msg=calibration_checks.crmsg_Between_pass,
+            #     description_msg=calibration_checks.crmsg_Between_description),
             calibration_checks.CalibrationRange(
                 'sample', None, crf_WaterComp, None, None,
                 fail_msg=crmsg_WaterComp_fail,
@@ -236,17 +251,29 @@ class carbon(model_classes.Model):
 
         self.set_calibration_ranges([
             calibration_checks.CalibrationRange(
-                'pressure', [0, 5000.0], calibration_checks.crf_Between, 'bar',
-                'Liu et al. (2005) Carbon',
-                fail_msg=calibration_checks.crmsg_Between_fail,
-                pass_msg=calibration_checks.crmsg_Between_pass,
-                description_msg=calibration_checks.crmsg_Between_description),
+                'pressure', 0, calibration_checks.crf_GreaterThan, 'bar',
+                'Liu et al. (2005) water',
+                fail_msg=crmsg_0bar_fail,
+                pass_msg=calibration_checks.crmsg_GreaterThan_pass,
+                description_msg=calibration_checks.crmsg_GreaterThan_description),
             calibration_checks.CalibrationRange(
-                'temperature', [700.0, 1200], calibration_checks.crf_Between, 'oC',
-                'Liu et al. (2005) Carbon',
-                fail_msg=calibration_checks.crmsg_Between_fail,
-                pass_msg=calibration_checks.crmsg_Between_pass,
-                description_msg=calibration_checks.crmsg_Between_description),
+                'pressure', 5000, calibration_checks.crf_LessThan, 'bar',
+                'Liu et al. (2005) water',
+                fail_msg=crmsg_5000bar_fail,
+                pass_msg=calibration_checks.crmsg_LessThan_pass,
+                description_msg=calibration_checks.crmsg_LessThan_description),
+            # calibration_checks.CalibrationRange(
+            #     'pressure', [0, 5000.0], calibration_checks.crf_Between, 'bar',
+            #     'Liu et al. (2005) Carbon',
+            #     fail_msg=calibration_checks.crmsg_Between_fail,
+            #     pass_msg=calibration_checks.crmsg_Between_pass,
+            #     description_msg=calibration_checks.crmsg_Between_description),
+            # calibration_checks.CalibrationRange(
+            #     'temperature', [700.0, 1200], calibration_checks.crf_Between, 'oC',
+            #     'Liu et al. (2005) Carbon',
+            #     fail_msg=calibration_checks.crmsg_Between_fail,
+            #     pass_msg=calibration_checks.crmsg_Between_pass,
+            #     description_msg=calibration_checks.crmsg_Between_description),
             calibration_checks.CalibrationRange(
                 'sample', None, crf_CarbonComp, None, None,
                 fail_msg=crmsg_CarbonComp_fail,
@@ -526,15 +553,27 @@ for ox in carboncomprange.keys():
 
 mixed.models[0].set_calibration_ranges([
     calibration_checks.CalibrationRange(
-        'pressure', [0, 5000.0], calibration_checks.crf_Between, 'bar', 'Liu et al. (2005)',
-        fail_msg=calibration_checks.crmsg_Between_fail,
-        pass_msg=calibration_checks.crmsg_Between_pass,
-        description_msg=calibration_checks.crmsg_Between_description),
+        'pressure', 0, calibration_checks.crf_GreaterThan, 'bar',
+        'Liu et al. (2005) water',
+        fail_msg=crmsg_0bar_fail,
+        pass_msg=calibration_checks.crmsg_GreaterThan_pass,
+        description_msg=calibration_checks.crmsg_GreaterThan_description),
     calibration_checks.CalibrationRange(
-        'temperature', [700.0, 1200], calibration_checks.crf_Between, 'oC', 'Liu et al. (2005)',
-        fail_msg=calibration_checks.crmsg_Between_fail,
-        pass_msg=calibration_checks.crmsg_Between_pass,
-        description_msg=calibration_checks.crmsg_Between_description),
+        'pressure', 5000, calibration_checks.crf_LessThan, 'bar',
+        'Liu et al. (2005) water',
+        fail_msg=crmsg_5000bar_fail,
+        pass_msg=calibration_checks.crmsg_LessThan_pass,
+        description_msg=calibration_checks.crmsg_LessThan_description),
+    # calibration_checks.CalibrationRange(
+    #     'pressure', [0, 5000.0], calibration_checks.crf_Between, 'bar', 'Liu et al. (2005)',
+    #     fail_msg=calibration_checks.crmsg_Between_fail,
+    #     pass_msg=calibration_checks.crmsg_Between_pass,
+    #     description_msg=calibration_checks.crmsg_Between_description),
+    # calibration_checks.CalibrationRange(
+    #     'temperature', [700.0, 1200], calibration_checks.crf_Between, 'oC', 'Liu et al. (2005)',
+    #     fail_msg=calibration_checks.crmsg_Between_fail,
+    #     pass_msg=calibration_checks.crmsg_Between_pass,
+    #     description_msg=calibration_checks.crmsg_Between_description),
     calibration_checks.CalibrationRange(
         'sample', None, crf_MixedComp, None, None,
         fail_msg=crmsg_Comp_fail,
