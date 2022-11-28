@@ -1,0 +1,10 @@
+{
+    "VoilaConfiguration": {
+        "enable_nbextensions": true,
+        "file_whitelist": ["VESIcal_Output.xlsx"]
+    },
+
+    "VoilaExecutePreprocessor": { 
+        "cell_error_instruction" : ""
+    }
+}
