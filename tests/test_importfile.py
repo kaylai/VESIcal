@@ -3,6 +3,21 @@ import VESIcal as v
 import pandas as pd
 import pathlib
 
+def print_msg_box(msg, indent=1, width=None, title=None):
+    """Print message-box with optional title."""
+    lines = msg.split('\n')
+    space = " " * indent
+    if not width:
+        width = max(map(len, lines))
+    box = f'╔{"═" * (width + indent * 2)}╗\n'  # upper_border
+    if title:
+        box += f'║{space}{title:<{width}}{space}║\n'  # title
+        box += f'║{space}{"-" * len(title):<{width}}{space}║\n'  # underscore
+    box += ''.join([f'║{space}{line:<{width}}{space}║\n' for line in lines])
+    box += f'╚{"═" * (width + indent * 2)}╝'  # lower_border
+    print("\n")
+    print(box)
+
 # Allow unittest to find the file
 TEST_FILE = pathlib.Path(__file__).parent.joinpath("ImportTest.xlsx")
 
@@ -43,5 +58,6 @@ class TestImportExcel(unittest.TestCase):
         self.myfile = v.BatchFile(TEST_FILE)
 
     def test_ImportExcel(self):
+        print_msg_box("TestImportExcel")
         self.assertEqual(self.df, self.myfile.get_data(), 
                          'DataFrames are different')
