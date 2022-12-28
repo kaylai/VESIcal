@@ -915,7 +915,8 @@ class MagmaSat(model_classes.Model):
         return res_isobars, res_isopleths
 
     def calculate_degassing_path(self, sample, temperature, pressure="saturation",
-                                 fractionate_vapor=0.0, init_vapor=0.0, steps=50, **kwargs):
+                                 fractionate_vapor=0.0, init_vapor=0.0, final_pressure=1.0,
+                                 steps=50, **kwargs):
         """
         Calculates degassing path for one sample
 
@@ -932,7 +933,7 @@ class MagmaSat(model_classes.Model):
         temperature: float
             Temperature at which to calculate degassing paths, in degrees C.
 
-        pressure: float
+        pressure: string, float, int, list, or numpy array
             OPTIONAL. The perssure at which to begin the degassing calculations. Default value is
             'saturation', which runs the calculation with the initial pressure at the saturation
             pressure. If a pressure greater than the saturation pressure is input, the calculation
@@ -951,6 +952,11 @@ class MagmaSat(model_classes.Model):
         init_vapor: float
             OPTIONAL. Default value is 0.0. Specifies the amount of vapor (in wt%) coexisting
             with the melt before degassing.
+        
+        final_pressure: float
+            OPTIONAL. The final pressure on the degassing path, in bars. Ignored if a
+            list or numpy array is passed as the pressure variable. Default is
+            1 bar.
 
         steps: int
             OPTIONAL. Default value is 50. Specifies the number of steps in pressure space at
@@ -988,26 +994,37 @@ class MagmaSat(model_classes.Model):
         data = self.calculate_saturation_pressure(sample=_sample, temperature=temperature,
                                                   verbose=True)
 
-        if pressure == "saturation" or pressure >= data["SaturationP_bars"]:
-            SatP_MPa = data["SaturationP_bars"] / 10.0
-        else:
-            SatP_MPa = pressure / 10.0
+        if type(pressure) == str or type(pressure) == float or type(pressure) == int:
+            if pressure == "saturation" or pressure >= data["SaturationP_bars"]:
+                SatP_bars = data["SaturationP_bars"]
+            else:
+                SatP_bars = pressure
+            step_size = (SatP_bars - final_pressure) / steps
+            P_array_bars = np.arange(SatP_bars, final_pressure, -step_size)
+            P_array_MPa = P_array_bars/10.0
+            # add last few MPa steps
+            P_array_MPa = np.append(P_array_MPa, 0.5)
+            P_array_MPa = np.append(P_array_MPa, 0.1)
+        elif type(pressure) == list:
+            SatP_bars = max(pressure)
+            finalP_bars = min(pressure)
+            step_size = (SatP_bars - finalP_bars) / steps
+            P_array_bars = np.arange(SatP_bars, finalP_bars, -step_size)
+            P_array_MPa = P_array_bars/10.0
+        elif type(pressure) == np.ndarray:
+            P_array_bars = pressure
+            P_array_MPa = P_array_bars/10.0
 
-        # convert number of steps to step size
-        MPa_step = SatP_MPa / steps
-        if MPa_step < 1:
-            MPa_step = 1
+        # # convert number of steps to step size
+        # MPa_step = SatP_MPa / steps
+        # if MPa_step < 1:
+        #     MPa_step = 1
 
-        P_array = np.arange(1.0, SatP_MPa, MPa_step)
-        P_array = -np.sort(-P_array)
-        # add last few MPa steps
-        P_array = np.append(P_array, 0.5)
-        P_array = np.append(P_array, 0.1)
         fl_wtper = data["FluidProportion_wt"]
 
         while fl_wtper <= init_vapor:
             with redirect_stdout(_f):
-                output = self.melts.equilibrate_tp(temperature, SatP_MPa, initialize=True)
+                output = self.melts.equilibrate_tp(temperature, np.amax(pressure), initialize=True)
             (status, temperature, p, xmlout) = output[0]
             fl_mass = self.melts.get_mass_of_phase(xmlout, phase_name="Fluid")
             liq_mass = self.melts.get_mass_of_phase(xmlout, phase_name="Liquid")
@@ -1025,7 +1042,7 @@ class MagmaSat(model_classes.Model):
             _sample_dict = _sample.get_composition(normalization="standard", units="wtpt_oxides")
             self.melts.set_bulk_composition(_sample_dict)  # reset MELTS
 
-        pressure = []
+        press = []
         H2Oliq = []
         CO2liq = []
         H2Ofl = []
@@ -1033,17 +1050,17 @@ class MagmaSat(model_classes.Model):
         fluid_wtper = []
         iterno = 0
         sys.stdout.write("\r")  # carriage return to remove previous printed text
-        for i in P_array:
+        for i in P_array_MPa:
             # Handle status_bar
             iterno += 1
-            percent = iterno / len(P_array)
+            percent = iterno / len(P_array_MPa)
             batchfile.status_bar.status_bar(percent, btext="Calculating degassing path...")
 
             fl_mass = 0.0
             self.melts.set_bulk_composition(_sample_dict)
             with redirect_stdout(_f):
                 output = self.melts.equilibrate_tp(temperature, i, initialize=True)
-            (status, temperature, p, xmlout) = output[0]
+            (status, temp, p, xmlout) = output[0]
             liq_comp = self.melts.get_composition_of_phase(xmlout, phase_name="Liquid")
             fl_comp = self.melts.get_composition_of_phase(xmlout, phase_name="Fluid",
                                                           mode="component")
@@ -1052,7 +1069,7 @@ class MagmaSat(model_classes.Model):
             fl_wtper = 100 * fl_mass / (fl_mass + liq_mass)
 
             if fl_mass > 0:
-                pressure.append(p * 10.0)
+                press.append(p * 10.0)
                 try:
                     H2Oliq.append(liq_comp["H2O"])
                 except Exception:
@@ -1087,7 +1104,7 @@ class MagmaSat(model_classes.Model):
             _sample_dict = _sample.get_composition(normalization="standard", units="wtpt_oxides")
 
         self.melts.set_bulk_composition(self.bulk_comp_orig)  # this needs to be reset always!
-        open_degassing_df = pd.DataFrame(list(zip(pressure, H2Oliq, CO2liq, H2Ofl, CO2fl,
+        open_degassing_df = pd.DataFrame(list(zip(press, H2Oliq, CO2liq, H2Ofl, CO2fl,
                                                   fluid_wtper)),
                                          columns=["Pressure_bars",
                                                   "H2O_liq",
