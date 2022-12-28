@@ -153,7 +153,10 @@ crmsg_LessThan_description = ("The {model_name} model is calibrated for "
 
 
 def crf_Between(calibval, paramval):
-    return paramval >= calibval[0] and paramval <= calibval[1]
+    if isinstance(paramval, np.ndarray):
+        return paramval.any() >= calibval[0] and paramval.any() <= calibval[1]
+    else:
+        return paramval >= calibval[0] and paramval <= calibval[1]
 
 
 crmsg_Between_pass = ("The {param_name} ({param_val:.1f} {units}) is between "
