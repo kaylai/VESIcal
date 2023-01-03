@@ -3,6 +3,21 @@ import VESIcal as v
 import numpy as np
 import pandas as pd
 
+def print_msg_box(msg, indent=1, width=None, title=None):
+    """Print message-box with optional title."""
+    lines = msg.split('\n')
+    space = " " * indent
+    if not width:
+        width = max(map(len, lines))
+    box = f'╔{"═" * (width + indent * 2)}╗\n'  # upper_border
+    if title:
+        box += f'║{space}{title:<{width}}{space}║\n'  # title
+        box += f'║{space}{"-" * len(title):<{width}}{space}║\n'  # underscore
+    box += ''.join([f'║{space}{line:<{width}}{space}║\n' for line in lines])
+    box += f'╚{"═" * (width + indent * 2)}╝'  # lower_border
+    print("\n")
+    print(box)
+
 class TestCreateSample(unittest.TestCase):
     def setUp(self):
         self.majors = pd.Series({'SiO2':    47.95,
@@ -139,6 +154,7 @@ class TestCreateSample(unittest.TestCase):
         self.sample_all = v.Sample(self.majors_all_species)
 
     def test_createSample(self):
+        print_msg_box("TestCreateSample")
         for ox in self.majors.index:
             self.assertEqual(self.sample._composition[ox],self.majors[ox])
         for ox in self.majors_all_species.index:
@@ -343,6 +359,7 @@ class TestGetComposition(unittest.TestCase):
         self.sample = v.Sample(self.majorsv)
 
     def test_default(self):
+        print_msg_box("TestGetComposition")
         composition = self.sample.get_composition()
         for ox in composition.index:
             self.assertEqual(composition[ox],self.majorsv[ox])

@@ -585,9 +585,12 @@ class MixedFluid(Model):
         wtm0s, wtm1s = (wtptoxides[self.volatile_species[0]],
                         wtptoxides[self.volatile_species[1]])
 
-        if pressure == 'saturation':
-            p0 = self.calculate_saturation_pressure(sample, **kwargs)
-            pressures = np.linspace(p0, final_pressure, steps)
+        if isinstance(pressure, str):
+            if pressure == 'saturation':
+                p0 = self.calculate_saturation_pressure(sample, **kwargs)
+                pressures = np.linspace(p0, final_pressure, steps)
+            else:
+                raise core.InputError("Pressure string not understood.")
         elif type(pressure) == float or type(pressure) == int:
             pressures = np.linspace(pressure, final_pressure, steps)
         elif type(pressure) == list or type(pressure) == np.ndarray:

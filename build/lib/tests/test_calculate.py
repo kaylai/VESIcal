@@ -1,5 +1,21 @@
 import unittest
 import VESIcal as v
+import numpy as np
+
+def print_msg_box(msg, indent=1, width=None, title=None):
+    """Print message-box with optional title."""
+    lines = msg.split('\n')
+    space = " " * indent
+    if not width:
+        width = max(map(len, lines))
+    box = f'╔{"═" * (width + indent * 2)}╗\n'  # upper_border
+    if title:
+        box += f'║{space}{title:<{width}}{space}║\n'  # title
+        box += f'║{space}{"-" * len(title):<{width}}{space}║\n'  # underscore
+    box += ''.join([f'║{space}{line:<{width}}{space}║\n' for line in lines])
+    box += f'╚{"═" * (width + indent * 2)}╝'  # lower_border
+    print("\n")
+    print(box)
 
 class TestDissolvedVolatiles(unittest.TestCase):
     def setUp(self):
@@ -99,6 +115,7 @@ class TestDissolvedVolatiles(unittest.TestCase):
                             }
 
     def test_calculate_single_wtpt_mixed(self):
+        print_msg_box("TestDissolvedVolatiles \nsingle_wtpt_mixed")
         for model in self.mixed_dict.keys():
             calcd_result = v.calculate_dissolved_volatiles(self.sample_wtpt, pressure=1000, temperature=1000, X_fluid=0.5, model=model, verbose=False).result
             known_result = self.mixed_dict[model]['wtpt_oxides']
@@ -112,20 +129,23 @@ class TestDissolvedVolatiles(unittest.TestCase):
     #         for k in calcd_result.keys():
     #             self.assertAlmostEqual(calcd_result[k], known_result[k], places=4)
 
-    def test_calculate_single__wtpt_nonmixed(self):
+    def test_calculate_single_wtpt_nonmixed(self):
+        print_msg_box("TestDissolvedVolatiles \nsingle_wtpt_nonmixed")
         for model in self.nonmixed_dict.keys():
             calcd_result = v.calculate_dissolved_volatiles(self.sample_wtpt, pressure=1000, temperature=1000, X_fluid=0.5, model=model, verbose=False).result
             known_result = self.nonmixed_dict[model]['wtpt_oxides']
             self.assertAlmostEqual(calcd_result, known_result, places=4)
 
-    def test_calculate_single__molox_mixed(self):
+    def test_calculate_single_molox_mixed(self):
+        print_msg_box("TestDissolvedVolatiles \nsingle_molox_mixed")
         for model in self.mixed_dict.keys():
             calcd_result = v.calculate_dissolved_volatiles(self.sample_molox, pressure=1000, temperature=1000, X_fluid=0.5, model=model, verbose=False).result
             known_result = self.mixed_dict[model]['mol_oxides']
             for k in calcd_result.keys():
                 self.assertAlmostEqual(calcd_result[k], known_result[k], places=4)
 
-    def test_calculate_single__molox_nonmixed(self):
+    def test_calculate_single_molox_nonmixed(self):
+        print_msg_box("TestDissolvedVolatiles \nsingle_molox_nonmixed")
         for model in self.nonmixed_dict.keys():
             calcd_result = v.calculate_dissolved_volatiles(self.sample_molox, pressure=1000, temperature=1000, X_fluid=0.5, model=model, verbose=False).result
             known_result = self.nonmixed_dict[model]['mol_oxides']
@@ -226,12 +246,14 @@ class TestSaturationPressure(unittest.TestCase):
                           }
 
     def test_calculate_single_wtpt_mixed(self):
+        print_msg_box("TestSaturationPressure \nsingle_wtpt_mixed")
         for model in self.mixed_dict.keys():
             calcd_result = v.calculate_saturation_pressure(self.sample_wtpt, temperature=self.temperature, model=model, verbose=False).result
             known_result = self.mixed_dict[model]
             self.assertAlmostEqual(calcd_result, known_result, places=4)
 
     def test_calculate_batch_wtpt_mixed(self):
+        print_msg_box("TestSaturationPressure \nbatch_wtpt_mixed")
         for model in self.mixed_dict.keys():
             batch_result = self.batch_wtpt.calculate_saturation_pressure(temperature=self.temperature, model=model, verbose=True)
             calcd_result = batch_result['SaturationP_bars_VESIcal'].loc['test_samp']
@@ -240,12 +262,14 @@ class TestSaturationPressure(unittest.TestCase):
             self.assertAlmostEqual(calcd_result, known_result, places=4)
 
     def test_calculate_single_wtpt_carbon(self):
+        print_msg_box("TestSaturationPressure \nsingle_wtpt_carbon")
         for model in self.carbon_dict.keys():
             calcd_result = v.calculate_saturation_pressure(self.sample_wtpt, temperature=self.temperature, model=model, verbose=False).result
             known_result = self.carbon_dict[model]
             self.assertAlmostEqual(calcd_result, known_result, places=4)
 
     def test_calculate_batch_wtpt_carbon(self):
+        print_msg_box("TestSaturationPressure \nbatch_wtpt_carbon")
         for model in self.carbon_dict.keys():
             batch_result = self.batch_wtpt.calculate_saturation_pressure(temperature=self.temperature, model=model, verbose=False)
             calcd_result = batch_result['SaturationP_bars_VESIcal'].loc['test_samp']
@@ -253,12 +277,14 @@ class TestSaturationPressure(unittest.TestCase):
             self.assertAlmostEqual(calcd_result, known_result, places=4)
 
     def test_calculate_single_wtpt_water(self):
+        print_msg_box("TestSaturationPressure \nsingle_wtpt_water")
         for model in self.water_dict.keys():
             calcd_result = v.calculate_saturation_pressure(self.sample_wtpt, temperature=self.temperature, model=model, verbose=False).result
             known_result = self.water_dict[model]
             self.assertAlmostEqual(calcd_result, known_result, places=4)
 
     def test_calculate_batch_wtpt_water(self):
+        print_msg_box("TestSaturationPressure \nbatch_wtpt_water")
         for model in self.water_dict.keys():
             batch_result = self.batch_wtpt.calculate_saturation_pressure(temperature=self.temperature, model=model, verbose=False)
             calcd_result = batch_result['SaturationP_bars_VESIcal'].loc['test_samp']
@@ -266,12 +292,14 @@ class TestSaturationPressure(unittest.TestCase):
             self.assertAlmostEqual(calcd_result, known_result, places=4)
 
     def test_calculation_single_molox_mixed(self):
+        print_msg_box("TestSaturationPressure \nsingle_molox_mixed")
         for model in self.mixed_dict.keys():
             calcd_result = v.calculate_saturation_pressure(self.sample_molox, temperature=self.temperature, model=model, verbose=False).result
             known_result = self.mixed_dict[model]
             self.assertAlmostEqual(calcd_result, known_result, places=4)
 
     def test_calculation_batch_molox_mixed(self):
+        print_msg_box("TestSaturationPressure \nbatch_molox_mixed")
         for model in self.mixed_dict.keys():
             batch_result = self.batch_molox.calculate_saturation_pressure(temperature=self.temperature, model=model, verbose=True)
             calcd_result = batch_result['SaturationP_bars_VESIcal'].loc['test_samp']
@@ -280,12 +308,14 @@ class TestSaturationPressure(unittest.TestCase):
             self.assertAlmostEqual(calcd_result, known_result, places=4)
 
     def test_calculate_single_molox_carbon(self):
+        print_msg_box("TestSaturationPressure \nsingle_molox_carbon")
         for model in self.carbon_dict.keys():
             calcd_result = v.calculate_saturation_pressure(self.sample_molox, temperature=self.temperature, model=model, verbose=False).result
             known_result = self.carbon_dict[model]
             self.assertAlmostEqual(calcd_result, known_result, places=4)
 
     def test_calculate_batch_molox_carbon(self):
+        print_msg_box("TestSaturationPressure \nbatch_molox_carbon")
         for model in self.carbon_dict.keys():
             batch_result = self.batch_molox.calculate_saturation_pressure(temperature=self.temperature, model=model, verbose=False)
             calcd_result = batch_result['SaturationP_bars_VESIcal'].loc['test_samp']
@@ -293,17 +323,83 @@ class TestSaturationPressure(unittest.TestCase):
             self.assertAlmostEqual(calcd_result, known_result, places=4)
 
     def test_calculate_single_molox_water(self):
+        print_msg_box("TestSaturationPressure \nsingle_molox_water")
         for model in self.water_dict.keys():
             calcd_result = v.calculate_saturation_pressure(self.sample_molox, temperature=self.temperature, model=model, verbose=False).result
             known_result = self.water_dict[model]
             self.assertAlmostEqual(calcd_result, known_result, places=4)
 
     def test_calculate_batch_molox_water(self):
+        print_msg_box("TestSaturationPressure \nbatch_molox_water")
         for model in self.water_dict.keys():
             batch_result = self.batch_molox.calculate_saturation_pressure(temperature=self.temperature, model=model, verbose=False)
             calcd_result = batch_result['SaturationP_bars_VESIcal'].loc['test_samp']
             known_result = self.water_dict[model]
             self.assertAlmostEqual(calcd_result, known_result, places=4)
+
+
+class TestDegassingPath(unittest.TestCase):
+    """ Only checks for exceptions thrown, not that result is correct!!
+    """
+    def setUp(self):
+        self.majors_wtpt = {'SiO2':    47.95,
+                         'TiO2':    1.67,
+                         'Al2O3':   17.32,
+                         'FeO':     10.24,
+                         'Fe2O3':   0.1,
+                         'MgO':     5.76,
+                         'CaO':     10.93,
+                         'Na2O':    3.45,
+                         'K2O':     1.99,
+                         'P2O5':    0.51,
+                         'MnO':     0.1,
+                         'H2O':     2.0,
+                         'CO2':     0.1}
+        
+        self.sample = v.Sample(self.majors_wtpt)
+
+        # Set conditions of calculation
+        self.temperature = 1000
+        self.pressure_init = 500
+        self.pressure_final = 300
+        self.step_size = -1
+        self.pressure_array = np.arange(self.pressure_init, self.pressure_final, self.step_size)
+
+        # Grab mixed models
+        self.mixed_model_names = v.get_model_names("mixed")
+        self.mixed_model_names.append("MagmaSat") # include MagmaSat
+    
+    def test_calculate_degassing_path_simple(self):
+        """ Only starting pressure supplied
+        """
+        print_msg_box("TestDegassingPath \nsimple")
+                                       
+        for model_name in self.mixed_model_names:
+            result = v.calculate_degassing_path(sample=self.sample,
+                                                temperature=self.temperature,
+                                                pressure=self.pressure_init, model=model_name)
+    
+    def test_calculate_degassing_path_init_to_final(self):
+        """ Uses initial and final pressures, as floats
+        """
+        print_msg_box("TestDegassingPath \ninit_to_final")
+        for model_name in self.mixed_model_names:
+            result = v.calculate_degassing_path(sample=self.sample,
+                                                temperature=self.temperature,
+                                                pressure=self.pressure_init, 
+                                                final_pressure = self.pressure_final,
+                                                model=model_name)
+    
+    def test_calculate_degassing_path_array(self):
+        """ Uses np.ndarray() object for pressures
+        """
+        print_msg_box("TestDegassingPath \narray")
+                  
+        for model_name in self.mixed_model_names:
+            result = v.calculate_degassing_path(sample=self.sample,
+                                                temperature=self.temperature,
+                                                pressure=self.pressure_array, model=model_name)
+
 
 class TestEquilibriumFluidComp(unittest.TestCase):
     def setUp(self):
@@ -387,6 +483,7 @@ class TestEquilibriumFluidComp(unittest.TestCase):
                           }
 
     def test_calculate_wtpt_mixed(self):
+        print_msg_box("TestEquilibriumFluidComp \nwtpt_mixed")
         for model in self.mixed_dict.keys():
             calcd_result = v.calculate_equilibrium_fluid_comp(self.sample_wtpt,
                                                               temperature=self.temperature,
@@ -398,6 +495,7 @@ class TestEquilibriumFluidComp(unittest.TestCase):
                 self.assertAlmostEqual(calcd_result[key], known_result[key], places=4)
 
     def test_calculate_wtpt_carbon(self):
+        print_msg_box("TestEquilibriumFluidComp \nwtpt_carbon")
         for model in self.carbon_dict.keys():
             calcd_result = v.calculate_equilibrium_fluid_comp(self.sample_wtpt,
                                                               temperature=self.temperature,
@@ -408,6 +506,7 @@ class TestEquilibriumFluidComp(unittest.TestCase):
             self.assertAlmostEqual(calcd_result, known_result, places=4)
 
     def test_calculate_wtpt_water(self):
+        print_msg_box("TestEquilibriumFluidComp \nwtpt_water")
         for model in self.water_dict.keys():
             calcd_result = v.calculate_equilibrium_fluid_comp(self.sample_wtpt,
                                                               temperature=self.temperature,
@@ -418,6 +517,7 @@ class TestEquilibriumFluidComp(unittest.TestCase):
             self.assertAlmostEqual(calcd_result, known_result, places=4)
 
     def test_calculation_molox_mixed(self):
+        print_msg_box("TestEquilibriumFluidComp \nmolox_mixed")
         for model in self.mixed_dict.keys():
             calcd_result = v.calculate_equilibrium_fluid_comp(self.sample_molox,
                                                               temperature=self.temperature,
@@ -429,6 +529,7 @@ class TestEquilibriumFluidComp(unittest.TestCase):
                 self.assertAlmostEqual(calcd_result[key], known_result[key], places=4)
 
     def test_calculate_molox_carbon(self):
+        print_msg_box("TestEquilibriumFluidComp \nmolox_carbon")
         for model in self.carbon_dict.keys():
             calcd_result = v.calculate_equilibrium_fluid_comp(self.sample_molox,
                                                               temperature=self.temperature,
@@ -439,6 +540,7 @@ class TestEquilibriumFluidComp(unittest.TestCase):
             self.assertAlmostEqual(calcd_result, known_result, places=4)
 
     def test_calculate_molox_water(self):
+        print_msg_box("TestEquilibriumFluidComp \nmolox_water")
         for model in self.water_dict.keys():
             calcd_result = v.calculate_equilibrium_fluid_comp(self.sample_molox,
                                                               temperature=self.temperature,
@@ -533,12 +635,14 @@ class TestLiquidViscosity(unittest.TestCase):
                                     'F2O':     0.748}
 
     def test_calculate_single_wtpt(self):
+        print_msg_box("TestLiquidViscosity \nsingle_wtpt")
         calcd_result = v.calculate_liquid_viscosity(self.sample_wtpt,
                                             temperature=self.temperature).result
         known_result = self.giordano_default_viscosity
         self.assertAlmostEqual(calcd_result, known_result, places=3)
 
     def test_calculate_batch_wtpt_1(self):
+        print_msg_box("TestLiquidViscosity \nbatch_wtpt_1")
         batch_result = self.batch_wtpt.calculate_liquid_viscosity(
                                                 temperature=self.temperature)
         calcd_result_1 = batch_result['Viscosity_liq_VESIcal'].loc['test_samp']
@@ -546,6 +650,7 @@ class TestLiquidViscosity(unittest.TestCase):
         self.assertAlmostEqual(calcd_result_1, known_result_1, places=3)
 
     def test_calculate_batch_wtpt_2(self):
+        print_msg_box("TestLiquidViscosity \nbatch_wtpt_2")
         batch_result = self.batch_wtpt.calculate_liquid_viscosity(
                                                 temperature=self.temperature)
         calcd_result_2 = batch_result['Viscosity_liq_VESIcal'].loc[
@@ -553,14 +658,15 @@ class TestLiquidViscosity(unittest.TestCase):
         known_result_2 = self.batch_test_giordano_spreadsheet_default_comp
         self.assertAlmostEqual(calcd_result_2, known_result_2, places=3)
 
-
     def test_calculate_single_molox(self):
+        print_msg_box("TestLiquidViscosity \nsingle_molox")
         calcd_result = v.calculate_liquid_viscosity(self.sample_molox,
                                             temperature=self.temperature).result
         known_result = self.giordano_default_viscosity
         self.assertAlmostEqual(calcd_result, known_result, places=3)
 
     def test_calculate_batch_molox_1(self):
+        print_msg_box("TestLiquidViscosity \nbatch_molox_1")
         batch_result = self.batch_molox.calculate_liquid_viscosity(
                                                 temperature=self.temperature)
         calcd_result_1 = batch_result['Viscosity_liq_VESIcal'].loc['test_samp']
@@ -568,6 +674,7 @@ class TestLiquidViscosity(unittest.TestCase):
         self.assertAlmostEqual(calcd_result_1, known_result_1, places=3)
 
     def test_calculate_batch_molox_2(self):
+        print_msg_box("TestLiquidViscosity \nbatch_molox_2")
         batch_result = self.batch_molox.calculate_liquid_viscosity(
                                                 temperature=self.temperature)
         calcd_result_2 = batch_result['Viscosity_liq_VESIcal'].loc[
@@ -576,6 +683,7 @@ class TestLiquidViscosity(unittest.TestCase):
         self.assertAlmostEqual(calcd_result_2, known_result_2, places=3)
 
     def test_normalize_giordano(self):
+        print_msg_box("TestLiquidViscosity \nnormalize_giordano")
         known_result = self.giordano_normalized
         calcd_result = {}
         calculation = v.thermo.giordano._normalize_Giordano(
@@ -632,6 +740,7 @@ class TestLiquidDensity(unittest.TestCase):
         self.densityx = 2620.832
 
     def test_calculate_single_wtpt(self):
+        print_msg_box("TestLiquidDensity \nsingle_wtpt")
         calcd_result = v.calculate_liquid_density(self.sample_wtpt,
                                                   temperature=self.temperature,
                                                   pressure=self.pressure).result
@@ -639,6 +748,7 @@ class TestLiquidDensity(unittest.TestCase):
         self.assertAlmostEqual(calcd_result, known_result, places=4)
 
     def test_calculate_batch_wtpt(self):
+        print_msg_box("TestLiquidDensity \nbatch_wtpt")
         batch_result = self.batch_wtpt.calculate_liquid_density(
                                             temperature=self.temperature,
                                             pressure=self.pressure)
@@ -647,6 +757,7 @@ class TestLiquidDensity(unittest.TestCase):
         self.assertAlmostEqual(calcd_result, known_result, places=4)
 
     def test_calculate_single_molox(self):
+        print_msg_box("TestLiquidDensity \nsingle_molox")
         calcd_result = v.calculate_liquid_density(self.sample_molox,
                                                   temperature=self.temperature,
                                                   pressure=self.pressure).result
@@ -654,6 +765,7 @@ class TestLiquidDensity(unittest.TestCase):
         self.assertAlmostEqual(calcd_result, known_result, places=4)
 
     def test_calculate_batch_molox(self):
+        print_msg_box("TestLiquidDensity \nbatch_molox")
         batch_result = self.batch_molox.calculate_liquid_density(
                                             temperature=self.temperature,
                                             pressure=self.pressure)

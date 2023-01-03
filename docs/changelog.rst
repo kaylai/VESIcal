@@ -8,6 +8,10 @@ The usage of VESIcal remains unchanged in the new version. Simply install using 
 Previous version history
 ########################
 
+Version 1.2.4
+^^^^^^^^^^^^^
+Fixed bug where a degassing path could not be calculated for some models using a numpy array as a pressure input. Now, a user can pass, for example np.arange(450, 200, -1) to calculate a degassing path from 450 to 200 bars in steps of 1 bar.
+
 Version 1.2.3
 ^^^^^^^^^^^^^
 Critical bug fix. With the update to matplotlib v3.6.0, styles were renamed. Namely, the "seaborn-colorblind" style used in VESIcal was updated to "seaborn-v0_8-colorblind". This change caused VESIcal to not import at all if matplotlib >=3.6.0 was installed. Try/Except block was added to first try "seaborn-colorblind" and then except to use "seaborn-v0_8-colorblind" in order to prevent VESIcal from breaking if older or newer versions of matplotlib are used.
