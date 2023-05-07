@@ -15,7 +15,7 @@ Single sample:
 
 	def calculate_saturation_pressure(self, sample, temperature, verbose=False).result
 
-ExcelFile batch process:
+BatchFile process:
 
 .. code-block:: python
 
@@ -23,30 +23,30 @@ ExcelFile batch process:
 
 **Required inputs:**
 
-:py:meth:`sample`: *Only for single-sample calculations*. The composition of a sample. A single sample may be passed as a dictionary of values, with compositions of oxides in wt%.
+``sample``: *Only for single-sample calculations*. The composition of a sample as Sample class.
 
-:py:meth:`temperature`: The temperature in degres C. For ExcelFile batch calculations, if temperature information is present in the ExcelFile (e.g., as a column with unique temperature values for each sample), this can be accessed by passing the column name in quotes to the temperature variable.
+``temperature``: The temperature in degres C. For BatchFile calculations, if temperature information is present in the file (e.g., as a column with unique temperature values for each sample), this can be accessed by passing the column name in quotes to the temperature variable.
 
 **Optional inputs:**
 
-:py:meth:`verbose`: *Only for single-sample calculations.* Default value is False. If set to True, additional parameters are returned in a dictionary: saturation pressure in bars, H2O and CO2 concentrations in the fluid, mass of the fluid in grams, and proportion of the fluid in the system in wt%.
+``verbose``: *Only for single-sample calculations.* Default value is False. If set to True, additional parameters are returned in a dictionary: saturation pressure in bars, H2O and CO2 concentrations in the fluid, mass of the fluid in grams, and proportion of the fluid in the system in wt%.
 
-:py:meth:`print_status`: *Only for ExcelFile batch calcualtions*. The default value is False. If True is passed, the progress of the calculation will be printed to the terminal. 
+``print_status``: *Only for ExcelFile batch calcualtions*. The default value is False. If True is passed, the progress of the calculation will be printed to the terminal. 
 
 **Calculated outputs:**
 If a single sample is passed to sample, the saturation pressure in bars is returned as a numerical value (float) (plus additional variables ‘XH2O_fl’, ‘XCO2_fl’, ‘FluidMass_grams’, and ‘FluidProportion_wtper’ if verbose is set to True).
 
-If mutliple samples are passed as an ExcelFile object, a pandas DataFrame is returned with sample information plus calculated saturation pressures, equilibrium fluid compositions, mass of the fluid in grams, and proportion of the fluid in the system in wt%. Temperature (in degrees C) is always returned.
+If mutliple samples are passed as a BatchFile object, a pandas DataFrame is returned with sample information plus calculated saturation pressures, equilibrium fluid compositions, mass of the fluid in grams, and proportion of the fluid in the system in wt%. Temperature (in degrees C) is always returned.
 
 For an entire dataset
 =====================
-Import an Excel file
---------------------
+Import a data file
+------------------
 
 .. code-block:: python
 
-	myfile = v.ExcelFile('example_data.xlsx')
-	myfile.data
+	myfile = v.BatchFile('example_data.xlsx')
+	myfile.get_data()
 
 .. csv-table:: Output
    :file: tables/example_data.csv
@@ -59,24 +59,6 @@ Do the calculation
 
 	satPs = myfile.calculate_saturation_pressure(temperature=925.0)
 	satPs
-
-.. code-block:: python
-
-	Calculating sample BT-ex
-	Calculating sample TVZMa-ex
-	Calculating sample TVZOh-ex
-	Calculating sample Oh48-FTIR1-MI1-a
-	Calculating sample Oh48-FTIR1-MI1-b
-	Calculating sample Oh48-FTIR1-MI1-IRc
-	Calculating sample Oh50-4.1
-	Calculating sample Oh50-4.2
-	Calculating sample Oh49-4.1
-	Calculating sample Oh49-4.2
-	Calculating sample Ma55-5a.1
-	Calculating sample Ma57-3b.2
-	Calculating sample Ma57-3c.1
-	Calculating sample Ma57-3c.2
-	Done!
 
 .. csv-table:: Output
    :file: tables/satP.csv
@@ -91,7 +73,7 @@ Extract a single sample from your dataset
 .. code-block:: python
 
 	SampleName = 'BT-ex'
-	extracted_bulk_comp = myfile.get_sample_oxide_comp(SampleName)
+	extracted_bulk_comp = myfile.get_sample_composition(SampleName, asSampleClass=True)
 
 Do the calculation
 ------------------

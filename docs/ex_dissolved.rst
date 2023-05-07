@@ -23,15 +23,15 @@ ExcelFile batch process:
 
 **Required inputs:**
 
-:py:meth:`sample`: *Only for single-sample calculations*. The composition of a sample. A single sample may be passed as a dictionary of values, with compositions of oxides in wt%.
+``sample``: *Only for single-sample calculations*. The composition of a sample. A single sample may be passed as a dictionary of values, with compositions of oxides in wt%.
 
-:py:meth:`temperature`, :py:meth:`pressure`, and :py:meth:`X_fluid`: the temperature in degrees C, the pressure in bars, and the mole fraction of H2O in the H2O-CO2 fluid, XH2Ofluid. Temperature and pressure of the sample or samples must be passed unless an ExcelFile object with a column for temperature and/or pressure is passed to sample. XH2Ofluid is optional, with a default value of 1 (pure H2O fluid). If a numerical (float) value is passed for either temperature, pressure, or X_fluid, that will be the value used for one or all samples. If, alternatively, the user wishes to use temperature, pressure, and/or X_fluid information in their ExcelFile object, the title of the column containing temperature, pressure, or X_fluid data should be passed in quotes (as a string) to temperature, pressure, and/or X_fluid, respectively. Note for batch calculations that if temperature, pressure, or XH2Ofluid information exists in the ExcelFile but a single numerical value is defined for one or both of these variables, both the original information plus the values used for the calculations will be returned.
+``temperature``, ``pressure``, and ``X_fluid``: the temperature in degrees C, the pressure in bars, and the mole fraction of H2O in the H2O-CO2 fluid, XH2Ofluid. Temperature and pressure of the sample or samples must be passed unless an ExcelFile object with a column for temperature and/or pressure is passed to sample. XH2Ofluid is optional, with a default value of 1 (pure H2O fluid). If a numerical (float) value is passed for either temperature, pressure, or X_fluid, that will be the value used for one or all samples. If, alternatively, the user wishes to use temperature, pressure, and/or X_fluid information in their ExcelFile object, the title of the column containing temperature, pressure, or X_fluid data should be passed in quotes (as a string) to temperature, pressure, and/or X_fluid, respectively. Note for batch calculations that if temperature, pressure, or XH2Ofluid information exists in the ExcelFile but a single numerical value is defined for one or both of these variables, both the original information plus the values used for the calculations will be returned.
 
 **Optional inputs:**
 
-:py:meth:`verbose`: *Only for single-sample calculations.* Default value is False. If set to True, additional parameters are returned in a dictionary: H2O and CO2 concentrations in the fluid in mole fraction, temperature, pressure, and proportion of the fluid in the system in wt%.
+``verbose``: *Only for single-sample calculations.* Default value is False. If set to True, additional parameters are returned in a dictionary: H2O and CO2 concentrations in the fluid in mole fraction, temperature, pressure, and proportion of the fluid in the system in wt%.
 
-:py:meth:`print_status`: *Only for ExcelFile batch calcualtions*. The default value is False. If True is passed, the progress of the calculation will be printed to the terminal. The user may desire to see the status of the calculation, as this particular function can be quite slow, averaging between 3-5 seconds per sample.
+``print_status``: *Only for ExcelFile batch calcualtions*. The default value is False. If True is passed, the progress of the calculation will be printed to the terminal. The user may desire to see the status of the calculation, as this particular function can be quite slow, averaging between 3-5 seconds per sample.
 
 **Calculated outputs:**
 If a single sample is passed to sample, a dictionary with keys ‘H2O’ and ‘CO2’ corresponding to the calculated dissolved H2O and CO2 concentrations in the liquid is returned (plus additional variables ‘temperature’ in degrees C, ‘pressure’ in bars, ‘XH2O_fl’, ‘XCO2_fl’, and ‘FluidProportion_wtper’ (the proportion of the fluid in the system in wt%) if verbose is set to True).
@@ -40,13 +40,13 @@ If mutliple samples are passed as an ExcelFile object, a pandas DataFrame is ret
 
 For an entire dataset
 =====================
-Import an Excel file
---------------------
+Import a data file
+------------------
 
 .. code-block:: python
 
-	myfile = v.ExcelFile('example_data.xlsx')
-	myfile.data
+	myfile = v.BatchFile('example_data.xlsx')
+	myfile.get_data()
 
 .. csv-table:: Output
    :file: tables/example_data.csv
@@ -59,24 +59,6 @@ Do the calculation
 
 	dissolved = myfile.calculate_dissolved_volatiles(temperature=900.0, pressure=1000.0, X_fluid=0.5, print_status=True)
 	dissolved
-
-.. code-block:: python
-
-	Calculating sample BT-ex
-	Calculating sample TVZMa-ex
-	Calculating sample TVZOh-ex
-	Calculating sample Oh48-FTIR1-MI1-a
-	Calculating sample Oh48-FTIR1-MI1-b
-	Calculating sample Oh48-FTIR1-MI1-IRc
-	Calculating sample Oh50-4.1
-	Calculating sample Oh50-4.2
-	Calculating sample Oh49-4.1
-	Calculating sample Oh49-4.2
-	Calculating sample Ma55-5a.1
-	Calculating sample Ma57-3b.2
-	Calculating sample Ma57-3c.1
-	Calculating sample Ma57-3c.2
-	Done!
 
 .. csv-table:: Output
    :file: tables/dissolved.csv
@@ -91,7 +73,7 @@ Extract a single sample from your dataset
 .. code-block:: python
 
 	SampleName = 'BT-ex'
-	extracted_bulk_comp = myfile.get_sample_oxide_comp(SampleName)
+	extracted_bulk_comp = myfile.get_sample_composition(SampleName, asSampleClass=True)
 
 Do the calculation
 ------------------

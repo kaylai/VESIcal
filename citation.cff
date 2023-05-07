@@ -1,0 +1,31 @@
+# YAML 1.2
+---
+authors: 
+  -
+    affiliation: "Jacobs/NASA Johnson Space Center"
+    family-names: Iacovino
+    given-names: Kayla
+    orcid: "https://orcid.org/0000-0002-2461-7748"
+  -
+    affiliation: "University of Iceland, Institute of Earth Sciences"
+    family-names: Matthews
+    given-names: Simon
+  -
+    affiliation: "University of Cambridge, Department of Earth Sciences"
+    family-names: Wieser
+    given-names: "Penny E."
+  -
+    affiliation: "Jacobs/NASA Johnson Space Center"
+    family-names: Moore
+    given-names: "Gordon M."
+  -
+    affiliation: "University of Geneva, Department of Earth Sciences"
+    family-names: "Bégué"
+    given-names: Florence
+cff-version: "1.1.0"
+license: MIT
+message: "If you use this software, please cite it using these metadata."
+repository-code: "https://github.com/kaylai/VESIcal"
+title: "VESIcal Part I: An open-source thermodynamic model engine for mixed volatile (H2O-CO2) solubility in silicate melts"
+version: "1.0.1"
+...

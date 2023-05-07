@@ -22,29 +22,29 @@ The calculation is performed by iterating through possible concentrations of H2O
 
 **Required inputs:**
 
-:py:meth:`sample`: The composition of a sample. A single sample may be passed as a dictionary of values, with compositions of oxides in wt%.
+``sample``: The composition of a sample. A single sample may be passed as a dictionary of values, with compositions of oxides in wt%.
 
-:py:meth:`temperature`: The temperature in degres C. 
+``temperature``: The temperature in degres C. 
 
-:py:meth:`pressure_list`: A list of all pressures in bars at which to calculate isobars.
+``pressure_list``: A list of all pressures in bars at which to calculate isobars.
 
 **Optional inputs:**
 
-:py:meth:`isopleth_list`: The default value is None in which case only isobars will be calcualted. A list of all fluid composition values, in mole fraction H2O (XH2Ofluid), at which to calculate isopleths. Values can range from 0–1.
+``isopleth_list``: The default value is None in which case only isobars will be calcualted. A list of all fluid composition values, in mole fraction H2O (XH2Ofluid), at which to calculate isopleths. Values can range from 0–1.
 
-:py:meth:`print_status`: The default value is False. If True is passed, the progress of the calculation will be printed to the terminal. 
+``print_status``: The default value is False. If True is passed, the progress of the calculation will be printed to the terminal. 
 
 **Calculated outputs:**
 The function returns two pandas DataFrames: the first has isobar data, and the second has isopleth data. Columns in the isobar dataframe are ‘Pressure’, ‘H2Omelt’, and ‘CO2melt’, correpsonding to pressure in bars and dissolved H2O and CO2 in the liquid in wt%. Columns in the isopleth dataframe are ‘XH2O_fl’, ‘H2O_liq’, and ‘CO2_liq’, corresponding to XH2Ofluid and dissolved H2O and CO2 in the liquid in wt%.
 
-Import an Excel file and extract a single sample
-------------------------------------------------
+Import a data file and extract a single sample
+----------------------------------------------
 
 .. code-block:: python
 
-	myfile = v.ExcelFile('../manuscript/example_data.xlsx')
+	myfile = v.BatchFile('../manuscript/example_data.xlsx')
 	SampleName = 'BT-ex'
-	extracted_bulk_comp = myfile.get_sample_oxide_comp(SampleName)
+	extracted_bulk_comp = myfile.get_sample_composition(SampleName, asSampleClass=True)
 
 Do the calculation
 ------------------
@@ -74,9 +74,9 @@ Once isobars and isopleths are calculated, they can be plotted in an H2O versus 
 
 **Required inputs for plotting isobars and isopleths:**
 
-:py:meth:`isobars`: Pandas DataFrame object containing isobar information as calculated by calculate_isobars_and_isopleths.
+``isobars``: Pandas DataFrame object containing isobar information as calculated by calculate_isobars_and_isopleths.
 
-:py:meth:`isopleths`: Pandas DataFrame object containing isopleth information as calculated by calculate_isobars_and_isopleths.
+``isopleths``: Pandas DataFrame object containing isopleth information as calculated by calculate_isobars_and_isopleths.
 
 **Calculated outputs:**
 The function returns a matplotlib object with the x-axis as H2O wt% in the melt and y-axis as CO2 wt% in the melt. Isobars, or lines of constant pressure at which the sample magma composition is saturated, and isopleths, or lines of constant fluid composition at which the sample magma composition is saturated, are plotted.
@@ -86,7 +86,8 @@ Plot your data
 
 .. code-block:: python
 
-	v.plot(isobars=isobars, isopleths=isopleths)
+	fig, ax = v.plot(isobars=isobars, isopleths=isopleths)
+	v.show()
 
 .. image:: img/ex_isobarsandisopleths_img1.png
    :width: 600
@@ -99,14 +100,14 @@ Following the example above, we could get smoothed isobars and/or isopleths with
 
 .. code-block:: python
 
-	smoothed_isobars, smoothed_isopleths = v.smooth_isobars_and_isopleths(isobars, isopleths)
+	smoothed_isobars, smoothed_isopleths = v.vplot.smooth_isobars_and_isopleths(isobars, isopleths)
 
 The method can also do isobars only or isopleths only, like:
 
 .. code-block:: python
 
-	smoothed_isobars = v.smooth_isobars_and_isopleths(isobars)
-	smoothed_isopleths = v.smooth_isobars_and_isopleths(isopleths=isopleths)
+	smoothed_isobars = v.vplot.smooth_isobars_and_isopleths(isobars)
+	smoothed_isopleths = v.vplot.smooth_isobars_and_isopleths(isopleths=isopleths)
 
 Below is essentially the same code that our `plot()` and `smooth_isobars_and_isopleths()` methods use to perform smoothing with numpy. Executing the code below will produce the same output as a call to `plot()`. Feel free to grab this code and edit it to customize to your hearts desire.
 

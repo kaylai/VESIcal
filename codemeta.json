@@ -1,0 +1,77 @@
+{
+    "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+    "@type": "SoftwareSourceCode",
+    "license": "https://spdx.org/licenses/MIT",
+    "codeRepository": "https://github.com/kaylai/VESIcal",
+    "dateCreated": "2021-06-22",
+    "datePublished": "2021-06-22",
+    "dateModified": "2021-06-22",
+    "downloadUrl": "https://github.com/kaylai/VESIcal",
+    "name": "VESIcal",
+    "version": "1.0.1",
+    "identifier": "10.5281/zenodo.4914503",
+    "description": "A generalized python library for calculating and plotting various things related to mixed volatile (H2O-CO2) solubility in silicate melts.",
+    "applicationCategory": "Geology",
+    "referencePublication": "https://doi.org/10.1029/2020EA001584",
+    "keywords": [
+        "volatile solubility",
+        "volcanology",
+        "petrology",
+        "igneous"
+    ],
+    "programmingLanguage": [
+        "Python 3"
+    ],
+    "relatedLink": [
+        "https://vesical.readthedocs.io/en/latest/"
+    ],
+    "author": [
+        {
+            "@type": "Person",
+            "@id": "http://orcid.org/0000-0002-2461-7748",
+            "givenName": "Kayla",
+            "familyName": "Iacovino",
+            "email": "kayla.iacovino@nasa.gov",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Jacobs, NASA Johnson Space Center"
+            }
+        },
+        {
+            "@type": "Person",
+            "givenName": "Simon",
+            "familyName": "Matthews",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "University of Iceland"
+            }
+        },
+        {
+            "@type": "Person",
+            "givenName": "Penny E.",
+            "familyName": "Wieser",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "University of Cambridge"
+            }
+        },
+        {
+            "@type": "Person",
+            "givenName": "Gordon M.",
+            "familyName": "Moore",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Jacobs, NASA Johnson Space Center"
+            }
+        },
+        {
+            "@type": "Person",
+            "givenName": "Florence",
+            "familyName": "Bégué",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "University of Geneva"
+            }
+        }
+    ]
+}

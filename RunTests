@@ -1,0 +1,12 @@
+#!/bin/bash
+
+echo " "
+echo "RUNNING VESIcal TESTING ROUTINES"
+echo "================================"
+echo " "
+
+flake8
+echo "flake8 completed"
+
+echo "Running unittest"
+python -m unittest

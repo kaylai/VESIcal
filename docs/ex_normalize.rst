@@ -3,13 +3,32 @@ Normalizing and Transforming Data
 #################################
 .. contents::
 
-Before performing model calculations on your data, it may be desired to normalize the input composition to a total of 100 wt%. VESIcal has multiple methods for normalizing sample data using various routines. Normalization can be done automatically when retrieving a single sample from an Excel file, as detailed above. Each of the normalization routines can be accessed by the user at any time to normalize either a signle sample or all samples in an ExcelFile object.
+Before performing model calculations on your data, it may be desired to normalize the input composition to a total of 100 wt%. VESIcal has multiple methods for normalizing sample data using various routines. Each of the normalization routines can be accessed by the user at any time to normalize either a signle sample or all samples in a BatchFile object.
 
-All three normalization functions can take in either a single composition as a dictionary or multiple compositions either as an ExcelFile object or a pandas DataFrame object (e.g., `yourexcelfile` or `yourexcelfile.data`). The standard normalize functino returns the composition normalized to 100%, including any volatiles. The FixedVolatiles function normalizes the oxides to 100%, but volatiles remain fixed while other major element oxides are reduced proporitonally so that the total is 100 wt%. The AdditionalVolatiles function normalizes oxides to 100% assuming the sample is volatile-free. If H\ :subscript:`2`\ O or CO\ :subscript:`2` concentrations are passed to the function, their un-normalized values will be retained in addition to the normalized non-volatile oxides, summing to >100%.
+The standard normalization type returns the composition normalized to 100%, including any volatiles. The FixedVolatiles type the oxides to 100%, but volatiles remain fixed while other major element oxides are reduced proporitonally so that the total is 100 wt%. The AdditionalVolatiles type normalizes oxides to 100% assuming the sample is volatile-free. If H\ :subscript:`2`\ O or CO\ :subscript:`2` concentrations are passed to the function, their un-normalized values will be retained in addition to the normalized non-volatile oxides, summing to >100%.
+
+Normalization types are: 'none', 'standard', 'fixedvolatiles', 'additionalvolatiles'.
 
 .. code-block:: python
 
 	import VESIcal as v
+
+Default normalizations and how to change them
+=============================================
+MagmaSat
+--------
+Currently, no models force any kind of normalization onto samples. For testing purposes, MagmaSat (the default model) has an attribute called 'normalization_type'. By default, this is set to 'none' such that no normalization is performed on samples. To change the type of normalization performed during all calculations, you can create a copy of the MagmaSat() model object, set its normalization type, and then use that model object for calculations, like so:
+
+.. code-block:: python
+
+	# make a copy of the MagmaSat() model object and give it a name
+	magmasatNorm = v.models.magmasat.MagmaSat()
+
+	# set normalization_type to be whatever you want. Let's say 'standard'.
+	magmasatNorm.normalization_type = 'standard'
+
+	# now you can do a calculation and set model=magmasatNorm
+	test_calc = v.calculate_saturation_pressure(sample=<your-sample>, temperature=<temperature>, model=magmasatNorm).result
 
 Normalizing an entire dataset
 =============================
@@ -18,8 +37,8 @@ Import an Excel file
 
 .. code-block:: python
 
-	myfile = v.ExcelFile('example_data.xlsx')
-	myfile.data
+	myfile = v.BatchFile('example_data.xlsx')
+	myfile.get_data()
 
 .. csv-table:: Output
    :file: tables/example_data.csv
@@ -31,12 +50,13 @@ Returns the composition normalized to 100%, including any volatiles.
 
 .. code-block:: python
 
-	standard = v.normalize(myfile)
-	standard.data
+	standard = myfile.get_data(normalization='standard', asBatchFile=True)
+	standard.get_data()
 
 .. csv-table:: Output
    :file: tables/NormStandard.csv
    :header-rows: 1
+
 
 FixedVolatiles Normalization
 ----------------------------
@@ -44,8 +64,8 @@ Normalizes the oxides to 100%, but volatiles remain fixed while other major elem
 
 .. code-block:: python
 
-	fixed = v.normalize(myfile, how='fixedvolatiles')
-	fixed.data
+	fixed_vols = myfile.get_data(normalization='fixedvolatiles', asBatchFile=True)
+	fixed_vols.get_data()
 
 .. csv-table:: Output
    :file: tables/NormFixedVolatiles.csv
@@ -57,8 +77,8 @@ Normalizes oxides to 100% assuming the sample is volatile-free. If H_2O or CO_2 
 
 .. code-block:: python
 
-	additional = v.normalize(myfile, how='additionalvolatiles')
-	additional.data
+	additional_vols = myfile.get_data(normalization='additionalvolatiles', asBatchFile=True)
+	additional_vols.get_data()
 
 .. csv-table:: Output
    :file: tables/NormAdditionalVolatiles.csv
@@ -68,17 +88,28 @@ Normalize a single sample composition
 =====================================
 Extract a single sample from your dataset
 -----------------------------------------
+Here, a composition is extracted from a BatchFile object and returned as a Sample object. Set asSampleClass=False to return as a dictionary.
 
 .. code-block:: python
 
 	SampleName = 'BT-ex'
-	extracted_bulk_comp = myfile.get_sample_oxide_comp(SampleName)
+	extracted_bulk_comp = myfile.get_sample_composition(SampleName, asSampleClass=True)
+
+The normalization type can be passed to get_sample_composition directly:
+
+.. code-block:: python
+
+	extracted_bulk_comp = myfile.get_sample_composition(SampleName, normalization=<normalization-type>, asSampleClass=True)
+
+Or, normalization can be done to any Sample object, as shown below.
 
 Standard Normalization
 ----------------------
+In the following three examples, the normalized composition is returned as a dictionary, not as a Sample object.
+
 .. code-block:: python
 
-	single_standard = v.normalize(extracted_bulk_comp)
+	single_standard = extracted_bulk_comp.get_composition(normalization='standard')
 	single_standard
 
 .. code-block:: python
@@ -104,7 +135,7 @@ FixedVolatiles Normalization
 ----------------------------
 .. code-block:: python
 
-	single_fixed = v.normalize_FixedVolatiles(extracted_bulk_comp)
+	single_fixed = extracted_bulk_comp.get_composition(normalization='fixedvolatiles')
 	single_fixed
 
 .. code-block:: python
@@ -130,7 +161,7 @@ AdditionalVolatiles Normalization
 ---------------------------------
 .. code-block:: python
 
-	single_additional = v.normalize_AdditionalVolatiles(extracted_bulk_comp)
+	single_additional = extracted_bulk_comp.get_composition(normalization='additionalvolatiles')
 	single_additional
 
 .. code-block:: python
@@ -151,34 +182,5 @@ AdditionalVolatiles Normalization
 	 'P2O5': 0.0,
 	 'H2O': 5.5,
 	 'CO2': 0.05}
-
-Normalize Extracted Sample Composition In Place
------------------------------------------------
-A sample can be simultaneously extracted and normalized via 'standard', 'fixedvolatiles', and 'additionalvolatiles' normalization routines in one function call. This is acheived by passing any of these three strings to `norm` (which, by default, is set to 'none').
-
-.. code-block:: python
-
-	SampleName = 'BT-ex'
-	extracted_bulk_comp = myfile.get_sample_oxide_comp(SampleName, norm='standard')
-	extracted_bulk_comp
-
-.. code-block:: python
-
-	{'SiO2': 73.3693079617533,
-	 'TiO2': 0.07573605983148728,
-	 'Al2O3': 11.833759348669886,
-	 'Fe2O3': 0.1959670548139733,
-	 'Cr2O3': 0.0,
-	 'FeO': 0.44778945375366846,
-	 'MnO': 0.0,
-	 'MgO': 0.028401022436807727,
-	 'NiO': 0.0,
-	 'CoO': 0.0,
-	 'CaO': 0.4070813215942441,
-	 'Na2O': 3.7678689766164917,
-	 'K2O': 4.619899649720724,
-	 'P2O5': 0.0,
-	 'H2O': 5.2068541134147495,
-	 'CO2': 0.04733503739467954}
 
 

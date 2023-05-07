@@ -16,3 +16,5 @@ If you just need a quick reminder on how to perform certain functions, check out
    ex_satP
    ex_isobarsandisopleths
    ex_degassing
+   ex_density
+   ex_viscosity
