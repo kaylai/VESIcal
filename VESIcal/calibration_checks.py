@@ -23,8 +23,16 @@ class CalibrationRange(object):
         range.
         """
         if self.parameter_name in parameters:
+<<<<<<< Updated upstream
             return self.checkfunction(self.value,
                                       parameters[self.parameter_name])
+=======
+            if isinstance(parameters[self.parameter_name], np.ndarray):
+                return None
+            else:
+                return self.checkfunction(self.value,
+                                          parameters[self.parameter_name])
+>>>>>>> Stashed changes
         else:
             return None
 
@@ -153,10 +161,14 @@ crmsg_LessThan_description = ("The {model_name} model is calibrated for "
 
 
 def crf_Between(calibval, paramval):
+<<<<<<< Updated upstream
     if isinstance(paramval, np.ndarray):
         return paramval.any() >= calibval[0] and paramval.any() <= calibval[1]
     else:
         return paramval >= calibval[0] and paramval <= calibval[1]
+=======
+    return paramval >= calibval[0] and paramval <= calibval[1]
+>>>>>>> Stashed changes
 
 
 crmsg_Between_pass = ("The {param_name} ({param_val:.1f} {units}) is between "
