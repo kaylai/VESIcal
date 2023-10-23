@@ -32,54 +32,6 @@ class BatchFile(batchfile.BatchFile):
     """
     pass
 
-    # def get_XH2O_fluid(self, sample, temperature, pressure, H2O, CO2):
-    #     """An internally used function to calculate fluid composition.
-
-    #     Parameters
-    #     ----------
-    #     sample: dictionary
-    #         Sample composition in wt% oxides
-
-    #     temperature: float
-    #         Temperature in degrees C.
-
-    #     pressure: float
-    #         Pressure in bars
-
-    #     H2O: float
-    #         wt% H2O in the system
-
-    #     CO2: float
-    #         wt% CO2 in the system
-
-    #     Returns
-    #     -------
-    #     float
-    #         Mole fraction of H2O in the H2O-CO2 fluid
-
-    #     """
-    #     pressureMPa = pressure / 10.0
-
-    #     bulk_comp = {oxide:  sample[oxide] for oxide in core.magmasat_oxides}
-    #     bulk_comp["H2O"] = H2O
-    #     bulk_comp["CO2"] = CO2
-    #     melts.set_bulk_composition(bulk_comp)
-
-    #     output = melts.equilibrate_tp(temperature, pressureMPa,
-    #                                   initialize=True)
-    #     (status, temperature, pressureMPa, xmlout) = output[0]
-    #     fluid_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid',
-    #                                                 mode='component')
-    #     # NOTE mode='component' returns endmember component keys with values
-    #     # in mol fraction.
-
-    #     if "Water" in fluid_comp:
-    #         H2O_fl = fluid_comp["Water"]
-    #     else:
-    #         H2O_fl = 0.0
-
-    #     return H2O_fl
-
     def calculate_dissolved_volatiles(self, temperature, pressure, X_fluid=1,
                                       print_status=True, model='MagmaSat',
                                       record_errors=False, **kwargs):
