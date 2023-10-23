@@ -5,7 +5,7 @@ A generalized python library for calculating and plotting various things
 related to mixed volatile (H2O-CO2) solubility in silicate melts.
 """
 
-__version__ = "1.2.3"
+__version__ = "1.2.5"
 __author__ = "Kayla Iacovino, Simon Matthews, and Penny Wieser"
 
 # ----------------- IMPORTS ----------------- #
@@ -30,6 +30,9 @@ import VESIcal.thermo
 # -------------- TURN OFF WARNINGS ------------- #
 w.filterwarnings("ignore", message="rubicon.objc.ctypes_patch has only been tested ")
 w.filterwarnings("ignore", message="The handle")
+w.filterwarnings("ignore", message="duanH2ODriver(b):")
+w.filterwarnings("ignore", message="duanDriver-2:")
+w.filterwarnings("ignore", message="Error for element")
 
 
 # -------------- CALCULATION DEFINITIONS ----- #

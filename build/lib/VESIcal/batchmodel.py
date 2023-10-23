@@ -9,6 +9,12 @@ import numpy as np
 import warnings as w
 import sys
 
+from contextlib import redirect_stdout
+import io
+
+# Variable to send MagmaSat warnings into the void
+_f = io.StringIO()
+
 # from thermoengine import equilibrate
 
 # w.filterwarnings("ignore", message="rubicon.objc.ctypes_patch has only been "
@@ -250,11 +256,12 @@ class BatchFile(batchfile.BatchFile):
                         bulk_comp.set_default_units(self.default_units)
                         bulk_comp.set_default_normalization(
                                                     self.default_normalization)
-                        calc = calculate_classes.calculate_dissolved_volatiles(
-                                           sample=bulk_comp, pressure=pressure,
-                                           temperature=temperature,
-                                           X_fluid=X_fluid, model=model,
-                                           silence_warnings=True, verbose=True)
+                        with redirect_stdout(_f):
+                            calc = calculate_classes.calculate_dissolved_volatiles(
+                                            sample=bulk_comp, pressure=pressure,
+                                            temperature=temperature,
+                                            X_fluid=X_fluid, model=model,
+                                            silence_warnings=True, verbose=True)
                         H2Ovals.append(calc.result['H2O_liq'])
                         CO2vals.append(calc.result['CO2_liq'])
                         XH2Ovals.append(calc.result['XH2O_fl'])
