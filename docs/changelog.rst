@@ -7,6 +7,9 @@ The usage of VESIcal remains unchanged in the new version. Simply install using 
 
 Previous version history
 ########################
+Version 1.2.5
+^^^^^^^^^^^^^
+Fixed a bug where different models would return different data types. Any float is now returned as np.float rather than python's native float. Also removed some (but not all, unfortunately) unnecessary MagmaSat warnings.
 
 Version 1.2.4
 ^^^^^^^^^^^^^
