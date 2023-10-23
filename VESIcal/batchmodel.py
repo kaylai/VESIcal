@@ -462,7 +462,7 @@ class BatchFile(batchfile.BatchFile):
             file_has_press = True
             press_name = pressure
         elif (isinstance(pressure, float) or isinstance(pressure, int) or
-              pressure is None):
+              isinstance(pressure, np.float64) or pressure is None):
             file_has_press = False
         else:
             raise core.InputError("pressure must be type str or float or int")

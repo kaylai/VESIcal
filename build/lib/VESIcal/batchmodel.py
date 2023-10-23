@@ -414,7 +414,7 @@ class BatchFile(batchfile.BatchFile):
             file_has_press = True
             press_name = pressure
         elif (isinstance(pressure, float) or isinstance(pressure, int) or
-              pressure is None):
+              isinstance(pressure, np.float64) or pressure is None):
             file_has_press = False
         else:
             raise core.InputError("pressure must be type str or float or int")
@@ -507,13 +507,13 @@ class BatchFile(batchfile.BatchFile):
                         bulk_comp.set_default_units(self.default_units)
                         bulk_comp.set_default_normalization(
                                                     self.default_normalization)
-
-                        calc = (
-                            calculate_classes.calculate_equilibrium_fluid_comp(
-                                           sample=bulk_comp, pressure=pressure,
-                                           temperature=temperature,
-                                           model=model, silence_warnings=True,
-                                           **kwargs))
+                        with redirect_stdout(_f):
+                            calc = (
+                                calculate_classes.calculate_equilibrium_fluid_comp(
+                                            sample=bulk_comp, pressure=pressure,
+                                            temperature=temperature,
+                                            model=model, silence_warnings=True,
+                                            **kwargs))
 
                         H2Ovals.append(calc.result['H2O'])
                         CO2vals.append(calc.result['CO2'])
@@ -718,10 +718,11 @@ class BatchFile(batchfile.BatchFile):
                         bulk_comp.set_default_normalization(
                                                     self.default_normalization)
 
-                        calc = calculate_classes.calculate_saturation_pressure(
-                                     sample=bulk_comp, temperature=temperature,
-                                     model=model, verbose=True,
-                                     silence_warnings=True)
+                        with redirect_stdout(_f):
+                            calc = calculate_classes.calculate_saturation_pressure(
+                                        sample=bulk_comp, temperature=temperature,
+                                        model=model, verbose=True,
+                                        silence_warnings=True)
                         satP.append(calc.result["SaturationP_bars"])
                         flmass.append(calc.result["FluidMass_grams"])
                         flsystem_wtper.append(

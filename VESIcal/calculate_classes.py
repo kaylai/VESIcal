@@ -236,6 +236,11 @@ class calculate_equilibrium_fluid_comp(Calculate):
                                                              pressure=pressure,
                                                              sample=sample,
                                                              **kwargs)
+        if isinstance(fluid_comp, dict):
+            fluid_comp = {key: np.float64(value) for key, value in fluid_comp.items()}
+        else:
+            fluid_comp = np.float64(fluid_comp)
+
         return fluid_comp
 
     def check_calibration_range(self, sample, pressure=None, **kwargs):
@@ -367,7 +372,10 @@ class calculate_saturation_pressure(Calculate):
     def calculate(self, sample, **kwargs):
         satP = self.model.calculate_saturation_pressure(sample=sample,
                                                         **kwargs)
-        return satP
+        if isinstance(satP, dict):
+            return {key: np.float64(value) for key, value in satP.items()}
+        else:
+            return np.float64(satP)
 
     def check_calibration_range(self, sample, **kwargs):
         parameters = kwargs

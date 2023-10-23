@@ -563,15 +563,19 @@ class MagmaSat(model_classes.Model):
         self.melts.set_bulk_composition(self.bulk_comp_orig)  # reset
 
         if verbose is False:
-            return {"CO2": fluid_comp_CO2, "H2O": fluid_comp_H2O}
+            simple_return = {"CO2": fluid_comp_CO2, "H2O": fluid_comp_H2O}
+            simple_return = {key: np.float64(value) for key, value in simple_return.items()}
+            return simple_return
 
         if verbose:
-            return {
+            verbose_return = {
                 "CO2": fluid_comp_CO2,
                 "H2O": fluid_comp_H2O,
                 "FluidMass_grams": fluid_mass,
                 "FluidProportion_wt": flsystem_wtper,
             }
+            verbose_return = {key: np.float64(value) for key, value in verbose_return.items()}
+            return verbose_return
 
     def calculate_saturation_pressure(
         self, sample, temperature, verbose=False, **kwargs
@@ -751,20 +755,22 @@ class MagmaSat(model_classes.Model):
                 w.warn(warnmessage)
             except Exception:
                 pass
-            return satP
+            return np.float64(satP)
 
         elif verbose:
             try:
                 w.warn(warnmessage)
             except Exception:
                 pass
-            return {
+            verbose_return = {
                 "SaturationP_bars": satP,
                 "FluidMass_grams": flmass,
                 "FluidProportion_wt": flsystem_wtper,
                 "XH2O_fl": flH2O,
                 "XCO2_fl": flCO2,
             }
+            verbose_return = {key: np.float64(value) for key, value in verbose_return.items()}
+            return verbose_return
 
     def calculate_isobars_and_isopleths(
         self,
@@ -991,10 +997,11 @@ class MagmaSat(model_classes.Model):
         # ------------------------- #
 
         # Get saturation pressure
+
         data = self.calculate_saturation_pressure(sample=_sample, temperature=temperature,
                                                   verbose=True)
 
-        if type(pressure) == str or type(pressure) == float or type(pressure) == int:
+        if (type(pressure) == str or type(pressure) == float or type(pressure) == int):
             if pressure == "saturation" or pressure >= data["SaturationP_bars"]:
                 SatP_bars = data["SaturationP_bars"]
             else:
