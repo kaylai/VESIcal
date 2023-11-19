@@ -70,3 +70,22 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+.. toctree::
+    :maxdepth: 2
+    :caption: Contents:
+
+    install
+    changelog
+    about
+    models
+    quick_tutorials
+    tutorials
+    advanced_tutorials
+    youtube
+    integration
+    workshops
+    codedoc
+    faq
+    support
+    license
