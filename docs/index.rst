@@ -6,6 +6,8 @@ VESIcal Quickstart
 
 Installation
 ------------
+See the :doc:`install` section for detailed instructions and dependencies.
+
 In general, VESIcal can be accessed and used in a variety of ways. From most flexible (advanced) to least flexible (novice), these are:
 
 - local installation of the VESIcal library (get the full VESIcal experience)
@@ -27,26 +29,26 @@ Always use the most up-to-date version of the code:
 
    pip install VESIcal --upgrade
 
-See the :doc:`install` section for detailed instructions and dependencies.
+GitHub
+------
+Download the VESIcal source code, create issues, and more.
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+https://github.com/kaylai/VESIcal
 
-   install
-   changelog
-   about
-   models
-   quick_tutorials
-   tutorials
-   advanced_tutorials
-   youtube
-   integration
-   workshops
-   codedoc
-   faq
-   support
-   license
+Peer-reviewed Manuscripts
+-------------------------
+
+Instructions on how to cite VESIcal are :doc:`here </about>`
+
+Interactive versions of manuscripts
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   - Direct link to interactive VESIcal Part I manuscript: `Manuscript on Binder <https://mybinder.org/v2/gh/kaylai/vesical-binder/HEAD?filepath=Manuscript.ipynb>`_
+   - Jupyter Notebook hub with VESIcal: `Manuscript on Binder <https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/kaylai/vesical-binder/HEAD>`_
+
+PDF versions of manuscripts
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   - `VESIcal Part I: An Open-Source Thermodynamic Model Engine for Mixed Volatile (H2O-CO2) Solubility in Silicate Melts <https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2020EA001584>`_
+   - `VESIcal Part II: A critical approach to volatile solubility modelling using an open-source Python3 engine <https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2021EA001932>`_
 
 News
 ----
@@ -68,3 +70,22 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+.. toctree::
+    :maxdepth: 2
+    :caption: Contents:
+
+    install
+    changelog
+    about
+    models
+    quick_tutorials
+    tutorials
+    advanced_tutorials
+    youtube
+    integration
+    workshops
+    codedoc
+    faq
+    support
+    license
