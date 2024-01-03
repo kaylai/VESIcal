@@ -1,6 +1,6 @@
-numpy>=1.21
-scipy>=1.6.1
-sympy>=1.7.1
-pandas>=1.2.3
+numpy==1.23
+scipy==1.8.1
+sympy==1.9
+pandas==1.2.3
 matplotlib==3.4.3
 openpyxl>=1.1.0
