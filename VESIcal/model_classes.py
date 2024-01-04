@@ -450,10 +450,6 @@ class MixedFluid(Model):
             self.volatile_species.
 
         """
-    def calculate_isobars_and_isopleths(self, pressure_list, isopleth_list=[0, 1], points=51, return_dfs=True, extend_to_zero=True, **kwargs):
-        """
-        [Function description remains the same]
-        """
         if (len(self.volatile_species) != 2 or
                 'H2O' not in self.volatile_species or
                 'CO2' not in self.volatile_species):
@@ -465,59 +461,54 @@ class MixedFluid(Model):
 
         if isinstance(pressure_list, list):
             pass
-        elif isinstance(pressure_list, (int, float)):
+        elif (isinstance(pressure_list, int) or
+              isinstance(pressure_list, float)):
             pressure_list = [pressure_list]
         else:
             raise core.InputError("pressure_list must be a single float "
                                   "(1000.0), int (1000), or list of those "
                                   "[1000, 2000.0, 3000].")
 
-        has_isopleths = isopleth_list is not None
+        has_isopleths = True
+        if isopleth_list is None:
+            has_isopleths = False
 
-        # Prepare to accumulate DataFrames for isobars
-        isobar_dfs = []
+        isobars_df = pd.DataFrame(columns=['Pressure', 'H2O_liq', 'CO2_liq'])
         isobars = []
         for pressure in pressure_list:
             dissolved = np.zeros([2, points])
             Xv0 = np.linspace(0.0, 1.0, points)
             for i in range(points):
-                dissolved[:, i] = self.calculate_dissolved_volatiles(pressure=pressure, X_fluid=(Xv0[i], 1-Xv0[i]), **kwargs)
-                row_df = pd.DataFrame({
-                    'Pressure': [pressure],
-                    'H2O_liq': [dissolved[H2O_id, i]],
-                    'CO2_liq': [dissolved[CO2_id, i]]
-                })
-                isobar_dfs.append(row_df)
+                dissolved[:, i] = self.calculate_dissolved_volatiles(
+                       pressure=pressure, X_fluid=(Xv0[i], 1-Xv0[i]), **kwargs)
+                isobars_df = isobars_df.append({
+                                               'Pressure': pressure,
+                                               'H2O_liq': dissolved[H2O_id, i],
+                                               'CO2_liq': dissolved[CO2_id, i]
+                                               }, ignore_index=True)
             isobars.append(dissolved)
 
-        # Concatenate all DataFrames for isobars
-        isobars_df = pd.concat(isobar_dfs, ignore_index=True)
-
-        # Similar approach for isopleths
-        isopleth_dfs = []
-        isopleths = []
         if has_isopleths:
+            isopleths_df = pd.DataFrame(columns=['XH2O_fl', 'H2O_liq',
+                                                 'CO2_liq'])
+            isopleths = []
             for isopleth in isopleth_list:
                 dissolved = np.zeros([2, points])
                 pmin = np.nanmin(pressure_list)
                 pmax = np.nanmax(pressure_list)
                 if pmin == pmax:
                     pmin = 0.0
-                pressures = np.linspace(pmin, pmax, points)
+                pressure = np.linspace(pmin, pmax, points)
                 for i in range(points):
-                    dissolved[:, i] = self.calculate_dissolved_volatiles(pressure=pressures[i], X_fluid=(isopleth, 1-isopleth), **kwargs)
-                    row_df = pd.DataFrame({
-                        'XH2O_fl': [[isopleth, 1-isopleth][H2O_id]],
-                        'H2O_liq': [dissolved[H2O_id, i]],
-                        'CO2_liq': [dissolved[CO2_id, i]]
-                    })
-                    isopleth_dfs.append(row_df)
+                    dissolved[:, i] = self.calculate_dissolved_volatiles(
+                          pressure=pressure[i], X_fluid=(isopleth, 1-isopleth),
+                          **kwargs)
+                    isopleths_df = isopleths_df.append({
+                       'XH2O_fl': [isopleth, 1-isopleth][H2O_id],
+                       'H2O_liq': dissolved[H2O_id, i],
+                       'CO2_liq': dissolved[CO2_id, i]}, ignore_index=True)
                 isopleths.append(dissolved)
 
-            # Concatenate all DataFrames for isopleths
-            isopleths_df = pd.concat(isopleth_dfs, ignore_index=True)
-
-        # Return logic
         if return_dfs:
             if has_isopleths:
                 return (isobars_df, isopleths_df)
@@ -528,8 +519,6 @@ class MixedFluid(Model):
                 return (isobars, isopleths)
             else:
                 return isobars
-
-
 
     def calculate_degassing_path(self, sample, pressure='saturation',
                                  fractionate_vapor=0.0, final_pressure=100.0,
