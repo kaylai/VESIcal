@@ -1,12 +1,19 @@
-*******************************
-ChangeLog: What's new in v 1.2?
-*******************************
+*********
+ChangeLog
+*********
+
+What's new in v 1.2?
+####################
 A small but mighty update comes to VESIcal v1.2.0. VESIcal can now be used without the installation of the thermoengine library (which can only be built from source on a mac or run via a docker image on a PC or linux machine). MagmaSat, VESIcal's default model, requires thermoengine to run. We chose MagmaSat as the default model for a reason (it's usually the best model to use), but there are plenty of cases where access to the other models and not to MagmaSat is desired.
 
 The usage of VESIcal remains unchanged in the new version. Simply install using pip (see :doc:`install`) and get to work. If you do not have thermoengine installed, remember to specify which model to use in each calculation performed.
 
 Previous version history
 ########################
+Version 1.2.6
+^^^^^^^^^^^^^
+Made a minor adjustment to how pandas dataframes are handled that makes VESIcal work with Pandas 2.0. VESIcal will continue to work with Pandas 1.
+
 Version 1.2.5
 ^^^^^^^^^^^^^
 Fixed a bug where different models would return different data types. Any float is now returned as np.float rather than python's native float. Also removed some (but not all, unfortunately) unnecessary MagmaSat warnings.
