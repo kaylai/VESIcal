@@ -220,35 +220,34 @@ class Sample(object):
                     if species not in composition.index:
                         w.warn("Species " + str(species) + " not found in composition," +
                                " assigning value of 0.0",
-                                category=RuntimeWarning, stacklevel=2)
+                               category=RuntimeWarning, stacklevel=2)
                         return 0.0
                 if units in ['mol_cations', 'mol_singleO'] or units is None:
                     if units in ['mol_cations', 'mol_singleO']:
                         w.warn("Given species is an oxide. Concentration will be returned in" +
-                            " units of wtpt_oxides.", category=RuntimeWarning, stacklevel=2)
+                               " units of wtpt_oxides.", category=RuntimeWarning, stacklevel=2)
                     units = 'wtpt_oxides'
             elif species in core.cations:
                 corresponding_oxide = core.cations_to_oxides[species]
                 if corresponding_oxide not in composition.index:
                     if species not in composition.index:
                         w.warn("Species not found in composition, assigning value of 0.0",
-                                category=RuntimeWarning, stacklevel=2)
+                               category=RuntimeWarning, stacklevel=2)
                         return 0.0
                 if units in ['wtpt_oxides', 'mol_oxides'] or units is None:
                     if units in ['wtpt_oxides', 'mol_oxides']:
                         w.warn("Given species is a cation. Concentration will be returned in" +
-                            " units of mol_cations.", category=RuntimeWarning, stacklevel=2)
+                               " units of mol_cations.", category=RuntimeWarning, stacklevel=2)
                     units = 'mol_cations'
             else:
                 raise core.InputError(species + " was not recognised, check spelling, " +
-                                        "capitalization and stoichiometry.")
+                                      "capitalization and stoichiometry.")
         elif species is not None:
             raise w.warn("Species must be either a string or a NoneType.", category=RuntimeWarning,
                          stacklevel=2)
-    
-                
+
         if normalization is None:
-                normalization = 'none'
+            normalization = 'none'
 
         # Get the requested type of composition
         if units == 'wtpt_oxides':

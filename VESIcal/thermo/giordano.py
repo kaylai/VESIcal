@@ -46,7 +46,7 @@ def _normalize_Giordano(sample):
                                                 oxide_masses=giordano_oxide_mass,
                                                 species='FeO') +
                         0.8998*_sample.get_composition(units='wtpt_oxides',
-                                                    species='Fe2O3'))
+                                                       species='Fe2O3'))
     _sample.change_composition({'FeO': _sample_FeOT, 'Fe2O3': 0.0})
 
     # if passed, convert F to F2O
