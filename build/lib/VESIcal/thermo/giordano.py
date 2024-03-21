@@ -1,6 +1,7 @@
 from VESIcal import core
 
 import numpy as np
+import warnings as w
 
 giordano_oxide_mass = {'SiO2': 60.0843,
                        'TiO2': 79.8658,
@@ -38,11 +39,14 @@ def _normalize_Giordano(sample):
                                      asSampleClass=True)
 
     # convert FeO and Fe2O3 to FeOT as FeO
-    _sample_FeOT = (_sample.get_composition(units='wtpt_oxides',
-                                            oxide_masses=giordano_oxide_mass,
-                                            species='FeO') +
-                    0.8998*_sample.get_composition(units='wtpt_oxides',
-                                                   species='Fe2O3'))
+    with w.catch_warnings():
+        w.filterwarnings("ignore", message="Species Fe2O3 not found in composition, " +
+                                           "assigning value of 0.0")
+        _sample_FeOT = (_sample.get_composition(units='wtpt_oxides',
+                                                oxide_masses=giordano_oxide_mass,
+                                                species='FeO') +
+                        0.8998*_sample.get_composition(units='wtpt_oxides',
+                                                       species='Fe2O3'))
     _sample.change_composition({'FeO': _sample_FeOT, 'Fe2O3': 0.0})
 
     # if passed, convert F to F2O

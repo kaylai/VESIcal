@@ -10,6 +10,10 @@ The usage of VESIcal remains unchanged in the new version. Simply install using 
 
 Previous version history
 ########################
+Version 1.2.7
+^^^^^^^^^^^^^
+Fixed a bug where a cation concentration was not returned for a Sample composition given in terms of oxides and vice versa.
+
 Version 1.2.6
 ^^^^^^^^^^^^^
 Made a minor adjustment to how pandas dataframes are handled that makes VESIcal work with Pandas 2.0. VESIcal will continue to work with Pandas 1.
