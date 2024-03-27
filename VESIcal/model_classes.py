@@ -28,9 +28,9 @@ class Model(object):
         self.set_solubility_dependence(False)
 
     def set_volatile_species(self, volatile_species):
-        if type(volatile_species) == str:
+        if isinstance(volatile_species, str):
             volatile_species = [volatile_species]
-        elif type(volatile_species) != list:
+        elif isinstance(volatile_species, list) is False:
             raise core.InputError("volatile_species must be a str or list.")
         self.volatile_species = volatile_species
 
@@ -66,7 +66,7 @@ class Model(object):
 
         # Check if the variable name is passed as a string, and if so put it in
         # a list:
-        if type(variable_names) == str:
+        if isinstance(variable_names, str):
             variable_names = [variable_names]
 
         calibration_values = []
@@ -206,7 +206,7 @@ class MixedFluid(Model):
             Dissolved volatile concentrations of each species in the model, in
             the order set by self.volatile_species.
         """
-        if ((type(X_fluid) == float or type(X_fluid) == int) and
+        if (isinstance(X_fluid, float) or isinstance(X_fluid, int) and
            len(self.volatile_species) == 2):
             X_fluid = (X_fluid, 1-X_fluid)
         elif len(X_fluid) != len(self.volatile_species):
@@ -222,7 +222,7 @@ class MixedFluid(Model):
             raise core.InputError("Each mole fraction in X_fluid must have a "
                                   "value between 0 and 1.")
 
-        if type(X_fluid) == dict or type(X_fluid) == pd.core.series.Series:
+        if isinstance(X_fluid, dict) or isinstance(X_fluid, pd.core.series.Series):
             X_fluid = tuple(X_fluid[species] for species in
                             self.volatile_species)
 
@@ -528,7 +528,7 @@ class MixedFluid(Model):
                 return isobars
 
     def calculate_degassing_path(self, sample, pressure='saturation',
-                                 fractionate_vapor=0.0, final_pressure=100.0,
+                                 fractionate_vapor=0.0, final_pressure=1.0,
                                  steps=101, return_dfs=True,
                                  round_to_zero=True, **kwargs):
         """
@@ -598,9 +598,9 @@ class MixedFluid(Model):
                 pressures = np.linspace(p0, final_pressure, steps)
             else:
                 raise core.InputError("Pressure string not understood.")
-        elif type(pressure) == float or type(pressure) == int:
+        elif isinstance(pressure, float) or isinstance(pressure, int):
             pressures = np.linspace(pressure, final_pressure, steps)
-        elif type(pressure) == list or type(pressure) == np.ndarray:
+        elif isinstance(pressure, list) or isinstance(pressure, np.ndarray):
             pressures = pressure
 
         Xv = np.zeros([2, len(pressures)])
