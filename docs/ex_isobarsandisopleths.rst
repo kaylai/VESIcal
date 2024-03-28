@@ -42,7 +42,7 @@ Import a data file and extract a single sample
 
 .. code-block:: python
 
-	myfile = v.BatchFile('../manuscript/example_data.xlsx')
+	myfile = v.BatchFile('../../manuscript/example_data.xlsx')
 	SampleName = 'BT-ex'
 	extracted_bulk_comp = myfile.get_sample_composition(SampleName, asSampleClass=True)
 

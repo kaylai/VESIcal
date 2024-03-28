@@ -684,9 +684,9 @@ class BatchFile(object):
             Creates and saves a CSV file or files with data from each
             calculation saved to its own file.
         """
-        if type(filenames) != list:
+        if isinstance(filenames, list) is False:
             filenames = [filenames]
-        if type(calculations) != list:
+        if isinstance(calculations, list) is False:
             calculations = [calculations]
         if len(filenames) != len(calculations):
             raise core.InputError("calculations and filenames must have the "
