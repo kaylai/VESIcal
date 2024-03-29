@@ -11,11 +11,41 @@ import pandas as pd
 import warnings as w
 import sys
 
-from contextlib import redirect_stdout
-import io
+# START duanDriver suppression code
+# below function stops printing of duanDriver messages from thermoengine
+import os
+from contextlib import contextmanager
 
-# Variable to send MagmaSat warnings into the void
-_f = io.StringIO()
+
+@contextmanager
+def stdout_redirected(to=os.devnull):
+    '''
+    import os
+
+    with stdout_redirected(to=filename):
+        print("from Python")
+        os.system("echo non-Python applications are also supported")
+
+    source: ('https://stackoverflow.com/questions/5081657/
+                how-do-i-prevent-a-c-shared-library-to-print-on-stdout-in-python/
+                17954769#17954769')
+    '''
+    fd = sys.stdout.fileno()
+
+    def _redirect_stdout(to):
+        sys.stdout.close()  # + implicit flush()
+        os.dup2(to.fileno(), fd)  # fd writes to 'to' file
+        sys.stdout = os.fdopen(fd, 'w')  # Python writes to fd
+
+    with os.fdopen(os.dup(fd), 'w') as old_stdout:
+        with open(to, 'w') as file:
+            _redirect_stdout(to=file)
+        try:
+            yield  # allow code to be run with the redirected stdout
+        finally:
+            _redirect_stdout(to=old_stdout)  # restore stdout
+# END duanDriver supression code
+
 
 # optional dependency thermoengine
 try:
@@ -207,7 +237,7 @@ class MagmaSat(model_classes.Model):
         bulk_comp_dict["CO2"] = CO2
         self.melts.set_bulk_composition(bulk_comp_dict)
 
-        with redirect_stdout(_f):
+        with stdout_redirected():
             output = self.melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
         (status, temperature, pressureMPa, xmlout) = output[0]
         fluid_mass = self.melts.get_mass_of_phase(xmlout, phase_name="Fluid")
@@ -249,7 +279,7 @@ class MagmaSat(model_classes.Model):
             _sample.get_composition(units="wtpt_oxides", normalization="none")
         )
 
-        with redirect_stdout(_f):
+        with stdout_redirected():
             output = self.melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
         (status, temperature, pressureMPa, xmlout) = output[0]
         fluid_comp = self.melts.get_composition_of_phase(
@@ -356,7 +386,7 @@ class MagmaSat(model_classes.Model):
             _sample.get_composition(units="wtpt_oxides", normalization="none")
         )
 
-        with redirect_stdout(_f):
+        with stdout_redirected():
             output = self.melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
         (status, temperature, pressureMPa, xmlout) = output[0]
         liquid_comp = self.melts.get_composition_of_phase(
@@ -429,11 +459,12 @@ class MagmaSat(model_classes.Model):
         _sample.change_composition(
             {"H2O": H2O_val, "CO2": CO2_val}, units="wtpt_oxides"
         )
+
         self.melts.set_bulk_composition(
             _sample.get_composition(units="wtpt_oxides", normalization="none")
         )
 
-        with redirect_stdout(_f):
+        with stdout_redirected():
             output = self.melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
         (status, temperature, pressureMPa, xmlout) = output[0]
         fluid_mass = self.melts.get_mass_of_phase(xmlout, phase_name="Fluid")
@@ -545,7 +576,7 @@ class MagmaSat(model_classes.Model):
 
         self.melts.set_bulk_composition(bulk_comp_dict)
 
-        with redirect_stdout(_f):
+        with stdout_redirected():
             output = self.melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
         (status, temperature, pressureMPa, xmlout) = output[0]
         fluid_mass = self.melts.get_mass_of_phase(xmlout, phase_name="Fluid")
@@ -617,7 +648,7 @@ class MagmaSat(model_classes.Model):
         pressureMPa = 2000
 
         # Check if saturated at 2000 MPa (rare, for deep samples)
-        with redirect_stdout(_f):
+        with stdout_redirected():
             output = self.melts.equilibrate_tp(temperature, pressureMPa,
                                                initialize=True)
         (status, temperature, pressureMPa, xmlout) = output[0]
@@ -631,11 +662,11 @@ class MagmaSat(model_classes.Model):
 
                 # composition needs to be reset for each refinement
                 self.melts.set_bulk_composition(bulk_comp)
-                with redirect_stdout(_f):
+                with stdout_redirected():
                     output = self.melts.equilibrate_tp(temperature, pressureMPa,
                                                        initialize=True)
-                    (status, temperature, pressureMPa, xmlout) = output[0]
-                    fluid_mass = self.melts.get_mass_of_phase(xmlout, phase_name="Fluid")
+                (status, temperature, pressureMPa, xmlout) = output[0]
+                fluid_mass = self.melts.get_mass_of_phase(xmlout, phase_name="Fluid")
 
             fluid_mass = 0
             pressureMPa += 100
@@ -645,11 +676,12 @@ class MagmaSat(model_classes.Model):
 
                 # composition needs to be reset for each refinement
                 self.melts.set_bulk_composition(bulk_comp)
-                with redirect_stdout(_f):
+
+                with stdout_redirected():
                     output = self.melts.equilibrate_tp(
                         temperature, pressureMPa, initialize=True)
-                    (status, temperature, pressureMPa, xmlout) = output[0]
-                    fluid_mass = self.melts.get_mass_of_phase(xmlout, phase_name="Fluid")
+                (status, temperature, pressureMPa, xmlout) = output[0]
+                fluid_mass = self.melts.get_mass_of_phase(xmlout, phase_name="Fluid")
 
             fluid_mass = 1.0
             pressureMPa -= 100
@@ -663,12 +695,12 @@ class MagmaSat(model_classes.Model):
                 # composition needs to be reset for each refinement
                 self.melts.set_bulk_composition(bulk_comp)
 
-                with redirect_stdout(_f):
+                with stdout_redirected():
                     output = self.melts.equilibrate_tp(temperature, pressureMPa,
                                                        initialize=True)
-                    (status, temperature, pressureMPa, xmlout) = output[0]
-                    fluid_mass = self.melts.get_mass_of_phase(xmlout,
-                                                              phase_name="Fluid")
+                (status, temperature, pressureMPa, xmlout) = output[0]
+                fluid_mass = self.melts.get_mass_of_phase(xmlout,
+                                                          phase_name="Fluid")
 
             fluid_mass = 0
             pressureMPa += 10
@@ -678,12 +710,13 @@ class MagmaSat(model_classes.Model):
 
                 # composition needs to be reset for each refinement
                 self.melts.set_bulk_composition(bulk_comp)
-                with redirect_stdout(_f):
+
+                with stdout_redirected():
                     output = self.melts.equilibrate_tp(temperature, pressureMPa,
                                                        initialize=True)
-                    (status, temperature, pressureMPa, xmlout) = output[0]
-                    fluid_mass = self.melts.get_mass_of_phase(xmlout,
-                                                              phase_name="Fluid")
+                (status, temperature, pressureMPa, xmlout) = output[0]
+                fluid_mass = self.melts.get_mass_of_phase(xmlout,
+                                                          phase_name="Fluid")
 
             fluid_mass = 1.0
             pressureMPa -= 10
@@ -698,12 +731,12 @@ class MagmaSat(model_classes.Model):
                 # composition needs to be reset for each refinement
                 self.melts.set_bulk_composition(bulk_comp)
 
-                with redirect_stdout(_f):
+                with stdout_redirected():
                     output = self.melts.equilibrate_tp(temperature, pressureMPa,
                                                        initialize=True)
-                    (status, temperature, pressureMPa, xmlout) = output[0]
-                    fluid_mass = self.melts.get_mass_of_phase(xmlout,
-                                                              phase_name="Fluid")
+                (status, temperature, pressureMPa, xmlout) = output[0]
+                fluid_mass = self.melts.get_mass_of_phase(xmlout,
+                                                          phase_name="Fluid")
 
             pass
 
@@ -713,12 +746,13 @@ class MagmaSat(model_classes.Model):
 
                 # composition needs to be reset for each refinement
                 self.melts.set_bulk_composition(bulk_comp)
-                with redirect_stdout(_f):
+
+                with stdout_redirected():
                     output = self.melts.equilibrate_tp(temperature, pressureMPa,
                                                        initialize=True)
-                    (status, temperature, pressureMPa, xmlout) = output[0]
-                    fluid_mass = self.melts.get_mass_of_phase(xmlout,
-                                                              phase_name="Fluid")
+                (status, temperature, pressureMPa, xmlout) = output[0]
+                fluid_mass = self.melts.get_mass_of_phase(xmlout,
+                                                          phase_name="Fluid")
 
         if pressureMPa != np.nan:
             satP = pressureMPa * 10  # convert pressure to bars
@@ -746,8 +780,7 @@ class MagmaSat(model_classes.Model):
             warnmessage = "Calculation failed."
 
         self.melts.set_bulk_composition(
-            self.bulk_comp_orig
-        )  # this needs to be reset always!
+            self.bulk_comp_orig)  # this needs to be reset always!
 
         if verbose is False:
             try:
@@ -1029,7 +1062,7 @@ class MagmaSat(model_classes.Model):
         fl_wtper = data["FluidProportion_wt"]
 
         while fl_wtper <= init_vapor:
-            with redirect_stdout(_f):
+            with stdout_redirected():
                 output = self.melts.equilibrate_tp(temperature, np.amax(P_array_MPa),
                                                    initialize=True)
             (status, temperature, p, xmlout) = output[0]
@@ -1065,7 +1098,7 @@ class MagmaSat(model_classes.Model):
 
             fl_mass = 0.0
             self.melts.set_bulk_composition(_sample_dict)
-            with redirect_stdout(_f):
+            with stdout_redirected():
                 output = self.melts.equilibrate_tp(temperature, i, initialize=True)
             (status, temp, p, xmlout) = output[0]
             liq_comp = self.melts.get_composition_of_phase(xmlout, phase_name="Liquid")

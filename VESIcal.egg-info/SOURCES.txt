@@ -36,4 +36,5 @@ VESIcal/thermo/thermo_core.py
 tests/__init__.py
 tests/test_calculate.py
 tests/test_importfile.py
+tests/test_manuscript.py
 tests/test_sample.py
