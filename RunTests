@@ -48,4 +48,5 @@ echo "flake8 completed"
 echo ' '
 echo "RUNNING UNIT TESTS"
 echo '=================='
+python tests/print_version.py
 python -m unittest
