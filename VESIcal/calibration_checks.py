@@ -32,10 +32,10 @@ class CalibrationRange(object):
         """Returns a string statement of the calibration check"""
         if parameters is None:
             msgdict = self.description_msg[1]
-            if type(self.value) == float or type(self.value) == int:
+            if isinstance(self.value, float) or isinstance(self.value, int):
                 msgdict['calib_val'] = self.value
-            elif (type(self.value) == list or type(self.value) == tuple or
-                  type(self.value) == np.ndarray):
+            elif (isinstance(self.value, list) or isinstance(self.value, tuple) or
+                  isinstance(self.value, np.ndarray)):
                 for i in range(len(self.value)):
                     msgdict['calib_val'+str(i)] = self.value[i]
             if 'param_name' not in msgdict:
@@ -50,10 +50,10 @@ class CalibrationRange(object):
             if check:
                 msgdict = self.pass_msg[1]
                 msgdict['param_val'] = parameters[self.parameter_name]
-                if type(self.value) == float or type(self.value) == int:
+                if isinstance(self.value, float) or isinstance(self.value, int):
                     msgdict['calib_val'] = self.value
-                elif (type(self.value) == list or type(self.value) == tuple or
-                      type(self.value) == np.ndarray):
+                elif (isinstance(self.value, list) or isinstance(self.value, tuple) or
+                      isinstance(self.value, np.ndarray)):
                     for i in range(len(self.value)):
                         msgdict['calib_val'+str(i)] = self.value[i]
                 if 'param_name' not in msgdict:
@@ -66,10 +66,10 @@ class CalibrationRange(object):
             elif check is False:
                 msgdict = self.fail_msg[1]
                 msgdict['param_val'] = parameters[self.parameter_name]
-                if type(self.value) == float or type(self.value) == int:
+                if isinstance(self.value, float) or isinstance(self.value, int):
                     msgdict['calib_val'] = self.value
-                elif (type(self.value) == list or type(self.value) == tuple or
-                      type(self.value) == np.ndarray):
+                elif (isinstance(self.value, list) or isinstance(self.value, tuple) or
+                      isinstance(self.value, np.ndarray)):
                     for i in range(len(self.value)):
                         msgdict['calib_val'+str(i)] = self.value[i]
                 if 'param_name' not in msgdict:
@@ -104,7 +104,7 @@ crmsg_EqualTo_description = ("The {model_name} model is calibrated for "
 
 
 def crf_MixedFluidWarning(calibval, paramval):
-    if type(paramval) == float or type(paramval) == int or len(paramval) == 1:
+    if isinstance(paramval, float) or isinstance(paramval, int) or len(paramval) == 1:
         return paramval == 0 or paramval == 1
     elif len(paramval) == 2:
         return list(paramval) == [0, 1] or list(paramval) == [1, 0]

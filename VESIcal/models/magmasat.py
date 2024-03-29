@@ -1033,7 +1033,7 @@ class MagmaSat(model_classes.Model):
         data = self.calculate_saturation_pressure(sample=_sample, temperature=temperature,
                                                   verbose=True)
 
-        if (type(pressure) == str or type(pressure) == float or type(pressure) == int):
+        if isinstance(pressure, str) or isinstance(pressure, float) or isinstance(pressure, int):
             if pressure == "saturation" or pressure >= data["SaturationP_bars"]:
                 SatP_bars = data["SaturationP_bars"]
             else:
@@ -1044,13 +1044,13 @@ class MagmaSat(model_classes.Model):
             # add last few MPa steps
             P_array_MPa = np.append(P_array_MPa, 0.5)
             P_array_MPa = np.append(P_array_MPa, 0.1)
-        elif type(pressure) == list:
+        elif isinstance(pressure, list):
             SatP_bars = max(pressure)
             finalP_bars = min(pressure)
             step_size = (SatP_bars - finalP_bars) / steps
             P_array_bars = np.arange(SatP_bars, finalP_bars, -step_size)
             P_array_MPa = P_array_bars/10.0
-        elif type(pressure) == np.ndarray:
+        elif isinstance(pressure, np.ndarray):
             P_array_bars = pressure
             P_array_MPa = P_array_bars/10.0
 

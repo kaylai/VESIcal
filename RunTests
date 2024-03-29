@@ -1,16 +1,52 @@
 #!/bin/bash
 
+SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+cd $SCRIPT_DIR
+
 echo ' '
 echo 'RUNNING VESIcal TESTING ROUTINES'
 echo '================================'
 echo ' '
+echo 'RUN DOCUMENTAITON NOTEBOOKS?'
+echo '============================'
 
-SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
-cd $SCRIPT_DIR
+while true; do
+	read -t 10 -p 'Would you like to also re-run documentation notebooks? [Y/N] Will default to N after 10 seconds. ' yn
+	if [[ $yn ]]
+	then
+		case $yn in
+			[Yy]* ) echo ' '
+			echo "UPDATING DOCUMENTATION JUPYTER NOTEBOOKS AND TABLES"
+			echo '==================================================='
+			jupyter nbconvert --execute --to notebook --inplace docs/jupyter_notebooks/ex_satP.ipynb
+			jupyter nbconvert --execute --to notebook --inplace docs/jupyter_notebooks/ex_dissolved.ipynb
+			jupyter nbconvert --execute --to notebook --inplace docs/jupyter_notebooks/ex_eqfluid.ipynb
+			jupyter nbconvert --execute --to notebook --inplace docs/jupyter_notebooks/ex_normalize.ipynb
+			jupyter nbconvert --execute --to notebook --inplace docs/jupyter_notebooks/adv_newcalcs.ipynb
 
+			echo ' '
+			echo "TESTING DOCUMENTATION JUPYTER NOTEBOOKS WITHOUT TABLES"
+			echo '======================================================'
+			jupyter nbconvert --execute --to notebook --inplace docs/jupyter_notebooks/ex_degassing.ipynb
+			jupyter nbconvert --execute --to notebook --inplace docs/jupyter_notebooks/ex_import.ipynb
+			jupyter nbconvert --execute --to notebook --inplace docs/jupyter_notebooks/ex_isobarsandisopleths.ipynb
+	 		break;;
+			[Nn]* ) break;;
+			* ) echo "Please answer Y or N.";;
+		esac
+	else
+		break
+	fi
+done
+
+echo ' '
+echo 'RUNNING FLAKE8'
+echo '=============='
 python -m flake8
 echo "flake8 completed"
-echo " "
 
-echo "Running unittest"
+echo ' '
+echo "RUNNING UNIT TESTS"
+echo '=================='
+python tests/print_version.py
 python -m unittest
