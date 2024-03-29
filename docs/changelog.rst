@@ -8,8 +8,12 @@ A small but mighty update comes to VESIcal v1.2.0. VESIcal can now be used witho
 
 The usage of VESIcal remains unchanged in the new version. Simply install using pip (see :doc:`install`) and get to work. If you do not have thermoengine installed, remember to specify which model to use in each calculation performed.
 
-Previous version history
-########################
+Version history
+###############
+Version 1.2.8
+^^^^^^^^^^^^^
+Fixed bug in calculate_degassing_path() where the default final_pressure() value was set to 100 bars instead of 1 bar. Added code to silence unhelpful "Duan Driver" warning messages from thermoengine. Made significant updates to the unittest testing routines.
+
 Version 1.2.7
 ^^^^^^^^^^^^^
 Fixed a bug where a cation concentration was not returned for a Sample composition given in terms of oxides and vice versa.
