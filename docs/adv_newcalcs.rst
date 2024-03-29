@@ -214,11 +214,11 @@ Now, let's test our new method.
 
 	{'temperature': 1000.0,
 	 'pressure': 5000.0,
-	 'H2O_liq': 2.00137179156045,
-	 'CO2_liq': 0.520077091019401,
-	 'XH2O_fl': 0.146938900738546,
-	 'XCO2_fl': 0.853061099261454,
-	 'FluidProportion_wt': 0.006638675057019597}
+	 'H2O_liq': 2.00178003974518,
+	 'CO2_liq': 0.52008219111891,
+	 'XH2O_fl': 0.146985466738443,
+	 'XCO2_fl': 0.853014533261557,
+	 'FluidProportion_wt': 0.007595399812658153}
 
 Some notes about our new calculation
 ------------------------------------
