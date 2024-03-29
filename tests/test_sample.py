@@ -447,3 +447,43 @@ class TestGetComposition(unittest.TestCase):
     def test_formulawt_exclV(self):
         fw = self.sample.get_formulaweight(exclude_volatiles=True)
         self.assertEqual(np.round(self.majors_fw,2),np.round(fw,2))
+
+    def test_get_cation(self):
+        Si_conc = self.majorsv_molcations["Si"]
+
+        # get cation no units
+        get_Si_conc = self.sample.get_composition(species="Si")
+        self.assertEqual(np.round(Si_conc,2), np.round(get_Si_conc,2)) 
+
+        # get cation units='mol_cations'
+        get_Si_mol_cations = self.sample.get_composition(species="Si", units="mol_cations")
+        self.assertEqual(np.round(Si_conc, 2), np.round(get_Si_mol_cations, 2))
+
+        # get cation units='wtpt_oxides'
+        get_Si_wtpt_oxides = self.sample.get_composition(species="Si", units="wtpt_oxides")
+        self.assertEqual(np.round(Si_conc, 2), np.round(get_Si_wtpt_oxides, 2))
+        self.assertWarns(expected_warning=RuntimeWarning)
+
+        # get cation for cation not given a value by user
+        self.assertEqual(self.sample.get_composition(species="Cr"), 0.0)
+        self.assertWarns(expected_warning=RuntimeWarning)
+    
+    def test_get_oxide(self):
+        SiO2_conc = self.majorsv["SiO2"]
+
+        # get oxide no units
+        get_SiO2_conc = self.sample.get_composition(species="SiO2")
+        self.assertEqual(np.round(SiO2_conc,2), np.round(get_SiO2_conc,2)) 
+
+        # get oxide units='mol_cations'
+        get_SiO2_mol_cations = self.sample.get_composition(species="SiO2", units="mol_cations")
+        self.assertEqual(np.round(SiO2_conc, 2), np.round(get_SiO2_mol_cations, 2))
+        self.assertWarns(expected_warning=RuntimeWarning)
+
+        # get oxide units='wtpt_oxides'
+        get_SiO2_wtpt_oxides = self.sample.get_composition(species="SiO2", units="wtpt_oxides")
+        self.assertEqual(np.round(SiO2_conc, 2), np.round(get_SiO2_wtpt_oxides, 2))
+
+        # get oxide for oxide not given a value by user
+        self.assertEqual(self.sample.get_composition(species="Cr2O3"), 0.0)
+        self.assertWarns(expected_warning=RuntimeWarning)

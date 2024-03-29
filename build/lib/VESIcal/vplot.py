@@ -11,9 +11,9 @@ import matplotlib.pyplot as plt
 
 # ---------- DEFINE CUSTOM PLOTTING FORMATTING ------------ #
 try:
-    style = "seaborn-colorblind" # old style name
+    style = "seaborn-colorblind"  # old style name
     plt.style.use(style)
-    
+
     # Define color cycler based on plot style set here
     # get style formatting set by plt.style.use():
     the_rc = plt.style.library[style]
@@ -22,9 +22,9 @@ try:
     color_cyler = the_rc['axes.prop_cycle']  # get the cycler
 
 except:
-    style = "seaborn-v0_8-colorblind" # new style name as of 3.6.0
+    style = "seaborn-v0_8-colorblind"  # new style name as of 3.6.0
     plt.style.use(style)
-    
+
     # Define color cycler based on plot style set here
     # get style formatting set by plt.style.use():
     the_rc = plt.style.library[style]
@@ -42,6 +42,7 @@ plt.rcParams['xtick.labelsize'] = 14
 plt.rcParams['ytick.labelsize'] = 14
 plt.rcParams['legend.fontsize'] = 14
 mpl.rcParams['lines.markersize'] = 10
+
 
 # ----------- MAGMASAT PLOTTING FUNCTIONS ----------- #
 def smooth_isobars_and_isopleths(isobars=None, isopleths=None):

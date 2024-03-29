@@ -9,6 +9,12 @@ import numpy as np
 import warnings as w
 import sys
 
+from contextlib import redirect_stdout
+import io
+
+# Variable to send MagmaSat warnings into the void
+_f = io.StringIO()
+
 # from thermoengine import equilibrate
 
 # w.filterwarnings("ignore", message="rubicon.objc.ctypes_patch has only been "
@@ -31,54 +37,6 @@ class BatchFile(batchfile.BatchFile):
     """Performs model functions on a batchfile.BatchFile object
     """
     pass
-
-    # def get_XH2O_fluid(self, sample, temperature, pressure, H2O, CO2):
-    #     """An internally used function to calculate fluid composition.
-
-    #     Parameters
-    #     ----------
-    #     sample: dictionary
-    #         Sample composition in wt% oxides
-
-    #     temperature: float
-    #         Temperature in degrees C.
-
-    #     pressure: float
-    #         Pressure in bars
-
-    #     H2O: float
-    #         wt% H2O in the system
-
-    #     CO2: float
-    #         wt% CO2 in the system
-
-    #     Returns
-    #     -------
-    #     float
-    #         Mole fraction of H2O in the H2O-CO2 fluid
-
-    #     """
-    #     pressureMPa = pressure / 10.0
-
-    #     bulk_comp = {oxide:  sample[oxide] for oxide in core.magmasat_oxides}
-    #     bulk_comp["H2O"] = H2O
-    #     bulk_comp["CO2"] = CO2
-    #     melts.set_bulk_composition(bulk_comp)
-
-    #     output = melts.equilibrate_tp(temperature, pressureMPa,
-    #                                   initialize=True)
-    #     (status, temperature, pressureMPa, xmlout) = output[0]
-    #     fluid_comp = melts.get_composition_of_phase(xmlout, phase_name='Fluid',
-    #                                                 mode='component')
-    #     # NOTE mode='component' returns endmember component keys with values
-    #     # in mol fraction.
-
-    #     if "Water" in fluid_comp:
-    #         H2O_fl = fluid_comp["Water"]
-    #     else:
-    #         H2O_fl = 0.0
-
-    #     return H2O_fl
 
     def calculate_dissolved_volatiles(self, temperature, pressure, X_fluid=1,
                                       print_status=True, model='MagmaSat',
@@ -298,11 +256,12 @@ class BatchFile(batchfile.BatchFile):
                         bulk_comp.set_default_units(self.default_units)
                         bulk_comp.set_default_normalization(
                                                     self.default_normalization)
-                        calc = calculate_classes.calculate_dissolved_volatiles(
-                                           sample=bulk_comp, pressure=pressure,
-                                           temperature=temperature,
-                                           X_fluid=X_fluid, model=model,
-                                           silence_warnings=True, verbose=True)
+                        with redirect_stdout(_f):
+                            calc = calculate_classes.calculate_dissolved_volatiles(
+                                            sample=bulk_comp, pressure=pressure,
+                                            temperature=temperature,
+                                            X_fluid=X_fluid, model=model,
+                                            silence_warnings=True, verbose=True)
                         H2Ovals.append(calc.result['H2O_liq'])
                         CO2vals.append(calc.result['CO2_liq'])
                         XH2Ovals.append(calc.result['XH2O_fl'])
@@ -462,7 +421,7 @@ class BatchFile(batchfile.BatchFile):
             file_has_press = True
             press_name = pressure
         elif (isinstance(pressure, float) or isinstance(pressure, int) or
-              pressure is None):
+              isinstance(pressure, np.float64) or pressure is None):
             file_has_press = False
         else:
             raise core.InputError("pressure must be type str or float or int")
@@ -555,13 +514,13 @@ class BatchFile(batchfile.BatchFile):
                         bulk_comp.set_default_units(self.default_units)
                         bulk_comp.set_default_normalization(
                                                     self.default_normalization)
-
-                        calc = (
-                            calculate_classes.calculate_equilibrium_fluid_comp(
-                                           sample=bulk_comp, pressure=pressure,
-                                           temperature=temperature,
-                                           model=model, silence_warnings=True,
-                                           **kwargs))
+                        with redirect_stdout(_f):
+                            calc = (
+                                calculate_classes.calculate_equilibrium_fluid_comp(
+                                            sample=bulk_comp, pressure=pressure,
+                                            temperature=temperature,
+                                            model=model, silence_warnings=True,
+                                            **kwargs))
 
                         H2Ovals.append(calc.result['H2O'])
                         CO2vals.append(calc.result['CO2'])
@@ -766,10 +725,11 @@ class BatchFile(batchfile.BatchFile):
                         bulk_comp.set_default_normalization(
                                                     self.default_normalization)
 
-                        calc = calculate_classes.calculate_saturation_pressure(
-                                     sample=bulk_comp, temperature=temperature,
-                                     model=model, verbose=True,
-                                     silence_warnings=True)
+                        with redirect_stdout(_f):
+                            calc = calculate_classes.calculate_saturation_pressure(
+                                        sample=bulk_comp, temperature=temperature,
+                                        model=model, verbose=True,
+                                        silence_warnings=True)
                         satP.append(calc.result["SaturationP_bars"])
                         flmass.append(calc.result["FluidMass_grams"])
                         flsystem_wtper.append(

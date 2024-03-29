@@ -84,4 +84,4 @@ Do the calculation
 
 .. code-block:: python
 
-	2310.0
+	2490.0

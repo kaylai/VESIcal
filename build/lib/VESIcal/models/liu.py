@@ -338,7 +338,7 @@ class carbon(model_classes.Model):
 
         XCO2fluid = sympy.solve(equation, XCO2fluid, real=True)[0]
 
-        if type(XCO2fluid) != float:
+        if isinstance(XCO2fluid, float) is False:
             w.warn("Could not find equilibrium fluid composition.")
             return 0
         else:
