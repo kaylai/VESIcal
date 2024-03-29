@@ -621,9 +621,25 @@ class MixedFluid(Model):
                             pressure=pressures[i], sample=sample,
                             X_fluid=X_fluid, **kwargs)[0]
                     else:
-                        wtm[:, i] = self.calculate_dissolved_volatiles(
+                        calc = self.calculate_dissolved_volatiles(
                             pressure=pressures[i], sample=sample,
                             X_fluid=X_fluid, **kwargs)
+                        # This next block ensures that melts will not
+                        # gain tiny amounts of volatiles due to a numerical
+                        # error in the algorithm that I have been unable to
+                        # trace. In most cases the error is unnoticeable anyway.
+                        if i == 0:
+                            compare = [wtm0s, wtm1s]
+                        else:
+                            compare = wtm[:, i-1]
+                        if calc[0] < compare[0]:
+                            wtm[0,i] = calc[0]
+                        else:
+                            wtm[0,i] = compare[0]
+                        if calc[1] < compare[1]:
+                            wtm[1,i] = calc[1]
+                        else:
+                            wtm[1,i] = compare[1]
 
                     sample.change_composition({
                         self.volatile_species[0]: (wtm[0, i] +

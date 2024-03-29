@@ -23,8 +23,12 @@ class CalibrationRange(object):
         range.
         """
         if self.parameter_name in parameters:
-            return self.checkfunction(self.value,
-                                      parameters[self.parameter_name])
+
+            if isinstance(parameters[self.parameter_name], np.ndarray):
+                return None
+            else:
+                return self.checkfunction(self.value,
+                                          parameters[self.parameter_name])
         else:
             return None
 

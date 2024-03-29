@@ -496,7 +496,8 @@ class MagmaSat(model_classes.Model):
 
         verbose: bool
             OPTIONAL: Default is False. If set to True, returns H2O and CO2 concentration in the
-            fluid in mole fraction, mass of the fluid in grams, and proportion of fluid in the system in wt%.
+            fluid in mole fraction, mass of the fluid in grams, and proportion of fluid in the
+            system in wt%.
 
         Returns
         -------
@@ -573,8 +574,8 @@ class MagmaSat(model_classes.Model):
                 "FluidProportion_wt": flsystem_wtper,
             }
 
-    def calculate_saturation_pressure(self, sample, temperature, verbose=False, 
-                                      refinement_level=2, **kwargs):
+    def calculate_saturation_pressure(self, sample, temperature, verbose=False,
+                                      refinement_level=3, **kwargs):
         """
         Calculates the saturation pressure of a sample composition.
 
@@ -592,10 +593,10 @@ class MagmaSat(model_classes.Model):
             in wt%, and H2O and CO2 concentrations in the fluid in mole fraction are all returned
             in a dict.
 
-        refinement_level: int, default: 2
+        refinement_level: int, default: 3
             Controls how precisely the saturation pressure is determined. A value of 1 gives a
-            solution to the neartest 10 MPa, a value of 2 gives it to the nearest 10 bar, 
-            a value of 3 gives it to the nearest 1 bar, and 4 gives it to the nearest 0.1 bar.
+            solution to the neartest 1000 bar, a value of 2 gives it to the nearest 100 bar,
+            a value of 3 gives it to the nearest 10 bar, and 4 gives it to the nearest 1 bar.
             This is only likely to be required in select applications, the returned precision
             far exceeds the uncertainty on the model.
         Returns
@@ -632,7 +633,7 @@ class MagmaSat(model_classes.Model):
                     output = self.melts.equilibrate_tp(temperature, pressureMPa,
                                                        initialize=True)
                 (status, temperature, pressureMPa, xmlout) = output[0]
-                fluid_mass = self.melts.get_mass_of_phase(xmlout, 
+                fluid_mass = self.melts.get_mass_of_phase(xmlout,
                                                           phase_name="Fluid")
 
             fluid_mass = 0
@@ -671,10 +672,10 @@ class MagmaSat(model_classes.Model):
 
                     with redirect_stdout(_f):
                         output = self.melts.equilibrate_tp(temperature, pressureMPa,
-                                                        initialize=True)
+                                                           initialize=True)
                     (status, temperature, pressureMPa, xmlout) = output[0]
                     fluid_mass = self.melts.get_mass_of_phase(xmlout,
-                                                            phase_name="Fluid")
+                                                              phase_name="Fluid")
 
                 fluid_mass = 0
                 pressureMPa += pressure_change
@@ -687,23 +688,29 @@ class MagmaSat(model_classes.Model):
                     self.melts.set_bulk_composition(bulk_comp)
                     with redirect_stdout(_f):
                         output = self.melts.equilibrate_tp(temperature, pressureMPa,
-                                                        initialize=True)
+                                                           initialize=True)
                     (status, temperature, pressureMPa, xmlout) = output[0]
                     fluid_mass = self.melts.get_mass_of_phase(xmlout,
-                                                            phase_name="Fluid")
+                                                              phase_name="Fluid")
 
                 fluid_mass = 1.0
                 pressureMPa -= pressure_change
 
-
-
         if pressureMPa != np.nan:
             satP = pressureMPa * 10  # convert pressure to bars
+            # Round to account for directionality of algorithm
+            # Adding pressure_change ensures that if 5 is the final
+            # digit, the number will be rounded up. Following the conversion
+            # of satP to bars, the pressure_change is now a higher precision
+            # than the result, so it shouldn't affect the calculation
+            # outcome at all. SM.
+            satP = np.round(satP + pressure_change,
+                            - int(np.log10(pressure_change)) - 2)
             flmass = fluid_mass
             flsystem_wtper = (100 * fluid_mass
-                              / (fluid_mass + 
+                              / (fluid_mass +
                                  self.melts.get_mass_of_phase(xmlout,
-                                                          phase_name="Liquid")))
+                                                              phase_name="Liquid")))
             flcomp = self.melts.get_composition_of_phase(xmlout,
                                                          phase_name="Fluid",
                                                          mode="component")
@@ -932,7 +939,7 @@ class MagmaSat(model_classes.Model):
         init_vapor: float
             OPTIONAL. Default value is 0.0. Specifies the amount of vapor (in wt%) coexisting
             with the melt before degassing.
-        
+
         final_pressure: float
             OPTIONAL. The final pressure on the degassing path, in bars. Ignored if a
             list or numpy array is passed as the pressure variable. Default is
