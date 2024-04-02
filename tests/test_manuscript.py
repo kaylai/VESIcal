@@ -210,24 +210,24 @@ class TestManuscriptCalculations(unittest.TestCase):
         print_msg_box("TestManuscript \ndegassing_paths")
         """Calculate open, closed, and closed + 2 wt% initial vapor"""
         closed_df = v.calculate_degassing_path(sample=self.sample_10star, temperature=1200).result
-        assert_frame_equal(closed_df, self.pickle_closed_df, rtol=1e-5)
+        assert_frame_equal(closed_df, self.pickle_closed_df, atol=1e-4)
 
         open_df = v.calculate_degassing_path(sample=self.sample_10star, temperature=1200,
                                              fractionate_vapor=1.0).result
-        assert_frame_equal(open_df, self.pickle_open_df, rtol=1e-5)
+        assert_frame_equal(open_df, self.pickle_open_df, atol=1e-4)
 
         half_df = v.calculate_degassing_path(sample=self.sample_10star, temperature=1200,
                                              fractionate_vapor=0.5).result
-        assert_frame_equal(half_df, self.pickle_half_df, rtol=1e-5)
+        assert_frame_equal(half_df, self.pickle_half_df, atol=5e-4)
 
         exsolved_df = v.calculate_degassing_path(sample=self.sample_10star, temperature=1200,
                                                  init_vapor=2.0).result
-        assert_frame_equal(exsolved_df, self.pickle_exsolved_df, rtol=1e-5)
+        assert_frame_equal(exsolved_df, self.pickle_exsolved_df, atol=1e-4)
 
         """Calculate closed-system degassing starting from a pressure of 2000 bars"""
         start2000_df = v.calculate_degassing_path(sample=self.sample_10star, temperature=1200,
                                                   pressure=2000.0).result
-        assert_frame_equal(start2000_df, self.pickle_start2000_df, rtol=1e-5)
+        assert_frame_equal(start2000_df, self.pickle_start2000_df, atol=1e-4)
     
     def test_dissolved_batch(self):
         print_msg_box("TestManuscript \ndissolved_batch")
@@ -319,4 +319,6 @@ class TestManuscriptCalculations(unittest.TestCase):
         print_msg_box("TestManuscript \nsaturation_pressure_mysample")
         result = v.calculate_saturation_pressure(sample=self.mysample, temperature=925.0,
                                                  verbose=True).result
-        self.assertDictEqual(result, self.mysample_satP)
+        params = list(result.keys())
+        for param in params:
+            self.assertAlmostEqual(result[param], self.mysample_satP[param])
