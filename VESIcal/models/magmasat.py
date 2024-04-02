@@ -1107,7 +1107,6 @@ class MagmaSat(model_classes.Model):
             liq_mass = self.melts.get_mass_of_phase(xmlout, phase_name="Liquid")
             fl_mass = self.melts.get_mass_of_phase(xmlout, phase_name="Fluid")
             fl_wtper = 100 * fl_mass / (fl_mass + liq_mass)
-            print("hi")
             if fl_mass > 0:
                 press.append(p * 10.0)
                 try:
