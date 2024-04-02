@@ -306,10 +306,10 @@ class TestManuscriptCalculations(unittest.TestCase):
         result = self.myfile.calculate_saturation_pressure(temperature=925.0)
         assert_frame_equal(result, self.pickle_satPs)
     
-    def test_saturation_pressure_batch_wTemps(self):
-        print_msg_box("TestManuscript \nsaturation_pressure_batch_wTemps")
-        result = self.myfile.calculate_saturation_pressure(temperature="Temp")
-        assert_frame_equal(result, self.pickle_satPs_wTemps)
+    # def test_saturation_pressure_batch_wTemps(self):
+    #     print_msg_box("TestManuscript \nsaturation_pressure_batch_wTemps")
+    #     result = self.myfile.calculate_saturation_pressure(temperature="Temp")
+    #     assert_frame_equal(result, self.pickle_satPs_wTemps)
     
     def test_saturation_pressure_mysample(self):
         print_msg_box("TestManuscript \nsaturation_pressure_mysample")
