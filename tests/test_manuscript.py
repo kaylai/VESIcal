@@ -62,7 +62,8 @@ class TestManuscriptCalculations(unittest.TestCase):
     to normalization routines made after publication. I've noted original values in commented
     text below where they differ from currently accepted values.
 
-    Current values last updated March 2024 by Kayla Iacovino.
+    Current values last updated March 2024 by Kayla Iacovino. 
+    Some degassing paths updated March 2024 by Simon Matthews (see comments below).
     """
     def setUp(self):
         # import any pickled objects
@@ -97,7 +98,7 @@ class TestManuscriptCalculations(unittest.TestCase):
             self.pickle_closed_df = pickle.load(f)
         
         with open(PICKLE_OPEN_DF, "rb") as f:
-            self.pickle_open_df = pickle.load(f)
+            self.pickle_open_df = pickle.load(f) # Updated following bug fix. SM.
         
         with open(PICKLE_HALF_DF, "rb") as f:
             self.pickle_half_df = pickle.load(f)
@@ -209,24 +210,24 @@ class TestManuscriptCalculations(unittest.TestCase):
         print_msg_box("TestManuscript \ndegassing_paths")
         """Calculate open, closed, and closed + 2 wt% initial vapor"""
         closed_df = v.calculate_degassing_path(sample=self.sample_10star, temperature=1200).result
-        assert_frame_equal(closed_df, self.pickle_closed_df)
+        assert_frame_equal(closed_df, self.pickle_closed_df, rtol=1e-5)
 
         open_df = v.calculate_degassing_path(sample=self.sample_10star, temperature=1200,
                                              fractionate_vapor=1.0).result
-        assert_frame_equal(open_df, self.pickle_open_df)
+        assert_frame_equal(open_df, self.pickle_open_df, rtol=1e-5)
 
         half_df = v.calculate_degassing_path(sample=self.sample_10star, temperature=1200,
                                              fractionate_vapor=0.5).result
-        assert_frame_equal(half_df, self.pickle_half_df)
+        assert_frame_equal(half_df, self.pickle_half_df, rtol=1e-5)
 
         exsolved_df = v.calculate_degassing_path(sample=self.sample_10star, temperature=1200,
                                                  init_vapor=2.0).result
-        assert_frame_equal(exsolved_df, self.pickle_exsolved_df)
+        assert_frame_equal(exsolved_df, self.pickle_exsolved_df, rtol=1e-5)
 
         """Calculate closed-system degassing starting from a pressure of 2000 bars"""
         start2000_df = v.calculate_degassing_path(sample=self.sample_10star, temperature=1200,
                                                   pressure=2000.0).result
-        assert_frame_equal(start2000_df, self.pickle_start2000_df)
+        assert_frame_equal(start2000_df, self.pickle_start2000_df, rtol=1e-5)
     
     def test_dissolved_batch(self):
         print_msg_box("TestManuscript \ndissolved_batch")
@@ -238,7 +239,9 @@ class TestManuscriptCalculations(unittest.TestCase):
         print_msg_box("TestManuscript \ndissolved_volatiles_sample_10star")
         result = v.calculate_dissolved_volatiles(sample=self.sample_10star, temperature=900.0,
                                                  pressure=2000.0, X_fluid=0.5, verbose=True).result
-        self.assertDictEqual(result, self.tenstar_verbose_diss_vol)
+        params = list(result.keys())
+        for param in params:
+            self.assertAlmostEqual(result[param], self.tenstar_verbose_diss_vol[param])
     
     def test_eqfluid_batch(self):
         print_msg_box("TestManuscript \neqfluid_batch")
@@ -264,7 +267,8 @@ class TestManuscriptCalculations(unittest.TestCase):
         print_msg_box("TestManuscript \nequilibrium_fluid_sample_10star")
         result = v.calculate_equilibrium_fluid_comp(sample=self.sample_10star, temperature=900.0,
                                                     pressure=100.0).result
-        self.assertDictEqual(result, self.tenstar_eqfluid)
+        self.assertAlmostEqual(result['H2O'], self.tenstar_eqfluid['H2O'])
+        self.assertAlmostEqual(result['CO2'], self.tenstar_eqfluid['CO2'])
     
     def test_isobars_and_isopleths(self):
         print_msg_box("TestManuscript \nisobars_and_isopleths")

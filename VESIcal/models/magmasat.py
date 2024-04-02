@@ -1139,7 +1139,7 @@ class MagmaSat(model_classes.Model):
                                            (1.0 - fractionate_vapor))
                     if _sample_dict["CO2"] < 1e-10:
                         _sample_dict["CO2"] = 0.0
-                    
+
                 except Exception:
                     _sample_dict["CO2"] = 0
             _sample = sample_class.Sample(_sample_dict)
