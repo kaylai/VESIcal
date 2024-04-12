@@ -1107,7 +1107,6 @@ class MagmaSat(model_classes.Model):
             liq_mass = self.melts.get_mass_of_phase(xmlout, phase_name="Liquid")
             fl_mass = self.melts.get_mass_of_phase(xmlout, phase_name="Fluid")
             fl_wtper = 100 * fl_mass / (fl_mass + liq_mass)
-
             if fl_mass > 0:
                 press.append(p * 10.0)
                 try:
@@ -1138,6 +1137,9 @@ class MagmaSat(model_classes.Model):
                     _sample_dict["CO2"] = (liq_comp["CO2"] +
                                            (_sample_dict["CO2"] - liq_comp["CO2"]) *
                                            (1.0 - fractionate_vapor))
+                    if _sample_dict["CO2"] < 1e-10:
+                        _sample_dict["CO2"] = 0.0
+
                 except Exception:
                     _sample_dict["CO2"] = 0
             _sample = sample_class.Sample(_sample_dict)

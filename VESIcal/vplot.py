@@ -21,7 +21,7 @@ try:
     color_list = the_rc['axes.prop_cycle'].by_key()['color'] * 10
     color_cyler = the_rc['axes.prop_cycle']  # get the cycler
 
-except:
+except Exception:
     style = "seaborn-v0_8-colorblind"  # new style name as of 3.6.0
     plt.style.use(style)
 
