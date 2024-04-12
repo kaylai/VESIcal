@@ -10,6 +10,10 @@ The usage of VESIcal remains unchanged in the new version. Simply install using 
 
 Version history
 ###############
+Version 1.2.9
+^^^^^^^^^^^^^
+This fixes the bug outlined in issue https://github.com/kaylai/VESIcal/issues/188, or rather provides a workaround for the bug in thermoengine that was causing it. Also fixed some flake8 complaints, and made some of the unit tests more robust to machine error and random thermoengine errors (see issue https://github.com/kaylai/VESIcal/issues/197). The testing routine passes on the ENKI server.
+
 Version 1.2.8
 ^^^^^^^^^^^^^
 Fixed bug in calculate_degassing_path() where the default final_pressure() value was set to 100 bars instead of 1 bar. Added code to silence unhelpful "Duan Driver" warning messages from thermoengine. Made significant updates to the unittest testing routines.
