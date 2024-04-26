@@ -10,6 +10,10 @@ The usage of VESIcal remains unchanged in the new version. Simply install using 
 
 Version history
 ###############
+Version 1.2.10
+^^^^^^^^^^^^^^
+Our attempts to remove DuanDriver error messages thrown by MagmaSat ended up causing other things to break. This update removes DuanDriver "fixes". Expect to see more DuanDriver print messages when running MagmaSat if you got used to them not being there!
+
 Version 1.2.9
 ^^^^^^^^^^^^^
 This fixes the bug outlined in issue https://github.com/kaylai/VESIcal/issues/188, or rather provides a workaround for the bug in thermoengine that was causing it. Also fixed some flake8 complaints, and made some of the unit tests more robust to machine error and random thermoengine errors (see issue https://github.com/kaylai/VESIcal/issues/197). The testing routine passes on the ENKI server.

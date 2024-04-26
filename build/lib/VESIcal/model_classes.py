@@ -246,8 +246,8 @@ class MixedFluid(Model):
                             pressure=pressure, X_fluid=X_fluid[1], **kwargs)
             result = (result0, result1)
         elif (len(self.models) == 2 and
-             self.models[1].solubility_dependence is False and
-             'sample' in kwargs):
+                self.models[1].solubility_dependence is False and
+                'sample' in kwargs):
             result1 = self.models[1].calculate_dissolved_volatiles(
                                pressure=pressure, X_fluid=X_fluid[1], **kwargs)
             samplecopy = kwargs['sample'].change_composition(

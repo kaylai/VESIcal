@@ -34,6 +34,7 @@ VESIcal/thermo/giordano.py
 VESIcal/thermo/thermo_calculate_classes.py
 VESIcal/thermo/thermo_core.py
 tests/__init__.py
+tests/print_version.py
 tests/test_calculate.py
 tests/test_importfile.py
 tests/test_manuscript.py
