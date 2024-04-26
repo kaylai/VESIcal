@@ -2,7 +2,7 @@ import unittest
 import VESIcal as v
 import numpy as np
 import pathlib
-import pickle
+import pandas as pd
 from pandas.testing import assert_frame_equal
 
 
@@ -49,11 +49,11 @@ PICKLE_SATPS = pathlib.Path(__file__).parent.joinpath("manuscript_satPs.p")
 PICKLE_SATPS_WTEMPS = pathlib.Path(__file__).parent.joinpath("manuscript_satPs_wTemps.p")
 PICKLE_ISOBARS = pathlib.Path(__file__).parent.joinpath("manuscript_isobars.p")
 PICKLE_ISOPLETHS = pathlib.Path(__file__).parent.joinpath("manuscript_isopleths.p")
-PICKLE_CLOSED_DF = pathlib.Path(__file__).parent.joinpath("manuscript_closed_df.p")
-PICKLE_OPEN_DF = pathlib.Path(__file__).parent.joinpath("manuscript_open_df.p")
-PICKLE_HALF_DF = pathlib.Path(__file__).parent.joinpath("manuscript_half_df.p")
-PICKLE_EXSOLVED_DF = pathlib.Path(__file__).parent.joinpath("manuscript_exsolved_df.p")
-PICKLE_START2000_DF = pathlib.Path(__file__).parent.joinpath("manuscript_start2000_df.p")    
+PICKLE_CLOSED_DF = pathlib.Path(__file__).parent.joinpath("manuscript_closed.p")
+PICKLE_OPEN_DF = pathlib.Path(__file__).parent.joinpath("manuscript_open.p")
+PICKLE_HALF_DF = pathlib.Path(__file__).parent.joinpath("manuscript_half.p")
+PICKLE_EXSOLVED_DF = pathlib.Path(__file__).parent.joinpath("manuscript_exsolved.p")
+PICKLE_START2000_DF = pathlib.Path(__file__).parent.joinpath("manuscript_start2000.p")    
 
 class TestManuscriptCalculations(unittest.TestCase):
     """
@@ -67,47 +67,20 @@ class TestManuscriptCalculations(unittest.TestCase):
     """
     def setUp(self):
         # import any pickled objects
-        with open(PICKLE_DISSOLVED, "rb") as f:
-            self.pickle_dissolved = pickle.load(f)
-
-        with open(PICKLE_EQFLUID, "rb") as f:
-            self.pickle_eqfluid = pickle.load(f)
-        
-        with open(PICKLE_EQFLUID_WTEMPS, "rb") as f:
-            self.pickle_eqfluid_wTemps = pickle.load(f)
-
-        with open(PICKLE_EQFLUID_WT, "rb") as f:
-            self.pickle_eqfluid_wt = pickle.load(f)
-        
-        with open(PICKLE_EQFLUID_MOL, "rb") as f:
-            self.pickle_eqfluid_mol = pickle.load(f)
-        
-        with open(PICKLE_SATPS, "rb") as f:
-            self.pickle_satPs = pickle.load(f)
-        
-        with open(PICKLE_SATPS_WTEMPS, "rb") as f:
-            self.pickle_satPs_wTemps = pickle.load(f)
-
-        with open(PICKLE_ISOBARS, "rb") as f:
-            self.pickle_isobars = pickle.load(f)
-        
-        with open(PICKLE_ISOPLETHS, "rb") as f:
-            self.pickle_isopleths = pickle.load(f)
-        
-        with open(PICKLE_CLOSED_DF, "rb") as f:
-            self.pickle_closed_df = pickle.load(f)
-        
-        with open(PICKLE_OPEN_DF, "rb") as f:
-            self.pickle_open_df = pickle.load(f) # Updated following bug fix. SM.
-        
-        with open(PICKLE_HALF_DF, "rb") as f:
-            self.pickle_half_df = pickle.load(f)
-        
-        with open(PICKLE_EXSOLVED_DF, "rb") as f:
-            self.pickle_exsolved_df = pickle.load(f)
-        
-        with open(PICKLE_START2000_DF, "rb") as f:
-            self.pickle_start2000_df = pickle.load(f)
+        self.pickle_dissolved = pd.read_pickle(PICKLE_DISSOLVED)
+        self.pickle_eqfluid = pd.read_pickle(PICKLE_EQFLUID)
+        self.pickle_eqfluid_wTemps = pd.read_pickle(PICKLE_EQFLUID_WTEMPS)
+        self.pickle_eqfluid_wt = pd.read_pickle(PICKLE_EQFLUID_WT)
+        self.pickle_eqfluid_mol = pd.read_pickle(PICKLE_EQFLUID_MOL)
+        self.pickle_satPs = pd.read_pickle(PICKLE_SATPS)
+        self.pickle_satPs_wTemps = pd.read_pickle(PICKLE_SATPS_WTEMPS)
+        self.pickle_isobars = pd.read_pickle(PICKLE_ISOBARS)
+        self.pickle_isopleths = pd.read_pickle(PICKLE_ISOPLETHS)
+        self.pickle_closed_df = pd.read_pickle(PICKLE_CLOSED_DF)
+        self.pickle_open_df = pd.read_pickle(PICKLE_OPEN_DF)
+        self.pickle_half_df = pd.read_pickle(PICKLE_HALF_DF)
+        self.pickle_exsolved_df = pd.read_pickle(PICKLE_EXSOLVED_DF)
+        self.pickle_start2000_df = pd.read_pickle(PICKLE_START2000_DF)
 
         # example data file
         self.myfile = v.BatchFile(TEST_FILE)
@@ -130,8 +103,8 @@ class TestManuscriptCalculations(unittest.TestCase):
                                   'H2O':    6.5,
                                   'CO2':    0.05})
         
-        # values are same as in ms!
-        self.mysample_satP = {'SaturationP_bars': 2960.0,
+        # values are same as in ms unless noted!
+        self.mysample_satP = {'SaturationP_bars': 2970.0,  # changed from 2960 in ms due to rounding
                               'FluidMass_grams': 0.0018160337487088,
                               'FluidProportion_wt': 0.0018160337487087978,
                               'XH2O_fl': 0.838064480487942,
