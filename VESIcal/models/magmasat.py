@@ -634,12 +634,7 @@ class MagmaSat(model_classes.Model):
                 # composition needs to be reset for each refinement
                 self.melts.set_bulk_composition(bulk_comp)
 
-                output = self.melts.equilibrate_tp(
-<<<<<<< Updated upstream
-                        temperature, pressureMPa, initialize=True)
-=======
-                    temperature, pressureMPa, initialize=True)
->>>>>>> Stashed changes
+                output = self.melts.equilibrate_tp(temperature, pressureMPa, initialize=True)
                 (status, temperature, pressureMPa, xmlout) = output[0]
                 fluid_mass = self.melts.get_mass_of_phase(xmlout, phase_name="Fluid")
 
@@ -656,7 +651,6 @@ class MagmaSat(model_classes.Model):
                 self.melts.set_bulk_composition(bulk_comp)
 
                 output = self.melts.equilibrate_tp(temperature, pressureMPa,
-<<<<<<< Updated upstream
                                                    initialize=True)
                 (status, temperature, pressureMPa, xmlout) = output[0]
                 fluid_mass = self.melts.get_mass_of_phase(xmlout,
@@ -673,9 +667,6 @@ class MagmaSat(model_classes.Model):
 
                 output = self.melts.equilibrate_tp(temperature, pressureMPa,
                                                    initialize=True)
-=======
-                                                       initialize=True)
->>>>>>> Stashed changes
                 (status, temperature, pressureMPa, xmlout) = output[0]
                 fluid_mass = self.melts.get_mass_of_phase(xmlout,
                                                           phase_name="Fluid")
@@ -690,7 +681,6 @@ class MagmaSat(model_classes.Model):
                 if pressureMPa <= 0:
                     break
 
-<<<<<<< Updated upstream
                 # composition needs to be reset for each refinement
                 self.melts.set_bulk_composition(bulk_comp)
 
@@ -699,15 +689,6 @@ class MagmaSat(model_classes.Model):
                 (status, temperature, pressureMPa, xmlout) = output[0]
                 fluid_mass = self.melts.get_mass_of_phase(xmlout,
                                                           phase_name="Fluid")
-=======
-                    # composition needs to be reset for each refinement
-                    self.melts.set_bulk_composition(bulk_comp)
-                    output = self.melts.equilibrate_tp(temperature, pressureMPa,
-                                                       initialize=True)
-                    (status, temperature, pressureMPa, xmlout) = output[0]
-                    fluid_mass = self.melts.get_mass_of_phase(xmlout,
-                                                              phase_name="Fluid")
->>>>>>> Stashed changes
 
             pass
 
@@ -715,22 +696,14 @@ class MagmaSat(model_classes.Model):
             while fluid_mass > 0:
                 pressureMPa += 1
 
-            satP = np.round(satP,  # + pressure_change,
-                            - int(np.log10(pressure_change)) - 2)
+                # composition needs to be reset for each refinement
+                self.melts.set_bulk_composition(bulk_comp)
 
-<<<<<<< Updated upstream
                 output = self.melts.equilibrate_tp(temperature, pressureMPa,
                                                    initialize=True)
                 (status, temperature, pressureMPa, xmlout) = output[0]
                 fluid_mass = self.melts.get_mass_of_phase(xmlout,
                                                           phase_name="Fluid")
-=======
-            output = self.melts.equilibrate_tp(temperature, pressureMPa,
-                                                    initialize=True)
-            (status, temperature, pressureMPa, xmlout) = output[0]
-            fluid_mass = self.melts.get_mass_of_phase(xmlout,
-                                                        phase_name="Fluid")
->>>>>>> Stashed changes
 
         if pressureMPa != np.nan:
             satP = pressureMPa * 10  # convert pressure to bars
@@ -1076,12 +1049,7 @@ class MagmaSat(model_classes.Model):
             fl_mass = 0.0
             self.melts.set_bulk_composition(_sample_dict)
             output = self.melts.equilibrate_tp(temperature, i, initialize=True)
-<<<<<<< Updated upstream
             (status, temp, p, xmlout) = output[0]
-=======
-
-            (status, temperature, p, xmlout) = output[0]
->>>>>>> Stashed changes
             liq_comp = self.melts.get_composition_of_phase(xmlout, phase_name="Liquid")
             fl_comp = self.melts.get_composition_of_phase(xmlout, phase_name="Fluid",
                                                           mode="component")
