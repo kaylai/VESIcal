@@ -55,9 +55,10 @@ docker pull registry.gitlab.com/enki-portal/thermoengine:latest
 	1. ```screen -S <name-of-your-screen>```
 	2. Note: to detach from this screen at any time, press ctrl+a then ctrl+d
 	3. Note: to reattach to this screen at any time, type:
-		1. ```screen -r <name-of-your-screen>```
-2. In your screen, run the docker image and give it a name:
-	1. ```docker run --name <some-container-name> --user root -it --rm registry.gitlab.com/enki-portal/thermoengine:latest bash```
+		1. You can see names of screens with `screen -ls`
+		2. ```screen -r <name-of-your-screen>```
+2. In your screen, run the docker image and give it a name. Here we use the name 'anvilcontainer':
+	1. ```docker run --name anvilcontainer --user root -it --rm registry.gitlab.com/enki-portal/thermoengine:latest bash```
 3. In the docker container, clone the VESIcal repository as:
 	1. ```git clone https://github.com/kaylai/VESIcal.git```
 4. In the docker container, install the anvil server library and VESIcal:
@@ -71,7 +72,7 @@ docker pull registry.gitlab.com/enki-portal/thermoengine:latest
 	1. nano launch_anvil_server.sh
 	2. Note: to save your file in nano use ctrl+o and then enter to confirm file name
 	3. Note: to exit nano use ctrl+x
-2. In that file put the following:
+2. In that file put the following (here we use the container name anvilcontainer. You must use the name of the container that you created above):
 ```
 #!/bin/bash
 truncate -s 0 cronfile.log
@@ -80,11 +81,11 @@ if pgrep -f "python anvil_server.py" &>/dev/null; then
         echo "it is running"
 else
         echo "starting anvil server anew"
-        docker exec -i -w /app/VESIcal <some-container-name> python anvil_server.py
+        docker exec -i -w /app/VESIcal anvilcontainer python anvil_server.py
 fi
 ```
 
-4. Note: "/app/VESIcal" is the path to the folder VESIcal cloned from the github repo (that lives inside the docker container). In the case of the thermoengine docker, you live in the /app folder, so the path is /app/VESIcal.
+4. Note: "/app/VESIcal" is the path to the folder VESIcal cloned from the github repo (that lives inside the docker container). In the case of the thermoengine docker, you live in the /app folder, so the path is /app/VESIcal. You'll be able to see the /app folder if you are inside of the running docker container that you created, which should be named anvilcontainer. Do `docker ps` to see containers. Names are shown on the far right.
 
 # 5. Create a cron job to run your bash script every minute
 1. Open up your crontab for editing with:
