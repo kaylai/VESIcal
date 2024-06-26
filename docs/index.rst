@@ -8,12 +8,14 @@ Installation
 ------------
 See the :doc:`install` section for detailed instructions and dependencies.
 
+Ways to use VESIcal
+^^^^^^^^^^^^^^^^^^^
 In general, VESIcal can be accessed and used in a variety of ways. From most flexible (advanced) to least flexible (novice), these are:
 
 - local installation of the VESIcal library (get the full VESIcal experience)
 - through the ENKI server (http://enki-portal.org/ recommended for most users)
 - through a jupyter notebook version of the VESIcal manuscript (https://mybinder.org/v2/gh/kaylai/vesical-binder/HEAD?filepath=Manuscript.ipynb)
-- via the web-app (https://vesical.anvil.app/)
+- via the web app (https://vesical.anvil.app/). The web app sometimes crashes. If so, it should restart within 1 minute. If it does not, please email kayla.iacovino at nasa dot gov!
 
 Local installation
 ^^^^^^^^^^^^^^^^^^
