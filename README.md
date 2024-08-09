@@ -12,7 +12,8 @@ Check here first for all your VESIcal questions! And be sure to read the manuscr
 
 ### Interactive versions of manuscripts
 
-   - Direct link to interactive VESIcal Part I manuscript: [![Manuscript on Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/kaylai/vesical-binder/HEAD?filepath=Manuscript.ipynb)
+   - Curvenote/AGU Notebooks Now! implementation of VESIcal Part I manuscript: [Manuscript on Curvenote](https://agu.curve.space/articles/NN0001)
+   - Direct link to interactive jupyter notebook version of VESIcal Part I manuscript: [Manuscript on Binder](https://agu-binder.curvenote.dev/user/2be900e9-fb5d-4-9778d16a48c.zip-4wrcztow/lab/tree/Manuscript.ipynb?token=EzBUfh6US4qFq4UW0MSkYA)
    - Jupyter Notebook hub with VESIcal: [![Manuscript on Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/kaylai/vesical-binder/HEAD)
 
 ### PDF versions of manuscripts
@@ -27,7 +28,7 @@ In general, VESIcal can be accessed and used in a variety of ways. From most fle
 
    - local installation of the VESIcal library
    - through the ENKI server (recommended for most users)
-   - through a [jupyter notebook version of the VESIcal manuscript](https://mybinder.org/v2/gh/kaylai/vesical-binder/HEAD?filepath=Manuscript.ipynb).
+   - through a [jupyter notebook version of the VESIcal manuscript](https://agu-binder.curvenote.dev/user/2be900e9-fb5d-4-9778d16a48c.zip-4wrcztow/lab/tree/Manuscript.ipynb?token=EzBUfh6US4qFq4UW0MSkYA).
    - via the web-app [https://vesical.anvil.app/](https://vesical.anvil.app/)
 
 ### VESIcal on the ENKI server
