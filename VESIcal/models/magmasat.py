@@ -197,7 +197,7 @@ class MagmaSat(model_classes.Model):
 
         equil = self._setup_equilibrate()
         state = equil.execute(T, P, bulk_comp=mol_elems,
-                                         stats=True, debug=0)
+                                         stats=False, debug=0)
         
         
         magma_comp = state.compositions(phase_name='Liquid', ctype='oxides', units='wt%')
