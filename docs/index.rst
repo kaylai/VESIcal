@@ -1,8 +1,22 @@
-##################
-VESIcal Quickstart
-##################
-
 .. image:: img/header_transparent.png
+
+################
+What is VESIcal?
+################
+
+VESIcal is a framework for thermodynamic modeling of magmatic volatiles written in Python. As such, VESIcal provides a standard way to interact with multiple (currrently seven) published volatile solubility models. This allows a user to:
+- Run automatic caluclations on large datasets
+- Easily compare models using their own data
+- Interrogate choices made by model authors
+- Transform geochemical data (silicate liquids and H-O-C fluids): convert between units, normalize compositions
+- Make plots like isobar diagrams and degassing paths
+
+Some Common Use Cases
+---------------------
+- Calculate pressures from melt inclusions
+- Calculate and plot magma degassing paths
+- Calculate equilibrium state of liquid-vapor system
+- Calculate the density and viscosity of silicate liquids
 
 Installation
 ------------
@@ -14,8 +28,8 @@ In general, VESIcal can be accessed and used in a variety of ways. From most fle
 
 - local installation of the VESIcal library (get the full VESIcal experience)
 - through the ENKI server (http://enki-portal.org/ recommended for most users)
-- through a `jupyter notebook version of the VESIcal manuscript <https://agu-binder.curvenote.dev/user/2be900e9-fb5d-4-9778d16a48c.zip-4wrcztow/lab/tree/Manuscript.ipynb?token=EzBUfh6US4qFq4UW0MSkYA>`_
-- via the web app (https://vesical.anvil.app/). The web app sometimes crashes. If so, it should restart within 1 minute. If it does not, please email kayla.iacovino at nasa dot gov!
+- through a jupyter notebook version of the VESIcal manuscript (https://mybinder.org/v2/gh/kaylai/vesical-binder/HEAD?filepath=Manuscript.ipynb)
+- via the web-app (https://vesical.anvil.app/)
 
 Local installation
 ^^^^^^^^^^^^^^^^^^
@@ -81,20 +95,36 @@ Indices and tables
 * :ref:`search`
 
 .. toctree::
-    :maxdepth: 2
-    :caption: Contents:
+   :maxdepth: 2
+   :caption: Getting Started
+   install
+   models
 
-    install
-    changelog
-    about
-    models
+.. toctree::
+    :maxdepth: 2
+    :caption: Tutorials
+
     quick_tutorials
     tutorials
     advanced_tutorials
     youtube
     integration
-    workshops
+
+.. toctree::
+    :maxdepth: 2
+    :caption: Reference
+
     codedoc
     faq
+    changelog
+    about
     support
     license
+
+.. toctree::
+    :maxdepth: 2
+    :caption: Community Resources
+
+    workshops
+    GitHub Repo <https://github.com/kaylai/VESIcal>
+    Link Tree <https://linktr.ee/VESIcal>
