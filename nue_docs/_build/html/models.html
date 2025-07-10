@@ -1,0 +1,257 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Models in VESIcal &mdash; VESIcal 1.2.6 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=77553476" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=010db75e"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Integration with Thermobar" href="integration.html" />
+    <link rel="prev" title="About VESIcal" href="about.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">ChangeLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About VESIcal</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Models in VESIcal</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#vesical-recognized-models">VESIcal Recognized Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#model-calibrations">Model Calibrations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#choosing-a-model">Choosing a Model</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#VESIcal.calib_plot"><code class="docutils literal notranslate"><span class="pre">calib_plot()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="integration.html">Integration with Thermobar</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workshops.html">Workshops and Presentations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="codedoc.html">VESIcal Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ’s</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support.html">Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">MIT Licence</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">ChangeLog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">VESIcal</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Models in VESIcal</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/models.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="models-in-vesical">
+<h1><a class="toc-backref" href="#id1" role="doc-backlink">Models in VESIcal</a><a class="headerlink" href="#models-in-vesical" title="Link to this heading"></a></h1>
+<nav class="contents" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#models-in-vesical" id="id1">Models in VESIcal</a></p>
+<ul>
+<li><p><a class="reference internal" href="#vesical-recognized-models" id="id2">VESIcal Recognized Models</a></p></li>
+<li><p><a class="reference internal" href="#model-calibrations" id="id3">Model Calibrations</a></p></li>
+<li><p><a class="reference internal" href="#choosing-a-model" id="id4">Choosing a Model</a></p></li>
+</ul>
+</li>
+</ul>
+</nav>
+<section id="vesical-recognized-models">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">VESIcal Recognized Models</a><a class="headerlink" href="#vesical-recognized-models" title="Link to this heading"></a></h2>
+<p>Models included in VESIcal are:</p>
+<p><strong>1. MagmaSat:</strong> VESIcal’s default model. The mixed-volatile solubility model within MELTS v. 1.2.0 (Ghiorso and Gualda, 2015)</p>
+<p><strong>2. Dixon:</strong> The simplification of the Dixon (1997) model as implemented in VolatileCalc (Newman and Lowenstern, 2002)</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>DixonWater and DixonCarbon are available as pure-fluid models</p></li>
+</ul>
+</div></blockquote>
+<p><strong>3. MooreWater:</strong> (Moore et al. 1998; water only, but H2O fluid concentration can be specified)</p>
+<p><strong>4. Liu:</strong> (Liu et al., 2005)</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>LiuWater and LiuCarbon are available as pure-fluid models</p></li>
+</ul>
+</div></blockquote>
+<p><strong>5. IaconoMarziano:</strong> (Iacono-Marziano et al., 2012)</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>IaconoMarzianoWater and IaconoMarzianoCarbon are available as pure-fluid models</p></li>
+</ul>
+</div></blockquote>
+<p><strong>6. ShishkinaIdealMixing:</strong> (Shishkina et al., 2014) using pure-H2O and pure-CO2 models and assuming ideal mixing. In general, the pure-fluid versions of this model should be used.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>ShishkinaWater and ShishkinaCarbon are available as pure-fluid models</p></li>
+</ul>
+</div></blockquote>
+<p><strong>7. AllisonCarbon:</strong> (Allison et al. 2019, carbon only). The Vesuvius calibraiton is used by default. For other AllisonCarbon model calibrations pass the argument <cite>model_loc</cite> as a string (can be one of ‘vesuvius’, ‘sunset’, ‘sfvf’, ‘erebus’, ‘etna’, or ‘stromboli’). In the manuscript, Allison et al. describe both thermodynamic and power-law fits to their data. The thermodynamic fit is used by default, but you can choose to use their power fits by passing the <cite>model_fit</cite> argument as a string (can be either ‘thermodynamic’ or ‘power’).</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>AllisonCarbon vesuvius (default; phonotephrite from Vesuvius, Italy)</p></li>
+<li><p>AllisonCarbon sunset (alkali basalt from Sunset Crater, AZ, USA)</p></li>
+<li><p>AllisonCarbon sfvf (basaltic andesite from San Francisco Volcanic Field, AZ, USA)</p></li>
+<li><p>AllisonCarbon erebus (phonotephrite from Erebus, Antarctica)</p></li>
+<li><p>AllisonCarbon etna (trachybasalt from Etna, Italy)</p></li>
+<li><p>AllisonCarbon stromboli (trachybasalt from Stromboli, Italy)</p></li>
+</ul>
+</div></blockquote>
+<p>A list of model names recognized by VESIcal can be retrieved by executing the command <cite>v.get_model_names()</cite>, assuming VESIcal has been imported as <cite>v</cite>. Note that the above model names are given in terms of how to call them within VESIcal (e.g., model=’MooreWater’). Allison et al. (2019) provides unique model equations for each of the six alkali-rich mafic magmas investigated in their study. The default model in VESIcal is that calibrated for Vesuvius magmas, whose calibration has the widest pressure range of the study. Setting a model name of ‘AllisonCarbon’ within VESIcal will
+thus result in calculations using the AllisonCarbon vesuvius model equations.</p>
+</section>
+<section id="model-calibrations">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Model Calibrations</a><a class="headerlink" href="#model-calibrations" title="Link to this heading"></a></h2>
+<img alt="_images/Table1.png" src="_images/Table1.png" />
+<img alt="_images/Figure1.png" src="_images/Figure1.png" />
+</section>
+<section id="choosing-a-model">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Choosing a Model</a><a class="headerlink" href="#choosing-a-model" title="Link to this heading"></a></h2>
+<p>Comparing User Data to Model Calibrations: Which Model Should I Use?</p>
+<p>MagmaSat is the default model in VESIcal. It is the most thermodynamically robust model implemented in VESIcal, and thus it is the most generally appropriate model to use (n.b. that it is also the most computationally expensive). However, one of the strengths of VESIcal is its ability to utilize up to seven different solubility models. Each of these models is based on its own calibration dataset, meaning the pressure-temperature-composition space over which models are calibrated is quite variable from model to model. The individual model calibrations are discussed in detail in this manuscript’s companion paper (Wieser et al., in prep).</p>
+<p>To use any VESIcal model, simply add ‘model=’ and the name of the desired model in quotes to any calculation (e.g., <cite>v.calculate_dissolved_volatiles(temperature=900, pressure=1000, model=”Dixon”)</cite>). The model argument is not neccessary to use MagmaSat, since it is the default. The model names recognized by VESIcal are: MagmaSat, ShishkinaIdealMixing, Dixon, IaconoMarziano, Liu, AllisonCarbon, and MooreWater. For more advanced use cases such as hybridizing models, pure-H2O and pure-CO2 models from within a mixed-fluid model can be used by adding ‘Water’ or ‘Carbon’ to the model name (e.g., DixonCarbon; note that MagmaSat does not have this functionality).</p>
+<p>Determination of the appropriate model to use with any sample is crucial to the correct application of these models, and so we stress the importance of understanding how a model’s calibration space relates to the sample at hand. VESIcal
+includes some built-in functionality for comparing melt compositions from user loaded data to those in the datasets upon which each of the VESIcal models is calibrated using the method calib_plot. This can be visualized as a total alkalis vs silica (TAS) diagram or as any x-y plot in which x and y are oxides.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="VESIcal.calib_plot">
+<span class="sig-prename descclassname"><span class="pre">VESIcal.</span></span><span class="sig-name descname"><span class="pre">calib_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/VESIcal.html#calib_plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#VESIcal.calib_plot" title="Link to this definition"></a></dt>
+<dd><p>Plots user data and calibration set of any or all models on any x-y plot
+or a total alkalis vs silica (TAS) diagram. TAS diagram boundaries
+provided by tasplot python module, copyright John A Stevenson.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>user_data</strong> (<em>BatchFile object, Sample object, pandas DataFrame, pandas Series,</em>) – or dict.
+OPTIONAL. Default value is None, in which case only the model
+calibration set is plotted. User provided sample data describing the
+oxide composition of one or more samples. Multiple samples can be
+passed as an BatchFile object or pandas DataFrame. A single sample can
+be passed as a pandas Series.</p></li>
+<li><p><strong>model</strong> (<em>str or list</em>) – OPTIONAL. Default value is ‘all’, in which case all model calibration
+datasets will be plotted. ‘Mixed’ can be used to plot all mixed fluid
+models. String of the name of the model calibration dataset to plot
+(e.g., ‘Shishkina’). Multiple models can be plotted by passing them as
+strings within a list (e.g., [‘Shishkina’, ‘Dixon’]).</p></li>
+<li><p><strong>plot_type</strong> (<em>str</em>) – OPTIONAL. Default value is ‘TAS’, which returns a total alkali vs
+silica (TAS) diagram. Any two oxides can be plotted as an x-y plot by
+setting plot_type=’xy’ and specifying x- and y-axis oxides, e.g.,
+x=’SiO2’, y=’Al2O3’.</p></li>
+<li><p><strong>zoom</strong> (<em>str or list</em>) – OPTIONAL. Default value is None in which case axes will be set to the
+default of 35&lt;x&lt;100 wt% and 0&lt;y&lt;25 wt% for TAS type plots and the best
+values to show the data for xy type plots. Can pass “user_data” to
+plot the figure where the x and y axes are scaled down to zoom in and
+only show the region surrounding the user_data. A list of tuples may
+be passed to manually specify x and y limits. Pass in data as
+[(x_min, x_max), (y_min, y_max)]. For example, the default limits here
+would be passed in as [(35,100), (0,25)].</p></li>
+<li><p><strong>figsize</strong> (<em>tuple</em>) – OPTIONAL. Default value is (17,8). Sets the matplotlib.pyplot figsize
+value as (x_dimension, y_dimension).</p></li>
+<li><p><strong>legend</strong> (<em>bool</em>) – OPTIONAL. Default value is True. Can be set to False in which case the
+legend will not be displayed.</p></li>
+<li><p><strong>save_fig</strong> (<em>False or str</em>) – OPTIONAL. Default value is False, in which case the figure will not be
+saved. If a string is passed, the figure will be saved with the string
+as the filename. The string must include the file extension.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>matplotlib object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Here is an example of the calib_plot function in action. Below we plot the calibration plot along with some data previously loaded from an ExcelFile (named myfile). You can also call <cite>calib_plot()</cite> with no arguments to generate the plot with only the calibration data shown:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">calib_plot</span><span class="p">(</span><span class="n">user_data</span><span class="o">=</span><span class="n">myfile</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="_images/calibplot_wdata.png" src="_images/calibplot_wdata.png" />
+<p>You can also generate an x-y plot for any oxides in the calibration database (and/or in your data). Here is an example showing our own loaded up data compared to the IaconoMarziano model database in SiO2-K2O space:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">calib_plot</span><span class="p">(</span><span class="n">user_data</span><span class="o">=</span><span class="n">myfile</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s1">&#39;IaconoMarziano&#39;</span><span class="p">,</span> <span class="n">plot_type</span><span class="o">=</span><span class="s1">&#39;xy&#39;</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s1">&#39;SiO2&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s1">&#39;K2O&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="_images/xycalib_wdata.png" src="_images/xycalib_wdata.png" />
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="about.html" class="btn btn-neutral float-left" title="About VESIcal" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="integration.html" class="btn btn-neutral float-right" title="Integration with Thermobar" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Kayla Iacovino and Simon Matthews.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

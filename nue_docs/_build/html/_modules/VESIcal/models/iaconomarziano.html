@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VESIcal.models.iaconomarziano &mdash; VESIcal 1.1.1 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html">
+            <img src="../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">ChangeLog: What’s new in v 1.2?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../about.html">About VESIcal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../models.html">Models in VESIcal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quick_tutorials.html">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Verbose Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../advanced_tutorials.html">Advanced Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../youtube.html">YouTube Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../integration.html">Integration with Thermobar</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../workshops.html">Workshops and Presentations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../codedoc.html">VESIcal Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../faq.html">FAQ’s</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../support.html">Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">MIT Licence</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">VESIcal</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+          <li><a href="../../VESIcal.html">VESIcal</a> &raquo;</li>
+      <li>VESIcal.models.iaconomarziano</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for VESIcal.models.iaconomarziano</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">VESIcal</span> <span class="kn">import</span> <span class="n">activity_models</span>
+<span class="kn">from</span> <span class="nn">VESIcal</span> <span class="kn">import</span> <span class="n">calibration_checks</span>
+<span class="kn">from</span> <span class="nn">VESIcal</span> <span class="kn">import</span> <span class="n">core</span>
+<span class="kn">from</span> <span class="nn">VESIcal</span> <span class="kn">import</span> <span class="n">fugacity_models</span>
+<span class="kn">from</span> <span class="nn">VESIcal</span> <span class="kn">import</span> <span class="n">model_classes</span>
+<span class="kn">from</span> <span class="nn">VESIcal</span> <span class="kn">import</span> <span class="n">sample_class</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">root_scalar</span>
+<span class="kn">import</span> <span class="nn">warnings</span> <span class="k">as</span> <span class="nn">w</span>
+
+
+<div class="viewcode-block" id="water"><a class="viewcode-back" href="../../../codedoc.html#VESIcal.models.iaconomarziano.water">[docs]</a><span class="k">class</span> <span class="nc">water</span><span class="p">(</span><span class="n">model_classes</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Implementation of the Iacono-Marziano et al. (2012) water solubility model, as a Model class.</span>
+<span class="sd">    Three calibrations are provided- the one incorporating the H2O content as a parameter</span>
+<span class="sd">    (hydrous), and the one that does not (anhydrous), in addition to the coefficient values given</span>
+<span class="sd">    incorrect and do not align with the web versions of the model. Which model should be used is</span>
+<span class="sd">    specified when the methods are called. The default choice is the hydrous model.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialise the model.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_volatile_species</span><span class="p">([</span><span class="s1">&#39;H2O&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_fugacity_model</span><span class="p">(</span><span class="n">fugacity_models</span><span class="o">.</span><span class="n">fugacity_idealgas</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_activity_model</span><span class="p">(</span><span class="n">activity_models</span><span class="o">.</span><span class="n">activity_idealsolution</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_calibration_ranges</span><span class="p">([</span>
+            <span class="n">calibration_checks</span><span class="o">.</span><span class="n">CalibrationRange</span><span class="p">(</span>
+                <span class="s1">&#39;temperature&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">1400</span><span class="p">],</span> <span class="n">calibration_checks</span><span class="o">.</span><span class="n">crf_Between</span><span class="p">,</span> <span class="s1">&#39;oC&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;IaconoMarzianoWater&#39;</span><span class="p">,</span>
+                <span class="n">fail_msg</span><span class="o">=</span><span class="n">crmsg_BC_T</span><span class="p">,</span>
+                <span class="n">pass_msg</span><span class="o">=</span><span class="n">calibration_checks</span><span class="o">.</span><span class="n">crmsg_Between_pass</span><span class="p">,</span>
+                <span class="n">description_msg</span><span class="o">=</span><span class="n">calibration_checks</span><span class="o">.</span><span class="n">crmsg_Between_description</span><span class="p">),</span>
+            <span class="n">calibration_checks</span><span class="o">.</span><span class="n">CalibrationRange</span><span class="p">(</span>
+                <span class="s1">&#39;pressure&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">10000</span><span class="p">],</span> <span class="n">calibration_checks</span><span class="o">.</span><span class="n">crf_Between</span><span class="p">,</span> <span class="s1">&#39;bars&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;IaconoMarzianoWater&#39;</span><span class="p">,</span>
+                <span class="n">fail_msg</span><span class="o">=</span><span class="n">crmsg_BC_P</span><span class="p">,</span>
+                <span class="n">pass_msg</span><span class="o">=</span><span class="n">calibration_checks</span><span class="o">.</span><span class="n">crmsg_Between_pass</span><span class="p">,</span>
+                <span class="n">description_msg</span><span class="o">=</span><span class="n">calibration_checks</span><span class="o">.</span><span class="n">crmsg_Between_description</span><span class="p">)])</span>
+        <span class="c1"># Not dependent on CO2 conc, H2O dependence dealt with within model.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_solubility_dependence</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># The oxide masses used in the IM webapp.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">IM_oxideMasses</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Al2O3&#39;</span><span class="p">:</span> <span class="mf">101.96</span><span class="p">,</span>
+                               <span class="s1">&#39;CaO&#39;</span><span class="p">:</span>    <span class="mf">56.08</span><span class="p">,</span>
+                               <span class="s1">&#39;FeO&#39;</span><span class="p">:</span>    <span class="mf">71.85</span><span class="p">,</span>
+                               <span class="s1">&#39;K2O&#39;</span><span class="p">:</span>    <span class="mf">94.2</span><span class="p">,</span>
+                               <span class="s1">&#39;MgO&#39;</span><span class="p">:</span>    <span class="mf">40.32</span><span class="p">,</span>
+                               <span class="s1">&#39;Na2O&#39;</span><span class="p">:</span>   <span class="mf">61.98</span><span class="p">,</span>
+                               <span class="s1">&#39;SiO2&#39;</span><span class="p">:</span>   <span class="mf">60.09</span><span class="p">,</span>
+                               <span class="s1">&#39;TiO2&#39;</span><span class="p">:</span>   <span class="mf">79.9</span><span class="p">,</span>
+                               <span class="s1">&#39;H2O&#39;</span><span class="p">:</span>    <span class="mf">18.01</span><span class="p">}</span>
+
+<div class="viewcode-block" id="water.calculate_dissolved_volatiles"><a class="viewcode-back" href="../../../codedoc.html#VESIcal.models.iaconomarziano.water.calculate_dissolved_volatiles">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_dissolved_volatiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pressure</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span> <span class="n">X_fluid</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                                      <span class="n">coeffs</span><span class="o">=</span><span class="s1">&#39;webapp&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates the dissolved H2O concentration, using Eq (13) of Iacono-Marziano et al. (2012).</span>
+<span class="sd">        If using the hydrous parameterization, it will use the scipy.root_scalar routine to find</span>
+<span class="sd">        the root of the root_dissolved_volatiles method.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pressure    float</span>
+<span class="sd">            Total pressure in bars.</span>
+<span class="sd">        temperature     float</span>
+<span class="sd">            Temperature in C</span>
+<span class="sd">        sample     pandas Series or dict</span>
+<span class="sd">            Major element oxides in wt%.</span>
+<span class="sd">        X_fluid      float</span>
+<span class="sd">            Mole fraction of H2O in the fluid. Default is 1.0.</span>
+<span class="sd">        coeffs  str</span>
+<span class="sd">            Which set of coefficients should be used in the calculations:</span>
+<span class="sd">            - &#39;webapp&#39; (default) for the hydrous NBO/O parameterisation coefficients used in</span>
+<span class="sd">              the Iacono-Marziano webapp.</span>
+<span class="sd">            - &#39;manuscript&#39; for the hydrous NBO/O parameterisation coefficients given in the</span>
+<span class="sd">              Iacono-Marziano et al. (2012) manuscript, but were incorrect (pers.comm.).</span>
+<span class="sd">            - &#39;anhydrous&#39; for the anhydrous NBO/O parameterisation coefficients given in the</span>
+<span class="sd">              Iacono-Marziano et al. (2012) manuscript.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Dissolved H2O concentration in wt%.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">coeffs</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;webapp&#39;</span><span class="p">,</span> <span class="s1">&#39;manuscript&#39;</span><span class="p">,</span> <span class="s1">&#39;anhydrous&#39;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;The coeffs argument must be one of &#39;webapp&#39;, &#39;manuscript&#39;, &quot;</span>
+                                  <span class="s2">&quot;or &#39;anhydrous&#39;&quot;</span><span class="p">)</span>
+
+        <span class="n">temperature</span> <span class="o">=</span> <span class="n">temperature</span> <span class="o">+</span> <span class="mf">273.15</span>  <span class="c1"># translate T from C to K</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sample</span><span class="p">,</span> <span class="n">sample_class</span><span class="o">.</span><span class="n">Sample</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;Sample must be an instance of the Sample class.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pressure</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;Pressure must be positive.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">X_fluid</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">X_fluid</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;X_fluid must have a value between 0 and 1.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">pressure</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="n">coeffs</span> <span class="o">==</span> <span class="s1">&#39;webapp&#39;</span> <span class="ow">or</span> <span class="n">coeffs</span> <span class="o">==</span> <span class="s1">&#39;manuscript&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">X_fluid</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="mi">0</span>
+            <span class="n">H2O</span> <span class="o">=</span> <span class="n">root_scalar</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">root_dissolved_volatiles</span><span class="p">,</span>
+                <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">pressure</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span> <span class="n">X_fluid</span><span class="p">,</span> <span class="n">coeffs</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">),</span>
+                <span class="n">x0</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">x1</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span><span class="o">.</span><span class="n">root</span>
+            <span class="k">return</span> <span class="n">H2O</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="mf">0.54</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="mf">1.24</span>
+            <span class="n">B</span> <span class="o">=</span> <span class="o">-</span><span class="mf">2.95</span>
+            <span class="n">C</span> <span class="o">=</span> <span class="mf">0.02</span>
+
+            <span class="n">fugacity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fugacity_model</span><span class="o">.</span><span class="n">fugacity</span><span class="p">(</span><span class="n">pressure</span><span class="o">=</span><span class="n">pressure</span><span class="p">,</span> <span class="n">X_fluid</span><span class="o">=</span><span class="n">X_fluid</span><span class="p">,</span>
+                                                    <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="o">-</span><span class="mf">273.15</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">fugacity</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="mi">0</span>
+            <span class="n">NBO_O</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">NBO_O</span><span class="p">(</span><span class="n">sample</span><span class="o">=</span><span class="n">sample</span><span class="p">,</span> <span class="n">coeffs</span><span class="o">=</span><span class="n">coeffs</span><span class="p">)</span>
+
+            <span class="n">H2O</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">fugacity</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">NBO_O</span> <span class="o">+</span> <span class="n">B</span> <span class="o">+</span> <span class="n">C</span><span class="o">*</span><span class="n">pressure</span><span class="o">/</span><span class="n">temperature</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">H2O</span></div>
+
+<div class="viewcode-block" id="water.calculate_equilibrium_fluid_comp"><a class="viewcode-back" href="../../../codedoc.html#VESIcal.models.iaconomarziano.water.calculate_equilibrium_fluid_comp">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_equilibrium_fluid_comp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pressure</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns 1.0 if a pure H2O fluid is saturated. Returns 0.0 if a pure H2O fluid is</span>
+<span class="sd">        undersaturated.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pressure     float</span>
+<span class="sd">            The total pressure of the system in bars.</span>
+<span class="sd">        temperature     float</span>
+<span class="sd">            The temperature of the system in C.</span>
+<span class="sd">        sample         pandas Series or dict</span>
+<span class="sd">            Major element oxides in wt% (including H2O).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            1.0 if H2O-fluid saturated, 0.0 otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">pressure</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_saturation_pressure</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span>
+                                                         <span class="n">sample</span><span class="o">=</span><span class="n">sample</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">1.0</span></div>
+
+<div class="viewcode-block" id="water.calculate_saturation_pressure"><a class="viewcode-back" href="../../../codedoc.html#VESIcal.models.iaconomarziano.water.calculate_saturation_pressure">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_saturation_pressure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates the pressure at which a pure H2O fluid is saturated, for the given sample</span>
+<span class="sd">        composition and H2O concentration. Calls the scipy.root_scalar routine, which makes</span>
+<span class="sd">        repeated called to the calculate_dissolved_volatiles method.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        temperature     float</span>
+<span class="sd">            The temperature of the system in C.</span>
+<span class="sd">        sample         pandas Series or dict</span>
+<span class="sd">            Major element oxides in wt% (including H2O).</span>
+<span class="sd">        X_fluid     float</span>
+<span class="sd">            The mole fraction of H2O in the fluid. Default is 1.0.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Calculated saturation pressure in bars.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sample</span><span class="p">,</span> <span class="n">sample_class</span><span class="o">.</span><span class="n">Sample</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;Sample must be an instance of the Sample class.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sample</span><span class="o">.</span><span class="n">check_oxide</span><span class="p">(</span><span class="s1">&#39;H2O&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;sample must contain H2O.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sample</span><span class="o">.</span><span class="n">get_composition</span><span class="p">(</span><span class="s1">&#39;H2O&#39;</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;Dissolved H2O must be greater than 0 wt%.&quot;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Checks whether the upper bound for the numerical solver returns a positive H2O</span>
+            <span class="c1"># concentration, and if it doesn&#39;t, it will progressively decrease the bound until</span>
+            <span class="c1"># it does.</span>
+            <span class="n">upperbound</span> <span class="o">=</span> <span class="mf">1e5</span>
+            <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_dissolved_volatiles</span><span class="p">(</span><span class="n">upperbound</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span>
+                                                     <span class="n">sample</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">upperbound</span> <span class="o">=</span> <span class="n">upperbound</span><span class="o">*</span><span class="mf">0.9</span>
+
+            <span class="n">satP</span> <span class="o">=</span> <span class="n">root_scalar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root_saturation_pressure</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">),</span>
+                               <span class="n">bracket</span><span class="o">=</span><span class="p">[</span><span class="mf">1e-15</span><span class="p">,</span> <span class="n">upperbound</span><span class="p">])</span><span class="o">.</span><span class="n">root</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">w</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Saturation pressure not found.&quot;</span><span class="p">,</span> <span class="ne">RuntimeWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">satP</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="k">return</span> <span class="n">satP</span></div>
+
+<div class="viewcode-block" id="water.root_saturation_pressure"><a class="viewcode-back" href="../../../codedoc.html#VESIcal.models.iaconomarziano.water.root_saturation_pressure">[docs]</a>    <span class="k">def</span> <span class="nf">root_saturation_pressure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pressure</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Function called by scipy.root_scalar when finding the saturation pressure using</span>
+<span class="sd">        calculate_saturation_pressure.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pressure     float</span>
+<span class="sd">            Pressure guess in bars</span>
+<span class="sd">        temperature     float</span>
+<span class="sd">            The temperature of the system in C.</span>
+<span class="sd">        sample         pandas Series or dict</span>
+<span class="sd">            Major elements in wt% (normalized to 100%), including H2O.</span>
+<span class="sd">        kwargs         dictionary</span>
+<span class="sd">            Additional keyword arguments supplied to calculate_saturation_pressure. Might be</span>
+<span class="sd">            required for the fugacity or activity models.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            The differece between the dissolved H2O at the pressure guessed, and the H2O</span>
+<span class="sd">            concentration passed in the sample variable.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">get_composition</span><span class="p">(</span><span class="s1">&#39;H2O&#39;</span><span class="p">)</span> <span class="o">-</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">calculate_dissolved_volatiles</span><span class="p">(</span><span class="n">pressure</span><span class="o">=</span><span class="n">pressure</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span>
+                                                   <span class="n">sample</span><span class="o">=</span><span class="n">sample</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="water.root_dissolved_volatiles"><a class="viewcode-back" href="../../../codedoc.html#VESIcal.models.iaconomarziano.water.root_dissolved_volatiles">[docs]</a>    <span class="k">def</span> <span class="nf">root_dissolved_volatiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h2o</span><span class="p">,</span> <span class="n">pressure</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span> <span class="n">X_fluid</span><span class="p">,</span> <span class="n">coeffs</span><span class="p">,</span>
+                                 <span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Function called by calculate_dissolved_volatiles method when the hydrous</span>
+<span class="sd">        parameterization is being used.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        h2o     float</span>
+<span class="sd">            Guess for the H2O concentration in wt%.</span>
+<span class="sd">        pressure     float</span>
+<span class="sd">            Total pressure in bars.</span>
+<span class="sd">        temperature     float</span>
+<span class="sd">            Temperature in K.</span>
+<span class="sd">        sample         pandas Series or dict</span>
+<span class="sd">            Major element oxides in wt%.</span>
+<span class="sd">        X_fluid     float</span>
+<span class="sd">            Mole fraction of H2O in the fluid.</span>
+<span class="sd">        coeffs  str</span>
+<span class="sd">            One of &#39;webapp&#39;,&#39;manuscript&#39;,&#39;anhydrous&#39;.</span>
+<span class="sd">        kwargs     dictionary</span>
+<span class="sd">            Keyword arguments</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Difference between H2O guessed and the H2O calculated.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">coeffs</span> <span class="o">==</span> <span class="s1">&#39;manuscript&#39;</span><span class="p">:</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="mf">0.53</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="mf">2.35</span>
+            <span class="n">B</span> <span class="o">=</span> <span class="o">-</span><span class="mf">3.37</span>
+            <span class="n">C</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.02</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="mf">0.52096846</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="mf">2.11575907</span>
+            <span class="n">B</span> <span class="o">=</span> <span class="o">-</span><span class="mf">3.24443335</span>
+            <span class="n">C</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.02238884</span>
+
+        <span class="n">sample_copy</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">change_composition</span><span class="p">({</span><span class="s1">&#39;H2O&#39;</span><span class="p">:</span> <span class="n">h2o</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">NBO_O</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">NBO_O</span><span class="p">(</span><span class="n">sample</span><span class="o">=</span><span class="n">sample_copy</span><span class="p">,</span> <span class="n">coeffs</span><span class="o">=</span><span class="n">coeffs</span><span class="p">)</span>
+        <span class="n">fugacity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fugacity_model</span><span class="o">.</span><span class="n">fugacity</span><span class="p">(</span><span class="n">pressure</span><span class="o">=</span><span class="n">pressure</span><span class="p">,</span> <span class="n">X_fluid</span><span class="o">=</span><span class="n">X_fluid</span><span class="p">,</span>
+                                                <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span> <span class="o">-</span> <span class="mf">273.15</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">h2o</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">fugacity</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">NBO_O</span> <span class="o">+</span> <span class="n">B</span> <span class="o">+</span> <span class="n">C</span><span class="o">*</span><span class="n">pressure</span><span class="o">/</span><span class="p">(</span><span class="n">temperature</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="water.NBO_O"><a class="viewcode-back" href="../../../codedoc.html#VESIcal.models.iaconomarziano.water.NBO_O">[docs]</a>    <span class="k">def</span> <span class="nf">NBO_O</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span> <span class="n">coeffs</span><span class="o">=</span><span class="s1">&#39;webapp&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates NBO/O according to Appendix A.1. of Iacono-Marziano et al. (2012). NBO/O</span>
+<span class="sd">        is calculated on either a hydrous or anhyrous basis, as set when initialising the</span>
+<span class="sd">        Model class.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sample     pandas Series or dict</span>
+<span class="sd">            Major element oxides in wt% (including H2O if using the hydrous parameterization).</span>
+
+<span class="sd">        coeffs  str</span>
+<span class="sd">            One of:</span>
+<span class="sd">            - &#39;webapp&#39; or &#39;manuscript&#39; to include H2O in NBO/O</span>
+<span class="sd">            - &#39;anhydrous&#39; to exclude H2O from NBO/O</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            NBO/O.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sample</span><span class="p">,</span> <span class="n">sample_class</span><span class="o">.</span><span class="n">Sample</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;Sample must be an instance of the Sample class.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">check_oxide</span><span class="p">(</span><span class="n">ox</span><span class="p">)</span> <span class="k">for</span> <span class="n">ox</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;K2O&#39;</span><span class="p">,</span> <span class="s1">&#39;Na2O&#39;</span><span class="p">,</span> <span class="s1">&#39;CaO&#39;</span><span class="p">,</span> <span class="s1">&#39;MgO&#39;</span><span class="p">,</span>
+                                                 <span class="s1">&#39;FeO&#39;</span><span class="p">,</span> <span class="s1">&#39;Al2O3&#39;</span><span class="p">,</span> <span class="s1">&#39;SiO2&#39;</span><span class="p">,</span> <span class="s1">&#39;TiO2&#39;</span><span class="p">])</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;Sample must contain K2O, Na2O, CaO, MgO, FeO, Al2O3, SiO2, &quot;</span>
+                                  <span class="s2">&quot;and TiO2.&quot;</span><span class="p">)</span>
+
+        <span class="n">X</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">get_composition</span><span class="p">(</span><span class="n">units</span><span class="o">=</span><span class="s1">&#39;mol_oxides&#39;</span><span class="p">,</span> <span class="n">oxide_masses</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">IM_oxideMasses</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s1">&#39;Fe2O3&#39;</span> <span class="ow">in</span> <span class="n">X</span><span class="p">:</span>
+            <span class="n">Fe2O3</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="s1">&#39;Fe2O3&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">Fe2O3</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">NBO</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="s1">&#39;K2O&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">X</span><span class="p">[</span><span class="s1">&#39;Na2O&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">X</span><span class="p">[</span><span class="s1">&#39;CaO&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">X</span><span class="p">[</span><span class="s1">&#39;MgO&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">X</span><span class="p">[</span><span class="s1">&#39;FeO&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">Fe2O3</span> <span class="o">-</span> <span class="n">X</span><span class="p">[</span><span class="s1">&#39;Al2O3&#39;</span><span class="p">])</span>
+        <span class="n">Ox</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">X</span><span class="p">[</span><span class="s1">&#39;SiO2&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">X</span><span class="p">[</span><span class="s1">&#39;TiO2&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">3</span><span class="o">*</span><span class="n">X</span><span class="p">[</span><span class="s1">&#39;Al2O3&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">X</span><span class="p">[</span><span class="s1">&#39;MgO&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">X</span><span class="p">[</span><span class="s1">&#39;FeO&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">Fe2O3</span> <span class="o">+</span>
+              <span class="n">X</span><span class="p">[</span><span class="s1">&#39;CaO&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">X</span><span class="p">[</span><span class="s1">&#39;Na2O&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">X</span><span class="p">[</span><span class="s1">&#39;K2O&#39;</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">coeffs</span> <span class="o">==</span> <span class="s1">&#39;webapp&#39;</span> <span class="ow">or</span> <span class="n">coeffs</span> <span class="o">==</span> <span class="s1">&#39;manuscript&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;H2O&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">X</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;sample must contain H2O if using the hydrous&quot;</span>
+                                      <span class="s2">&quot; parameterization.&quot;</span><span class="p">)</span>
+            <span class="n">NBO</span> <span class="o">=</span> <span class="n">NBO</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">X</span><span class="p">[</span><span class="s1">&#39;H2O&#39;</span><span class="p">]</span>
+            <span class="n">Ox</span> <span class="o">=</span> <span class="n">Ox</span> <span class="o">+</span> <span class="n">X</span><span class="p">[</span><span class="s1">&#39;H2O&#39;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">NBO</span><span class="o">/</span><span class="n">Ox</span></div></div>
+
+
+<div class="viewcode-block" id="carbon"><a class="viewcode-back" href="../../../codedoc.html#VESIcal.models.iaconomarziano.carbon">[docs]</a><span class="k">class</span> <span class="nc">carbon</span><span class="p">(</span><span class="n">model_classes</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Implementation of the Iacono-Marziano et al. (2012) carbon solubility model, as a Model class.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialise the model.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_volatile_species</span><span class="p">([</span><span class="s1">&#39;CO2&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_fugacity_model</span><span class="p">(</span><span class="n">fugacity_models</span><span class="o">.</span><span class="n">fugacity_idealgas</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_activity_model</span><span class="p">(</span><span class="n">activity_models</span><span class="o">.</span><span class="n">activity_idealsolution</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_calibration_ranges</span><span class="p">([</span>
+            <span class="n">calibration_checks</span><span class="o">.</span><span class="n">CalibrationRange</span><span class="p">(</span>
+                <span class="s1">&#39;temperature&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">1400</span><span class="p">],</span> <span class="n">calibration_checks</span><span class="o">.</span><span class="n">crf_Between</span><span class="p">,</span> <span class="s1">&#39;oC&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;IaconoMarzianoCarbon&#39;</span><span class="p">,</span>
+                <span class="n">fail_msg</span><span class="o">=</span><span class="n">crmsg_BC_T</span><span class="p">,</span>
+                <span class="n">pass_msg</span><span class="o">=</span><span class="n">calibration_checks</span><span class="o">.</span><span class="n">crmsg_Between_pass</span><span class="p">,</span>
+                <span class="n">description_msg</span><span class="o">=</span><span class="n">calibration_checks</span><span class="o">.</span><span class="n">crmsg_Between_description</span><span class="p">),</span>
+            <span class="n">calibration_checks</span><span class="o">.</span><span class="n">CalibrationRange</span><span class="p">(</span>
+                <span class="s1">&#39;pressure&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">10000</span><span class="p">],</span> <span class="n">calibration_checks</span><span class="o">.</span><span class="n">crf_Between</span><span class="p">,</span> <span class="s1">&#39;bars&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;IaconoMarzianoCarbon&#39;</span><span class="p">,</span>
+                <span class="n">fail_msg</span><span class="o">=</span><span class="n">crmsg_BC_P</span><span class="p">,</span>
+                <span class="n">pass_msg</span><span class="o">=</span><span class="n">calibration_checks</span><span class="o">.</span><span class="n">crmsg_Between_pass</span><span class="p">,</span>
+                <span class="n">description_msg</span><span class="o">=</span><span class="n">calibration_checks</span><span class="o">.</span><span class="n">crmsg_Between_description</span><span class="p">)])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_solubility_dependence</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># The oxide masses used in the IM webapp.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">IM_oxideMasses</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Al2O3&#39;</span><span class="p">:</span> <span class="mf">101.96</span><span class="p">,</span>
+                               <span class="s1">&#39;CaO&#39;</span><span class="p">:</span>    <span class="mf">56.08</span><span class="p">,</span>
+                               <span class="s1">&#39;FeO&#39;</span><span class="p">:</span>    <span class="mf">71.85</span><span class="p">,</span>
+                               <span class="s1">&#39;K2O&#39;</span><span class="p">:</span>    <span class="mf">94.2</span><span class="p">,</span>
+                               <span class="s1">&#39;MgO&#39;</span><span class="p">:</span>    <span class="mf">40.32</span><span class="p">,</span>
+                               <span class="s1">&#39;Na2O&#39;</span><span class="p">:</span>   <span class="mf">61.98</span><span class="p">,</span>
+                               <span class="s1">&#39;SiO2&#39;</span><span class="p">:</span>   <span class="mf">60.09</span><span class="p">,</span>
+                               <span class="s1">&#39;TiO2&#39;</span><span class="p">:</span>   <span class="mf">79.9</span><span class="p">,</span>
+                               <span class="s1">&#39;H2O&#39;</span><span class="p">:</span>    <span class="mf">18.01</span><span class="p">}</span>
+
+<div class="viewcode-block" id="carbon.calculate_dissolved_volatiles"><a class="viewcode-back" href="../../../codedoc.html#VESIcal.models.iaconomarziano.carbon.calculate_dissolved_volatiles">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_dissolved_volatiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pressure</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span> <span class="n">X_fluid</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                      <span class="n">coeffs</span><span class="o">=</span><span class="s1">&#39;webapp&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates the dissolved CO2 concentration, using Eq (12) of Iacono-Marziano et al. (2012).</span>
+<span class="sd">        If using the hydrous parameterization, it will use the scipy.root_scalar routine to find</span>
+<span class="sd">        the root of the root_dissolved_volatiles method.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pressure    float</span>
+<span class="sd">            Total pressure in bars.</span>
+<span class="sd">        temperature     float</span>
+<span class="sd">            Temperature in C</span>
+<span class="sd">        sample     Sample class</span>
+<span class="sd">            Magma major element composition.</span>
+<span class="sd">        X_fluid      float</span>
+<span class="sd">            Mole fraction of H2O in the fluid. Default is 1.0.</span>
+<span class="sd">        coeffs  str</span>
+<span class="sd">            Which set of coefficients should be used for H2O calculations:</span>
+<span class="sd">            - &#39;webapp&#39; (default) for the hydrous NBO/O parameterisation coefficients used in the</span>
+<span class="sd">              Iacono-Marziano webapp.</span>
+<span class="sd">            - &#39;manuscript&#39; for the hydrous NBO/O parameterisation coefficients given in the</span>
+<span class="sd">              Iacono-Marziano et al. (2012) manuscript.</span>
+<span class="sd">            - &#39;anhydrous&#39; for the anhydrous NBO/O parameterisation coefficients given in the</span>
+<span class="sd">              Iacono-Marziano et al. (2012) manuscript.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Dissolved H2O concentration in wt%.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">coeffs</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;webapp&#39;</span><span class="p">,</span> <span class="s1">&#39;manuscript&#39;</span><span class="p">,</span> <span class="s1">&#39;anhydrous&#39;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;The coeffs argument must be one of &#39;webapp&#39;, &#39;manuscript&#39;, &quot;</span>
+                                  <span class="s2">&quot;or &#39;anhydrous&#39;&quot;</span><span class="p">)</span>
+
+        <span class="n">temperature</span> <span class="o">=</span> <span class="n">temperature</span> <span class="o">+</span> <span class="mf">273.15</span>  <span class="c1"># translate T from C to K</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sample</span><span class="p">,</span> <span class="n">sample_class</span><span class="o">.</span><span class="n">Sample</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;Sample must be an instance of the Sample class.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pressure</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;Pressure must be positive.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">temperature</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;Temperature must be greater than 0K.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">X_fluid</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">X_fluid</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;X_fluid must have a value between 0 and 1.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">pressure</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="n">coeffs</span> <span class="o">==</span> <span class="s1">&#39;webapp&#39;</span> <span class="ow">or</span> <span class="n">coeffs</span> <span class="o">==</span> <span class="s1">&#39;manuscript&#39;</span><span class="p">:</span>
+            <span class="n">im_h2o_model</span> <span class="o">=</span> <span class="n">water</span><span class="p">()</span>
+            <span class="n">h2o</span> <span class="o">=</span> <span class="n">im_h2o_model</span><span class="o">.</span><span class="n">calculate_dissolved_volatiles</span><span class="p">(</span><span class="n">pressure</span><span class="o">=</span><span class="n">pressure</span><span class="p">,</span>
+                                                             <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="o">-</span><span class="mf">273.15</span><span class="p">,</span>
+                                                             <span class="n">sample</span><span class="o">=</span><span class="n">sample</span><span class="p">,</span> <span class="n">X_fluid</span><span class="o">=</span><span class="mi">1</span><span class="o">-</span><span class="n">X_fluid</span><span class="p">,</span>
+                                                             <span class="n">coeffs</span><span class="o">=</span><span class="n">coeffs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+            <span class="n">sample_h2o</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">change_composition</span><span class="p">({</span><span class="s1">&#39;H2O&#39;</span><span class="p">:</span> <span class="n">h2o</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+            <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">16.4</span><span class="p">,</span> <span class="mf">4.4</span><span class="p">,</span> <span class="o">-</span><span class="mf">17.1</span><span class="p">,</span> <span class="mf">22.8</span><span class="p">])</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="mf">1.0</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="mf">17.3</span>
+            <span class="n">B</span> <span class="o">=</span> <span class="o">-</span><span class="mf">6.0</span>
+            <span class="n">C</span> <span class="o">=</span> <span class="mf">0.12</span>
+
+            <span class="n">NBO_O</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">NBO_O</span><span class="p">(</span><span class="n">sample</span><span class="o">=</span><span class="n">sample_h2o</span><span class="p">,</span> <span class="n">coeffs</span><span class="o">=</span><span class="n">coeffs</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">im_h2o_model</span> <span class="o">=</span> <span class="n">water</span><span class="p">()</span>
+            <span class="n">h2o</span> <span class="o">=</span> <span class="n">im_h2o_model</span><span class="o">.</span><span class="n">calculate_dissolved_volatiles</span><span class="p">(</span><span class="n">pressure</span><span class="o">=</span><span class="n">pressure</span><span class="p">,</span>
+                                                             <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="o">-</span><span class="mf">273.15</span><span class="p">,</span>
+                                                             <span class="n">sample</span><span class="o">=</span><span class="n">sample</span><span class="p">,</span> <span class="n">X_fluid</span><span class="o">=</span><span class="mi">1</span><span class="o">-</span><span class="n">X_fluid</span><span class="p">,</span>
+                                                             <span class="n">coeffs</span><span class="o">=</span><span class="n">coeffs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+            <span class="n">sample_h2o</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">change_composition</span><span class="p">({</span><span class="s1">&#39;H2O&#39;</span><span class="p">:</span> <span class="n">h2o</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+            <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">2.3</span><span class="p">,</span> <span class="mf">3.8</span><span class="p">,</span> <span class="o">-</span><span class="mf">16.3</span><span class="p">,</span> <span class="mf">20.1</span><span class="p">])</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="mf">1.0</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="mf">15.8</span>
+            <span class="n">B</span> <span class="o">=</span> <span class="o">-</span><span class="mf">5.3</span>
+            <span class="n">C</span> <span class="o">=</span> <span class="mf">0.14</span>
+
+            <span class="n">NBO_O</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">NBO_O</span><span class="p">(</span><span class="n">sample</span><span class="o">=</span><span class="n">sample</span><span class="p">,</span> <span class="n">coeffs</span><span class="o">=</span><span class="n">coeffs</span><span class="p">)</span>
+
+        <span class="n">fugacity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fugacity_model</span><span class="o">.</span><span class="n">fugacity</span><span class="p">(</span><span class="n">pressure</span><span class="o">=</span><span class="n">pressure</span><span class="p">,</span> <span class="n">X_fluid</span><span class="o">=</span><span class="n">X_fluid</span><span class="p">,</span>
+                                                <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="o">-</span><span class="mf">273.15</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">fugacity</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+
+        <span class="n">molarProps</span> <span class="o">=</span> <span class="n">sample_h2o</span><span class="o">.</span><span class="n">get_composition</span><span class="p">(</span><span class="n">units</span><span class="o">=</span><span class="s1">&#39;mol_oxides&#39;</span><span class="p">,</span>
+                                                <span class="n">oxide_masses</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">IM_oxideMasses</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">ox</span> <span class="ow">in</span> <span class="n">molarProps</span> <span class="k">for</span> <span class="n">ox</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Al2O3&#39;</span><span class="p">,</span> <span class="s1">&#39;CaO&#39;</span><span class="p">,</span> <span class="s1">&#39;K2O&#39;</span><span class="p">,</span> <span class="s1">&#39;Na2O&#39;</span><span class="p">,</span>
+                                           <span class="s1">&#39;FeO&#39;</span><span class="p">,</span> <span class="s1">&#39;MgO&#39;</span><span class="p">,</span> <span class="s1">&#39;Na2O&#39;</span><span class="p">,</span> <span class="s1">&#39;K2O&#39;</span><span class="p">])</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;sample must contain Al2O3, CaO, K2O, Na2O, FeO, MgO, Na2O, &quot;</span>
+                                  <span class="s2">&quot;and K2O.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;Fe2O3&#39;</span> <span class="ow">in</span> <span class="n">molarProps</span><span class="p">:</span>
+            <span class="n">Fe2O3</span> <span class="o">=</span> <span class="n">molarProps</span><span class="p">[</span><span class="s1">&#39;Fe2O3&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">Fe2O3</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s1">&#39;H2O&#39;</span> <span class="ow">in</span> <span class="n">molarProps</span><span class="p">:</span>
+            <span class="n">x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">molarProps</span><span class="p">[</span><span class="s1">&#39;H2O&#39;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">molarProps</span><span class="p">[</span><span class="s1">&#39;Al2O3&#39;</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">molarProps</span><span class="p">[</span><span class="s1">&#39;CaO&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">molarProps</span><span class="p">[</span><span class="s1">&#39;K2O&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">molarProps</span><span class="p">[</span><span class="s1">&#39;Na2O&#39;</span><span class="p">]))</span>
+        <span class="n">x</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">molarProps</span><span class="p">[</span><span class="s1">&#39;FeO&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">Fe2O3</span><span class="o">*</span><span class="mi">2</span><span class="o">+</span><span class="n">molarProps</span><span class="p">[</span><span class="s1">&#39;MgO&#39;</span><span class="p">]))</span>
+        <span class="n">x</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">molarProps</span><span class="p">[</span><span class="s1">&#39;Na2O&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">molarProps</span><span class="p">[</span><span class="s1">&#39;K2O&#39;</span><span class="p">]))</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="n">CO3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">d</span><span class="p">)</span> <span class="o">+</span> <span class="n">a</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">fugacity</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">NBO_O</span> <span class="o">+</span> <span class="n">B</span> <span class="o">+</span> <span class="n">C</span><span class="o">*</span><span class="n">pressure</span><span class="o">/</span><span class="n">temperature</span><span class="p">)</span>
+        <span class="n">CO2</span> <span class="o">=</span> <span class="n">CO3</span><span class="o">/</span><span class="mf">1e4</span>
+
+        <span class="k">return</span> <span class="n">CO2</span></div>
+
+<div class="viewcode-block" id="carbon.calculate_equilibrium_fluid_comp"><a class="viewcode-back" href="../../../codedoc.html#VESIcal.models.iaconomarziano.carbon.calculate_equilibrium_fluid_comp">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_equilibrium_fluid_comp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pressure</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns 1.0 if a pure CO2 fluid is saturated. Returns 0.0 if a pure CO2 fluid is</span>
+<span class="sd">        undersaturated.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pressure     float</span>
+<span class="sd">            The total pressure of the system in bars.</span>
+<span class="sd">        temperature     float</span>
+<span class="sd">            The temperature of the system in C.</span>
+<span class="sd">        sample         Sample class</span>
+<span class="sd">            Magma major element composition (including H2O).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            1.0 if CO2-fluid saturated, 0.0 otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">pressure</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_saturation_pressure</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span> <span class="n">sample</span><span class="o">=</span><span class="n">sample</span><span class="p">,</span>
+                                                         <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">1.0</span></div>
+
+<div class="viewcode-block" id="carbon.calculate_saturation_pressure"><a class="viewcode-back" href="../../../codedoc.html#VESIcal.models.iaconomarziano.carbon.calculate_saturation_pressure">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_saturation_pressure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates the pressure at which a pure CO2 fluid is saturated, for the given sample</span>
+<span class="sd">        composition and CO2 concentration. Calls the scipy.root_scalar routine, which makes</span>
+<span class="sd">        repeated called to the calculate_dissolved_volatiles method.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        temperature     float</span>
+<span class="sd">            The temperature of the system in C.</span>
+<span class="sd">        sample         Sample class</span>
+<span class="sd">            Magma major element composition (including CO2).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Calculated saturation pressure in bars.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">temperature</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;Temperature must be greater than 0K.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sample</span><span class="p">,</span> <span class="n">sample_class</span><span class="o">.</span><span class="n">Sample</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;Sample must be an instance of the Sample class.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sample</span><span class="o">.</span><span class="n">check_oxide</span><span class="p">(</span><span class="s1">&#39;CO2&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;sample must contain CO2&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sample</span><span class="o">.</span><span class="n">get_composition</span><span class="p">(</span><span class="s1">&#39;CO2&#39;</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;Dissolved CO2 must be greater than 0 wt%.&quot;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">satP</span> <span class="o">=</span> <span class="n">root_scalar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root_saturation_pressure</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">),</span>
+                               <span class="n">bracket</span><span class="o">=</span><span class="p">[</span><span class="mf">1e-15</span><span class="p">,</span> <span class="mf">1e5</span><span class="p">])</span><span class="o">.</span><span class="n">root</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">w</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Saturation pressure not found.&quot;</span><span class="p">,</span> <span class="ne">RuntimeWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">satP</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="k">return</span> <span class="n">satP</span></div>
+
+<div class="viewcode-block" id="carbon.root_saturation_pressure"><a class="viewcode-back" href="../../../codedoc.html#VESIcal.models.iaconomarziano.carbon.root_saturation_pressure">[docs]</a>    <span class="k">def</span> <span class="nf">root_saturation_pressure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pressure</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Function called by scipy.root_scalar when finding the saturation pressure using</span>
+<span class="sd">        calculate_saturation_pressure.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pressure     float</span>
+<span class="sd">            Pressure guess in bars</span>
+<span class="sd">        temperature     float</span>
+<span class="sd">            The temperature of the system in C.</span>
+<span class="sd">        sample       Sample class</span>
+<span class="sd">            Magma major element composition, including CO2.</span>
+<span class="sd">        kwargs         dictionary</span>
+<span class="sd">            Additional keyword arguments supplied to calculate_saturation_pressure. Might be</span>
+<span class="sd">            required for the fugacity or activity models.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            The differece between the dissolved CO2 at the pressure guessed, and the CO2</span>
+<span class="sd">            concentration passed in the sample variable.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">get_composition</span><span class="p">(</span><span class="s1">&#39;CO2&#39;</span><span class="p">)</span> <span class="o">-</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">calculate_dissolved_volatiles</span><span class="p">(</span><span class="n">pressure</span><span class="o">=</span><span class="n">pressure</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span>
+                                                   <span class="n">sample</span><span class="o">=</span><span class="n">sample</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="carbon.NBO_O"><a class="viewcode-back" href="../../../codedoc.html#VESIcal.models.iaconomarziano.carbon.NBO_O">[docs]</a>    <span class="k">def</span> <span class="nf">NBO_O</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span> <span class="n">coeffs</span><span class="o">=</span><span class="s1">&#39;webapp&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates NBO/O according to Appendix A.1. of Iacono-Marziano et al. (2012). NBO/O is</span>
+<span class="sd">        calculated on either a hydrous or anhyrous basis, as set when initialising the Model class.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sample     pandas Series or dict</span>
+<span class="sd">            Major element oxides in wt% (including H2O if using the hydrous parameterization).</span>
+
+<span class="sd">        coeffs  str</span>
+<span class="sd">            One of:</span>
+<span class="sd">            - &#39;webapp&#39; or &#39;manuscript&#39; to include H2O in NBO/O</span>
+<span class="sd">            - &#39;anhydrous&#39; to exclude H2O from NBO/O</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            NBO/O.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sample</span><span class="p">,</span> <span class="n">sample_class</span><span class="o">.</span><span class="n">Sample</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;Sample must be an instance of the Sample class.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">check_oxide</span><span class="p">(</span><span class="n">ox</span><span class="p">)</span> <span class="k">for</span> <span class="n">ox</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;K2O&#39;</span><span class="p">,</span> <span class="s1">&#39;Na2O&#39;</span><span class="p">,</span> <span class="s1">&#39;CaO&#39;</span><span class="p">,</span> <span class="s1">&#39;MgO&#39;</span><span class="p">,</span> <span class="s1">&#39;FeO&#39;</span><span class="p">,</span>
+                                                 <span class="s1">&#39;Al2O3&#39;</span><span class="p">,</span> <span class="s1">&#39;SiO2&#39;</span><span class="p">,</span> <span class="s1">&#39;TiO2&#39;</span><span class="p">])</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;sample must contain K2O, Na2O, CaO, MgO, FeO, Al2O3, SiO2, &quot;</span>
+                                  <span class="s2">&quot;and TiO2.&quot;</span><span class="p">)</span>
+
+        <span class="n">X</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">get_composition</span><span class="p">(</span><span class="n">units</span><span class="o">=</span><span class="s1">&#39;mol_oxides&#39;</span><span class="p">,</span> <span class="n">oxide_masses</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">IM_oxideMasses</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s1">&#39;Fe2O3&#39;</span> <span class="ow">in</span> <span class="n">X</span><span class="p">:</span>
+            <span class="n">Fe2O3</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="s1">&#39;Fe2O3&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">Fe2O3</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">NBO</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="s1">&#39;K2O&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">X</span><span class="p">[</span><span class="s1">&#39;Na2O&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">X</span><span class="p">[</span><span class="s1">&#39;CaO&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">X</span><span class="p">[</span><span class="s1">&#39;MgO&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">X</span><span class="p">[</span><span class="s1">&#39;FeO&#39;</span><span class="p">]</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">Fe2O3</span><span class="o">-</span><span class="n">X</span><span class="p">[</span><span class="s1">&#39;Al2O3&#39;</span><span class="p">])</span>
+        <span class="n">Ox</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">X</span><span class="p">[</span><span class="s1">&#39;SiO2&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">X</span><span class="p">[</span><span class="s1">&#39;TiO2&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">3</span><span class="o">*</span><span class="n">X</span><span class="p">[</span><span class="s1">&#39;Al2O3&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">X</span><span class="p">[</span><span class="s1">&#39;MgO&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">X</span><span class="p">[</span><span class="s1">&#39;FeO&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">Fe2O3</span> <span class="o">+</span>
+              <span class="n">X</span><span class="p">[</span><span class="s1">&#39;CaO&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">X</span><span class="p">[</span><span class="s1">&#39;Na2O&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">X</span><span class="p">[</span><span class="s1">&#39;K2O&#39;</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">coeffs</span> <span class="o">==</span> <span class="s1">&#39;webapp&#39;</span> <span class="ow">or</span> <span class="n">coeffs</span> <span class="o">==</span> <span class="s1">&#39;manuscript&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;H2O&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">X</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;sample must contain H2O if using the hydrous &quot;</span>
+                                      <span class="s2">&quot;parameterization.&quot;</span><span class="p">)</span>
+            <span class="n">NBO</span> <span class="o">=</span> <span class="n">NBO</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">X</span><span class="p">[</span><span class="s1">&#39;H2O&#39;</span><span class="p">]</span>
+            <span class="n">Ox</span> <span class="o">=</span> <span class="n">Ox</span> <span class="o">+</span> <span class="n">X</span><span class="p">[</span><span class="s1">&#39;H2O&#39;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">NBO</span><span class="o">/</span><span class="n">Ox</span></div></div>
+
+
+<span class="n">crmsg_BC_T</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="si">{param_name}</span><span class="s2"> (</span><span class="si">{param_val:.1f}</span><span class="s2"> </span><span class="si">{units}</span><span class="s2">) is outside the broad range suggested by &quot;</span>
+              <span class="s2">&quot;Iacono-Marziano (</span><span class="si">{calib_val0:.1f}</span><span class="s2">-</span><span class="si">{calib_val1:.1f}</span><span class="s2"> </span><span class="si">{units}</span><span class="s2">, although they note &quot;</span>
+              <span class="s2">&quot;that this model is best calibrated at 1200-1300C). &quot;</span><span class="p">)</span>
+<span class="c1"># Warning for Iacono-Marziano pressure</span>
+<span class="n">crmsg_BC_P</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="si">{param_name}</span><span class="s2"> (</span><span class="si">{param_val:.1f}</span><span class="s2"> </span><span class="si">{units}</span><span class="s2">) is outside the broad range suggested by &quot;</span>
+              <span class="s2">&quot;Iacono-Marziano (</span><span class="si">{calib_val0:.1f}</span><span class="s2">-</span><span class="si">{calib_val1:.1f}</span><span class="s2"> </span><span class="si">{units}</span><span class="s2">, although most &quot;</span>
+              <span class="s2">&quot;calibration experiments were conducted at &lt;5000 bars).  &quot;</span><span class="p">)</span>
+
+
+<span class="n">mixed</span> <span class="o">=</span> <span class="n">model_classes</span><span class="o">.</span><span class="n">MixedFluid</span><span class="p">({</span><span class="s1">&#39;H2O&#39;</span><span class="p">:</span> <span class="n">water</span><span class="p">(),</span> <span class="s1">&#39;CO2&#39;</span><span class="p">:</span> <span class="n">carbon</span><span class="p">()})</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Kayla Iacovino and Simon Matthews.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VESIcal.models.moore &mdash; VESIcal 1.1.1 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html">
+            <img src="../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">ChangeLog: What’s new in v 1.2?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../about.html">About VESIcal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../models.html">Models in VESIcal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quick_tutorials.html">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Verbose Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../advanced_tutorials.html">Advanced Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../youtube.html">YouTube Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../integration.html">Integration with Thermobar</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../workshops.html">Workshops and Presentations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../codedoc.html">VESIcal Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../faq.html">FAQ’s</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../support.html">Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">MIT Licence</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">VESIcal</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+          <li><a href="../../VESIcal.html">VESIcal</a> &raquo;</li>
+      <li>VESIcal.models.moore</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for VESIcal.models.moore</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">VESIcal</span> <span class="kn">import</span> <span class="n">activity_models</span>
+<span class="kn">from</span> <span class="nn">VESIcal</span> <span class="kn">import</span> <span class="n">calibration_checks</span>
+<span class="kn">from</span> <span class="nn">VESIcal</span> <span class="kn">import</span> <span class="n">core</span>
+<span class="kn">from</span> <span class="nn">VESIcal</span> <span class="kn">import</span> <span class="n">fugacity_models</span>
+<span class="kn">from</span> <span class="nn">VESIcal</span> <span class="kn">import</span> <span class="n">model_classes</span>
+<span class="kn">from</span> <span class="nn">VESIcal</span> <span class="kn">import</span> <span class="n">sample_class</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">warnings</span> <span class="k">as</span> <span class="nn">w</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">root_scalar</span>
+
+
+<div class="viewcode-block" id="water"><a class="viewcode-back" href="../../../codedoc.html#VESIcal.models.moore.water">[docs]</a><span class="k">class</span> <span class="nc">water</span><span class="p">(</span><span class="n">model_classes</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Implementation of the Moore et al. (1998) H2O solubility model for magmas up to 3,000 bars.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_volatile_species</span><span class="p">([</span><span class="s1">&#39;H2O&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_fugacity_model</span><span class="p">(</span><span class="n">fugacity_models</span><span class="o">.</span><span class="n">fugacity_HB_h2o</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_activity_model</span><span class="p">(</span><span class="n">activity_models</span><span class="o">.</span><span class="n">activity_idealsolution</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_solubility_dependence</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_calibration_ranges</span><span class="p">([</span>
+            <span class="n">calibration_checks</span><span class="o">.</span><span class="n">CalibrationRange</span><span class="p">(</span>
+                <span class="s1">&#39;pressure&#39;</span><span class="p">,</span> <span class="mf">3000.0</span><span class="p">,</span> <span class="n">calibration_checks</span><span class="o">.</span><span class="n">crf_LessThan</span><span class="p">,</span> <span class="s1">&#39;bar&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;Moore et al. (1998) water&#39;</span><span class="p">,</span>
+                <span class="n">fail_msg</span><span class="o">=</span><span class="n">calibration_checks</span><span class="o">.</span><span class="n">crmsg_LessThan_fail</span><span class="p">,</span>
+                <span class="n">pass_msg</span><span class="o">=</span><span class="n">calibration_checks</span><span class="o">.</span><span class="n">crmsg_LessThan_pass</span><span class="p">,</span>
+                <span class="n">description_msg</span><span class="o">=</span><span class="n">calibration_checks</span><span class="o">.</span><span class="n">crmsg_LessThan_description</span><span class="p">),</span>
+            <span class="n">calibration_checks</span><span class="o">.</span><span class="n">CalibrationRange</span><span class="p">(</span>
+                <span class="s1">&#39;temperature&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mf">700.0</span><span class="p">,</span> <span class="mi">1200</span><span class="p">],</span> <span class="n">calibration_checks</span><span class="o">.</span><span class="n">crf_Between</span><span class="p">,</span> <span class="s1">&#39;oC&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;Moore et al. (1998) water&#39;</span><span class="p">,</span>
+                <span class="n">fail_msg</span><span class="o">=</span><span class="n">calibration_checks</span><span class="o">.</span><span class="n">crmsg_Between_fail</span><span class="p">,</span>
+                <span class="n">pass_msg</span><span class="o">=</span><span class="n">calibration_checks</span><span class="o">.</span><span class="n">crmsg_Between_pass</span><span class="p">,</span>
+                <span class="n">description_msg</span><span class="o">=</span><span class="n">calibration_checks</span><span class="o">.</span><span class="n">crmsg_Between_description</span><span class="p">)])</span>
+
+<div class="viewcode-block" id="water.calculate_dissolved_volatiles"><a class="viewcode-back" href="../../../codedoc.html#VESIcal.models.moore.water.calculate_dissolved_volatiles">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_dissolved_volatiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span> <span class="n">pressure</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">X_fluid</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sample:     Sample class</span>
+<span class="sd">            Magma major element chemistry.</span>
+
+<span class="sd">        pressure float</span>
+<span class="sd">            Pressure in bars.</span>
+
+<span class="sd">        temperature float</span>
+<span class="sd">            Temperature in degrees C.</span>
+
+<span class="sd">        X_fluid float</span>
+<span class="sd">            OPTIONAL. Default is 1.0. Mole fraction of H2O in the H2O-CO2 fluid.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Calculated dissolved H2O concentration in wt%.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">_sample</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">change_composition</span><span class="p">({</span><span class="s1">&#39;H2O&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s1">&#39;CO2&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">fH2O</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fugacity_model</span><span class="o">.</span><span class="n">fugacity</span><span class="p">(</span><span class="n">pressure</span><span class="o">=</span><span class="n">pressure</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span>
+                                            <span class="n">X_fluid</span><span class="o">=</span><span class="n">X_fluid</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">aParam</span> <span class="o">=</span> <span class="mf">2565.0</span>
+        <span class="n">bParam_Al2O3</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.997</span>
+        <span class="n">bParam_FeOt</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.9275</span>
+        <span class="n">bParam_Na2O</span> <span class="o">=</span> <span class="mf">2.736</span>
+        <span class="n">cParam</span> <span class="o">=</span> <span class="mf">1.171</span>
+        <span class="n">dParam</span> <span class="o">=</span> <span class="o">-</span><span class="mf">14.21</span>
+
+        <span class="n">temperatureK</span> <span class="o">=</span> <span class="n">temperature</span> <span class="o">+</span> <span class="mf">273.15</span>
+
+        <span class="n">sample_molfrac</span> <span class="o">=</span> <span class="n">_sample</span><span class="o">.</span><span class="n">get_composition</span><span class="p">(</span><span class="n">units</span><span class="o">=</span><span class="s1">&#39;mol_oxides&#39;</span><span class="p">)</span>
+        <span class="n">FeOtot</span> <span class="o">=</span> <span class="n">sample_molfrac</span><span class="p">[</span><span class="s1">&#39;FeO&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">sample_molfrac</span><span class="p">[</span><span class="s1">&#39;Fe2O3&#39;</span><span class="p">]</span><span class="o">*</span><span class="mf">0.8998</span>
+
+        <span class="n">b_x_sum</span> <span class="o">=</span> <span class="p">((</span><span class="n">bParam_Al2O3</span> <span class="o">*</span> <span class="n">sample_molfrac</span><span class="p">[</span><span class="s1">&#39;Al2O3&#39;</span><span class="p">])</span> <span class="o">+</span> <span class="p">(</span><span class="n">bParam_FeOt</span> <span class="o">*</span> <span class="n">FeOtot</span><span class="p">)</span> <span class="o">+</span>
+                   <span class="p">(</span><span class="n">bParam_Na2O</span> <span class="o">*</span> <span class="n">sample_molfrac</span><span class="p">[</span><span class="s1">&#39;Na2O&#39;</span><span class="p">]))</span>
+        <span class="n">two_ln_XH2Omelt</span> <span class="o">=</span> <span class="p">((</span><span class="n">aParam</span> <span class="o">/</span> <span class="n">temperatureK</span><span class="p">)</span> <span class="o">+</span> <span class="n">b_x_sum</span> <span class="o">*</span> <span class="p">(</span><span class="n">pressure</span><span class="o">/</span><span class="n">temperatureK</span><span class="p">)</span> <span class="o">+</span>
+                           <span class="n">cParam</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">fH2O</span><span class="p">)</span> <span class="o">+</span> <span class="n">dParam</span><span class="p">)</span>
+        <span class="n">ln_XH2Omelt</span> <span class="o">=</span> <span class="n">two_ln_XH2Omelt</span> <span class="o">/</span> <span class="mf">2.0</span>
+        <span class="n">XH2Omelt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">ln_XH2Omelt</span><span class="p">)</span>
+        <span class="n">sample_molfrac</span><span class="p">[</span><span class="s1">&#39;H2O&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">XH2Omelt</span>
+
+        <span class="c1"># Normalize mol fractions to sum to 1, while preserving XH2O</span>
+        <span class="n">sample_molfrac</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">sample_molfrac</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">sample_molfrac</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">!=</span> <span class="s1">&#39;H2O&#39;</span><span class="p">:</span>
+                <span class="n">sample_molfrac</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span><span class="o">/</span><span class="p">((</span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">sample_molfrac</span><span class="p">[</span><span class="s1">&#39;H2O&#39;</span><span class="p">])))})</span>
+
+        <span class="n">_sample</span><span class="o">.</span><span class="n">change_composition</span><span class="p">(</span><span class="n">sample_molfrac</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mol_oxides&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">_sample</span><span class="o">.</span><span class="n">get_composition</span><span class="p">(</span><span class="s1">&#39;H2O&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="water.calculate_equilibrium_fluid_comp"><a class="viewcode-back" href="../../../codedoc.html#VESIcal.models.moore.water.calculate_equilibrium_fluid_comp">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_equilibrium_fluid_comp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span> <span class="n">pressure</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sample:     Sample class</span>
+<span class="sd">            Magma major element composition.</span>
+
+<span class="sd">        pressure float</span>
+<span class="sd">            Pressure in bars.</span>
+
+<span class="sd">        temperature float</span>
+<span class="sd">            Temperature in degrees C.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Calculated equilibrium fluid concentration in XH2Ofluid mole fraction.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">sample_anhy</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">change_composition</span><span class="p">({</span><span class="s1">&#39;H2O&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s1">&#39;CO2&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">aParam</span> <span class="o">=</span> <span class="mf">2565.0</span>
+        <span class="n">bParam_Al2O3</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.997</span>
+        <span class="n">bParam_FeOt</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.9275</span>
+        <span class="n">bParam_Na2O</span> <span class="o">=</span> <span class="mf">2.736</span>
+        <span class="n">cParam</span> <span class="o">=</span> <span class="mf">1.171</span>
+        <span class="n">dParam</span> <span class="o">=</span> <span class="o">-</span><span class="mf">14.21</span>
+
+        <span class="n">temperatureK</span> <span class="o">=</span> <span class="n">temperature</span> <span class="o">+</span> <span class="mf">273.15</span>
+
+        <span class="n">sample_molfrac_anhy</span> <span class="o">=</span> <span class="n">sample_anhy</span><span class="o">.</span><span class="n">get_composition</span><span class="p">(</span><span class="n">units</span><span class="o">=</span><span class="s1">&#39;mol_oxides&#39;</span><span class="p">)</span>
+        <span class="n">sample_molfrac_hy</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">get_composition</span><span class="p">(</span><span class="n">units</span><span class="o">=</span><span class="s1">&#39;mol_oxides&#39;</span><span class="p">)</span>
+        <span class="n">FeOtot</span> <span class="o">=</span> <span class="n">sample_molfrac_anhy</span><span class="p">[</span><span class="s1">&#39;FeO&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">sample_molfrac_anhy</span><span class="p">[</span><span class="s1">&#39;Fe2O3&#39;</span><span class="p">]</span><span class="o">*</span><span class="mf">0.8998</span>
+
+        <span class="n">b_x_sum</span> <span class="o">=</span> <span class="p">((</span><span class="n">bParam_Al2O3</span> <span class="o">*</span> <span class="n">sample_molfrac_anhy</span><span class="p">[</span><span class="s1">&#39;Al2O3&#39;</span><span class="p">])</span> <span class="o">+</span> <span class="p">(</span><span class="n">bParam_FeOt</span> <span class="o">*</span> <span class="n">FeOtot</span><span class="p">)</span> <span class="o">+</span>
+                   <span class="p">(</span><span class="n">bParam_Na2O</span> <span class="o">*</span> <span class="n">sample_molfrac_anhy</span><span class="p">[</span><span class="s1">&#39;Na2O&#39;</span><span class="p">]))</span>
+        <span class="n">ln_fH2O</span> <span class="o">=</span> <span class="p">((</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">sample_molfrac_hy</span><span class="p">[</span><span class="s1">&#39;H2O&#39;</span><span class="p">])</span> <span class="o">-</span> <span class="p">(</span><span class="n">aParam</span><span class="o">/</span><span class="n">temperatureK</span><span class="p">)</span> <span class="o">-</span>
+                   <span class="n">b_x_sum</span> <span class="o">*</span> <span class="p">(</span><span class="n">pressure</span><span class="o">/</span><span class="n">temperatureK</span><span class="p">)</span> <span class="o">-</span> <span class="n">dParam</span><span class="p">)</span> <span class="o">/</span> <span class="n">cParam</span><span class="p">)</span>
+        <span class="n">fH2O</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">ln_fH2O</span><span class="p">)</span>
+        <span class="n">XH2O_fl</span> <span class="o">=</span> <span class="n">fH2O</span> <span class="o">/</span> <span class="n">pressure</span>
+
+        <span class="k">return</span> <span class="n">XH2O_fl</span></div>
+
+<div class="viewcode-block" id="water.calculate_saturation_pressure"><a class="viewcode-back" href="../../../codedoc.html#VESIcal.models.moore.water.calculate_saturation_pressure">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_saturation_pressure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span> <span class="n">X_fluid</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates the pressure at which a an H2O-bearing fluid is saturated. Calls the</span>
+<span class="sd">        scipy.root_scalar routine, which makes repeated called to the</span>
+<span class="sd">        calculate_dissolved_volatiles method.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sample:     Sample class</span>
+<span class="sd">            Magma major element composition.</span>
+
+<span class="sd">        temperature float</span>
+<span class="sd">            Temperature in degrees C.</span>
+
+<span class="sd">        X_fluid float</span>
+<span class="sd">            OPTIONAL. Default is 1.0. Mole fraction of H2O in the H2O-CO2 fluid.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Calculated saturation pressure in bars.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">temperatureK</span> <span class="o">=</span> <span class="n">temperature</span> <span class="o">+</span> <span class="mf">273.15</span>
+        <span class="k">if</span> <span class="n">temperatureK</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;Temperature must be greater than 0K.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">X_fluid</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">X_fluid</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;X_fluid must have a value between 0 and 1.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sample</span><span class="p">,</span> <span class="n">sample_class</span><span class="o">.</span><span class="n">Sample</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;Sample must be an instance of the Sample class.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sample</span><span class="o">.</span><span class="n">check_oxide</span><span class="p">(</span><span class="s1">&#39;H2O&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;sample must contain H2O.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sample</span><span class="o">.</span><span class="n">get_composition</span><span class="p">(</span><span class="s1">&#39;H2O&#39;</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;Dissolved H2O concentration must be greater than 0 wt%.&quot;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">satP</span> <span class="o">=</span> <span class="n">root_scalar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root_saturation_pressure</span><span class="p">,</span>
+                               <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span> <span class="n">X_fluid</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">),</span>
+                               <span class="n">x0</span><span class="o">=</span><span class="mf">100.0</span><span class="p">,</span> <span class="n">x1</span><span class="o">=</span><span class="mf">2000.0</span><span class="p">)</span><span class="o">.</span><span class="n">root</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">w</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Saturation pressure not found.&quot;</span><span class="p">,</span> <span class="ne">RuntimeWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">satP</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">satP</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="water.root_saturation_pressure"><a class="viewcode-back" href="../../../codedoc.html#VESIcal.models.moore.water.root_saturation_pressure">[docs]</a>    <span class="k">def</span> <span class="nf">root_saturation_pressure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pressure</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span> <span class="n">X_fluid</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Function called by scipy.root_scalar when finding the saturation pressure using</span>
+<span class="sd">        calculate_saturation_pressure.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pressure     float</span>
+<span class="sd">            Pressure guess in bars</span>
+<span class="sd">        temperature     float</span>
+<span class="sd">            The temperature of the system in C.</span>
+<span class="sd">        sample         Sample class</span>
+<span class="sd">            Magma major element composition.</span>
+<span class="sd">        kwargs         dictionary</span>
+<span class="sd">            Additional keyword arguments supplied to calculate_saturation_pressure. Might be</span>
+<span class="sd">            required for the fugacity or activity models.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            The differece between the dissolved H2O at the pressure guessed, and the H2O</span>
+<span class="sd">            concentration passed in the sample variable.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calculate_dissolved_volatiles</span><span class="p">(</span><span class="n">pressure</span><span class="o">=</span><span class="n">pressure</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span>
+                                                   <span class="n">sample</span><span class="o">=</span><span class="n">sample</span><span class="p">,</span> <span class="n">X_fluid</span><span class="o">=</span><span class="n">X_fluid</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-</span>
+                <span class="n">sample</span><span class="o">.</span><span class="n">get_composition</span><span class="p">(</span><span class="s1">&#39;H2O&#39;</span><span class="p">))</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Kayla Iacovino and Simon Matthews.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VESIcal.batchfile &mdash; VESIcal 1.2.6 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html">
+            <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">ChangeLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About VESIcal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../models.html">Models in VESIcal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quick_tutorials.html">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Verbose Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../advanced_tutorials.html">Advanced Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../youtube.html">YouTube Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../integration.html">Integration with Thermobar</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../workshops.html">Workshops and Presentations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../codedoc.html">VESIcal Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../faq.html">FAQ’s</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../support.html">Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">MIT Licence</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">VESIcal</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+          <li><a href="../VESIcal.html">VESIcal</a> &raquo;</li>
+      <li>VESIcal.batchfile</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for VESIcal.batchfile</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">warnings</span> <span class="k">as</span> <span class="nn">w</span>
+
+<span class="kn">from</span> <span class="nn">VESIcal</span> <span class="kn">import</span> <span class="n">core</span>
+<span class="kn">from</span> <span class="nn">VESIcal</span> <span class="kn">import</span> <span class="n">sample_class</span>
+
+<span class="c1"># Turn off chained assignment pandas warning</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">mode</span><span class="o">.</span><span class="n">chained_assignment</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># default=&#39;warn&#39;</span>
+
+
+<span class="k">def</span> <span class="nf">rename_duplicates</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s1">&#39;-duplicate-&#39;</span><span class="p">):</span>
+    <span class="n">appendents</span> <span class="o">=</span> <span class="p">(</span><span class="n">suffix</span> <span class="o">+</span>
+                  <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">cumcount</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
+    <span class="n">appendents</span> <span class="o">=</span> <span class="n">appendents</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">suffix</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span> <span class="o">+</span> <span class="n">appendents</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="status_bar"><a class="viewcode-back" href="../../codedoc.html#VESIcal.batchfile.status_bar">[docs]</a><span class="k">class</span> <span class="nc">status_bar</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Various styles of status bars that display the progress of a calculation</span>
+<span class="sd">    within a loop</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">():</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">status_bar</span><span class="p">(</span><span class="n">percent</span><span class="p">,</span> <span class="n">sample_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">btext</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">barLen</span><span class="o">=</span><span class="mi">20</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Prints an updating status bar to the terminal or jupyter notebook.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        percent: float</span>
+<span class="sd">            Percent value of progress from 0 to 1</span>
+
+<span class="sd">        sample_name: string</span>
+<span class="sd">            Name of the current sample being calculated</span>
+
+<span class="sd">        btext: string</span>
+<span class="sd">            Any extra text to display next to status bar</span>
+
+<span class="sd">        barLen: int</span>
+<span class="sd">            Length of bar to print</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\r</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;[{:&lt;</span><span class="si">{}</span><span class="s2">}] </span><span class="si">{:.0f}</span><span class="s2">%&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="nb">int</span><span class="p">(</span><span class="n">barLen</span> <span class="o">*</span> <span class="n">percent</span><span class="p">),</span>
+                                                   <span class="n">barLen</span><span class="p">,</span> <span class="n">percent</span> <span class="o">*</span> <span class="mi">100</span><span class="p">))</span>
+
+        <span class="n">sample_string</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">sample_name</span><span class="p">)</span>
+        <span class="c1"># Set max number of characters in sample name</span>
+        <span class="n">max_name_length</span> <span class="o">=</span> <span class="mi">25</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">sample_name</span><span class="p">))</span> <span class="o">&gt;=</span> <span class="n">max_name_length</span><span class="p">:</span>
+            <span class="n">sample_string</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">sample_name</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="n">max_name_length</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;...&quot;</span>
+
+        <span class="c1"># Write out sample name and trailing spaces to cover contents of</span>
+        <span class="c1"># previous sample names left over on line</span>
+        <span class="k">if</span> <span class="n">sample_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;  Working on sample &quot;</span> <span class="o">+</span> <span class="n">sample_string</span> <span class="o">+</span>
+                             <span class="s2">&quot;                            &quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">btext</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">btext</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">percent</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">:</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span></div>
+
+
+<span class="c1"># ---------- BATCHFILE CLASS --------- #</span>
+<div class="viewcode-block" id="BatchFile"><a class="viewcode-back" href="../../codedoc.html#VESIcal.batchfile.BatchFile">[docs]</a><span class="k">class</span> <span class="nc">BatchFile</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A batch file with sample names and oxide compositions</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">        filename: str</span>
+<span class="sd">            Path to the batch file, e.g., &quot;my_file.xlsx&quot;. This always needs to</span>
+<span class="sd">            be passed, even if the user is passing a pandas DataFrame rather</span>
+<span class="sd">            than an batch file. If passing a DataFrame, filename should be set</span>
+<span class="sd">            to None. File can be excel file (.xlsx) or .csv.</span>
+
+<span class="sd">        sheet_name: str</span>
+<span class="sd">            OPTIONAL. For Excel files. Default value is 0 which gets the first</span>
+<span class="sd">            sheet in the batch spreadsheet file. This implements the pandas.</span>
+<span class="sd">            read_excel() sheet_name parameter. But functionality to read in</span>
+<span class="sd">            more than one sheet at a time (e.g.,</span>
+<span class="sd">            pandas.read_excel(sheet_name=None)) is not yet imlpemented in</span>
+<span class="sd">            VESIcal. From the pandas 1.0.4 documentation:</span>
+
+<span class="sd">            Available cases:</span>
+<span class="sd">            - Defaults to 0: 1st sheet as a DataFrame</span>
+<span class="sd">            - 1: 2nd sheet as a DataFrame</span>
+<span class="sd">            - &quot;Sheet1&quot;: Load sheet with name “Sheet1”</span>
+
+<span class="sd">        file_type: str</span>
+<span class="sd">            OPTIONAL. Default is &#39;excel&#39;, which denotes that passed file has</span>
+<span class="sd">            extension .xlsx. Other option is &#39;csv&#39;, which denotes that the</span>
+<span class="sd">            passed file has extension .csv.</span>
+
+<span class="sd">        units: str</span>
+<span class="sd">            OPTIONAL. Default is &#39;wtpt_oxides&#39;. String defining whether the</span>
+<span class="sd">            oxide composition is given in wt percent (&quot;wtpt_oxides&quot;, which is</span>
+<span class="sd">            the default), mole oxides (mol_oxides) or mole cations</span>
+<span class="sd">            (mol_cations).</span>
+
+<span class="sd">        default_normalization:     None or str</span>
+<span class="sd">            The type of normalization to apply to the data by default. One of:</span>
+<span class="sd">            - None (no normalization)</span>
+<span class="sd">            - &#39;standard&#39; (default): Normalizes an input composition to 100%.</span>
+<span class="sd">            - &#39;fixedvolatiles&#39;: Normalizes major element oxides to 100 wt%,</span>
+<span class="sd">               including volatiles. The volatile wt% will remain fixed, whilst</span>
+<span class="sd">               the other major element oxides are reduced proportionally so</span>
+<span class="sd">               that the total is 100 wt%.</span>
+<span class="sd">            - &#39;additionalvolatiles&#39;: Normalises major element oxide wt% to</span>
+<span class="sd">              100%, assuming it is volatile-free. If H2O or CO2 are passed to</span>
+<span class="sd">              the function, their un-normalized values will be retained in</span>
+<span class="sd">              addition to the normalized non-volatile oxides, summing to &gt;100%.</span>
+
+<span class="sd">        default_units     str</span>
+<span class="sd">            The type of composition to return by default, one of:</span>
+<span class="sd">            - wtpt_oxides (default)</span>
+<span class="sd">            - mol_oxides</span>
+<span class="sd">            - mol_cations</span>
+
+<span class="sd">        label: str</span>
+<span class="sd">            OPTIONAL. Default is &#39;Label&#39;. Name of the column within the passed</span>
+<span class="sd">            file referring to sample names.</span>
+
+<span class="sd">        dataframe: pandas DataFrame</span>
+<span class="sd">            OPTIONAL. Default is None in which case this argument is ignored.</span>
+<span class="sd">            This argument is used when the user wishes to turn a pandas</span>
+<span class="sd">            DataFrame into an BatchFile object, for example when user data is</span>
+<span class="sd">            already in python rather than being imported from a file. In this</span>
+<span class="sd">            case set `dataframe` equal to the dataframe object being passed in.</span>
+<span class="sd">            If using this option, pass None to filename.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">sheet_name</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="s1">&#39;excel&#39;</span><span class="p">,</span>
+                 <span class="n">units</span><span class="o">=</span><span class="s1">&#39;wtpt_oxides&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Label&#39;</span><span class="p">,</span>
+                 <span class="n">default_normalization</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="n">default_units</span><span class="o">=</span><span class="s1">&#39;wtpt_oxides&#39;</span><span class="p">,</span>
+                 <span class="n">dataframe</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a BatchFile object whose parameters are defined here.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="n">units</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_default_normalization</span><span class="p">(</span><span class="n">default_normalization</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_default_units</span><span class="p">(</span><span class="n">default_units</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">file_name</span><span class="p">,</span> <span class="n">file_extension</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">file_extension</span> <span class="o">==</span> <span class="s1">&#39;.xlsx&#39;</span> <span class="ow">or</span> <span class="n">file_extension</span> <span class="o">==</span> <span class="s1">&#39;.xls&#39;</span><span class="p">:</span>
+                <span class="n">file_type</span> <span class="o">=</span> <span class="s1">&#39;excel&#39;</span>
+            <span class="k">if</span> <span class="n">file_extension</span> <span class="o">==</span> <span class="s1">&#39;.csv&#39;</span><span class="p">:</span>
+                <span class="n">file_type</span> <span class="o">=</span> <span class="s1">&#39;csv&#39;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheet_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheet_name</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;If sheet_name is passed, it must be of &quot;</span>
+                                  <span class="s2">&quot;type str or int. Currently, VESIcal cannot &quot;</span>
+                                  <span class="s2">&quot;import more than one sheet at a time.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># handle data if passed in as existing dataframe or as file</span>
+        <span class="k">if</span> <span class="n">dataframe</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">dataframe</span>
+            <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">try_set_index</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s1">&#39;excel&#39;</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">sheet_name</span><span class="o">=</span><span class="n">sheet_name</span><span class="p">)</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">try_set_index</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s1">&#39;csv&#39;</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">try_set_index</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;file_type must be one of </span><span class="se">\&#39;</span><span class="s2">excel</span><span class="se">\&#39;</span><span class="s2"> or &quot;</span>
+                                      <span class="s2">&quot;</span><span class="se">\&#39;</span><span class="s2">csv</span><span class="se">\&#39;</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Sanitize data inputs</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">rename_duplicates</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>  <span class="c1"># handle any duplicated sample names</span>
+        <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>  <span class="c1"># convert all oxide columns to numeric</span>
+            <span class="k">if</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">core</span><span class="o">.</span><span class="n">oxides</span><span class="p">:</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">column</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s1">&#39;coerce&#39;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">how</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>  <span class="c1"># drop any rows that are all NaNs</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># fill in any missing data with 0&#39;s</span>
+
+        <span class="k">if</span> <span class="s1">&#39;model&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">w</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;You don&#39;t need to pass a model here, so it will be &quot;</span>
+                   <span class="s2">&quot;ignored. You can specify a model when performing &quot;</span>
+                   <span class="s2">&quot;calculations on your dataset (e.g., &quot;</span>
+                   <span class="s2">&quot;calculate_dissolved_volatiles())&quot;</span><span class="p">,</span>
+                   <span class="ne">RuntimeWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s1">&#39;norm&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">w</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;We noticed you passed a norm argument here. This does &quot;</span>
+                   <span class="s2">&quot;nothing. You can normalize your BatchFile and save it to &quot;</span>
+                   <span class="s2">&quot;a new variable name after import using &quot;</span>
+                   <span class="s2">&quot;normalize(BatchFileObject). See the documentation for &quot;</span>
+                   <span class="s2">&quot;more info.&quot;</span><span class="p">,</span>
+                   <span class="ne">RuntimeWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="n">total_iron_columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;FeOt&quot;</span><span class="p">,</span> <span class="s2">&quot;FeOT&quot;</span><span class="p">,</span> <span class="s2">&quot;FeOtot&quot;</span><span class="p">,</span> <span class="s2">&quot;FeOtotal&quot;</span><span class="p">,</span> <span class="s2">&quot;FeOstar&quot;</span><span class="p">,</span>
+                              <span class="s2">&quot;FeO*&quot;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">total_iron_columns</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s1">&#39;FeO&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">itertuples</span><span class="p">():</span>
+                        <span class="k">if</span> <span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span> <span class="s2">&quot;FeO&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span>
+                           <span class="n">data</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span> <span class="n">name</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+                            <span class="n">w</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Sample &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">Index</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;: &quot;</span> <span class="o">+</span>
+                                   <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; value of &quot;</span> <span class="o">+</span>
+                                   <span class="nb">str</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span> <span class="n">name</span><span class="p">])</span> <span class="o">+</span>
+                                   <span class="s2">&quot; used as FeO. Fe2O3 set to 0.0.&quot;</span><span class="p">,</span>
+                                   <span class="ne">RuntimeWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                            <span class="n">data</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span> <span class="s2">&quot;Fe2O3&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+                            <span class="n">data</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span> <span class="s2">&quot;FeO&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                                                      <span class="n">data</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span> <span class="n">name</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">w</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Total iron column &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; detected. &quot;</span> <span class="o">+</span>
+                           <span class="s2">&quot;This column will be treated as FeO. If Fe2O3 &quot;</span> <span class="o">+</span>
+                           <span class="s2">&quot;data are not given, Fe2O3 will be 0.0. In &quot;</span> <span class="o">+</span>
+                           <span class="s2">&quot;future, an option to calcualte FeO/Fe2O3 based &quot;</span> <span class="o">+</span>
+                           <span class="s2">&quot;on fO2 will be implemented.&quot;</span><span class="p">,</span>
+                           <span class="ne">RuntimeWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                    <span class="n">data</span><span class="p">[</span><span class="s1">&#39;FeO&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">units</span> <span class="o">==</span> <span class="s2">&quot;wtpt_oxides&quot;</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">if</span> <span class="n">units</span> <span class="o">==</span> <span class="s2">&quot;mol_oxides&quot;</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_molOxides_to_wtpercentOxides</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">units</span> <span class="o">==</span> <span class="s2">&quot;mol_cations&quot;</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_molCations_to_wtpercentOxides</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">core</span><span class="o">.</span><span class="n">oxides</span><span class="p">:</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">column</span><span class="p">][</span><span class="n">data</span><span class="p">[</span><span class="n">column</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+
+<div class="viewcode-block" id="BatchFile.set_default_normalization"><a class="viewcode-back" href="../../codedoc.html#VESIcal.batchfile.BatchFile.set_default_normalization">[docs]</a>    <span class="k">def</span> <span class="nf">set_default_normalization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">default_normalization</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Set the default type of normalization to use with the</span>
+<span class="sd">        get_composition() method.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        default_normalization:    str</span>
+<span class="sd">            The type of normalization to apply to the data. One of:</span>
+<span class="sd">            - &#39;none&#39; (no normalization)</span>
+<span class="sd">            - &#39;standard&#39; (default): Normalizes an input composition to 100%.</span>
+<span class="sd">            - &#39;fixedvolatiles&#39;: Normalizes major element oxides to 100 wt%,</span>
+<span class="sd">              including volatiles. The volatile wt% will remain fixed, whilst</span>
+<span class="sd">              the other major element oxides are reduced proportionally so</span>
+<span class="sd">              that the total is 100 wt%.</span>
+<span class="sd">            - &#39;additionalvolatiles&#39;: Normalises major element oxide wt% to</span>
+<span class="sd">              100%, assuming it is volatile-free. If H2O or CO2 are passed to</span>
+<span class="sd">              the function, their un-normalized values will be retained in</span>
+<span class="sd">              addition to the normalized non-volatile oxides, summing to &gt;100%.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">default_normalization</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="s1">&#39;standard&#39;</span><span class="p">,</span> <span class="s1">&#39;fixedvolatiles&#39;</span><span class="p">,</span>
+                                     <span class="s1">&#39;additionalvolatiles&#39;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">default_normalization</span> <span class="o">=</span> <span class="n">default_normalization</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;The normalization method must be one of &quot;</span>
+                                  <span class="s2">&quot;&#39;none&#39;, &#39;standard&#39;, &#39;fixedvolatiles&#39; &quot;</span>
+                                  <span class="s2">&quot;or &#39;additionalvolatiles&#39;.&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BatchFile.set_default_units"><a class="viewcode-back" href="../../codedoc.html#VESIcal.batchfile.BatchFile.set_default_units">[docs]</a>    <span class="k">def</span> <span class="nf">set_default_units</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">default_units</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Set the default units of composition to return when using the</span>
+<span class="sd">        get_composition() method.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        default_units     str</span>
+<span class="sd">            The type of composition to return, one of:</span>
+<span class="sd">            - wtpt_oxides (default)</span>
+<span class="sd">            - mol_oxides</span>
+<span class="sd">            - mol_cations</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">default_units</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;wtpt_oxides&#39;</span><span class="p">,</span> <span class="s1">&#39;mol_oxides&#39;</span><span class="p">,</span> <span class="s1">&#39;mol_cations&#39;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">default_units</span> <span class="o">=</span> <span class="n">default_units</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;The units must be one of &#39;wtpt_oxides&#39;, &quot;</span>
+                                  <span class="s2">&quot;&#39;mol_oxides&#39;,&#39;mol_cations&#39;.&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BatchFile.get_composition"><a class="viewcode-back" href="../../codedoc.html#VESIcal.batchfile.BatchFile.get_composition">[docs]</a>    <span class="k">def</span> <span class="nf">get_composition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">species</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">normalization</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">exclude_volatiles</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">asBatchFile</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns a pandas DataFrame containing the compositional</span>
+<span class="sd">        information for all samples in the BatchFile object</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        species:    NoneType or str</span>
+<span class="sd">            The name of the oxide or cation to return the concentration of. If</span>
+<span class="sd">            NoneType (default) the whole composition of each sample will be</span>
+<span class="sd">            returned. If an oxide is passed, the value in wtpt will be</span>
+<span class="sd">            returned unless units is set to &#39;mol_oxides&#39;, even if the default</span>
+<span class="sd">            units for the sample object are mol_oxides. If an element is</span>
+<span class="sd">            passed, the concentration will be returned as mol_cations, unless</span>
+<span class="sd">            &#39;mol_singleO&#39; is specified as units, even if the default units for</span>
+<span class="sd">            the sample object are mol_singleO. Unless normalization is</span>
+<span class="sd">            specified in the method call, none will be applied.</span>
+
+<span class="sd">        normalization:     NoneType or str</span>
+<span class="sd">            The type of normalization to apply to the data. One of:</span>
+<span class="sd">            - &#39;none&#39; (no normalization)</span>
+<span class="sd">            - &#39;standard&#39; (default): Normalizes an input composition to 100%.</span>
+<span class="sd">            - &#39;fixedvolatiles&#39;: Normalizes major element oxides to 100 wt%,</span>
+<span class="sd">              including volatiles. The volatile wt% will remain fixed, whilst</span>
+<span class="sd">              the other major element oxides are reduced proportionally so</span>
+<span class="sd">              that the total is 100 wt%.</span>
+<span class="sd">            - &#39;additionalvolatiles&#39;: Normalises major element oxide wt% to</span>
+<span class="sd">              100%, assuming it is volatile-free. If H2O or CO2 are passed to</span>
+<span class="sd">              the function, their un-normalized values will be retained in</span>
+<span class="sd">              addition to the normalized non-volatile oxides, summing to &gt;100%.</span>
+<span class="sd">            If NoneType is passed the default normalization option will be</span>
+<span class="sd">            used (self.default_normalization).</span>
+
+<span class="sd">        units:     NoneType or str</span>
+<span class="sd">            The units of composition to return, one of:</span>
+<span class="sd">            - wtpt_oxides (default)</span>
+<span class="sd">            - mol_oxides</span>
+<span class="sd">            - mol_cations</span>
+<span class="sd">            - mol_singleO</span>
+<span class="sd">            If NoneType is passed the default units option will be used</span>
+<span class="sd">            (self.default_type).</span>
+
+<span class="sd">        exclude_volatiles   bool</span>
+<span class="sd">            If True, volatiles will be excluded from the returned composition,</span>
+<span class="sd">            prior to normalization and conversion.</span>
+
+<span class="sd">        asBatchFile:    bool</span>
+<span class="sd">            If True, returns a BatchFile object. If False, returns a</span>
+<span class="sd">            pandas.DataFrame object.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame or BatchFile object</span>
+<span class="sd">            All sample information.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="c1"># Fetch the default return types if not specified in function call</span>
+        <span class="k">if</span> <span class="n">normalization</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">species</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">normalization</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_normalization</span>
+        <span class="k">if</span> <span class="n">units</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">species</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">units</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_units</span>
+
+        <span class="n">new_compositions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">sample_names</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="n">sample_comp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sample_composition</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>
+                                                      <span class="n">asSampleClass</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">new_compositions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sample_comp</span><span class="o">.</span><span class="n">get_composition</span><span class="p">(</span>
+                     <span class="n">species</span><span class="o">=</span><span class="n">species</span><span class="p">,</span> <span class="n">normalization</span><span class="o">=</span><span class="n">normalization</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>
+                     <span class="n">exclude_volatiles</span><span class="o">=</span><span class="n">exclude_volatiles</span><span class="p">))</span>
+            <span class="n">sample_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_compositions</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+            <span class="n">return_frame</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+                           <span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">new_compositions</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">return_frame</span> <span class="o">=</span> <span class="n">return_frame</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+            <span class="n">return_frame</span><span class="p">[</span><span class="s2">&quot;new_index&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sample_names</span>
+            <span class="n">return_frame</span> <span class="o">=</span> <span class="n">return_frame</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;new_index&quot;</span><span class="p">)</span>
+            <span class="n">return_frame</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_compositions</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="n">species_data</span> <span class="o">=</span> <span class="p">{</span><span class="n">species</span><span class="p">:</span> <span class="n">new_compositions</span><span class="p">}</span>
+            <span class="n">return_frame</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+                           <span class="n">species_data</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">sample_names</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">return_frame</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">asBatchFile</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">return_frame</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">BatchFile</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dataframe</span><span class="o">=</span><span class="n">return_frame</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BatchFile.get_data"><a class="viewcode-back" href="../../codedoc.html#VESIcal.batchfile.BatchFile.get_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">normalization</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">asBatchFile</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns all data stored in a BatchFile object (both compositional and</span>
+<span class="sd">        other data). To return only the compositional data, use</span>
+<span class="sd">        get_composition().</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        normalization:     NoneType or str</span>
+<span class="sd">            The type of normalization to apply to the data. One of:</span>
+<span class="sd">            - &#39;none&#39; (no normalization)</span>
+<span class="sd">            - &#39;standard&#39; (default): Normalizes an input composition to 100%.</span>
+<span class="sd">            - &#39;fixedvolatiles&#39;: Normalizes major element oxides to 100 wt%,</span>
+<span class="sd">              including volatiles. The volatile wt% will remain fixed, whilst</span>
+<span class="sd">              the other major element oxides are reduced proportionally so</span>
+<span class="sd">              that the total is 100 wt%.</span>
+<span class="sd">            - &#39;additionalvolatiles&#39;: Normalises major element oxide wt% to</span>
+<span class="sd">              100%, assuming it is volatile-free. If H2O or CO2 are passed to</span>
+<span class="sd">              the function, their un-normalized values will be retained in</span>
+<span class="sd">              addition to the normalized non-volatile oxides, summing to &gt;100%.</span>
+
+<span class="sd">            If NoneType is passed the default normalization option will be</span>
+<span class="sd">            used (self.default_normalization).</span>
+
+<span class="sd">        units:     NoneType or str</span>
+<span class="sd">            The units of composition to return, one of:</span>
+<span class="sd">            - wtpt_oxides (default)</span>
+<span class="sd">            - mol_oxides</span>
+<span class="sd">            - mol_cations</span>
+<span class="sd">            - mol_singleO</span>
+
+<span class="sd">            If NoneType is passed the default units option will be used</span>
+<span class="sd">            (self.default_type).</span>
+
+<span class="sd">        asBatchFile:    bool</span>
+<span class="sd">            If True, returns a BatchFile object. If False, returns a</span>
+<span class="sd">            pandas.DataFrame object.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame or BatchFile object</span>
+<span class="sd">            All sample information.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="c1"># Fetch the default return units if not specified in function call</span>
+        <span class="k">if</span> <span class="n">units</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">units</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_units</span>
+
+        <span class="c1"># Fetch the default normalization if not specified in the function call</span>
+        <span class="k">if</span> <span class="n">normalization</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">normalization</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_normalization</span>
+
+        <span class="c1"># Grab all compositional data</span>
+        <span class="n">compositional_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_composition</span><span class="p">(</span><span class="n">normalization</span><span class="o">=</span><span class="n">normalization</span><span class="p">,</span>
+                                                  <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="p">)</span>
+
+        <span class="c1"># Grab all non-compositional data</span>
+        <span class="n">non_compositional_data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                       <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">core</span><span class="o">.</span><span class="n">oxides</span><span class="p">])</span>
+
+        <span class="c1"># concatenate both compositional and non-compositional dataframes</span>
+        <span class="c1"># into one</span>
+        <span class="n">return_frame</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">compositional_data</span><span class="p">,</span> <span class="n">non_compositional_data</span><span class="p">],</span>
+                                 <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">asBatchFile</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">return_frame</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">BatchFile</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dataframe</span><span class="o">=</span><span class="n">return_frame</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BatchFile.get_sample_composition"><a class="viewcode-back" href="../../codedoc.html#VESIcal.batchfile.BatchFile.get_sample_composition">[docs]</a>    <span class="k">def</span> <span class="nf">get_sample_composition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samplename</span><span class="p">,</span> <span class="n">species</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                               <span class="n">normalization</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                               <span class="n">asSampleClass</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns oxide composition of a single sample from a user-imported file</span>
+<span class="sd">        as a dictionary</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        samplename: string</span>
+<span class="sd">            Name of the desired sample</span>
+
+<span class="sd">        normalization: NoneType or str</span>
+<span class="sd">            The type of normalization to apply to the data. One of:</span>
+<span class="sd">            - &#39;none&#39; (no normalization)</span>
+<span class="sd">            - &#39;standard&#39; (default): Normalizes an input composition to 100%.</span>
+<span class="sd">            - &#39;fixedvolatiles&#39;: Normalizes major element oxides to 100 wt%,</span>
+<span class="sd">              including volatiles. The volatile wt% will remain fixed, whilst</span>
+<span class="sd">              the other major element oxides are reduced proportionally so</span>
+<span class="sd">              that the total is 100 wt%.</span>
+<span class="sd">            - &#39;additionalvolatiles&#39;: Normalises major element oxide wt% to</span>
+<span class="sd">              100%, assuming it is volatile-free. If H2O or CO2 are passed to</span>
+<span class="sd">              the function, their un-normalized values will be retained in</span>
+<span class="sd">              addition to the normalized non-volatile oxides, summing to &gt;100%.</span>
+
+<span class="sd">            If NoneType is passed the default normalization option will be</span>
+<span class="sd">            used (self.default_normalization).</span>
+
+<span class="sd">        units:     NoneType or str</span>
+<span class="sd">            The units of composition to return, one of:</span>
+<span class="sd">            - wtpt_oxides (default)</span>
+<span class="sd">            - mol_oxides</span>
+<span class="sd">            - mol_cations</span>
+<span class="sd">            - mol_singleO</span>
+<span class="sd">            If NoneType is passed the default units option will be used</span>
+<span class="sd">            (self.default_type).</span>
+
+<span class="sd">        asSampleClass:  bool</span>
+<span class="sd">            If True, the sample composition will be returned as a sample</span>
+<span class="sd">            class, with default options. In this case any normalization</span>
+<span class="sd">            instructions will be ignored.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dictionary, float, or sample_class.Sample object</span>
+<span class="sd">            Composition of the sample as oxides</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Fetch the default return types if not specified in function call</span>
+        <span class="k">if</span> <span class="n">normalization</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">species</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">normalization</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_normalization</span>
+        <span class="k">if</span> <span class="n">units</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">species</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">units</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_units</span>
+
+        <span class="c1"># Check that normalization being chosen is one of the possible options</span>
+        <span class="k">if</span> <span class="n">normalization</span> <span class="ow">in</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="s1">&#39;standard&#39;</span><span class="p">,</span> <span class="s1">&#39;fixedvolatiles&#39;</span><span class="p">,</span>
+                             <span class="s1">&#39;additionalvolatiles&#39;</span><span class="p">]:</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;The normalization method must be one of &quot;</span>
+                                  <span class="s2">&quot;&#39;none&#39;, &#39;standard&#39;, &#39;fixedvolatiles&#39;, &quot;</span>
+                                  <span class="s2">&quot;or &#39;additionalvolatiles&#39;.&quot;</span><span class="p">)</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span>
+        <span class="n">my_sample</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">samplename</span><span class="p">])</span>
+        <span class="n">sample_dict</span> <span class="o">=</span> <span class="p">(</span><span class="n">my_sample</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()[</span><span class="n">samplename</span><span class="p">])</span>
+        <span class="n">sample_oxides</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">item</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">sample_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">core</span><span class="o">.</span><span class="n">oxides</span><span class="p">:</span>
+                <span class="n">sample_oxides</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">item</span><span class="p">:</span> <span class="n">value</span><span class="p">})</span>
+
+        <span class="n">_sample</span> <span class="o">=</span> <span class="n">sample_class</span><span class="o">.</span><span class="n">Sample</span><span class="p">(</span><span class="n">sample_oxides</span><span class="p">)</span>
+
+        <span class="c1"># Get sample composition in terms of any species, units, and</span>
+        <span class="c1"># normalization passed</span>
+        <span class="n">return_sample</span> <span class="o">=</span> <span class="n">_sample</span><span class="o">.</span><span class="n">get_composition</span><span class="p">(</span><span class="n">species</span><span class="o">=</span><span class="n">species</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>
+                                                <span class="n">normalization</span><span class="o">=</span><span class="n">normalization</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">asSampleClass</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">sample_class</span><span class="o">.</span><span class="n">Sample</span><span class="p">(</span><span class="n">return_sample</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">species</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">return_sample</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">species</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">return_sample</span></div>
+
+    <span class="k">def</span> <span class="nf">_molOxides_to_wtpercentOxides</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="n">sample_comp</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">oxide</span> <span class="ow">in</span> <span class="n">core</span><span class="o">.</span><span class="n">oxides</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">oxide</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                    <span class="n">sample_comp</span><span class="p">[</span><span class="n">oxide</span><span class="p">]</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">oxide</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">sample_comp</span><span class="p">[</span><span class="n">oxide</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">_sample</span> <span class="o">=</span> <span class="n">sample_class</span><span class="o">.</span><span class="n">Sample</span><span class="p">(</span><span class="n">sample_comp</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mol_oxides&#39;</span><span class="p">)</span>
+            <span class="n">_sample_conv</span> <span class="o">=</span> <span class="n">_sample</span><span class="o">.</span><span class="n">get_composition</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">ox</span> <span class="ow">in</span> <span class="n">core</span><span class="o">.</span><span class="n">oxides</span><span class="p">:</span>
+                <span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">oxide</span><span class="p">]</span> <span class="o">=</span> <span class="n">_sample_conv</span><span class="p">[</span><span class="n">oxide</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+    <span class="k">def</span> <span class="nf">_molCations_to_wtpercentOxides</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="n">sample_comp</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">cation</span> <span class="ow">in</span> <span class="n">core</span><span class="o">.</span><span class="n">oxides_to_cations</span><span class="p">[</span><span class="n">core</span><span class="o">.</span><span class="n">oxides</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">cation</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                    <span class="n">sample_comp</span><span class="p">[</span><span class="n">cation</span><span class="p">]</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">cation</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">sample_comp</span><span class="p">[</span><span class="n">cation</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">_sample</span> <span class="o">=</span> <span class="n">sample_class</span><span class="o">.</span><span class="n">Sample</span><span class="p">(</span><span class="n">sample_comp</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mol_cations&#39;</span><span class="p">)</span>
+            <span class="n">_sample_conv</span> <span class="o">=</span> <span class="n">_sample</span><span class="o">.</span><span class="n">get_composition</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">oxide</span> <span class="ow">in</span> <span class="n">core</span><span class="o">.</span><span class="n">oxides</span><span class="p">:</span>
+                <span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">oxide</span><span class="p">]</span> <span class="o">=</span> <span class="n">_sample_conv</span><span class="p">[</span><span class="n">oxide</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+<div class="viewcode-block" id="BatchFile.try_set_index"><a class="viewcode-back" href="../../codedoc.html#VESIcal.batchfile.BatchFile.try_set_index">[docs]</a>    <span class="k">def</span> <span class="nf">try_set_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method to handle setting the index column in an BatchFile object. If</span>
+<span class="sd">        no column is passed that matches the default index name, then this</span>
+<span class="sd">        method will attempt to choose the &#39;best&#39; column that the user might</span>
+<span class="sd">        want to serve as an index column.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dataframe: pandas DataFrame</span>
+
+<span class="sd">        label: str</span>
+<span class="sd">            Name of the column within the passed Excel file referring to</span>
+<span class="sd">            sample names.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_dataframe</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">_dataframe</span> <span class="o">=</span> <span class="n">_dataframe</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">label_found</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">_dataframe</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">core</span><span class="o">.</span><span class="n">oxides</span><span class="p">:</span>
+                    <span class="k">pass</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">_dataframe</span> <span class="o">=</span> <span class="n">_dataframe</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+                    <span class="n">label_found</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="n">w</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;No Label column given, so column &#39;&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">col</span><span class="p">)</span> <span class="o">+</span>
+                           <span class="s2">&quot;&#39; was chosen for you. To choose your own, set &quot;</span> <span class="o">+</span>
+                           <span class="s2">&quot;label=&#39;&lt;column-name&gt;&#39;.&quot;</span><span class="p">,</span> <span class="ne">RuntimeWarning</span><span class="p">,</span>
+                           <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                    <span class="k">break</span>
+            <span class="k">if</span> <span class="n">label_found</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="n">_dataframe</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Label&#39;</span>
+                <span class="n">w</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;No Label column given, so one was created for you. &quot;</span>
+                       <span class="s2">&quot;To choose your own, set label=&#39;&lt;column-name&gt;&#39;.&quot;</span><span class="p">,</span>
+                       <span class="ne">RuntimeWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">_dataframe</span></div>
+
+<div class="viewcode-block" id="BatchFile.save_excel"><a class="viewcode-back" href="../../codedoc.html#VESIcal.batchfile.BatchFile.save_excel">[docs]</a>    <span class="k">def</span> <span class="nf">save_excel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">calculations</span><span class="p">,</span> <span class="n">sheet_names</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Saves data calculated by the user in batch processing mode (using the</span>
+<span class="sd">        BatchFile class methods) to an organized Excel file, with the original</span>
+<span class="sd">        user data plus any calculated data.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        filename: string</span>
+<span class="sd">            Name of the file. Extension (.xlsx) should be passed along with</span>
+<span class="sd">            the name itself, all in quotes (e.g., &#39;myfile.xlsx&#39;).</span>
+
+<span class="sd">        calculations: pandas DataFrame or list of pandas DataFrames</span>
+<span class="sd">            A single DataFrame or list of DataFrames (e.g., calculated outputs</span>
+<span class="sd">            from any of the core BatchFile functions:</span>
+<span class="sd">            calculate_dissolved_volatiles, calculate_equilibrium_fluid_comp,</span>
+<span class="sd">            and calculate_saturation_pressure). If None, only the original</span>
+<span class="sd">            user data will be saved.</span>
+
+<span class="sd">        sheet_names: None, string, or list</span>
+<span class="sd">            OPTIONAL. Default value is None. Allows user to set the name of</span>
+<span class="sd">            the sheet or sheets written to the Excel file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">            Creates and saves an Excel file with data from each calculation</span>
+<span class="sd">            saved to its own sheet.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">calculations</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheet_names</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="n">sheet_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;If calculations is passed as list, &quot;</span>
+                                      <span class="s2">&quot;sheet_names must also be list of same &quot;</span>
+                                      <span class="s2">&quot;length&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">calculations</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">calculations</span> <span class="o">=</span> <span class="p">[</span><span class="n">calculations</span><span class="p">]</span>
+
+        <span class="k">with</span> <span class="n">pd</span><span class="o">.</span><span class="n">ExcelWriter</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">to_excel</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="s1">&#39;Original_User_Data&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">calculations</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">sheet_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">df</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">calculations</span><span class="p">):</span>
+                        <span class="n">df</span><span class="o">.</span><span class="n">to_excel</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="s1">&#39;Calc</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">n</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheet_names</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                    <span class="k">pass</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">sheet_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">sheet_names</span><span class="p">]</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheet_names</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sheet_names</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">calculations</span><span class="p">):</span>
+                        <span class="k">pass</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;calculations and sheet_names &quot;</span>
+                                              <span class="s2">&quot;must have the same length&quot;</span><span class="p">)</span>
+
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">calculations</span><span class="p">)):</span>
+                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheet_names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="nb">str</span><span class="p">):</span>
+                            <span class="n">calculations</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">to_excel</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">sheet_names</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;if sheet_names is passed, &quot;</span>
+                                                  <span class="s2">&quot;it must be list of strings&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">calculations</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">pass</span>
+        <span class="k">return</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Saved &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="BatchFile.save_csv"><a class="viewcode-back" href="../../codedoc.html#VESIcal.batchfile.BatchFile.save_csv">[docs]</a>    <span class="k">def</span> <span class="nf">save_csv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filenames</span><span class="p">,</span> <span class="n">calculations</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Saves data calculated by the user in batch processing mode to a</span>
+<span class="sd">        comma-separated values (csv) file. Mirros the pandas.to_csv() method.</span>
+<span class="sd">        Any argument that can be passed to pandas.csv() can be passed here.</span>
+<span class="sd">        One csv file will be saved for each calculation passed.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        filenames: string or list of strings</span>
+<span class="sd">            Name of the file. Extension (.csv) should be passed along with</span>
+<span class="sd">            the name itself, all in quotes (e.g., &#39;myfile.csv&#39;). The number</span>
+<span class="sd">            of calculations passed must match the number of filenames passed.</span>
+<span class="sd">            If passing more than one, should be passed as a list.</span>
+
+<span class="sd">        calculations: pandas DataFrame or list of pandas DataFrames</span>
+<span class="sd">            A single variable or list of variables containing calculated</span>
+<span class="sd">            outputs from any of the core BatchFile functions:</span>
+<span class="sd">            calculate_dissolved_volatiles, calculate_equilibrium_fluid_comp,</span>
+<span class="sd">            and calculate_saturation_pressure.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">            Creates and saves a CSV file or files with data from each</span>
+<span class="sd">            calculation saved to its own file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">filenames</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="n">filenames</span> <span class="o">=</span> <span class="p">[</span><span class="n">filenames</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">calculations</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="n">calculations</span> <span class="o">=</span> <span class="p">[</span><span class="n">calculations</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">filenames</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">calculations</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;calculations and filenames must have the &quot;</span>
+                                  <span class="s2">&quot;same length&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">filenames</span><span class="p">)):</span>
+            <span class="n">calculations</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">filenames</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Saved &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">filenames</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">from_DataFrame</span><span class="p">(</span><span class="n">dataframe</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;wtpt_oxides&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Label&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Transforms any pandas DataFrame object into a VESIcal BatchFile object.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dataframe: pd.DataFrame object</span>
+<span class="sd">        DataFrame object containing samples and oxide compositions.</span>
+
+<span class="sd">    units: str</span>
+<span class="sd">        OPTIONAL. Default is &#39;wtpt_oxides&#39;. String defining whether the oxide</span>
+<span class="sd">        composition is given in wt percent (&quot;wtpt_oxides&quot;, which is the</span>
+<span class="sd">        default), mole fraction oxides (&quot;mol_oxides&quot;), or mole fraction</span>
+<span class="sd">        cations (&quot;mol_cations&quot;).</span>
+
+<span class="sd">    label: str</span>
+<span class="sd">        OPTIONAL. Default is &#39;Label&#39;. Name of the column within the passed</span>
+<span class="sd">        file referring to sample names. This column will be set as the index</span>
+<span class="sd">        column.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    VESIcal.BatchFile object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">BatchFile</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>
+                     <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Kayla Iacovino and Simon Matthews.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

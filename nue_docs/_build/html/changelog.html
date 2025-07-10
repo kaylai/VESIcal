@@ -1,0 +1,292 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChangeLog &mdash; VESIcal 1.2.6 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=77553476" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=010db75e"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="About VESIcal" href="about.html" />
+    <link rel="prev" title="Installation" href="install.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">ChangeLog</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#what-s-new-in-v-1-2">What’s new in v 1.2?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#version-history">Version history</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#version-1-2-10">Version 1.2.10</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#version-1-2-9">Version 1.2.9</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#version-1-2-8">Version 1.2.8</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#version-1-2-7">Version 1.2.7</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#version-1-2-6">Version 1.2.6</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#version-1-2-5">Version 1.2.5</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#version-1-2-4">Version 1.2.4</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#version-1-2-3">Version 1.2.3</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#version-1-2-2">Version 1.2.2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#version-1-2-1">Version 1.2.1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#version-1-2-0">Version 1.2.0</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#version-1-1-1">Version 1.1.1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#version-1-1-0">Version 1.1.0</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#version-1-0-4">Version 1.0.4</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#version-1-0-3">Version 1.0.3</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#version-1-0">Version 1.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#upgrading-your-code-to-v-0-9">Upgrading your code to v 0.9+</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#try-this-first-quick-and-dirty-update">Try this first: Quick and dirty update</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About VESIcal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">Models in VESIcal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="integration.html">Integration with Thermobar</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workshops.html">Workshops and Presentations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="codedoc.html">VESIcal Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ’s</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support.html">Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">MIT Licence</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">ChangeLog</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#what-s-new-in-v-1-2">What’s new in v 1.2?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#version-history">Version history</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#version-1-2-10">Version 1.2.10</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#version-1-2-9">Version 1.2.9</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#version-1-2-8">Version 1.2.8</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#version-1-2-7">Version 1.2.7</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#version-1-2-6">Version 1.2.6</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#version-1-2-5">Version 1.2.5</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#version-1-2-4">Version 1.2.4</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#version-1-2-3">Version 1.2.3</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#version-1-2-2">Version 1.2.2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#version-1-2-1">Version 1.2.1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#version-1-2-0">Version 1.2.0</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#version-1-1-1">Version 1.1.1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#version-1-1-0">Version 1.1.0</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#version-1-0-4">Version 1.0.4</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#version-1-0-3">Version 1.0.3</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#version-1-0">Version 1.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#upgrading-your-code-to-v-0-9">Upgrading your code to v 0.9+</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#try-this-first-quick-and-dirty-update">Try this first: Quick and dirty update</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">VESIcal</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">ChangeLog</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/changelog.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="changelog">
+<h1>ChangeLog<a class="headerlink" href="#changelog" title="Link to this heading"></a></h1>
+<section id="what-s-new-in-v-1-2">
+<h2>What’s new in v 1.2?<a class="headerlink" href="#what-s-new-in-v-1-2" title="Link to this heading"></a></h2>
+<p>A small but mighty update comes to VESIcal v1.2.0. VESIcal can now be used without the installation of the thermoengine library (which can only be built from source on a mac or run via a docker image on a PC or linux machine). MagmaSat, VESIcal’s default model, requires thermoengine to run. We chose MagmaSat as the default model for a reason (it’s usually the best model to use), but there are plenty of cases where access to the other models and not to MagmaSat is desired.</p>
+<p>The usage of VESIcal remains unchanged in the new version. Simply install using pip (see <a class="reference internal" href="install.html"><span class="doc">Installation</span></a>) and get to work. If you do not have thermoengine installed, remember to specify which model to use in each calculation performed.</p>
+</section>
+<section id="version-history">
+<h2>Version history<a class="headerlink" href="#version-history" title="Link to this heading"></a></h2>
+<section id="version-1-2-10">
+<h3>Version 1.2.10<a class="headerlink" href="#version-1-2-10" title="Link to this heading"></a></h3>
+<p>Our attempts to remove DuanDriver error messages thrown by MagmaSat ended up causing other things to break. This update removes DuanDriver “fixes”. Expect to see more DuanDriver print messages when running MagmaSat if you got used to them not being there!</p>
+</section>
+<section id="version-1-2-9">
+<h3>Version 1.2.9<a class="headerlink" href="#version-1-2-9" title="Link to this heading"></a></h3>
+<p>This fixes the bug outlined in issue <a class="reference external" href="https://github.com/kaylai/VESIcal/issues/188">https://github.com/kaylai/VESIcal/issues/188</a>, or rather provides a workaround for the bug in thermoengine that was causing it. Also fixed some flake8 complaints, and made some of the unit tests more robust to machine error and random thermoengine errors (see issue <a class="reference external" href="https://github.com/kaylai/VESIcal/issues/197">https://github.com/kaylai/VESIcal/issues/197</a>). The testing routine passes on the ENKI server.</p>
+</section>
+<section id="version-1-2-8">
+<h3>Version 1.2.8<a class="headerlink" href="#version-1-2-8" title="Link to this heading"></a></h3>
+<p>Fixed bug in calculate_degassing_path() where the default final_pressure() value was set to 100 bars instead of 1 bar. Added code to silence unhelpful “Duan Driver” warning messages from thermoengine. Made significant updates to the unittest testing routines.</p>
+</section>
+<section id="version-1-2-7">
+<h3>Version 1.2.7<a class="headerlink" href="#version-1-2-7" title="Link to this heading"></a></h3>
+<p>Fixed a bug where a cation concentration was not returned for a Sample composition given in terms of oxides and vice versa.</p>
+</section>
+<section id="version-1-2-6">
+<h3>Version 1.2.6<a class="headerlink" href="#version-1-2-6" title="Link to this heading"></a></h3>
+<p>Made a minor adjustment to how pandas dataframes are handled that makes VESIcal work with Pandas 2.0. VESIcal will continue to work with Pandas 1.</p>
+</section>
+<section id="version-1-2-5">
+<h3>Version 1.2.5<a class="headerlink" href="#version-1-2-5" title="Link to this heading"></a></h3>
+<p>Fixed a bug where different models would return different data types. Any float is now returned as np.float rather than python’s native float. Also removed some (but not all, unfortunately) unnecessary MagmaSat warnings.</p>
+</section>
+<section id="version-1-2-4">
+<h3>Version 1.2.4<a class="headerlink" href="#version-1-2-4" title="Link to this heading"></a></h3>
+<p>Fixed bug where a degassing path could not be calculated for some models using a numpy array as a pressure input. Now, a user can pass, for example np.arange(450, 200, -1) to calculate a degassing path from 450 to 200 bars in steps of 1 bar.</p>
+</section>
+<section id="version-1-2-3">
+<h3>Version 1.2.3<a class="headerlink" href="#version-1-2-3" title="Link to this heading"></a></h3>
+<p>Critical bug fix. With the update to matplotlib v3.6.0, styles were renamed. Namely, the “seaborn-colorblind” style used in VESIcal was updated to “seaborn-v0_8-colorblind”. This change caused VESIcal to not import at all if matplotlib &gt;=3.6.0 was installed. Try/Except block was added to first try “seaborn-colorblind” and then except to use “seaborn-v0_8-colorblind” in order to prevent VESIcal from breaking if older or newer versions of matplotlib are used.</p>
+</section>
+<section id="version-1-2-2">
+<h3>Version 1.2.2<a class="headerlink" href="#version-1-2-2" title="Link to this heading"></a></h3>
+<p>Fixed bug in MagmaSat model. To be internally consistent between MagmaSat calculations and between MagmaSat and other models, we now force “fixedvolatiles” normalization on any sample when performing MagmaSat calculations. This makes VESIcal’s behavior consistent with the behavior of the MagmaSat app, which may treat input H2O and CO2 contents as either dissolved in the melt or in the system (melt + fluid). This fixes a bug where a user might calculate the saturation pressure, then when calculating the equilibrium fluid composition at that pressure, VESIcal would say the composition is undersaturated. Results in very small differences to the equilibrium_fluid_comp() results, within error of the model (on the order of 0.01 mole fraction difference for H2O or CO2 in the fluid). The saturation pressure results are unchanged as they already performed a “fixedvolatiles” normalization.</p>
+</section>
+<section id="version-1-2-1">
+<h3>Version 1.2.1<a class="headerlink" href="#version-1-2-1" title="Link to this heading"></a></h3>
+<p>Fixed small bug in the Iacono-Marziano model. In most cases this will result in either a very small difference to the calculated results or no difference at all.</p>
+</section>
+<section id="version-1-2-0">
+<h3>Version 1.2.0<a class="headerlink" href="#version-1-2-0" title="Link to this heading"></a></h3>
+<p>VESIcal can now be installed without the thermoengine library. Note that the MagmaSat model will not work without thermoengine installed (which we recommend in most cases).</p>
+</section>
+<section id="version-1-1-1">
+<h3>Version 1.1.1<a class="headerlink" href="#version-1-1-1" title="Link to this heading"></a></h3>
+<p>Fixed bug where users could not calculate or plot degassing paths for compositions with only one volatile. Fixed bug where degassing paths in MagmaSat were not calculated down to 1 bar.</p>
+</section>
+<section id="version-1-1-0">
+<h3>Version 1.1.0<a class="headerlink" href="#version-1-1-0" title="Link to this heading"></a></h3>
+<p>New in version 1.1.0 is VESIcal’s thermo package. This package begins to introduce more calculations that a user might wish to perform. In this version, we have added the ability to calculate the density of a liquid (using DensityX, Iacovino and Till, 2019) and the viscosity of a liquid (Giordano et al., 2008). Check out the tutorials to learn how to use these functions, which use the same syntax as all other core calculations.</p>
+</section>
+<section id="version-1-0-4">
+<h3>Version 1.0.4<a class="headerlink" href="#version-1-0-4" title="Link to this heading"></a></h3>
+<p>Diverted Duan H2O driver warnings to the void.</p>
+</section>
+<section id="version-1-0-3">
+<h3>Version 1.0.3<a class="headerlink" href="#version-1-0-3" title="Link to this heading"></a></h3>
+<p>Batch calculations for <code class="xref py py-meth docutils literal notranslate"><span class="pre">calculate_equilibrium_fluid_comp()</span></code> with the MagmaSat (default) model can now take the <code class="docutils literal notranslate"><span class="pre">verbose</span></code> argument. If passed as <code class="docutils literal notranslate"><span class="pre">verbose=True</span></code>, the calculation will return the mass and weight proportion of fluid in equilibrium with the system. Previously this only worked for single sample calculations.</p>
+</section>
+</section>
+<section id="version-1-0">
+<h2>Version 1.0<a class="headerlink" href="#version-1-0" title="Link to this heading"></a></h2>
+<p>Some minor but important changes to the VESIcal code were made between version 0.9 and 1.0. These are mainly bug fixes and editing of the code itself to be fully flake8 compliant. We have also implemented much more rigorous testing routines, important if you are interested in forking and developing for VESIcal. No functionality changes were implemented during this upgrade, so if your code worked in version 0.9, it should continue to work in 1.0. If you are upgrading code originally written for a version &lt;0.9, please see below for important updates.</p>
+</section>
+<section id="upgrading-your-code-to-v-0-9">
+<h2>Upgrading your code to v 0.9+<a class="headerlink" href="#upgrading-your-code-to-v-0-9" title="Link to this heading"></a></h2>
+<p>In early 2021 the VESIcal code went through some major structural changes. From the user’s perspective, not a lot of the funcationality has changed, except for loads of new features and some key changes to fundamental function calls. Those are detailed here.</p>
+<p>In a couple of instances, code written with versions &lt;0.9 will not execute properly in 0.9+. Major changes are few but key:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>ExcelFile() has changed to BatchFile()</p></li>
+<li><p>ExcelFile.data has changed to BatchFile.get_data()</p></li>
+<li><p>Samples must now be in the form of VESIcal’s Sample class before being passed to a calculation</p></li>
+<li><p>To extract a sample from a BatchFile is now done as BatchFile.get_sample_composition() instead of ExcelFile.get_sample_oxide_comp()</p></li>
+</ul>
+</div></blockquote>
+<section id="try-this-first-quick-and-dirty-update">
+<h3>Try this first: Quick and dirty update<a class="headerlink" href="#try-this-first-quick-and-dirty-update" title="Link to this heading"></a></h3>
+<p>As a first pass, simply try making these changes:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Change all instances of ExcelFile to BatchFile</p></li>
+<li><p>Change all instances of .data to .get_data()</p></li>
+<li><p>Change all instances of get_sample_oxide_comp() to get_sample_composition(). Note that if you wish to then pass the extracted sample to a calculation, it will need to be in the form of a Sample class. Do so with get_sample_composition(&lt;your-sample-name&gt;, asSampleClass=True)</p></li>
+<li><p>Construct a sample as a Sample class from scratch like so:</p></li>
+</ol>
+</div></blockquote>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mysample</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">Sample</span><span class="p">({</span><span class="s1">&#39;SiO2&#39;</span><span class="p">:</span> <span class="mf">77.5</span><span class="p">,</span>
+         <span class="s1">&#39;TiO2&#39;</span><span class="p">:</span> <span class="mf">0.08</span><span class="p">,</span>
+         <span class="s1">&#39;Al2O3&#39;</span><span class="p">:</span> <span class="mf">12.5</span><span class="p">,</span>
+         <span class="s1">&#39;Fe2O3&#39;</span><span class="p">:</span> <span class="mf">0.207</span><span class="p">,</span>
+         <span class="s1">&#39;Cr2O3&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+         <span class="s1">&#39;FeO&#39;</span><span class="p">:</span> <span class="mf">0.473</span><span class="p">,</span>
+         <span class="s1">&#39;MnO&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+         <span class="s1">&#39;MgO&#39;</span><span class="p">:</span> <span class="mf">0.03</span><span class="p">,</span>
+         <span class="s1">&#39;NiO&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+         <span class="s1">&#39;CoO&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+         <span class="s1">&#39;CaO&#39;</span><span class="p">:</span> <span class="mf">0.43</span><span class="p">,</span>
+         <span class="s1">&#39;Na2O&#39;</span><span class="p">:</span> <span class="mf">3.98</span><span class="p">,</span>
+         <span class="s1">&#39;K2O&#39;</span><span class="p">:</span> <span class="mf">4.88</span><span class="p">,</span>
+         <span class="s1">&#39;P2O5&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+         <span class="s1">&#39;H2O&#39;</span><span class="p">:</span> <span class="mf">5.5</span><span class="p">,</span>
+         <span class="s1">&#39;CO2&#39;</span><span class="p">:</span> <span class="mf">0.05</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>If your code continues to throw errors, please refer to the guides in this documentation, which have been updated to reflect changes made for version 0.9. If all else fails, give us a shout: <a class="reference external" href="mailto:kayla&#46;iacovino&#37;&#52;&#48;nasa&#46;gov">kayla<span>&#46;</span>iacovino<span>&#64;</span>nasa<span>&#46;</span>gov</a>.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="install.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="about.html" class="btn btn-neutral float-right" title="About VESIcal" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Kayla Iacovino and Simon Matthews.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

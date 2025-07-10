@@ -1,0 +1,967 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VESIcal.model_classes &mdash; VESIcal 1.2.6 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=77553476" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=010db75e"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">ChangeLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About VESIcal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../models.html">Models in VESIcal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../integration.html">Integration with Thermobar</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../workshops.html">Workshops and Presentations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../codedoc.html">VESIcal Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../faq.html">FAQ’s</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../support.html">Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">MIT Licence</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">ChangeLog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">VESIcal</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../VESIcal.html">VESIcal</a></li>
+      <li class="breadcrumb-item active">VESIcal.model_classes</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for VESIcal.model_classes</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">abstractmethod</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">warnings</span> <span class="k">as</span> <span class="nn">w</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">root_scalar</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">root</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+
+<span class="kn">from</span> <span class="nn">VESIcal</span> <span class="kn">import</span> <span class="n">activity_models</span>
+<span class="kn">from</span> <span class="nn">VESIcal</span> <span class="kn">import</span> <span class="n">core</span>
+<span class="kn">from</span> <span class="nn">VESIcal</span> <span class="kn">import</span> <span class="n">fugacity_models</span>
+
+
+<div class="viewcode-block" id="Model">
+<a class="viewcode-back" href="../../codedoc.html#VESIcal.model_classes.Model">[docs]</a>
+<span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The model object implements a volatile solubility model. It is composed</span>
+<span class="sd">    of the methods needed to evaluate</span>
+<span class="sd">    :func:`VESIcal.calculate_dissolved_volatiles`,</span>
+<span class="sd">    :func:`VESIcal.calculate_equilibrium_fluid_comp`, and</span>
+<span class="sd">    :func:`calculate_saturation_pressure`. The fugacity and activity models for</span>
+<span class="sd">    the volatiles species must be specified, defaulting to ideal.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_volatile_species</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_fugacity_model</span><span class="p">(</span><span class="n">fugacity_models</span><span class="o">.</span><span class="n">fugacity_idealgas</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_activity_model</span><span class="p">(</span><span class="n">activity_models</span><span class="o">.</span><span class="n">activity_idealsolution</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_calibration_ranges</span><span class="p">([])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_solubility_dependence</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">set_volatile_species</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">volatile_species</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">volatile_species</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">volatile_species</span> <span class="o">=</span> <span class="p">[</span><span class="n">volatile_species</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">volatile_species</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;volatile_species must be a str or list.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span> <span class="o">=</span> <span class="n">volatile_species</span>
+
+    <span class="k">def</span> <span class="nf">set_fugacity_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fugacity_model</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fugacity_model</span> <span class="o">=</span> <span class="n">fugacity_model</span>
+
+    <span class="k">def</span> <span class="nf">set_activity_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">activity_model</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">activity_model</span> <span class="o">=</span> <span class="n">activity_model</span>
+
+    <span class="k">def</span> <span class="nf">set_calibration_ranges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">calibration_ranges</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calibration_ranges</span> <span class="o">=</span> <span class="n">calibration_ranges</span>
+
+    <span class="k">def</span> <span class="nf">set_solubility_dependence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">solubility_dependence</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solubility_dependence</span> <span class="o">=</span> <span class="n">solubility_dependence</span>
+
+<div class="viewcode-block" id="Model.get_calibration_values">
+<a class="viewcode-back" href="../../codedoc.html#VESIcal.model_classes.Model.get_calibration_values">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_calibration_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable_names</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns the values stored as the calibration range for the given</span>
+<span class="sd">        variable(s). However, for checks where there is a single value- i.e.</span>
+<span class="sd">        cr_GreaterThan or crf_LessThan, the logical operation will remain a</span>
+<span class="sd">        mystery until someone figures out an elegant way of communicating it.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        variable_names     str or list</span>
+<span class="sd">            The name(s) of the variables you want the calibration ranges for.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            A list of values or tuples for the calibration ranges in the order</span>
+<span class="sd">            given.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Check if the variable name is passed as a string, and if so put it in</span>
+        <span class="c1"># a list:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">variable_names</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">variable_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">variable_names</span><span class="p">]</span>
+
+        <span class="n">calibration_values</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">variable_names</span><span class="p">:</span>
+            <span class="n">found_var</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">for</span> <span class="n">cr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_ranges</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">found_var</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">cr</span><span class="o">.</span><span class="n">parameter_name</span> <span class="o">==</span> <span class="n">var</span><span class="p">:</span>
+                        <span class="n">found_var</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="n">calibration_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cr</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">found_var</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="n">calibration_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">calibration_values</span></div>
+
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">calculate_dissolved_volatiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">calculate_equilibrium_fluid_comp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">calculate_saturation_pressure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="c1"># @abstractmethod</span>
+    <span class="c1"># def preprocess_sample(self,**kwargs):</span>
+    <span class="c1">#     pass</span>
+
+<div class="viewcode-block" id="Model.check_calibration_range">
+<a class="viewcode-back" href="../../codedoc.html#VESIcal.model_classes.Model.check_calibration_range">[docs]</a>
+    <span class="k">def</span> <span class="nf">check_calibration_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">report_nonexistance</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Checks whether the given parameters are within the ranges defined</span>
+<span class="sd">        by the CalibrationRange objects for the model and its fugacity and</span>
+<span class="sd">        activity models. An empty string will be returned if all parameters are</span>
+<span class="sd">        within the calibration range. If a parameter is not within the</span>
+<span class="sd">        calibration range, a description of the problem will be returned in the</span>
+<span class="sd">        string.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        parameters     dict</span>
+<span class="sd">            Dictionary keys are the names of the parameters to be checked,</span>
+<span class="sd">            e.g., pressure temperature, SiO2, etc. Values are the values of</span>
+<span class="sd">            each parameter. A complete set need not be given.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            String description of any parameters falling outside of the</span>
+<span class="sd">            calibration range.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">cr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_ranges</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">cr</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="n">s</span> <span class="o">+=</span> <span class="n">cr</span><span class="o">.</span><span class="n">string</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">report_nonexistance</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">cr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fugacity_model</span><span class="o">.</span><span class="n">calibration_ranges</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">cr</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="n">s</span> <span class="o">+=</span> <span class="n">cr</span><span class="o">.</span><span class="n">string</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">report_nonexistance</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">cr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">activity_model</span><span class="o">.</span><span class="n">calibration_ranges</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">cr</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="n">s</span> <span class="o">+=</span> <span class="n">cr</span><span class="o">.</span><span class="n">string</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">report_nonexistance</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">s</span></div>
+
+
+<div class="viewcode-block" id="Model.get_calibration_range">
+<a class="viewcode-back" href="../../codedoc.html#VESIcal.model_classes.Model.get_calibration_range">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_calibration_range</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns a string describing the calibration ranges defined by the</span>
+<span class="sd">        CalibrationRange objects for each model, and its associated fugacity</span>
+<span class="sd">        and activity models.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            String description of the calibration range objects.&quot;&quot;&quot;</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">cr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_ranges</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="n">cr</span><span class="o">.</span><span class="n">string</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">cr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fugacity_model</span><span class="o">.</span><span class="n">calibration_ranges</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="n">cr</span><span class="o">.</span><span class="n">string</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">cr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">activity_model</span><span class="o">.</span><span class="n">calibration_ranges</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="n">cr</span><span class="o">.</span><span class="n">string</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">s</span></div>
+</div>
+
+
+
+<span class="c1"># ------------ MIXED FLUID MODELS ------------------------------- #</span>
+<div class="viewcode-block" id="MixedFluid">
+<a class="viewcode-back" href="../../codedoc.html#VESIcal.model_classes.MixedFluid">[docs]</a>
+<span class="k">class</span> <span class="nc">MixedFluid</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Implements the generic framework for mixed fluid solubility. Any set of</span>
+<span class="sd">    pure fluid solubility models may be specified.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">models</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes the mixed fluid model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        models     dictionary</span>
+<span class="sd">            Dictionary with names of volatile species as keys, and the model</span>
+<span class="sd">            objects as values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">models</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">model</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">models</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_volatile_species</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+
+<div class="viewcode-block" id="MixedFluid.get_calibration_values">
+<a class="viewcode-back" href="../../codedoc.html#VESIcal.model_classes.MixedFluid.get_calibration_values">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_calibration_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable_names</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Placeholder method to prevent an error when this generic method is</span>
+<span class="sd">        called for a MixedFluid model.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.nan</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span></div>
+
+
+<div class="viewcode-block" id="MixedFluid.calculate_dissolved_volatiles">
+<a class="viewcode-back" href="../../codedoc.html#VESIcal.model_classes.MixedFluid.calculate_dissolved_volatiles">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate_dissolved_volatiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pressure</span><span class="p">,</span> <span class="n">X_fluid</span><span class="p">,</span>
+                                      <span class="n">returndict</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates the dissolved volatile concentrations in wt%, using each</span>
+<span class="sd">        model&#39;s calculate_dissolved_volatiles method. At present the volatile</span>
+<span class="sd">        concentrations are not propagated through.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pressure     float</span>
+<span class="sd">            The total pressure in bars.</span>
+<span class="sd">        X_fluid     float, numpy.ndarry, dict, pandas Series</span>
+<span class="sd">            The mole fraction of each species in the fluid. If the mixed fluid</span>
+<span class="sd">            model contains only two species (e.g. CO2 and H2O), the value of</span>
+<span class="sd">            the first species in self.volatile_species may be passed on its own</span>
+<span class="sd">            as a float.</span>
+<span class="sd">        returndict         bool</span>
+<span class="sd">            If True, the results will be returned in a dict, otherwise they</span>
+<span class="sd">            will be returned as a tuple.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple</span>
+<span class="sd">            Dissolved volatile concentrations of each species in the model, in</span>
+<span class="sd">            the order set by self.volatile_species.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">X_fluid</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X_fluid</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span>
+           <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="n">X_fluid</span> <span class="o">=</span> <span class="p">(</span><span class="n">X_fluid</span><span class="p">,</span> <span class="mi">1</span><span class="o">-</span><span class="n">X_fluid</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">X_fluid</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;X_fluid must have the same length as the &quot;</span>
+                                  <span class="s2">&quot;number of volatile species in the &quot;</span>
+                                  <span class="s2">&quot;MixedFluids Model class, or it may have &quot;</span>
+                                  <span class="s2">&quot;length 1 if two species are present in &quot;</span>
+                                  <span class="s2">&quot;the MixedFluids Model class.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">X_fluid</span><span class="p">)</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;X_fluid must sum to 1.0&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">val</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">X_fluid</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="n">val</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">X_fluid</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;Each mole fraction in X_fluid must have a &quot;</span>
+                                  <span class="s2">&quot;value between 0 and 1.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X_fluid</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X_fluid</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">series</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+            <span class="n">X_fluid</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">X_fluid</span><span class="p">[</span><span class="n">species</span><span class="p">]</span> <span class="k">for</span> <span class="n">species</span> <span class="ow">in</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">)</span>
+
+        <span class="c1"># If the models don&#39;t depend on the concentration of volatiles,</span>
+        <span class="c1"># themselves:</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">solubility_dependence</span> <span class="ow">is</span> <span class="kc">False</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">):</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">calculate_dissolved_volatiles</span><span class="p">(</span>
+                        <span class="n">pressure</span><span class="o">=</span><span class="n">pressure</span><span class="p">,</span> <span class="n">X_fluid</span><span class="o">=</span><span class="n">Xi</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">model</span><span class="p">,</span> <span class="n">Xi</span>
+                        <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">,</span> <span class="n">X_fluid</span><span class="p">))</span>
+        <span class="c1"># If one of the models depends on the other volatile concentration</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">solubility_dependence</span> <span class="ow">is</span> <span class="kc">False</span> <span class="ow">and</span>
+              <span class="s1">&#39;sample&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">):</span>
+            <span class="n">result0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">calculate_dissolved_volatiles</span><span class="p">(</span>
+                              <span class="n">pressure</span><span class="o">=</span><span class="n">pressure</span><span class="p">,</span> <span class="n">X_fluid</span><span class="o">=</span><span class="n">X_fluid</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">samplecopy</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;sample&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">change_composition</span><span class="p">(</span>
+                             <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="n">result0</span><span class="p">},</span>
+                             <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;sample&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">samplecopy</span>
+            <span class="n">result1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">calculate_dissolved_volatiles</span><span class="p">(</span>
+                            <span class="n">pressure</span><span class="o">=</span><span class="n">pressure</span><span class="p">,</span> <span class="n">X_fluid</span><span class="o">=</span><span class="n">X_fluid</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="p">(</span><span class="n">result0</span><span class="p">,</span> <span class="n">result1</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">solubility_dependence</span> <span class="ow">is</span> <span class="kc">False</span> <span class="ow">and</span>
+                <span class="s1">&#39;sample&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">):</span>
+            <span class="n">result1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">calculate_dissolved_volatiles</span><span class="p">(</span>
+                               <span class="n">pressure</span><span class="o">=</span><span class="n">pressure</span><span class="p">,</span> <span class="n">X_fluid</span><span class="o">=</span><span class="n">X_fluid</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">samplecopy</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;sample&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">change_composition</span><span class="p">(</span>
+                            <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="n">result1</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;sample&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">samplecopy</span>
+            <span class="n">result0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">calculate_dissolved_volatiles</span><span class="p">(</span>
+                               <span class="n">pressure</span><span class="o">=</span><span class="n">pressure</span><span class="p">,</span> <span class="n">X_fluid</span><span class="o">=</span><span class="n">X_fluid</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="p">(</span><span class="n">result0</span><span class="p">,</span> <span class="n">result1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;The solubility dependence of the models &quot;</span>
+                                  <span class="s2">&quot;is not currently supported by the &quot;</span>
+                                  <span class="s2">&quot;MixedFluid model.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">returndict</span><span class="p">:</span>
+            <span class="n">resultsdict</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">)),</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">):</span>
+                <span class="n">resultsdict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">v</span><span class="o">+</span><span class="s1">&#39;_liq&#39;</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="n">i</span><span class="p">]})</span>
+            <span class="k">return</span> <span class="n">resultsdict</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="MixedFluid.calculate_equilibrium_fluid_comp">
+<a class="viewcode-back" href="../../codedoc.html#VESIcal.model_classes.MixedFluid.calculate_equilibrium_fluid_comp">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate_equilibrium_fluid_comp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pressure</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span>
+                                         <span class="n">return_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calculates the composition of the fluid in equilibrium with the</span>
+<span class="sd">        dissolved volatile concentrations passed. If a fluid phase is</span>
+<span class="sd">        undersaturated at the chosen pressure (0,0) will be returned. Note,</span>
+<span class="sd">        this currently assumes the given H2O and CO2 concentrations are the</span>
+<span class="sd">        system total, not the total dissolved. If one of the volatile species</span>
+<span class="sd">        has a zero or negative concentration, the pure fluid model for the</span>
+<span class="sd">        other volatile species will be used.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pressure     float</span>
+<span class="sd">            The total pressure in bars.</span>
+<span class="sd">        sample    Sample class</span>
+<span class="sd">            Magma major element composition.</span>
+<span class="sd">        return_dict     bool</span>
+<span class="sd">            Set the return type, if true a dict will be returned, if False two</span>
+<span class="sd">            floats will be returned. Default is True.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict or floats</span>
+<span class="sd">            Mole fractions of the volatile species in the fluid, in the order</span>
+<span class="sd">            given by self.volatile_species if floats.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;Currently equilibrium fluid compositions &quot;</span>
+                                  <span class="s2">&quot;can only be calculated when two volatile &quot;</span>
+                                  <span class="s2">&quot;species are present.&quot;</span><span class="p">)</span>
+
+        <span class="n">dissolved_at_0bar</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">calculate_dissolved_volatiles</span><span class="p">(</span>
+                                    <span class="n">sample</span><span class="o">=</span><span class="n">sample</span><span class="p">,</span> <span class="n">pressure</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span>
+                             <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">calculate_dissolved_volatiles</span><span class="p">(</span>
+                                    <span class="n">sample</span><span class="o">=</span><span class="n">sample</span><span class="p">,</span> <span class="n">pressure</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)]</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">get_composition</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="mf">0.0</span> <span class="ow">or</span>
+           <span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">get_composition</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&lt;=</span>
+           <span class="n">dissolved_at_0bar</span><span class="p">[</span><span class="mi">0</span><span class="p">])):</span>
+            <span class="n">Xv0</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">Xv1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">calculate_equilibrium_fluid_comp</span><span class="p">(</span>
+                                    <span class="n">pressure</span><span class="o">=</span><span class="n">pressure</span><span class="p">,</span> <span class="n">sample</span><span class="o">=</span><span class="n">sample</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">get_composition</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="mf">0.0</span> <span class="ow">or</span>
+              <span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">get_composition</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">&lt;=</span>
+              <span class="n">dissolved_at_0bar</span><span class="p">[</span><span class="mi">1</span><span class="p">])):</span>
+            <span class="n">Xv1</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">Xv0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">calculate_equilibrium_fluid_comp</span><span class="p">(</span>
+                                    <span class="n">pressure</span><span class="o">=</span><span class="n">pressure</span><span class="p">,</span> <span class="n">sample</span><span class="o">=</span><span class="n">sample</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">satP</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_saturation_pressure</span><span class="p">(</span><span class="n">sample</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">satP</span> <span class="o">&lt;</span> <span class="n">pressure</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">return_dict</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="mi">0</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="mi">0</span><span class="p">}</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+            <span class="n">molfracs</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">get_composition</span><span class="p">(</span><span class="n">units</span><span class="o">=</span><span class="s1">&#39;mol_oxides&#39;</span><span class="p">)</span>
+            <span class="p">(</span><span class="n">Xt0</span><span class="p">,</span> <span class="n">Xt1</span><span class="p">)</span> <span class="o">=</span> <span class="p">(</span><span class="n">molfracs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span>
+                          <span class="n">molfracs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">Xv0</span> <span class="o">=</span> <span class="n">root_scalar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root_for_fluid_comp</span><span class="p">,</span>
+                                  <span class="n">bracket</span><span class="o">=</span><span class="p">[</span><span class="mf">1e-15</span><span class="p">,</span> <span class="mi">1</span><span class="o">-</span><span class="mf">1e-15</span><span class="p">],</span>
+                                  <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">pressure</span><span class="p">,</span> <span class="n">Xt0</span><span class="p">,</span> <span class="n">Xt1</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span>
+                                        <span class="n">kwargs</span><span class="p">))</span><span class="o">.</span><span class="n">root</span>
+                <span class="n">Xv1</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">Xv0</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">Xv0</span> <span class="o">=</span> <span class="n">root_scalar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root_for_fluid_comp</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">x1</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+                                      <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">pressure</span><span class="p">,</span> <span class="n">Xt0</span><span class="p">,</span> <span class="n">Xt1</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span>
+                                            <span class="n">kwargs</span><span class="p">))</span><span class="o">.</span><span class="n">root</span>
+                    <span class="n">Xv1</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">Xv0</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">SaturationError</span><span class="p">(</span><span class="s2">&quot;Equilibrium fluid not found. &quot;</span>
+                                               <span class="s2">&quot;Likely an issue with the &quot;</span>
+                                               <span class="s2">&quot;numerical solver.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">return_dict</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="n">Xv0</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="n">Xv1</span><span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Xv0</span><span class="p">,</span> <span class="n">Xv1</span></div>
+
+
+<div class="viewcode-block" id="MixedFluid.calculate_saturation_pressure">
+<a class="viewcode-back" href="../../codedoc.html#VESIcal.model_classes.MixedFluid.calculate_saturation_pressure">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate_saturation_pressure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates the pressure at which a fluid will be saturated, given the</span>
+<span class="sd">        dissolved volatile concentrations. If one of the volatile species has a</span>
+<span class="sd">        zero or negative concentration the pure fluid model for the other</span>
+<span class="sd">        species will be used. If one of the volatile species has a</span>
+<span class="sd">        concentration lower than the concentration dissolved at 0 bar, the pure</span>
+<span class="sd">        fluid model for the other species will be used.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sample     Sample class</span>
+<span class="sd">            Magma major element composition (including volatiles).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            The saturation pressure in bars.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dissolved_at_0bar</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">calculate_dissolved_volatiles</span><span class="p">(</span>
+                                        <span class="n">sample</span><span class="o">=</span><span class="n">sample</span><span class="p">,</span> <span class="n">pressure</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span>
+                             <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">calculate_dissolved_volatiles</span><span class="p">(</span>
+                                        <span class="n">sample</span><span class="o">=</span><span class="n">sample</span><span class="p">,</span> <span class="n">pressure</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)]</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">get_composition</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="mf">0.0</span> <span class="ow">or</span>
+            <span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">get_composition</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&lt;=</span>
+             <span class="n">dissolved_at_0bar</span><span class="p">[</span><span class="mi">0</span><span class="p">])):</span>
+            <span class="n">satP</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">calculate_saturation_pressure</span><span class="p">(</span><span class="n">sample</span><span class="o">=</span><span class="n">sample</span><span class="p">,</span>
+                                                                <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">get_composition</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="mf">0.0</span> <span class="ow">or</span>
+              <span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">get_composition</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">&lt;=</span>
+               <span class="n">dissolved_at_0bar</span><span class="p">[</span><span class="mi">1</span><span class="p">])):</span>
+            <span class="n">satP</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">calculate_saturation_pressure</span><span class="p">(</span><span class="n">sample</span><span class="o">=</span><span class="n">sample</span><span class="p">,</span>
+                                                                <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">volatile_concs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">get_composition</span><span class="p">(</span><span class="n">species</span><span class="p">)</span> <span class="k">for</span>
+                                            <span class="n">species</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">))</span>
+
+            <span class="n">x0</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">:</span>
+                <span class="n">xx0</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">calculate_saturation_pressure</span><span class="p">(</span><span class="n">sample</span><span class="o">=</span><span class="n">sample</span><span class="p">,</span>
+                                                          <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">xx0</span><span class="p">):</span>
+                    <span class="n">x0</span> <span class="o">+=</span> <span class="n">xx0</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">satP</span> <span class="o">=</span> <span class="n">root</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root_saturation_pressure</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="p">[</span><span class="n">x0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
+                            <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">volatile_concs</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">))</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="n">w</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Saturation pressure not found.&quot;</span><span class="p">,</span> <span class="ne">RuntimeWarning</span><span class="p">,</span>
+                       <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                <span class="n">satP</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+        <span class="k">return</span> <span class="n">satP</span></div>
+
+
+<div class="viewcode-block" id="MixedFluid.calculate_isobars_and_isopleths">
+<a class="viewcode-back" href="../../codedoc.html#VESIcal.model_classes.MixedFluid.calculate_isobars_and_isopleths">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate_isobars_and_isopleths</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pressure_list</span><span class="p">,</span>
+                                        <span class="n">isopleth_list</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">points</span><span class="o">=</span><span class="mi">51</span><span class="p">,</span>
+                                        <span class="n">return_dfs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">extend_to_zero</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                        <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates isobars and isopleths. Isobars can be calculated for any</span>
+<span class="sd">        number of pressures. Variables required by each of the pure fluid</span>
+<span class="sd">        models must be passed, e.g. sample, temperature, etc.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pressure_list     list or float</span>
+<span class="sd">            List of all pressure values at which to calculate isobars, in bars.</span>
+<span class="sd">        isopleth_list     list</span>
+<span class="sd">            Default value is None, in which case only isobars will be</span>
+<span class="sd">            calculated. List of all fluid compositions in mole fraction (of the</span>
+<span class="sd">            first species in self.volatile_species) at which to calcualte</span>
+<span class="sd">            isopleths. Values can range from 0 to 1.</span>
+<span class="sd">        points     int</span>
+<span class="sd">            The number of points in each isobar and isopleth. Default value is</span>
+<span class="sd">            101.</span>
+<span class="sd">        return_dfs     bool</span>
+<span class="sd">            If True, the results will be returned as two pandas DataFrames, as</span>
+<span class="sd">            produced by the MagmaSat method. If False the results will be</span>
+<span class="sd">            returned as lists of numpy arrays.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas DataFrame object(s) or list(s)</span>
+<span class="sd">            If isopleth_list is not None, two objects will be returned, one</span>
+<span class="sd">            with the isobars and the second withthe isopleths. If return_dfs is</span>
+<span class="sd">            True, two pandas DataFrames will be returned with column names</span>
+<span class="sd">            &#39;Pressure&#39; or &#39;XH2O_fl&#39;, &#39;H2O_liq&#39;, and &#39;CO2_liq&#39;. If return_dfs is</span>
+<span class="sd">            False, two lists of numpy arrays will be returned. Each array is an</span>
+<span class="sd">            individual isobar or isopleth, in the order passed via</span>
+<span class="sd">            pressure_list or isopleth_list. The arrays are the concentrations</span>
+<span class="sd">            of H2O and CO2 in the liquid, in the order of the species in</span>
+<span class="sd">            self.volatile_species.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span> <span class="ow">or</span>
+                <span class="s1">&#39;H2O&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span> <span class="ow">or</span>
+                <span class="s1">&#39;CO2&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;calculate_isobars_and_isopleths may only &quot;</span>
+                                  <span class="s2">&quot;be used with a H2O-CO2 fluid.&quot;</span><span class="p">)</span>
+
+        <span class="n">H2O_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;H2O&#39;</span><span class="p">)</span>
+        <span class="n">CO2_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;CO2&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pressure_list</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">pressure_list</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span>
+              <span class="nb">isinstance</span><span class="p">(</span><span class="n">pressure_list</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+            <span class="n">pressure_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">pressure_list</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;pressure_list must be a single float &quot;</span>
+                                  <span class="s2">&quot;(1000.0), int (1000), or list of those &quot;</span>
+                                  <span class="s2">&quot;[1000, 2000.0, 3000].&quot;</span><span class="p">)</span>
+
+        <span class="n">has_isopleths</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">isopleth_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">has_isopleths</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="n">isobar_dfs</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Prepare to accumulate DataFrames for isobars</span>
+        <span class="n">isobars</span> <span class="o">=</span> <span class="p">[]</span>    <span class="c1"># This is only used as a return if return_dfs is set to False</span>
+        <span class="k">for</span> <span class="n">pressure</span> <span class="ow">in</span> <span class="n">pressure_list</span><span class="p">:</span>
+            <span class="n">dissolved</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="n">points</span><span class="p">])</span>
+            <span class="n">Xv0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">points</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">points</span><span class="p">):</span>
+                <span class="n">dissolved</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_dissolved_volatiles</span><span class="p">(</span>
+                    <span class="n">pressure</span><span class="o">=</span><span class="n">pressure</span><span class="p">,</span> <span class="n">X_fluid</span><span class="o">=</span><span class="p">(</span><span class="n">Xv0</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="mi">1</span><span class="o">-</span><span class="n">Xv0</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="n">row_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+                    <span class="s1">&#39;Pressure&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">pressure</span><span class="p">],</span>
+                    <span class="s1">&#39;H2O_liq&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">dissolved</span><span class="p">[</span><span class="n">H2O_id</span><span class="p">,</span> <span class="n">i</span><span class="p">]],</span>
+                    <span class="s1">&#39;CO2_liq&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">dissolved</span><span class="p">[</span><span class="n">CO2_id</span><span class="p">,</span> <span class="n">i</span><span class="p">]]</span>
+                <span class="p">})</span>
+                <span class="n">isobar_dfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row_df</span><span class="p">)</span>
+            <span class="n">isobars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dissolved</span><span class="p">)</span>
+
+        <span class="c1"># Concatenate all DataFrames for isobars</span>
+        <span class="n">isobars_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">isobar_dfs</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">has_isopleths</span><span class="p">:</span>
+            <span class="n">isopleth_dfs</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">isopleths</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">isopleth</span> <span class="ow">in</span> <span class="n">isopleth_list</span><span class="p">:</span>
+                <span class="n">dissolved</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="n">points</span><span class="p">])</span>
+                <span class="n">pmin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">pressure_list</span><span class="p">)</span>
+                <span class="n">pmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">pressure_list</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">pmin</span> <span class="o">==</span> <span class="n">pmax</span><span class="p">:</span>
+                    <span class="n">pmin</span> <span class="o">=</span> <span class="mf">0.0</span>
+                <span class="n">pressures</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">pmin</span><span class="p">,</span> <span class="n">pmax</span><span class="p">,</span> <span class="n">points</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">points</span><span class="p">):</span>
+                    <span class="n">dissolved</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_dissolved_volatiles</span><span class="p">(</span>
+                        <span class="n">pressure</span><span class="o">=</span><span class="n">pressures</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">X_fluid</span><span class="o">=</span><span class="p">(</span><span class="n">isopleth</span><span class="p">,</span> <span class="mi">1</span><span class="o">-</span><span class="n">isopleth</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                    <span class="n">row_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+                        <span class="s1">&#39;XH2O_fl&#39;</span><span class="p">:</span> <span class="p">[[</span><span class="n">isopleth</span><span class="p">,</span> <span class="mi">1</span><span class="o">-</span><span class="n">isopleth</span><span class="p">][</span><span class="n">H2O_id</span><span class="p">]],</span>
+                        <span class="s1">&#39;H2O_liq&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">dissolved</span><span class="p">[</span><span class="n">H2O_id</span><span class="p">,</span> <span class="n">i</span><span class="p">]],</span>
+                        <span class="s1">&#39;CO2_liq&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">dissolved</span><span class="p">[</span><span class="n">CO2_id</span><span class="p">,</span> <span class="n">i</span><span class="p">]]</span>
+                    <span class="p">})</span>
+                    <span class="n">isopleth_dfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row_df</span><span class="p">)</span>
+                <span class="n">isopleths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dissolved</span><span class="p">)</span>
+
+            <span class="c1"># Concatenate all DataFrames for isopleths</span>
+            <span class="n">isopleths_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">isopleth_dfs</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">return_dfs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">has_isopleths</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">isobars_df</span><span class="p">,</span> <span class="n">isopleths_df</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">isobars_df</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">has_isopleths</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">isobars</span><span class="p">,</span> <span class="n">isopleths</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">isobars</span></div>
+
+
+<div class="viewcode-block" id="MixedFluid.calculate_degassing_path">
+<a class="viewcode-back" href="../../codedoc.html#VESIcal.model_classes.MixedFluid.calculate_degassing_path">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate_degassing_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span> <span class="n">pressure</span><span class="o">=</span><span class="s1">&#39;saturation&#39;</span><span class="p">,</span>
+                                 <span class="n">fractionate_vapor</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">final_pressure</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                                 <span class="n">steps</span><span class="o">=</span><span class="mi">101</span><span class="p">,</span> <span class="n">return_dfs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                 <span class="n">round_to_zero</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates the dissolved volatiles in a progressively degassing sample.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sample     Sample class</span>
+<span class="sd">            Magma major element composition (including volatiles).</span>
+<span class="sd">        pressure     string, float, int, list, or numpy array</span>
+<span class="sd">            Defaults to &#39;saturation&#39;, the calculation will begin at the</span>
+<span class="sd">            saturation pressure. If a number is passed as either a float or</span>
+<span class="sd">            int, this will be the starting pressure. If a list of numpy array</span>
+<span class="sd">            is passed, the pressure values in the list or array will define the</span>
+<span class="sd">            degassing path, i.e. final_pressure and steps variables will be</span>
+<span class="sd">            ignored. Units are bars.</span>
+<span class="sd">        fractionate_vapor     float</span>
+<span class="sd">            What proportion of vapor should be removed at each step. If 0.0</span>
+<span class="sd">            (default), the degassing path will correspond to closed-system</span>
+<span class="sd">            degassing. If 1.0, the degassing path will correspond to</span>
+<span class="sd">            open-system degassing.</span>
+<span class="sd">        final_pressure         float</span>
+<span class="sd">            The final pressure on the degassing path, in bars. Ignored if a</span>
+<span class="sd">            list or numpy array is passed as the pressure variable. Default is</span>
+<span class="sd">            1 bar.</span>
+<span class="sd">        steps     int</span>
+<span class="sd">            The number of steps in the degassing path. Ignored if a list or</span>
+<span class="sd">            numpy array are passed as the pressure variable.</span>
+<span class="sd">        return_dfs     bool</span>
+<span class="sd">            If True, the results will be returned in a pandas DataFrame, if</span>
+<span class="sd">            False, two numpy arrays will be returned.</span>
+<span class="sd">        round_to_zero   bool</span>
+<span class="sd">            If True, the first entry of FluidProportion_wt will be rounded to</span>
+<span class="sd">            zero, rather than being a value within numerical error of zero.</span>
+<span class="sd">            Default is True.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas DataFrame or numpy arrays</span>
+<span class="sd">            If return_dfs is True (default), a DataFrame with columns</span>
+<span class="sd">            &#39;Pressure_bars&#39;, &#39;H2O_liq&#39;, &#39;CO2_liq&#39;, &#39;H2O_fl&#39;, &#39;CO2_fl&#39;, and</span>
+<span class="sd">            &#39;FluidProportion_wt&#39;, is returned. Dissolved volatiles are in wt%,</span>
+<span class="sd">            the proportions of volatiles in the fluid are in mole fraction.</span>
+<span class="sd">            Otherwise a numpy array containing the dissolved volatile</span>
+<span class="sd">            concentrations, and a numpy array containing the mole fractions of</span>
+<span class="sd">            volatiles in the fluid is returned. The columns are in the order of</span>
+<span class="sd">            the volatiles in self.volatile_species.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Create a copy of the sample so that initial volatile concentrations</span>
+        <span class="c1"># are not overwritten.</span>
+        <span class="n">sample</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span>
+
+        <span class="c1"># Its imperative that normalization doesn&#39;t change the volatile</span>
+        <span class="c1"># concentrations throughout the calculation.</span>
+        <span class="k">if</span> <span class="n">sample</span><span class="o">.</span><span class="n">default_normalization</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;fixedvolatiles&#39;</span><span class="p">,</span> <span class="s1">&#39;none&#39;</span><span class="p">]:</span>
+            <span class="n">sample</span><span class="o">.</span><span class="n">set_default_normalization</span><span class="p">(</span><span class="s1">&#39;fixedvolatiles&#39;</span><span class="p">)</span>
+            <span class="n">w</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Sample normalization changed to fixedvolatiles.&#39;</span><span class="p">)</span>
+
+        <span class="n">wtptoxides</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">get_composition</span><span class="p">(</span><span class="n">units</span><span class="o">=</span><span class="s1">&#39;wtpt_oxides&#39;</span><span class="p">)</span>
+        <span class="n">wtm0s</span><span class="p">,</span> <span class="n">wtm1s</span> <span class="o">=</span> <span class="p">(</span><span class="n">wtptoxides</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span>
+                        <span class="n">wtptoxides</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pressure</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">pressure</span> <span class="o">==</span> <span class="s1">&#39;saturation&#39;</span><span class="p">:</span>
+                <span class="n">p0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_saturation_pressure</span><span class="p">(</span><span class="n">sample</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="n">pressures</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">p0</span><span class="p">,</span> <span class="n">final_pressure</span><span class="p">,</span> <span class="n">steps</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;Pressure string not understood.&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pressure</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pressure</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">pressures</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">pressure</span><span class="p">,</span> <span class="n">final_pressure</span><span class="p">,</span> <span class="n">steps</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pressure</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pressure</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="n">pressures</span> <span class="o">=</span> <span class="n">pressure</span>
+
+        <span class="n">Xv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">pressures</span><span class="p">)])</span>
+        <span class="n">wtm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">pressures</span><span class="p">)])</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pressures</span><span class="p">)):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">wtptoxides</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">get_composition</span><span class="p">(</span><span class="n">units</span><span class="o">=</span><span class="s1">&#39;wtpt_oxides&#39;</span><span class="p">)</span>
+                <span class="n">X_fluid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_equilibrium_fluid_comp</span><span class="p">(</span>
+                    <span class="n">pressure</span><span class="o">=</span><span class="n">pressures</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">sample</span><span class="o">=</span><span class="n">sample</span><span class="p">,</span> <span class="n">return_dict</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="n">Xv</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">X_fluid</span>
+                <span class="k">if</span> <span class="n">X_fluid</span> <span class="o">==</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
+                    <span class="n">wtm</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">wtptoxides</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span>
+                                 <span class="n">wtptoxides</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">X_fluid</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">wtm</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">wtptoxides</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+                        <span class="n">wtm</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_dissolved_volatiles</span><span class="p">(</span>
+                            <span class="n">pressure</span><span class="o">=</span><span class="n">pressures</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">sample</span><span class="o">=</span><span class="n">sample</span><span class="p">,</span>
+                            <span class="n">X_fluid</span><span class="o">=</span><span class="n">X_fluid</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="k">elif</span> <span class="n">X_fluid</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">wtm</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">wtptoxides</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+                        <span class="n">wtm</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_dissolved_volatiles</span><span class="p">(</span>
+                            <span class="n">pressure</span><span class="o">=</span><span class="n">pressures</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">sample</span><span class="o">=</span><span class="n">sample</span><span class="p">,</span>
+                            <span class="n">X_fluid</span><span class="o">=</span><span class="n">X_fluid</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">wtm</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_dissolved_volatiles</span><span class="p">(</span>
+                            <span class="n">pressure</span><span class="o">=</span><span class="n">pressures</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">sample</span><span class="o">=</span><span class="n">sample</span><span class="p">,</span>
+                            <span class="n">X_fluid</span><span class="o">=</span><span class="n">X_fluid</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+                    <span class="n">sample</span><span class="o">.</span><span class="n">change_composition</span><span class="p">({</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="p">(</span><span class="n">wtm</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">+</span>
+                                                   <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">fractionate_vapor</span><span class="p">)</span> <span class="o">*</span>
+                                                   <span class="p">(</span><span class="n">wtm0s</span><span class="o">-</span><span class="n">wtm</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">])),</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="p">(</span><span class="n">wtm</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">+</span>
+                                                   <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">fractionate_vapor</span><span class="p">)</span> <span class="o">*</span>
+                                                   <span class="p">(</span><span class="n">wtm1s</span><span class="o">-</span><span class="n">wtm</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="p">]))})</span>
+
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="n">Xv</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">]</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">Xv</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">wtm</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">wtm</span><span class="p">[:,</span> <span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">return_dfs</span><span class="p">:</span>
+            <span class="n">exsolved_degassing_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+            <span class="n">exsolved_degassing_df</span><span class="p">[</span><span class="s1">&#39;Pressure_bars&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pressures</span>
+            <span class="n">exsolved_degassing_df</span><span class="p">[</span><span class="s1">&#39;H2O_liq&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                                    <span class="n">wtm</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;H2O&#39;</span><span class="p">),</span> <span class="p">:])</span>
+            <span class="n">exsolved_degassing_df</span><span class="p">[</span><span class="s1">&#39;CO2_liq&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                                    <span class="n">wtm</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;CO2&#39;</span><span class="p">),</span> <span class="p">:])</span>
+            <span class="n">exsolved_degassing_df</span><span class="p">[</span><span class="s1">&#39;H2O_fl&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                                     <span class="n">Xv</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;H2O&#39;</span><span class="p">),</span> <span class="p">:])</span>
+            <span class="n">exsolved_degassing_df</span><span class="p">[</span><span class="s1">&#39;CO2_fl&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                                     <span class="n">Xv</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;CO2&#39;</span><span class="p">),</span> <span class="p">:])</span>
+            <span class="n">exsolved_degassing_df</span><span class="p">[</span><span class="s1">&#39;FluidProportion_wt&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="p">(</span><span class="n">wtm0s</span><span class="o">+</span><span class="n">wtm1s</span><span class="p">)</span> <span class="o">-</span> <span class="n">exsolved_degassing_df</span><span class="p">[</span><span class="s1">&#39;H2O_liq&#39;</span><span class="p">]</span> <span class="o">-</span>
+                <span class="n">exsolved_degassing_df</span><span class="p">[</span><span class="s1">&#39;CO2_liq&#39;</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="n">round_to_zero</span> <span class="ow">is</span> <span class="kc">True</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span>
+                  <span class="n">exsolved_degassing_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;FluidProportion_wt&#39;</span><span class="p">],</span> <span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="n">exsolved_degassing_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;FluidProportion_wt&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+            <span class="k">return</span> <span class="n">exsolved_degassing_df</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">wtm</span><span class="p">,</span> <span class="n">Xv</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MixedFluid.root_saturation_pressure">
+<a class="viewcode-back" href="../../codedoc.html#VESIcal.model_classes.MixedFluid.root_saturation_pressure">[docs]</a>
+    <span class="k">def</span> <span class="nf">root_saturation_pressure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">volatile_concs</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Function called by scipy.root when finding the saturation pressure</span>
+<span class="sd">        using calculate_saturation_pressure.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x     numpy array</span>
+<span class="sd">            The guessed value for the root. x[0] is the pressure (in bars) and</span>
+<span class="sd">            x[1] is the mole fraction of the first volatile in</span>
+<span class="sd">            self.volatile_species.</span>
+<span class="sd">        volatile_concs     numpy array</span>
+<span class="sd">            The dissolved volatile concentrations, in the same order as</span>
+<span class="sd">            self.volatile_species.</span>
+<span class="sd">        sample:     Sample class</span>
+<span class="sd">            Magma major element composition (including volatiles).</span>
+<span class="sd">        kwargs     dictionary</span>
+<span class="sd">            Dictionary of keyword arguments, which may be required by the</span>
+<span class="sd">            pure-fluid models.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        numpy array</span>
+<span class="sd">            The difference in the dissolved volatile concentrations, and those</span>
+<span class="sd">            predicted with the pressure and fluid composition specified by x.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">elif</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1e-15</span>
+        <span class="n">misfit</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calculate_dissolved_volatiles</span><span class="p">(</span>
+            <span class="n">pressure</span><span class="o">=</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">X_fluid</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">sample</span><span class="o">=</span><span class="n">sample</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+            <span class="o">-</span> <span class="n">volatile_concs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">misfit</span></div>
+
+
+<div class="viewcode-block" id="MixedFluid.root_for_fluid_comp">
+<a class="viewcode-back" href="../../codedoc.html#VESIcal.model_classes.MixedFluid.root_for_fluid_comp">[docs]</a>
+    <span class="k">def</span> <span class="nf">root_for_fluid_comp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Xv0</span><span class="p">,</span> <span class="n">pressure</span><span class="p">,</span> <span class="n">Xt0</span><span class="p">,</span> <span class="n">Xt1</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Function called by scipy.root_scalar when calculating the</span>
+<span class="sd">        composition of equilibrium fluid in the</span>
+<span class="sd">        calculate_equilibrium_fluid_comp method.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        Xv0     float</span>
+<span class="sd">            The guessed mole fraction of the first volatile species in</span>
+<span class="sd">            self.volatile_species.</span>
+<span class="sd">        pressure     float</span>
+<span class="sd">            The total pressure in bars.</span>
+<span class="sd">        Xt0     float</span>
+<span class="sd">            The total mole fraction of the first volatile species in</span>
+<span class="sd">            self.volatile_species.</span>
+<span class="sd">        Xt1        float</span>
+<span class="sd">            The total mole fraction of the second volatile species in</span>
+<span class="sd">            self.volatile_species.</span>
+<span class="sd">        sample     Sample class</span>
+<span class="sd">            Magma major element composition.</span>
+<span class="sd">        kwargs     dictionary</span>
+<span class="sd">            A dictionary of keyword arguments that may be required by the pure</span>
+<span class="sd">            fluid models.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            The differene in the LHS and RHS of the mass balance equation. Eq X</span>
+<span class="sd">            in manuscript.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">wtt0</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">get_composition</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">wtt1</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">get_composition</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">wtm0</span><span class="p">,</span> <span class="n">wtm1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_dissolved_volatiles</span><span class="p">(</span>
+            <span class="n">pressure</span><span class="o">=</span><span class="n">pressure</span><span class="p">,</span> <span class="n">X_fluid</span><span class="o">=</span><span class="p">(</span><span class="n">Xv0</span><span class="p">,</span> <span class="mi">1</span><span class="o">-</span><span class="n">Xv0</span><span class="p">),</span> <span class="n">sample</span><span class="o">=</span><span class="n">sample</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="n">Xm0</span> <span class="o">=</span> <span class="n">Xt0</span> <span class="o">/</span> <span class="n">wtt0</span> <span class="o">*</span> <span class="n">wtm0</span>
+        <span class="n">Xm1</span> <span class="o">=</span> <span class="n">Xt1</span> <span class="o">/</span> <span class="n">wtt1</span> <span class="o">*</span> <span class="n">wtm1</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">volatile_species</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;CO2&#39;</span> <span class="ow">and</span> <span class="n">Xv0</span> <span class="o">!=</span> <span class="n">Xm0</span><span class="p">:</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="p">(</span><span class="n">Xt0</span> <span class="o">-</span> <span class="n">Xm0</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">Xv0</span> <span class="o">-</span> <span class="n">Xm0</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">f</span><span class="p">)</span> <span class="o">*</span> <span class="n">Xm1</span> <span class="o">+</span> <span class="n">f</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">Xv0</span><span class="p">)</span> <span class="o">-</span> <span class="n">Xt1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="p">(</span><span class="n">Xt1</span> <span class="o">-</span> <span class="n">Xm1</span><span class="p">)</span> <span class="o">/</span> <span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">Xv0</span><span class="p">)</span> <span class="o">-</span> <span class="n">Xm1</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">f</span><span class="p">)</span> <span class="o">*</span> <span class="n">Xm0</span> <span class="o">+</span> <span class="n">f</span> <span class="o">*</span> <span class="n">Xv0</span> <span class="o">-</span> <span class="n">Xt0</span></div>
+
+
+<div class="viewcode-block" id="MixedFluid.check_calibration_range">
+<a class="viewcode-back" href="../../codedoc.html#VESIcal.model_classes.MixedFluid.check_calibration_range">[docs]</a>
+    <span class="k">def</span> <span class="nf">check_calibration_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">report_nonexistance</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Checks whether the given parameters are within the ranges defined</span>
+<span class="sd">        by the CalibrationRange objects for each model and its fugacity and</span>
+<span class="sd">        activity models. An empty string will be returned if all parameters are</span>
+<span class="sd">        within the calibration range. If a parameter is not within the</span>
+<span class="sd">        calibration range, a description of the problem will be returned in the</span>
+<span class="sd">        string.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        parameters     dict</span>
+<span class="sd">            Dictionary keys are the names of the parameters to be checked,</span>
+<span class="sd">            e.g., pressure temperature, SiO2, etc. Values are the values of</span>
+<span class="sd">            each parameter. A complete set need not be given.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            String description of any parameters falling outside of the</span>
+<span class="sd">            calibration range.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">cr</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">calibration_ranges</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">cr</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                    <span class="n">s</span> <span class="o">+=</span> <span class="n">cr</span><span class="o">.</span><span class="n">string</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">report_nonexistance</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">cr</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">fugacity_model</span><span class="o">.</span><span class="n">calibration_ranges</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">cr</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                    <span class="n">s</span> <span class="o">+=</span> <span class="n">cr</span><span class="o">.</span><span class="n">string</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">report_nonexistance</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">cr</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">activity_model</span><span class="o">.</span><span class="n">calibration_ranges</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">cr</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                    <span class="n">s</span> <span class="o">+=</span> <span class="n">cr</span><span class="o">.</span><span class="n">string</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">report_nonexistance</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">s</span></div>
+
+
+<div class="viewcode-block" id="MixedFluid.get_calibration_range">
+<a class="viewcode-back" href="../../codedoc.html#VESIcal.model_classes.MixedFluid.get_calibration_range">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_calibration_range</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns a string describing the calibration ranges defined by the</span>
+<span class="sd">        CalibrationRange objects for each model, and its associated fugacity</span>
+<span class="sd">        and activity models.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            String description of the calibration range objects.&quot;&quot;&quot;</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">cr</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">calibration_ranges</span><span class="p">:</span>
+                <span class="n">s</span> <span class="o">+=</span> <span class="n">cr</span><span class="o">.</span><span class="n">string</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">cr</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">fugacity_model</span><span class="o">.</span><span class="n">calibration_ranges</span><span class="p">:</span>
+                <span class="n">s</span> <span class="o">+=</span> <span class="n">cr</span><span class="o">.</span><span class="n">string</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">cr</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">activity_model</span><span class="o">.</span><span class="n">calibration_ranges</span><span class="p">:</span>
+                <span class="n">s</span> <span class="o">+=</span> <span class="n">cr</span><span class="o">.</span><span class="n">string</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">s</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Kayla Iacovino and Simon Matthews.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

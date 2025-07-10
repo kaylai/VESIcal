@@ -1,0 +1,1526 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Normalizing and Transforming Data &mdash; VESIcal 1.2.6 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=77553476" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=010db75e"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">ChangeLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About VESIcal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">Models in VESIcal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="integration.html">Integration with Thermobar</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workshops.html">Workshops and Presentations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="codedoc.html">VESIcal Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ’s</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support.html">Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">MIT Licence</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">ChangeLog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">VESIcal</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Normalizing and Transforming Data</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/ex_normalize.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="normalizing-and-transforming-data">
+<h1><a class="toc-backref" href="#id8" role="doc-backlink">Normalizing and Transforming Data</a><a class="headerlink" href="#normalizing-and-transforming-data" title="Link to this heading"></a></h1>
+<nav class="contents" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#normalizing-and-transforming-data" id="id8">Normalizing and Transforming Data</a></p>
+<ul>
+<li><p><a class="reference internal" href="#default-normalizations-and-how-to-change-them" id="id9">Default normalizations and how to change them</a></p>
+<ul>
+<li><p><a class="reference internal" href="#magmasat" id="id10">MagmaSat</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#normalizing-an-entire-dataset" id="id11">Normalizing an entire dataset</a></p>
+<ul>
+<li><p><a class="reference internal" href="#import-an-excel-file" id="id12">Import an Excel file</a></p></li>
+<li><p><a class="reference internal" href="#standard-normalization" id="id13">Standard Normalization</a></p></li>
+<li><p><a class="reference internal" href="#fixedvolatiles-normalization" id="id14">FixedVolatiles Normalization</a></p></li>
+<li><p><a class="reference internal" href="#additionalvolatiles-normalization" id="id15">AdditionalVolatiles Normalization</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#normalize-a-single-sample-composition" id="id16">Normalize a single sample composition</a></p>
+<ul>
+<li><p><a class="reference internal" href="#extract-a-single-sample-from-your-dataset" id="id17">Extract a single sample from your dataset</a></p></li>
+<li><p><a class="reference internal" href="#id1" id="id18">Standard Normalization</a></p></li>
+<li><p><a class="reference internal" href="#id2" id="id19">FixedVolatiles Normalization</a></p></li>
+<li><p><a class="reference internal" href="#id3" id="id20">AdditionalVolatiles Normalization</a></p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+<p>Before performing model calculations on your data, it may be desired to normalize the input composition to a total of 100 wt%. VESIcal has multiple methods for normalizing sample data using various routines. Each of the normalization routines can be accessed by the user at any time to normalize either a signle sample or all samples in a BatchFile object.</p>
+<p>The standard normalization type returns the composition normalized to 100%, including any volatiles. The FixedVolatiles type the oxides to 100%, but volatiles remain fixed while other major element oxides are reduced proporitonally so that the total is 100 wt%. The AdditionalVolatiles type normalizes oxides to 100% assuming the sample is volatile-free. If H<sub>2</sub>O or CO<sub>2</sub> concentrations are passed to the function, their un-normalized values will be retained in addition to the normalized non-volatile oxides, summing to &gt;100%.</p>
+<p>Normalization types are: ‘none’, ‘standard’, ‘fixedvolatiles’, ‘additionalvolatiles’.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">VESIcal</span> <span class="k">as</span> <span class="nn">v</span>
+</pre></div>
+</div>
+<section id="default-normalizations-and-how-to-change-them">
+<h2><a class="toc-backref" href="#id9" role="doc-backlink">Default normalizations and how to change them</a><a class="headerlink" href="#default-normalizations-and-how-to-change-them" title="Link to this heading"></a></h2>
+<section id="magmasat">
+<h3><a class="toc-backref" href="#id10" role="doc-backlink">MagmaSat</a><a class="headerlink" href="#magmasat" title="Link to this heading"></a></h3>
+<p>Currently, no models force any kind of normalization onto samples. For testing purposes, MagmaSat (the default model) has an attribute called ‘normalization_type’. By default, this is set to ‘none’ such that no normalization is performed on samples. To change the type of normalization performed during all calculations, you can create a copy of the MagmaSat() model object, set its normalization type, and then use that model object for calculations, like so:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># make a copy of the MagmaSat() model object and give it a name</span>
+<span class="n">magmasatNorm</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">magmasat</span><span class="o">.</span><span class="n">MagmaSat</span><span class="p">()</span>
+
+<span class="c1"># set normalization_type to be whatever you want. Let&#39;s say &#39;standard&#39;.</span>
+<span class="n">magmasatNorm</span><span class="o">.</span><span class="n">normalization_type</span> <span class="o">=</span> <span class="s1">&#39;standard&#39;</span>
+
+<span class="c1"># now you can do a calculation and set model=magmasatNorm</span>
+<span class="n">test_calc</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">calculate_saturation_pressure</span><span class="p">(</span><span class="n">sample</span><span class="o">=&lt;</span><span class="n">your</span><span class="o">-</span><span class="n">sample</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=&lt;</span><span class="n">temperature</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">magmasatNorm</span><span class="p">)</span><span class="o">.</span><span class="n">result</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="normalizing-an-entire-dataset">
+<h2><a class="toc-backref" href="#id11" role="doc-backlink">Normalizing an entire dataset</a><a class="headerlink" href="#normalizing-an-entire-dataset" title="Link to this heading"></a></h2>
+<section id="import-an-excel-file">
+<h3><a class="toc-backref" href="#id12" role="doc-backlink">Import an Excel file</a><a class="headerlink" href="#import-an-excel-file" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">myfile</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">BatchFile</span><span class="p">(</span><span class="s1">&#39;example_data.xlsx&#39;</span><span class="p">)</span>
+<span class="n">myfile</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span>
+</pre></div>
+</div>
+<table class="docutils align-default" id="id4">
+<caption><span class="caption-text">Output</span><a class="headerlink" href="#id4" title="Link to this table"></a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Label</p></th>
+<th class="head"><p>SiO2</p></th>
+<th class="head"><p>TiO2</p></th>
+<th class="head"><p>Al2O3</p></th>
+<th class="head"><p>Fe2O3</p></th>
+<th class="head"><p>Cr2O3</p></th>
+<th class="head"><p>FeO</p></th>
+<th class="head"><p>MnO</p></th>
+<th class="head"><p>MgO</p></th>
+<th class="head"><p>NiO</p></th>
+<th class="head"><p>CoO</p></th>
+<th class="head"><p>CaO</p></th>
+<th class="head"><p>Na2O</p></th>
+<th class="head"><p>K2O</p></th>
+<th class="head"><p>P2O5</p></th>
+<th class="head"><p>H2O</p></th>
+<th class="head"><p>CO2</p></th>
+<th class="head"><p>Press</p></th>
+<th class="head"><p>Temp</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>BT-ex</p></td>
+<td><p>77.5</p></td>
+<td><p>0.08</p></td>
+<td><p>12.5</p></td>
+<td><p>0.207</p></td>
+<td><p>0</p></td>
+<td><p>0.473</p></td>
+<td><p>0</p></td>
+<td><p>0.03</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.43</p></td>
+<td><p>3.98</p></td>
+<td><p>4.88</p></td>
+<td><p>0</p></td>
+<td><p>5.5</p></td>
+<td><p>0.05</p></td>
+<td><p>500</p></td>
+<td><p>900</p></td>
+</tr>
+<tr class="row-odd"><td><p>TVZMa-ex</p></td>
+<td><p>78.37</p></td>
+<td><p>0.13</p></td>
+<td><p>11.94</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.99</p></td>
+<td><p>0.04</p></td>
+<td><p>0.05</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.53</p></td>
+<td><p>3.8</p></td>
+<td><p>4.14</p></td>
+<td><p>0</p></td>
+<td><p>4.06</p></td>
+<td><p>0.005</p></td>
+<td><p>600</p></td>
+<td><p>800</p></td>
+</tr>
+<tr class="row-even"><td><p>TVZOh-ex</p></td>
+<td><p>77.9</p></td>
+<td><p>0.08</p></td>
+<td><p>12.15</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.95</p></td>
+<td><p>0.05</p></td>
+<td><p>0.06</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.55</p></td>
+<td><p>4.05</p></td>
+<td><p>4.12</p></td>
+<td><p>0</p></td>
+<td><p>4.63</p></td>
+<td><p>0.005</p></td>
+<td><p>50</p></td>
+<td><p>900</p></td>
+</tr>
+<tr class="row-odd"><td><p>Oh48-FTIR1-MI1-a</p></td>
+<td><p>78.27</p></td>
+<td><p>0.0298</p></td>
+<td><p>12.02</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.9828</p></td>
+<td><p>0.0336</p></td>
+<td><p>0.0515</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.4772</p></td>
+<td><p>4.05</p></td>
+<td><p>4.09</p></td>
+<td><p>0</p></td>
+<td><p>4.214912406</p></td>
+<td><p>0.004565932</p></td>
+<td><p>250</p></td>
+<td><p>950</p></td>
+</tr>
+<tr class="row-even"><td><p>Oh48-FTIR1-MI1-b</p></td>
+<td><p>78.27</p></td>
+<td><p>0.0298</p></td>
+<td><p>12.02</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.9828</p></td>
+<td><p>0.0336</p></td>
+<td><p>0.0515</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.4772</p></td>
+<td><p>4.05</p></td>
+<td><p>4.09</p></td>
+<td><p>0</p></td>
+<td><p>4.005815793</p></td>
+<td><p>0.004447963</p></td>
+<td><p>500</p></td>
+<td><p>1025</p></td>
+</tr>
+<tr class="row-odd"><td><p>Oh48-FTIR1-MI1-IRc</p></td>
+<td><p>78.27</p></td>
+<td><p>0.0298</p></td>
+<td><p>12.02</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.9828</p></td>
+<td><p>0.0336</p></td>
+<td><p>0.0515</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.4772</p></td>
+<td><p>4.05</p></td>
+<td><p>4.09</p></td>
+<td><p>0</p></td>
+<td><p>3.885649341</p></td>
+<td><p>0.004654367</p></td>
+<td><p>5000</p></td>
+<td><p>925</p></td>
+</tr>
+<tr class="row-even"><td><p>Oh50-4.1</p></td>
+<td><p>77.91</p></td>
+<td><p>0.0984</p></td>
+<td><p>12.07</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>1.0556</p></td>
+<td><p>0.0257</p></td>
+<td><p>0.0999</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.5216</p></td>
+<td><p>4.04</p></td>
+<td><p>4.18</p></td>
+<td><p>0</p></td>
+<td><p>4.641842879</p></td>
+<td><p>0.004565932</p></td>
+<td><p>1000</p></td>
+<td><p>862</p></td>
+</tr>
+<tr class="row-odd"><td><p>Oh50-4.2</p></td>
+<td><p>77.91</p></td>
+<td><p>0.0984</p></td>
+<td><p>12.07</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>1.0556</p></td>
+<td><p>0.0257</p></td>
+<td><p>0.0999</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.5216</p></td>
+<td><p>4.04</p></td>
+<td><p>4.18</p></td>
+<td><p>0</p></td>
+<td><p>4.402133476</p></td>
+<td><p>0.004447963</p></td>
+<td><p>100</p></td>
+<td><p>770</p></td>
+</tr>
+<tr class="row-even"><td><p>Oh49-4.1</p></td>
+<td><p>77.92</p></td>
+<td><p>0.0099</p></td>
+<td><p>12.11</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>1.002</p></td>
+<td><p>0.0672</p></td>
+<td><p>0.0546</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.5346</p></td>
+<td><p>4.01</p></td>
+<td><p>4.3</p></td>
+<td><p>0</p></td>
+<td><p>4.283934433</p></td>
+<td><p>0.004565932</p></td>
+<td><p>1000</p></td>
+<td><p>855</p></td>
+</tr>
+<tr class="row-odd"><td><p>Oh49-4.2</p></td>
+<td><p>77.92</p></td>
+<td><p>0.0099</p></td>
+<td><p>12.11</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>1.002</p></td>
+<td><p>0.0672</p></td>
+<td><p>0.0546</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.5346</p></td>
+<td><p>4.01</p></td>
+<td><p>4.3</p></td>
+<td><p>0</p></td>
+<td><p>4.230532593</p></td>
+<td><p>0.004447963</p></td>
+<td><p>500</p></td>
+<td><p>1000</p></td>
+</tr>
+<tr class="row-even"><td><p>Ma55-5a.1</p></td>
+<td><p>77.68</p></td>
+<td><p>0.0096</p></td>
+<td><p>12.27</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>1.0272</p></td>
+<td><p>0.0628</p></td>
+<td><p>0.0342</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.6064</p></td>
+<td><p>3.97</p></td>
+<td><p>4.35</p></td>
+<td><p>0</p></td>
+<td><p>4.459767403</p></td>
+<td><p>0.004654367</p></td>
+<td><p>5000</p></td>
+<td><p>1010</p></td>
+</tr>
+<tr class="row-odd"><td><p>Ma57-3b.2</p></td>
+<td><p>77.9</p></td>
+<td><p>0.0498</p></td>
+<td><p>12.07</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>1.0844</p></td>
+<td><p>0.0748</p></td>
+<td><p>0.0355</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.4759</p></td>
+<td><p>4.1</p></td>
+<td><p>4.21</p></td>
+<td><p>0</p></td>
+<td><p>3.712506046</p></td>
+<td><p>0.004447963</p></td>
+<td><p>1000</p></td>
+<td><p>1012</p></td>
+</tr>
+<tr class="row-even"><td><p>Ma57-3c.1</p></td>
+<td><p>77.65</p></td>
+<td><p>0.159</p></td>
+<td><p>12.28</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.9769</p></td>
+<td><p>0.0597</p></td>
+<td><p>0.0577</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.5598</p></td>
+<td><p>4.08</p></td>
+<td><p>4.18</p></td>
+<td><p>0.0064</p></td>
+<td><p>4.443973024</p></td>
+<td><p>0.004654367</p></td>
+<td><p>100</p></td>
+<td><p>885</p></td>
+</tr>
+<tr class="row-odd"><td><p>Ma57-3c.2</p></td>
+<td><p>77.65</p></td>
+<td><p>0.159</p></td>
+<td><p>12.28</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.9769</p></td>
+<td><p>0.0597</p></td>
+<td><p>0.0577</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.5598</p></td>
+<td><p>4.08</p></td>
+<td><p>4.18</p></td>
+<td><p>0.0064</p></td>
+<td><p>4.283171078</p></td>
+<td><p>0.004644523</p></td>
+<td><p>1000</p></td>
+<td><p>885</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="standard-normalization">
+<h3><a class="toc-backref" href="#id13" role="doc-backlink">Standard Normalization</a><a class="headerlink" href="#standard-normalization" title="Link to this heading"></a></h3>
+<p>Returns the composition normalized to 100%, including any volatiles.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">standard</span> <span class="o">=</span> <span class="n">myfile</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">normalization</span><span class="o">=</span><span class="s1">&#39;standard&#39;</span><span class="p">,</span> <span class="n">asBatchFile</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">standard</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span>
+</pre></div>
+</div>
+<table class="docutils align-default" id="id5">
+<caption><span class="caption-text">Output</span><a class="headerlink" href="#id5" title="Link to this table"></a></caption>
+<thead>
+<tr class="row-odd"><th class="head"></th>
+<th class="head"><p>SiO2</p></th>
+<th class="head"><p>TiO2</p></th>
+<th class="head"><p>Al2O3</p></th>
+<th class="head"><p>Fe2O3</p></th>
+<th class="head"><p>Cr2O3</p></th>
+<th class="head"><p>FeO</p></th>
+<th class="head"><p>MnO</p></th>
+<th class="head"><p>MgO</p></th>
+<th class="head"><p>NiO</p></th>
+<th class="head"><p>CoO</p></th>
+<th class="head"><p>CaO</p></th>
+<th class="head"><p>Na2O</p></th>
+<th class="head"><p>K2O</p></th>
+<th class="head"><p>P2O5</p></th>
+<th class="head"><p>H2O</p></th>
+<th class="head"><p>CO2</p></th>
+<th class="head"><p>Press</p></th>
+<th class="head"><p>Temp</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>BT-ex</p></td>
+<td><p>73.3693079617533</p></td>
+<td><p>0.07573605983148728</p></td>
+<td><p>11.833759348669886</p></td>
+<td><p>0.1959670548139733</p></td>
+<td><p>0.0</p></td>
+<td><p>0.44778945375366846</p></td>
+<td><p>0.0</p></td>
+<td><p>0.028401022436807727</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.4070813215942441</p></td>
+<td><p>3.7678689766164917</p></td>
+<td><p>4.619899649720724</p></td>
+<td><p>0.0</p></td>
+<td><p>5.2068541134147495</p></td>
+<td><p>0.04733503739467954</p></td>
+<td><p>500</p></td>
+<td><p>900</p></td>
+</tr>
+<tr class="row-odd"><td><p>TVZMa-ex</p></td>
+<td><p>75.31593868627169</p></td>
+<td><p>0.12493392917207247</p></td>
+<td><p>11.474700879342656</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.9514199221565519</p></td>
+<td><p>0.038441208976022295</p></td>
+<td><p>0.048051511220027876</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.5093460189322955</p></td>
+<td><p>3.6519148527221184</p></td>
+<td><p>3.9786651290183075</p></td>
+<td><p>0.0</p></td>
+<td><p>3.9017827110662626</p></td>
+<td><p>0.004805151122002787</p></td>
+<td><p>600</p></td>
+<td><p>800</p></td>
+</tr>
+<tr class="row-even"><td><p>TVZOh-ex</p></td>
+<td><p>74.5133674494237</p></td>
+<td><p>0.07652207183509493</p></td>
+<td><p>11.621789659955043</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.9086996030417523</p></td>
+<td><p>0.04782629489693433</p></td>
+<td><p>0.0573915538763212</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.5260892438662778</p></td>
+<td><p>3.873929886651681</p></td>
+<td><p>3.9408866995073892</p></td>
+<td><p>0.0</p></td>
+<td><p>4.428714907456119</p></td>
+<td><p>0.004782629489693433</p></td>
+<td><p>50</p></td>
+<td><p>900</p></td>
+</tr>
+<tr class="row-odd"><td><p>Oh48-FTIR1-MI1-a</p></td>
+<td><p>75.0975937702406</p></td>
+<td><p>0.02859215912039312</p></td>
+<td><p>11.532810490843133</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.9429655699168578</p></td>
+<td><p>0.03223813914245668</p></td>
+<td><p>0.04941262398322972</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.4578583332970335</p></td>
+<td><p>3.88584712877826</p></td>
+<td><p>3.924225865852613</p></td>
+<td><p>0.0</p></td>
+<td><p>4.044074985988403</p></td>
+<td><p>0.004380932837037416</p></td>
+<td><p>250</p></td>
+<td><p>950</p></td>
+</tr>
+<tr class="row-even"><td><p>Oh48-FTIR1-MI1-b</p></td>
+<td><p>75.24864355354957</p></td>
+<td><p>0.028649668811751336</p></td>
+<td><p>11.556007352927889</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.94486223181843</p></td>
+<td><p>0.03230298228439077</p></td>
+<td><p>0.049512011537087036</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.4587792603009308</p></td>
+<td><p>3.893663043207816</p></td>
+<td><p>3.9321189744987572</p></td>
+<td><p>0.0</p></td>
+<td><p>3.8511846215038426</p></td>
+<td><p>0.004276299559552683</p></td>
+<td><p>500</p></td>
+<td><p>1025</p></td>
+</tr>
+<tr class="row-odd"><td><p>Oh48-FTIR1-MI1-IRc</p></td>
+<td><p>75.33552824378235</p></td>
+<td><p>0.028682748711699423</p></td>
+<td><p>11.569350319282789</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.9459532024784629</p></td>
+<td><p>0.03234028042661411</p></td>
+<td><p>0.049569179820554365</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.45930898272560283</p></td>
+<td><p>3.898158801422237</p></td>
+<td><p>3.9366591352634446</p></td>
+<td><p>0.0</p></td>
+<td><p>3.7399695922438303</p></td>
+<td><p>0.004479513842424467</p></td>
+<td><p>5000</p></td>
+<td><p>925</p></td>
+</tr>
+<tr class="row-even"><td><p>Oh50-4.1</p></td>
+<td><p>74.44986153482016</p></td>
+<td><p>0.09402985977443593</p></td>
+<td><p>11.533947230461806</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>1.0087186989623431</p></td>
+<td><p>0.024558611750030525</p></td>
+<td><p>0.09546324178319258</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.49843470384497746</p></td>
+<td><p>3.860575543584565</p></td>
+<td><p>3.994357864401852</p></td>
+<td><p>0.0</p></td>
+<td><p>4.435689495781982</p></td>
+<td><p>0.0043632148346552276</p></td>
+<td><p>1000</p></td>
+<td><p>862</p></td>
+</tr>
+<tr class="row-odd"><td><p>Oh50-4.2</p></td>
+<td><p>74.62087523917397</p></td>
+<td><p>0.0942458493586795</p></td>
+<td><p>11.560441074789242</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>1.0110357579575413</p></td>
+<td><p>0.024615023663801455</p></td>
+<td><p>0.09568252389158619</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.4995796242427563</p></td>
+<td><p>3.869443408628711</p></td>
+<td><p>4.003533031700003</p></td>
+<td><p>0.0</p></td>
+<td><p>4.216288247712112</p></td>
+<td><p>0.004260218881579333</p></td>
+<td><p>100</p></td>
+<td><p>770</p></td>
+</tr>
+<tr class="row-even"><td><p>Oh49-4.1</p></td>
+<td><p>74.70986645803131</p></td>
+<td><p>0.009492141657270407</p></td>
+<td><p>11.611094491873194</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.9607197919782775</p></td>
+<td><p>0.06443150700692639</p></td>
+<td><p>0.05235059944312769</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.5125756494926018</p></td>
+<td><p>3.844796772288316</p></td>
+<td><p>4.122849406693207</p></td>
+<td><p>0.0</p></td>
+<td><p>4.107445290747176</p></td>
+<td><p>0.004377890788595623</p></td>
+<td><p>1000</p></td>
+<td><p>855</p></td>
+</tr>
+<tr class="row-odd"><td><p>Oh49-4.2</p></td>
+<td><p>74.74822286148112</p></td>
+<td><p>0.009497014968283667</p></td>
+<td><p>11.617055683425775</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.9612130301232558</p></td>
+<td><p>0.06446458645138002</p></td>
+<td><p>0.052377476491746275</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.5128388082873179</p></td>
+<td><p>3.846770709375505</p></td>
+<td><p>4.124966097335329</p></td>
+<td><p>0.0</p></td>
+<td><p>4.058326790385657</p></td>
+<td><p>0.004266941674638963</p></td>
+<td><p>500</p></td>
+<td><p>1000</p></td>
+</tr>
+<tr class="row-even"><td><p>Ma55-5a.1</p></td>
+<td><p>74.35298568826587</p></td>
+<td><p>0.009188834482586925</p></td>
+<td><p>11.744479073056414</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.9832052896368009</p></td>
+<td><p>0.06011029224025613</p></td>
+<td><p>0.03273522284421592</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.5804280448167408</p></td>
+<td><p>3.799965926653135</p></td>
+<td><p>4.1636906249222</p></td>
+<td><p>0.0</p></td>
+<td><p>4.268756332698255</p></td>
+<td><p>0.0044546703835374535</p></td>
+<td><p>5000</p></td>
+<td><p>1010</p></td>
+</tr>
+<tr class="row-odd"><td><p>Ma57-3b.2</p></td>
+<td><p>75.10797084160093</p></td>
+<td><p>0.048015108445593396</p></td>
+<td><p>11.637396765829566</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>1.045533807196817</p></td>
+<td><p>0.07211907854880295</p></td>
+<td><p>0.03422763754655755</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.4588431748846968</p></td>
+<td><p>3.953051096926364</p></td>
+<td><p>4.059108565380487</p></td>
+<td><p>0.0</p></td>
+<td><p>3.579445345279441</p></td>
+<td><p>0.004288578360763041</p></td>
+<td><p>1000</p></td>
+<td><p>1012</p></td>
+</tr>
+<tr class="row-even"><td><p>Ma57-3c.1</p></td>
+<td><p>74.33600642676657</p></td>
+<td><p>0.15221410202003716</p></td>
+<td><p>11.7559067472079</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.9352072720966936</p></td>
+<td><p>0.05715208736224037</p></td>
+<td><p>0.0552374445695355</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.535908517678093</p></td>
+<td><p>3.9058712971179346</p></td>
+<td><p>4.001603436753178</p></td>
+<td><p>0.006126856936655584</p></td>
+<td><p>4.254310437712519</p></td>
+<td><p>0.004455373778624232</p></td>
+<td><p>100</p></td>
+<td><p>885</p></td>
+</tr>
+<tr class="row-odd"><td><p>Ma57-3c.2</p></td>
+<td><p>74.45062152893753</p></td>
+<td><p>0.15244879360078642</p></td>
+<td><p>11.774032612689668</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.9366492230730078</p></td>
+<td><p>0.05724020740859717</p></td>
+<td><p>0.05532261252053696</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.5367348091680517</p></td>
+<td><p>3.911893571642821</p></td>
+<td><p>4.0077733160458315</p></td>
+<td><p>0.006136303641792661</p></td>
+<td><p>4.106693407143862</p></td>
+<td><p>0.00445361412751983</p></td>
+<td><p>1000</p></td>
+<td><p>885</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="fixedvolatiles-normalization">
+<h3><a class="toc-backref" href="#id14" role="doc-backlink">FixedVolatiles Normalization</a><a class="headerlink" href="#fixedvolatiles-normalization" title="Link to this heading"></a></h3>
+<p>Normalizes the oxides to 100%, but volatiles remain fixed while other major element oxides are reduced proporitonally so that the total is 100 wt%.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">fixed_vols</span> <span class="o">=</span> <span class="n">myfile</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">normalization</span><span class="o">=</span><span class="s1">&#39;fixedvolatiles&#39;</span><span class="p">,</span> <span class="n">asBatchFile</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">fixed_vols</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span>
+</pre></div>
+</div>
+<table class="docutils align-default" id="id6">
+<caption><span class="caption-text">Output</span><a class="headerlink" href="#id6" title="Link to this table"></a></caption>
+<thead>
+<tr class="row-odd"><th class="head"></th>
+<th class="head"><p>SiO2</p></th>
+<th class="head"><p>TiO2</p></th>
+<th class="head"><p>Al2O3</p></th>
+<th class="head"><p>Fe2O3</p></th>
+<th class="head"><p>Cr2O3</p></th>
+<th class="head"><p>FeO</p></th>
+<th class="head"><p>MnO</p></th>
+<th class="head"><p>MgO</p></th>
+<th class="head"><p>NiO</p></th>
+<th class="head"><p>CoO</p></th>
+<th class="head"><p>CaO</p></th>
+<th class="head"><p>Na2O</p></th>
+<th class="head"><p>K2O</p></th>
+<th class="head"><p>P2O5</p></th>
+<th class="head"><p>CO2</p></th>
+<th class="head"><p>H2O</p></th>
+<th class="head"><p>Press</p></th>
+<th class="head"><p>Temp</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>BT-ex</p></td>
+<td><p>73.1402378097522</p></td>
+<td><p>0.07549960031974419</p></td>
+<td><p>11.79681254996003</p></td>
+<td><p>0.19535521582733809</p></td>
+<td><p>0.0</p></td>
+<td><p>0.4463913868904875</p></td>
+<td><p>0.0</p></td>
+<td><p>0.02831235011990407</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.405810351718625</p></td>
+<td><p>3.756105115907274</p></td>
+<td><p>4.6054756195043955</p></td>
+<td><p>0.0</p></td>
+<td><p>0.05</p></td>
+<td><p>5.5</p></td>
+<td><p>500</p></td>
+<td><p>900</p></td>
+</tr>
+<tr class="row-odd"><td><p>TVZMa-ex</p></td>
+<td><p>75.19177867786779</p></td>
+<td><p>0.12472797279727973</p></td>
+<td><p>11.455784578457846</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.9498514851485149</p></td>
+<td><p>0.03837783778377838</p></td>
+<td><p>0.047972297229722974</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.5085063506350636</p></td>
+<td><p>3.6458945894589463</p></td>
+<td><p>3.972106210621062</p></td>
+<td><p>0.0</p></td>
+<td><p>0.005</p></td>
+<td><p>4.06</p></td>
+<td><p>600</p></td>
+<td><p>800</p></td>
+</tr>
+<tr class="row-even"><td><p>TVZOh-ex</p></td>
+<td><p>74.35625563006705</p></td>
+<td><p>0.07636072465218695</p></td>
+<td><p>11.597285056550895</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.9067836052447201</p></td>
+<td><p>0.04772545290761685</p></td>
+<td><p>0.057270543489140215</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.5249799819837854</p></td>
+<td><p>3.865761685516964</p></td>
+<td><p>3.9325773195876286</p></td>
+<td><p>0.0</p></td>
+<td><p>0.005</p></td>
+<td><p>4.63</p></td>
+<td><p>50</p></td>
+<td><p>900</p></td>
+</tr>
+<tr class="row-odd"><td><p>Oh48-FTIR1-MI1-a</p></td>
+<td><p>74.96374134607406</p></td>
+<td><p>0.028541197037345176</p></td>
+<td><p>11.51225464392245</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.9412848472584846</p></td>
+<td><p>0.03218067853875161</p></td>
+<td><p>0.04932455192695558</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.45704225591346037</p></td>
+<td><p>3.8789210738673816</p></td>
+<td><p>3.9172314054611332</p></td>
+<td><p>0.0</p></td>
+<td><p>0.004566</p></td>
+<td><p>4.214912</p></td>
+<td><p>250</p></td>
+<td><p>950</p></td>
+</tr>
+<tr class="row-even"><td><p>Oh48-FTIR1-MI1-b</p></td>
+<td><p>75.1274851204291</p></td>
+<td><p>0.02860353975455203</p></td>
+<td><p>11.537400934554208</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.9433409017038167</p></td>
+<td><p>0.03225097099842108</p></td>
+<td><p>0.04943229185769897</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.4580405762037661</p></td>
+<td><p>3.8873938257025413</p></td>
+<td><p>3.9257878387958995</p></td>
+<td><p>0.0</p></td>
+<td><p>0.004448</p></td>
+<td><p>4.005816</p></td>
+<td><p>500</p></td>
+<td><p>1025</p></td>
+</tr>
+<tr class="row-odd"><td><p>Oh48-FTIR1-MI1-IRc</p></td>
+<td><p>75.22137399457428</p></td>
+<td><p>0.028639286380967337</p></td>
+<td><p>11.55181954024253</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.9445198206447886</p></td>
+<td><p>0.03229127591947995</p></td>
+<td><p>0.04949406874563147</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.4586130020468998</p></td>
+<td><p>3.892252008151601</p></td>
+<td><p>3.930694003293839</p></td>
+<td><p>0.0</p></td>
+<td><p>0.004654</p></td>
+<td><p>3.885649</p></td>
+<td><p>5000</p></td>
+<td><p>925</p></td>
+</tr>
+<tr class="row-even"><td><p>Oh50-4.1</p></td>
+<td><p>74.28909127900464</p></td>
+<td><p>0.09382680762230851</p></td>
+<td><p>11.509040325216095</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>1.0065404281108625</p></td>
+<td><p>0.024505578820054157</p></td>
+<td><p>0.0952570943238681</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.4973583623556516</p></td>
+<td><p>3.852238849533805</p></td>
+<td><p>3.985732275012699</p></td>
+<td><p>0.0</p></td>
+<td><p>0.004566</p></td>
+<td><p>4.641843</p></td>
+<td><p>1000</p></td>
+<td><p>862</p></td>
+</tr>
+<tr class="row-odd"><td><p>Oh50-4.2</p></td>
+<td><p>74.4759390316316</p></td>
+<td><p>0.09406279554245348</p></td>
+<td><p>11.53798721745339</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>1.0090720220997347</p></td>
+<td><p>0.02456721387643348</p></td>
+<td><p>0.09549667962084454</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.4986092901925176</p></td>
+<td><p>3.861927784466586</p></td>
+<td><p>3.9957569651164175</p></td>
+<td><p>0.0</p></td>
+<td><p>0.004448</p></td>
+<td><p>4.402133</p></td>
+<td><p>100</p></td>
+<td><p>770</p></td>
+</tr>
+<tr class="row-even"><td><p>Oh49-4.1</p></td>
+<td><p>74.57221130646157</p></td>
+<td><p>0.009474652103875379</p></td>
+<td><p>11.589700704841498</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.9589496371801141</p></td>
+<td><p>0.06431279003842681</p></td>
+<td><p>0.05225414190622178</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.5116312136092703</p></td>
+<td><p>3.8377126198525517</p></td>
+<td><p>4.115252934006477</p></td>
+<td><p>0.0</p></td>
+<td><p>0.004566</p></td>
+<td><p>4.283934</p></td>
+<td><p>1000</p></td>
+<td><p>855</p></td>
+</tr>
+<tr class="row-odd"><td><p>Oh49-4.2</p></td>
+<td><p>74.61390985028243</p></td>
+<td><p>0.009479950045146252</p></td>
+<td><p>11.596181317850617</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.9594858530541964</p></td>
+<td><p>0.0643487518215988</p></td>
+<td><p>0.052283360855049026</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.5119173024378976</p></td>
+<td><p>3.839858553640047</p></td>
+<td><p>4.117554060013019</p></td>
+<td><p>0.0</p></td>
+<td><p>0.004448</p></td>
+<td><p>4.230533</p></td>
+<td><p>500</p></td>
+<td><p>1000</p></td>
+</tr>
+<tr class="row-even"><td><p>Ma55-5a.1</p></td>
+<td><p>74.20446891137105</p></td>
+<td><p>0.009170480195020108</p></td>
+<td><p>11.721019999260076</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.9812413808671514</p></td>
+<td><p>0.059990224609089864</p></td>
+<td><p>0.03266983569475913</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.5792686656521036</p></td>
+<td><p>3.7923756639822743</p></td>
+<td><p>4.155373838368487</p></td>
+<td><p>0.0</p></td>
+<td><p>0.004654</p></td>
+<td><p>4.459767</p></td>
+<td><p>5000</p></td>
+<td><p>1010</p></td>
+</tr>
+<tr class="row-odd"><td><p>Ma57-3b.2</p></td>
+<td><p>75.00419281722876</p></td>
+<td><p>0.04794876511293955</p></td>
+<td><p>11.621317166931334</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>1.0440891744673022</p></td>
+<td><p>0.07201943033027869</p></td>
+<td><p>0.03418034460862157</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.4582091830772677</p></td>
+<td><p>3.9475890956436177</p></td>
+<td><p>4.05350002259991</p></td>
+<td><p>0.0</p></td>
+<td><p>0.004448</p></td>
+<td><p>3.712506</p></td>
+<td><p>1000</p></td>
+<td><p>1012</p></td>
+</tr>
+<tr class="row-even"><td><p>Ma57-3c.1</p></td>
+<td><p>74.18859321814428</p></td>
+<td><p>0.1519122514061164</p></td>
+<td><p>11.73259400796924</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.9333526943310383</p></td>
+<td><p>0.05703875099965503</p></td>
+<td><p>0.055127905070018336</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.5348457757053078</p></td>
+<td><p>3.8981256964588353</p></td>
+<td><p>3.99366799294067</p></td>
+<td><p>0.00611470697483739</p></td>
+<td><p>0.004654</p></td>
+<td><p>4.443973</p></td>
+<td><p>100</p></td>
+<td><p>885</p></td>
+</tr>
+<tr class="row-odd"><td><p>Ma57-3c.2</p></td>
+<td><p>74.31345109814566</p></td>
+<td><p>0.1521679166079222</p></td>
+<td><p>11.752339722926319</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.9349235077627622</p></td>
+<td><p>0.05713474604712552</p></td>
+<td><p>0.0552206842030007</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.5357459101705336</p></td>
+<td><p>3.9046861620146074</p></td>
+<td><p>4.000389254220848</p></td>
+<td><p>0.006124997901199385</p></td>
+<td><p>0.004645</p></td>
+<td><p>4.283171</p></td>
+<td><p>1000</p></td>
+<td><p>885</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="additionalvolatiles-normalization">
+<h3><a class="toc-backref" href="#id15" role="doc-backlink">AdditionalVolatiles Normalization</a><a class="headerlink" href="#additionalvolatiles-normalization" title="Link to this heading"></a></h3>
+<p>Normalizes oxides to 100% assuming the sample is volatile-free. If H_2O or CO_2 concentrations are passed to the function, their un-normalized values will be retained in addition to the normalized non-volatile oxides, summing to &gt;100%.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">additional_vols</span> <span class="o">=</span> <span class="n">myfile</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">normalization</span><span class="o">=</span><span class="s1">&#39;additionalvolatiles&#39;</span><span class="p">,</span> <span class="n">asBatchFile</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">additional_vols</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span>
+</pre></div>
+</div>
+<table class="docutils align-default" id="id7">
+<caption><span class="caption-text">Output</span><a class="headerlink" href="#id7" title="Link to this table"></a></caption>
+<thead>
+<tr class="row-odd"><th class="head"></th>
+<th class="head"><p>SiO2</p></th>
+<th class="head"><p>TiO2</p></th>
+<th class="head"><p>Al2O3</p></th>
+<th class="head"><p>Fe2O3</p></th>
+<th class="head"><p>Cr2O3</p></th>
+<th class="head"><p>FeO</p></th>
+<th class="head"><p>MnO</p></th>
+<th class="head"><p>MgO</p></th>
+<th class="head"><p>NiO</p></th>
+<th class="head"><p>CoO</p></th>
+<th class="head"><p>CaO</p></th>
+<th class="head"><p>Na2O</p></th>
+<th class="head"><p>K2O</p></th>
+<th class="head"><p>P2O5</p></th>
+<th class="head"><p>H2O</p></th>
+<th class="head"><p>CO2</p></th>
+<th class="head"><p>Press</p></th>
+<th class="head"><p>Temp</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>BT-ex</p></td>
+<td><p>77.4380495603517</p></td>
+<td><p>0.07993605115907274</p></td>
+<td><p>12.490007993605113</p></td>
+<td><p>0.20683453237410068</p></td>
+<td><p>0.0</p></td>
+<td><p>0.4726219024780175</p></td>
+<td><p>0.0</p></td>
+<td><p>0.029976019184652272</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.4296562749800159</p></td>
+<td><p>3.9768185451638685</p></td>
+<td><p>4.8760991207034365</p></td>
+<td><p>0.0</p></td>
+<td><p>5.5</p></td>
+<td><p>0.05</p></td>
+<td><p>500</p></td>
+<td><p>900</p></td>
+</tr>
+<tr class="row-odd"><td><p>TVZMa-ex</p></td>
+<td><p>78.37783778377838</p></td>
+<td><p>0.13001300130013002</p></td>
+<td><p>11.941194119411941</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.9900990099009901</p></td>
+<td><p>0.040004000400040006</p></td>
+<td><p>0.05000500050005</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.5300530053005301</p></td>
+<td><p>3.8003800380038006</p></td>
+<td><p>4.14041404140414</p></td>
+<td><p>0.0</p></td>
+<td><p>4.06</p></td>
+<td><p>0.005</p></td>
+<td><p>600</p></td>
+<td><p>800</p></td>
+</tr>
+<tr class="row-even"><td><p>TVZOh-ex</p></td>
+<td><p>77.97017315584026</p></td>
+<td><p>0.08007206485837252</p></td>
+<td><p>12.160944850365327</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.9508557701931738</p></td>
+<td><p>0.050045040536482836</p></td>
+<td><p>0.06005404864377939</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.5504954459013112</p></td>
+<td><p>4.053648283455109</p></td>
+<td><p>4.123711340206185</p></td>
+<td><p>0.0</p></td>
+<td><p>4.63</p></td>
+<td><p>0.005</p></td>
+<td><p>50</p></td>
+<td><p>900</p></td>
+</tr>
+<tr class="row-odd"><td><p>Oh48-FTIR1-MI1-a</p></td>
+<td><p>78.26616495791707</p></td>
+<td><p>0.0297985398715463</p></td>
+<td><p>12.019411048858608</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.9827518451595874</p></td>
+<td><p>0.03359835368066965</p></td>
+<td><p>0.05149747662364545</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.4771766183457012</p></td>
+<td><p>4.049801559723575</p></td>
+<td><p>4.089799599819609</p></td>
+<td><p>0.0</p></td>
+<td><p>4.214912</p></td>
+<td><p>0.004566</p></td>
+<td><p>250</p></td>
+<td><p>950</p></td>
+</tr>
+<tr class="row-even"><td><p>Oh48-FTIR1-MI1-b</p></td>
+<td><p>78.26616495791707</p></td>
+<td><p>0.0297985398715463</p></td>
+<td><p>12.019411048858608</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.9827518451595874</p></td>
+<td><p>0.03359835368066965</p></td>
+<td><p>0.05149747662364545</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.4771766183457012</p></td>
+<td><p>4.049801559723575</p></td>
+<td><p>4.089799599819609</p></td>
+<td><p>0.0</p></td>
+<td><p>4.005816</p></td>
+<td><p>0.004448</p></td>
+<td><p>500</p></td>
+<td><p>1025</p></td>
+</tr>
+<tr class="row-odd"><td><p>Oh48-FTIR1-MI1-IRc</p></td>
+<td><p>78.26616495791707</p></td>
+<td><p>0.0297985398715463</p></td>
+<td><p>12.019411048858608</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.9827518451595874</p></td>
+<td><p>0.03359835368066965</p></td>
+<td><p>0.05149747662364545</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.4771766183457012</p></td>
+<td><p>4.049801559723575</p></td>
+<td><p>4.089799599819609</p></td>
+<td><p>0.0</p></td>
+<td><p>3.885649</p></td>
+<td><p>0.004654</p></td>
+<td><p>5000</p></td>
+<td><p>925</p></td>
+</tr>
+<tr class="row-even"><td><p>Oh50-4.1</p></td>
+<td><p>77.90906509121889</p></td>
+<td><p>0.09839881921416942</p></td>
+<td><p>12.069855161738058</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>1.0555873329520045</p></td>
+<td><p>0.025699691603700753</p></td>
+<td><p>0.09989880121438542</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.5215937408751095</p></td>
+<td><p>4.039951520581752</p></td>
+<td><p>4.179949840601912</p></td>
+<td><p>0.0</p></td>
+<td><p>4.641843</p></td>
+<td><p>0.004566</p></td>
+<td><p>1000</p></td>
+<td><p>862</p></td>
+</tr>
+<tr class="row-odd"><td><p>Oh50-4.2</p></td>
+<td><p>77.90906509121889</p></td>
+<td><p>0.09839881921416942</p></td>
+<td><p>12.069855161738058</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>1.0555873329520045</p></td>
+<td><p>0.025699691603700753</p></td>
+<td><p>0.09989880121438542</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.5215937408751095</p></td>
+<td><p>4.039951520581752</p></td>
+<td><p>4.179949840601912</p></td>
+<td><p>0.0</p></td>
+<td><p>4.402133</p></td>
+<td><p>0.004448</p></td>
+<td><p>100</p></td>
+<td><p>770</p></td>
+</tr>
+<tr class="row-even"><td><p>Oh49-4.1</p></td>
+<td><p>77.91353317674633</p></td>
+<td><p>0.009899178368195441</p></td>
+<td><p>12.108994953418865</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>1.001916840902205</p></td>
+<td><p>0.06719442286290238</p></td>
+<td><p>0.054595468576108176</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.5345556318825537</p></td>
+<td><p>4.009667197622597</p></td>
+<td><p>4.299643129620241</p></td>
+<td><p>0.0</p></td>
+<td><p>4.283934</p></td>
+<td><p>0.004566</p></td>
+<td><p>1000</p></td>
+<td><p>855</p></td>
+</tr>
+<tr class="row-odd"><td><p>Oh49-4.2</p></td>
+<td><p>77.91353317674633</p></td>
+<td><p>0.009899178368195441</p></td>
+<td><p>12.108994953418865</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>1.001916840902205</p></td>
+<td><p>0.06719442286290238</p></td>
+<td><p>0.054595468576108176</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.5345556318825537</p></td>
+<td><p>4.009667197622597</p></td>
+<td><p>4.299643129620241</p></td>
+<td><p>0.0</p></td>
+<td><p>4.230533</p></td>
+<td><p>0.004448</p></td>
+<td><p>500</p></td>
+<td><p>1000</p></td>
+</tr>
+<tr class="row-even"><td><p>Ma55-5a.1</p></td>
+<td><p>77.67207744810031</p></td>
+<td><p>0.009599020899868213</p></td>
+<td><p>12.26874858764406</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>1.0270952362858987</p></td>
+<td><p>0.06279359505330455</p></td>
+<td><p>0.03419651195578051</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.6063381535083423</p></td>
+<td><p>3.969595101299668</p></td>
+<td><p>4.349556345252784</p></td>
+<td><p>0.0</p></td>
+<td><p>4.459767</p></td>
+<td><p>0.004654</p></td>
+<td><p>5000</p></td>
+<td><p>1010</p></td>
+</tr>
+<tr class="row-odd"><td><p>Ma57-3b.2</p></td>
+<td><p>77.89968840124641</p></td>
+<td><p>0.0497998008007968</p></td>
+<td><p>12.06995172019312</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>1.0843956624173505</p></td>
+<td><p>0.0747997008011968</p></td>
+<td><p>0.035499858000568</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.4758980964076144</p></td>
+<td><p>4.0999836000656</p></td>
+<td><p>4.2099831600673605</p></td>
+<td><p>0.0</p></td>
+<td><p>3.712506</p></td>
+<td><p>0.004448</p></td>
+<td><p>1000</p></td>
+<td><p>1012</p></td>
+</tr>
+<tr class="row-even"><td><p>Ma57-3c.1</p></td>
+<td><p>77.64262395072467</p></td>
+<td><p>0.15898489643483865</p></td>
+<td><p>12.27883351081647</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.9768072033156848</p></td>
+<td><p>0.05969432903874132</p></td>
+<td><p>0.05769451902069302</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.5597468240517149</p></td>
+<td><p>4.079612436818501</p></td>
+<td><p>4.179602937720916</p></td>
+<td><p>0.006399392057754512</p></td>
+<td><p>4.443973</p></td>
+<td><p>0.004654</p></td>
+<td><p>100</p></td>
+<td><p>885</p></td>
+</tr>
+<tr class="row-odd"><td><p>Ma57-3c.2</p></td>
+<td><p>77.64262395072467</p></td>
+<td><p>0.15898489643483865</p></td>
+<td><p>12.27883351081647</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.9768072033156848</p></td>
+<td><p>0.05969432903874132</p></td>
+<td><p>0.05769451902069302</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.5597468240517149</p></td>
+<td><p>4.079612436818501</p></td>
+<td><p>4.179602937720916</p></td>
+<td><p>0.006399392057754512</p></td>
+<td><p>4.283171</p></td>
+<td><p>0.004645</p></td>
+<td><p>1000</p></td>
+<td><p>885</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="normalize-a-single-sample-composition">
+<h2><a class="toc-backref" href="#id16" role="doc-backlink">Normalize a single sample composition</a><a class="headerlink" href="#normalize-a-single-sample-composition" title="Link to this heading"></a></h2>
+<section id="extract-a-single-sample-from-your-dataset">
+<h3><a class="toc-backref" href="#id17" role="doc-backlink">Extract a single sample from your dataset</a><a class="headerlink" href="#extract-a-single-sample-from-your-dataset" title="Link to this heading"></a></h3>
+<p>Here, a composition is extracted from a BatchFile object and returned as a Sample object. Set asSampleClass=False to return as a dictionary.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">SampleName</span> <span class="o">=</span> <span class="s1">&#39;BT-ex&#39;</span>
+<span class="n">extracted_bulk_comp</span> <span class="o">=</span> <span class="n">myfile</span><span class="o">.</span><span class="n">get_sample_composition</span><span class="p">(</span><span class="n">SampleName</span><span class="p">,</span> <span class="n">asSampleClass</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The normalization type can be passed to get_sample_composition directly:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">extracted_bulk_comp</span> <span class="o">=</span> <span class="n">myfile</span><span class="o">.</span><span class="n">get_sample_composition</span><span class="p">(</span><span class="n">SampleName</span><span class="p">,</span> <span class="n">normalization</span><span class="o">=&lt;</span><span class="n">normalization</span><span class="o">-</span><span class="nb">type</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">asSampleClass</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Or, normalization can be done to any Sample object, as shown below.</p>
+</section>
+<section id="id1">
+<h3><a class="toc-backref" href="#id18" role="doc-backlink">Standard Normalization</a><a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<p>In the following three examples, the normalized composition is returned as a dictionary, not as a Sample object.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">single_standard</span> <span class="o">=</span> <span class="n">extracted_bulk_comp</span><span class="o">.</span><span class="n">get_composition</span><span class="p">(</span><span class="n">normalization</span><span class="o">=</span><span class="s1">&#39;standard&#39;</span><span class="p">)</span>
+<span class="n">single_standard</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;SiO2&#39;</span><span class="p">:</span> <span class="mf">73.3693079617533</span><span class="p">,</span>
+ <span class="s1">&#39;TiO2&#39;</span><span class="p">:</span> <span class="mf">0.07573605983148728</span><span class="p">,</span>
+ <span class="s1">&#39;Al2O3&#39;</span><span class="p">:</span> <span class="mf">11.833759348669886</span><span class="p">,</span>
+ <span class="s1">&#39;Fe2O3&#39;</span><span class="p">:</span> <span class="mf">0.1959670548139733</span><span class="p">,</span>
+ <span class="s1">&#39;Cr2O3&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+ <span class="s1">&#39;FeO&#39;</span><span class="p">:</span> <span class="mf">0.44778945375366846</span><span class="p">,</span>
+ <span class="s1">&#39;MnO&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+ <span class="s1">&#39;MgO&#39;</span><span class="p">:</span> <span class="mf">0.028401022436807727</span><span class="p">,</span>
+ <span class="s1">&#39;NiO&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+ <span class="s1">&#39;CoO&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+ <span class="s1">&#39;CaO&#39;</span><span class="p">:</span> <span class="mf">0.4070813215942441</span><span class="p">,</span>
+ <span class="s1">&#39;Na2O&#39;</span><span class="p">:</span> <span class="mf">3.7678689766164917</span><span class="p">,</span>
+ <span class="s1">&#39;K2O&#39;</span><span class="p">:</span> <span class="mf">4.619899649720724</span><span class="p">,</span>
+ <span class="s1">&#39;P2O5&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+ <span class="s1">&#39;H2O&#39;</span><span class="p">:</span> <span class="mf">5.2068541134147495</span><span class="p">,</span>
+ <span class="s1">&#39;CO2&#39;</span><span class="p">:</span> <span class="mf">0.04733503739467954</span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3><a class="toc-backref" href="#id19" role="doc-backlink">FixedVolatiles Normalization</a><a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">single_fixed</span> <span class="o">=</span> <span class="n">extracted_bulk_comp</span><span class="o">.</span><span class="n">get_composition</span><span class="p">(</span><span class="n">normalization</span><span class="o">=</span><span class="s1">&#39;fixedvolatiles&#39;</span><span class="p">)</span>
+<span class="n">single_fixed</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;SiO2&#39;</span><span class="p">:</span> <span class="mf">73.1402378097522</span><span class="p">,</span>
+ <span class="s1">&#39;TiO2&#39;</span><span class="p">:</span> <span class="mf">0.07549960031974419</span><span class="p">,</span>
+ <span class="s1">&#39;Al2O3&#39;</span><span class="p">:</span> <span class="mf">11.79681254996003</span><span class="p">,</span>
+ <span class="s1">&#39;Fe2O3&#39;</span><span class="p">:</span> <span class="mf">0.19535521582733809</span><span class="p">,</span>
+ <span class="s1">&#39;Cr2O3&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+ <span class="s1">&#39;FeO&#39;</span><span class="p">:</span> <span class="mf">0.4463913868904875</span><span class="p">,</span>
+ <span class="s1">&#39;MnO&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+ <span class="s1">&#39;MgO&#39;</span><span class="p">:</span> <span class="mf">0.02831235011990407</span><span class="p">,</span>
+ <span class="s1">&#39;NiO&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+ <span class="s1">&#39;CoO&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+ <span class="s1">&#39;CaO&#39;</span><span class="p">:</span> <span class="mf">0.405810351718625</span><span class="p">,</span>
+ <span class="s1">&#39;Na2O&#39;</span><span class="p">:</span> <span class="mf">3.756105115907274</span><span class="p">,</span>
+ <span class="s1">&#39;K2O&#39;</span><span class="p">:</span> <span class="mf">4.6054756195043955</span><span class="p">,</span>
+ <span class="s1">&#39;P2O5&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+ <span class="s1">&#39;CO2&#39;</span><span class="p">:</span> <span class="mf">0.05</span><span class="p">,</span>
+ <span class="s1">&#39;H2O&#39;</span><span class="p">:</span> <span class="mf">5.5</span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3><a class="toc-backref" href="#id20" role="doc-backlink">AdditionalVolatiles Normalization</a><a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">single_additional</span> <span class="o">=</span> <span class="n">extracted_bulk_comp</span><span class="o">.</span><span class="n">get_composition</span><span class="p">(</span><span class="n">normalization</span><span class="o">=</span><span class="s1">&#39;additionalvolatiles&#39;</span><span class="p">)</span>
+<span class="n">single_additional</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;SiO2&#39;</span><span class="p">:</span> <span class="mf">77.4380495603517</span><span class="p">,</span>
+ <span class="s1">&#39;TiO2&#39;</span><span class="p">:</span> <span class="mf">0.07993605115907274</span><span class="p">,</span>
+ <span class="s1">&#39;Al2O3&#39;</span><span class="p">:</span> <span class="mf">12.490007993605113</span><span class="p">,</span>
+ <span class="s1">&#39;Fe2O3&#39;</span><span class="p">:</span> <span class="mf">0.20683453237410068</span><span class="p">,</span>
+ <span class="s1">&#39;Cr2O3&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+ <span class="s1">&#39;FeO&#39;</span><span class="p">:</span> <span class="mf">0.4726219024780175</span><span class="p">,</span>
+ <span class="s1">&#39;MnO&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+ <span class="s1">&#39;MgO&#39;</span><span class="p">:</span> <span class="mf">0.029976019184652272</span><span class="p">,</span>
+ <span class="s1">&#39;NiO&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+ <span class="s1">&#39;CoO&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+ <span class="s1">&#39;CaO&#39;</span><span class="p">:</span> <span class="mf">0.4296562749800159</span><span class="p">,</span>
+ <span class="s1">&#39;Na2O&#39;</span><span class="p">:</span> <span class="mf">3.9768185451638685</span><span class="p">,</span>
+ <span class="s1">&#39;K2O&#39;</span><span class="p">:</span> <span class="mf">4.8760991207034365</span><span class="p">,</span>
+ <span class="s1">&#39;P2O5&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+ <span class="s1">&#39;H2O&#39;</span><span class="p">:</span> <span class="mf">5.5</span><span class="p">,</span>
+ <span class="s1">&#39;CO2&#39;</span><span class="p">:</span> <span class="mf">0.05</span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Kayla Iacovino and Simon Matthews.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

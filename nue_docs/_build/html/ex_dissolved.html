@@ -1,0 +1,915 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculating dissolved volatile concentrations &mdash; VESIcal 1.2.6 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=77553476" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=010db75e"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">ChangeLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About VESIcal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">Models in VESIcal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="integration.html">Integration with Thermobar</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workshops.html">Workshops and Presentations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="codedoc.html">VESIcal Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ’s</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support.html">Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">MIT Licence</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">ChangeLog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">VESIcal</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Calculating dissolved volatile concentrations</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/ex_dissolved.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="calculating-dissolved-volatile-concentrations">
+<h1><a class="toc-backref" href="#id4" role="doc-backlink">Calculating dissolved volatile concentrations</a><a class="headerlink" href="#calculating-dissolved-volatile-concentrations" title="Link to this heading"></a></h1>
+<nav class="contents" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#calculating-dissolved-volatile-concentrations" id="id4">Calculating dissolved volatile concentrations</a></p>
+<ul>
+<li><p><a class="reference internal" href="#for-an-entire-dataset" id="id5">For an entire dataset</a></p>
+<ul>
+<li><p><a class="reference internal" href="#import-a-data-file" id="id6">Import a data file</a></p></li>
+<li><p><a class="reference internal" href="#do-the-calculation" id="id7">Do the calculation</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#for-a-single-sample" id="id8">For a single sample</a></p>
+<ul>
+<li><p><a class="reference internal" href="#extract-a-single-sample-from-your-dataset" id="id9">Extract a single sample from your dataset</a></p></li>
+<li><p><a class="reference internal" href="#id1" id="id10">Do the calculation</a></p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+<p>The <code class="xref py py-meth docutils literal notranslate"><span class="pre">VESIcal.calculate_dissolved_volatiles()</span></code> function calcutions the concentration of dissolved H2O and CO2 in the liquid at a given pressure-temperature condition and with a given H2O-CO2 fluid composition, defined as the mole fraction of H2O in an H2O-CO2 fluid (XH2Ofluid). The default MagmaSat model relies on the underlying functionatlity of MELTS, whose basic function is to calculate the equilibrium phase assemblage given the bulk composition of the system and pressure-temperature conditions. To calculate dissolved volatile concentrations thus requires computing the equilibrium state of a system at fixed pressure and temperature over a range of bulk volatile concentrations until a solution is found that satisfies the user defined fluid composition.</p>
+<p>First, the function makes an initial guess at the appropriate bulk volatile concentrations by finding the minimum dissolved volatile concentrations in the liquid at saturation, while asserting that the weight fraction of H2O/(total volatiles) in the system is equal to the user input mole fraction of H2O/(total volatiles) in the fluid. This is done by increasing the H2O and CO2 concentrations appropriately until a fluid phase is stable. Once fluid saturation is determined, the code then performs directional, iterative, and progressively more refined searches, increasing the proportion of H2O or CO2 in the system if the mole fraction of H2O calculated in the fluid is greater than or less than that defined by the user, respectively. Four iterative searches are performed; the precision of the match between the calculated and defined XH2Ofluid increases from 0.1 in the first iteration to 0.01, 0.001, and finally to 0.0001. Thus, the calculated dissolved volatile concentrations correspond to a system with XH2Ofluid within 0.0001 of the user defined value.</p>
+<p><strong>Method structure:</strong></p>
+<p>Single sample:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">calculate_dissolved_volatiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">pressure</span><span class="p">,</span> <span class="n">X_fluid</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">result</span>
+</pre></div>
+</div>
+<p>ExcelFile batch process:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">calculate_dissolved_volatiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">pressure</span><span class="p">,</span> <span class="n">X_fluid</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">print_status</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Required inputs:</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">sample</span></code>: <em>Only for single-sample calculations</em>. The composition of a sample. A single sample may be passed as a dictionary of values, with compositions of oxides in wt%.</p>
+<p><code class="docutils literal notranslate"><span class="pre">temperature</span></code>, <code class="docutils literal notranslate"><span class="pre">pressure</span></code>, and <code class="docutils literal notranslate"><span class="pre">X_fluid</span></code>: the temperature in degrees C, the pressure in bars, and the mole fraction of H2O in the H2O-CO2 fluid, XH2Ofluid. Temperature and pressure of the sample or samples must be passed unless an ExcelFile object with a column for temperature and/or pressure is passed to sample. XH2Ofluid is optional, with a default value of 1 (pure H2O fluid). If a numerical (float) value is passed for either temperature, pressure, or X_fluid, that will be the value used for one or all samples. If, alternatively, the user wishes to use temperature, pressure, and/or X_fluid information in their ExcelFile object, the title of the column containing temperature, pressure, or X_fluid data should be passed in quotes (as a string) to temperature, pressure, and/or X_fluid, respectively. Note for batch calculations that if temperature, pressure, or XH2Ofluid information exists in the ExcelFile but a single numerical value is defined for one or both of these variables, both the original information plus the values used for the calculations will be returned.</p>
+<p><strong>Optional inputs:</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">verbose</span></code>: <em>Only for single-sample calculations.</em> Default value is False. If set to True, additional parameters are returned in a dictionary: H2O and CO2 concentrations in the fluid in mole fraction, temperature, pressure, and proportion of the fluid in the system in wt%.</p>
+<p><code class="docutils literal notranslate"><span class="pre">print_status</span></code>: <em>Only for ExcelFile batch calcualtions</em>. The default value is False. If True is passed, the progress of the calculation will be printed to the terminal. The user may desire to see the status of the calculation, as this particular function can be quite slow, averaging between 3-5 seconds per sample.</p>
+<p><strong>Calculated outputs:</strong>
+If a single sample is passed to sample, a dictionary with keys ‘H2O’ and ‘CO2’ corresponding to the calculated dissolved H2O and CO2 concentrations in the liquid is returned (plus additional variables ‘temperature’ in degrees C, ‘pressure’ in bars, ‘XH2O_fl’, ‘XCO2_fl’, and ‘FluidProportion_wtper’ (the proportion of the fluid in the system in wt%) if verbose is set to True).</p>
+<p>If mutliple samples are passed as an ExcelFile object, a pandas DataFrame is returned with sample information plus calculated dissolved H2O and CO2 concentrations in the liquid, the fluid composition in mole fraction, and the proportion of the fluid in the system in wt%. Pressure (in bars) and Temperature (in degrees C) columns are always returned.</p>
+<section id="for-an-entire-dataset">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">For an entire dataset</a><a class="headerlink" href="#for-an-entire-dataset" title="Link to this heading"></a></h2>
+<section id="import-a-data-file">
+<h3><a class="toc-backref" href="#id6" role="doc-backlink">Import a data file</a><a class="headerlink" href="#import-a-data-file" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">myfile</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">BatchFile</span><span class="p">(</span><span class="s1">&#39;example_data.xlsx&#39;</span><span class="p">)</span>
+<span class="n">myfile</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span>
+</pre></div>
+</div>
+<table class="docutils align-default" id="id2">
+<caption><span class="caption-text">Output</span><a class="headerlink" href="#id2" title="Link to this table"></a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Label</p></th>
+<th class="head"><p>SiO2</p></th>
+<th class="head"><p>TiO2</p></th>
+<th class="head"><p>Al2O3</p></th>
+<th class="head"><p>Fe2O3</p></th>
+<th class="head"><p>Cr2O3</p></th>
+<th class="head"><p>FeO</p></th>
+<th class="head"><p>MnO</p></th>
+<th class="head"><p>MgO</p></th>
+<th class="head"><p>NiO</p></th>
+<th class="head"><p>CoO</p></th>
+<th class="head"><p>CaO</p></th>
+<th class="head"><p>Na2O</p></th>
+<th class="head"><p>K2O</p></th>
+<th class="head"><p>P2O5</p></th>
+<th class="head"><p>H2O</p></th>
+<th class="head"><p>CO2</p></th>
+<th class="head"><p>Press</p></th>
+<th class="head"><p>Temp</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>BT-ex</p></td>
+<td><p>77.5</p></td>
+<td><p>0.08</p></td>
+<td><p>12.5</p></td>
+<td><p>0.207</p></td>
+<td><p>0</p></td>
+<td><p>0.473</p></td>
+<td><p>0</p></td>
+<td><p>0.03</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.43</p></td>
+<td><p>3.98</p></td>
+<td><p>4.88</p></td>
+<td><p>0</p></td>
+<td><p>5.5</p></td>
+<td><p>0.05</p></td>
+<td><p>500</p></td>
+<td><p>900</p></td>
+</tr>
+<tr class="row-odd"><td><p>TVZMa-ex</p></td>
+<td><p>78.37</p></td>
+<td><p>0.13</p></td>
+<td><p>11.94</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.99</p></td>
+<td><p>0.04</p></td>
+<td><p>0.05</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.53</p></td>
+<td><p>3.8</p></td>
+<td><p>4.14</p></td>
+<td><p>0</p></td>
+<td><p>4.06</p></td>
+<td><p>0.005</p></td>
+<td><p>600</p></td>
+<td><p>800</p></td>
+</tr>
+<tr class="row-even"><td><p>TVZOh-ex</p></td>
+<td><p>77.9</p></td>
+<td><p>0.08</p></td>
+<td><p>12.15</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.95</p></td>
+<td><p>0.05</p></td>
+<td><p>0.06</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.55</p></td>
+<td><p>4.05</p></td>
+<td><p>4.12</p></td>
+<td><p>0</p></td>
+<td><p>4.63</p></td>
+<td><p>0.005</p></td>
+<td><p>50</p></td>
+<td><p>900</p></td>
+</tr>
+<tr class="row-odd"><td><p>Oh48-FTIR1-MI1-a</p></td>
+<td><p>78.27</p></td>
+<td><p>0.0298</p></td>
+<td><p>12.02</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.9828</p></td>
+<td><p>0.0336</p></td>
+<td><p>0.0515</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.4772</p></td>
+<td><p>4.05</p></td>
+<td><p>4.09</p></td>
+<td><p>0</p></td>
+<td><p>4.214912406</p></td>
+<td><p>0.004565932</p></td>
+<td><p>250</p></td>
+<td><p>950</p></td>
+</tr>
+<tr class="row-even"><td><p>Oh48-FTIR1-MI1-b</p></td>
+<td><p>78.27</p></td>
+<td><p>0.0298</p></td>
+<td><p>12.02</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.9828</p></td>
+<td><p>0.0336</p></td>
+<td><p>0.0515</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.4772</p></td>
+<td><p>4.05</p></td>
+<td><p>4.09</p></td>
+<td><p>0</p></td>
+<td><p>4.005815793</p></td>
+<td><p>0.004447963</p></td>
+<td><p>500</p></td>
+<td><p>1025</p></td>
+</tr>
+<tr class="row-odd"><td><p>Oh48-FTIR1-MI1-IRc</p></td>
+<td><p>78.27</p></td>
+<td><p>0.0298</p></td>
+<td><p>12.02</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.9828</p></td>
+<td><p>0.0336</p></td>
+<td><p>0.0515</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.4772</p></td>
+<td><p>4.05</p></td>
+<td><p>4.09</p></td>
+<td><p>0</p></td>
+<td><p>3.885649341</p></td>
+<td><p>0.004654367</p></td>
+<td><p>5000</p></td>
+<td><p>925</p></td>
+</tr>
+<tr class="row-even"><td><p>Oh50-4.1</p></td>
+<td><p>77.91</p></td>
+<td><p>0.0984</p></td>
+<td><p>12.07</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>1.0556</p></td>
+<td><p>0.0257</p></td>
+<td><p>0.0999</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.5216</p></td>
+<td><p>4.04</p></td>
+<td><p>4.18</p></td>
+<td><p>0</p></td>
+<td><p>4.641842879</p></td>
+<td><p>0.004565932</p></td>
+<td><p>1000</p></td>
+<td><p>862</p></td>
+</tr>
+<tr class="row-odd"><td><p>Oh50-4.2</p></td>
+<td><p>77.91</p></td>
+<td><p>0.0984</p></td>
+<td><p>12.07</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>1.0556</p></td>
+<td><p>0.0257</p></td>
+<td><p>0.0999</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.5216</p></td>
+<td><p>4.04</p></td>
+<td><p>4.18</p></td>
+<td><p>0</p></td>
+<td><p>4.402133476</p></td>
+<td><p>0.004447963</p></td>
+<td><p>100</p></td>
+<td><p>770</p></td>
+</tr>
+<tr class="row-even"><td><p>Oh49-4.1</p></td>
+<td><p>77.92</p></td>
+<td><p>0.0099</p></td>
+<td><p>12.11</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>1.002</p></td>
+<td><p>0.0672</p></td>
+<td><p>0.0546</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.5346</p></td>
+<td><p>4.01</p></td>
+<td><p>4.3</p></td>
+<td><p>0</p></td>
+<td><p>4.283934433</p></td>
+<td><p>0.004565932</p></td>
+<td><p>1000</p></td>
+<td><p>855</p></td>
+</tr>
+<tr class="row-odd"><td><p>Oh49-4.2</p></td>
+<td><p>77.92</p></td>
+<td><p>0.0099</p></td>
+<td><p>12.11</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>1.002</p></td>
+<td><p>0.0672</p></td>
+<td><p>0.0546</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.5346</p></td>
+<td><p>4.01</p></td>
+<td><p>4.3</p></td>
+<td><p>0</p></td>
+<td><p>4.230532593</p></td>
+<td><p>0.004447963</p></td>
+<td><p>500</p></td>
+<td><p>1000</p></td>
+</tr>
+<tr class="row-even"><td><p>Ma55-5a.1</p></td>
+<td><p>77.68</p></td>
+<td><p>0.0096</p></td>
+<td><p>12.27</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>1.0272</p></td>
+<td><p>0.0628</p></td>
+<td><p>0.0342</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.6064</p></td>
+<td><p>3.97</p></td>
+<td><p>4.35</p></td>
+<td><p>0</p></td>
+<td><p>4.459767403</p></td>
+<td><p>0.004654367</p></td>
+<td><p>5000</p></td>
+<td><p>1010</p></td>
+</tr>
+<tr class="row-odd"><td><p>Ma57-3b.2</p></td>
+<td><p>77.9</p></td>
+<td><p>0.0498</p></td>
+<td><p>12.07</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>1.0844</p></td>
+<td><p>0.0748</p></td>
+<td><p>0.0355</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.4759</p></td>
+<td><p>4.1</p></td>
+<td><p>4.21</p></td>
+<td><p>0</p></td>
+<td><p>3.712506046</p></td>
+<td><p>0.004447963</p></td>
+<td><p>1000</p></td>
+<td><p>1012</p></td>
+</tr>
+<tr class="row-even"><td><p>Ma57-3c.1</p></td>
+<td><p>77.65</p></td>
+<td><p>0.159</p></td>
+<td><p>12.28</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.9769</p></td>
+<td><p>0.0597</p></td>
+<td><p>0.0577</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.5598</p></td>
+<td><p>4.08</p></td>
+<td><p>4.18</p></td>
+<td><p>0.0064</p></td>
+<td><p>4.443973024</p></td>
+<td><p>0.004654367</p></td>
+<td><p>100</p></td>
+<td><p>885</p></td>
+</tr>
+<tr class="row-odd"><td><p>Ma57-3c.2</p></td>
+<td><p>77.65</p></td>
+<td><p>0.159</p></td>
+<td><p>12.28</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.9769</p></td>
+<td><p>0.0597</p></td>
+<td><p>0.0577</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.5598</p></td>
+<td><p>4.08</p></td>
+<td><p>4.18</p></td>
+<td><p>0.0064</p></td>
+<td><p>4.283171078</p></td>
+<td><p>0.004644523</p></td>
+<td><p>1000</p></td>
+<td><p>885</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="do-the-calculation">
+<h3><a class="toc-backref" href="#id7" role="doc-backlink">Do the calculation</a><a class="headerlink" href="#do-the-calculation" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">dissolved</span> <span class="o">=</span> <span class="n">myfile</span><span class="o">.</span><span class="n">calculate_dissolved_volatiles</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="mf">900.0</span><span class="p">,</span> <span class="n">pressure</span><span class="o">=</span><span class="mf">1000.0</span><span class="p">,</span> <span class="n">X_fluid</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">print_status</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">dissolved</span>
+</pre></div>
+</div>
+<table class="docutils align-default" id="id3">
+<caption><span class="caption-text">Output</span><a class="headerlink" href="#id3" title="Link to this table"></a></caption>
+<thead>
+<tr class="row-odd"><th class="head"></th>
+<th class="head"><p>SiO2</p></th>
+<th class="head"><p>TiO2</p></th>
+<th class="head"><p>Al2O3</p></th>
+<th class="head"><p>Fe2O3</p></th>
+<th class="head"><p>Cr2O3</p></th>
+<th class="head"><p>FeO</p></th>
+<th class="head"><p>MnO</p></th>
+<th class="head"><p>MgO</p></th>
+<th class="head"><p>NiO</p></th>
+<th class="head"><p>CoO</p></th>
+<th class="head"><p>CaO</p></th>
+<th class="head"><p>Na2O</p></th>
+<th class="head"><p>K2O</p></th>
+<th class="head"><p>P2O5</p></th>
+<th class="head"><p>H2O</p></th>
+<th class="head"><p>CO2</p></th>
+<th class="head"><p>Press</p></th>
+<th class="head"><p>Temp</p></th>
+<th class="head"><p>H2O_liq_VESIcal</p></th>
+<th class="head"><p>CO2_liq_VESIcal</p></th>
+<th class="head"><p>Temperature_C_VESIcal</p></th>
+<th class="head"><p>Pressure_bars_VESIcal</p></th>
+<th class="head"><p>X_fluid_input_VESIcal</p></th>
+<th class="head"><p>Model</p></th>
+<th class="head"><p>Warnings</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>BT-ex</p></td>
+<td><p>77.5</p></td>
+<td><p>0.08</p></td>
+<td><p>12.5</p></td>
+<td><p>0.207</p></td>
+<td><p>0.0</p></td>
+<td><p>0.473</p></td>
+<td><p>0.0</p></td>
+<td><p>0.03</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.43</p></td>
+<td><p>3.98</p></td>
+<td><p>4.88</p></td>
+<td><p>0.0</p></td>
+<td><p>5.5</p></td>
+<td><p>0.05</p></td>
+<td><p>500</p></td>
+<td><p>900</p></td>
+<td><p>2.38456836637105</p></td>
+<td><p>0.0324561587842498</p></td>
+<td><p>900.0</p></td>
+<td><p>1000.0</p></td>
+<td><p>0.5</p></td>
+<td><p>MagmaSat</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>TVZMa-ex</p></td>
+<td><p>78.37</p></td>
+<td><p>0.13</p></td>
+<td><p>11.94</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.99</p></td>
+<td><p>0.04</p></td>
+<td><p>0.05</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.53</p></td>
+<td><p>3.8</p></td>
+<td><p>4.14</p></td>
+<td><p>0.0</p></td>
+<td><p>4.06</p></td>
+<td><p>0.005</p></td>
+<td><p>600</p></td>
+<td><p>800</p></td>
+<td><p>2.40406756580507</p></td>
+<td><p>0.0346020890084509</p></td>
+<td><p>900.0</p></td>
+<td><p>1000.0</p></td>
+<td><p>0.5</p></td>
+<td><p>MagmaSat</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>TVZOh-ex</p></td>
+<td><p>77.9</p></td>
+<td><p>0.08</p></td>
+<td><p>12.15</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.95</p></td>
+<td><p>0.05</p></td>
+<td><p>0.06</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.55</p></td>
+<td><p>4.05</p></td>
+<td><p>4.12</p></td>
+<td><p>0.0</p></td>
+<td><p>4.63</p></td>
+<td><p>0.005</p></td>
+<td><p>50</p></td>
+<td><p>900</p></td>
+<td><p>2.407664343585</p></td>
+<td><p>0.033439332410493</p></td>
+<td><p>900.0</p></td>
+<td><p>1000.0</p></td>
+<td><p>0.5</p></td>
+<td><p>MagmaSat</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>Oh48-FTIR1-MI1-a</p></td>
+<td><p>78.27</p></td>
+<td><p>0.0298</p></td>
+<td><p>12.02</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.9828</p></td>
+<td><p>0.0336</p></td>
+<td><p>0.0515</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.4772</p></td>
+<td><p>4.05</p></td>
+<td><p>4.09</p></td>
+<td><p>0.0</p></td>
+<td><p>4.214912</p></td>
+<td><p>0.004566</p></td>
+<td><p>250</p></td>
+<td><p>950</p></td>
+<td><p>2.41247069630685</p></td>
+<td><p>0.0336703062821496</p></td>
+<td><p>900.0</p></td>
+<td><p>1000.0</p></td>
+<td><p>0.5</p></td>
+<td><p>MagmaSat</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>Oh48-FTIR1-MI1-b</p></td>
+<td><p>78.27</p></td>
+<td><p>0.0298</p></td>
+<td><p>12.02</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.9828</p></td>
+<td><p>0.0336</p></td>
+<td><p>0.0515</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.4772</p></td>
+<td><p>4.05</p></td>
+<td><p>4.09</p></td>
+<td><p>0.0</p></td>
+<td><p>4.005816</p></td>
+<td><p>0.004448</p></td>
+<td><p>500</p></td>
+<td><p>1025</p></td>
+<td><p>2.41248461063309</p></td>
+<td><p>0.0336700698826834</p></td>
+<td><p>900.0</p></td>
+<td><p>1000.0</p></td>
+<td><p>0.5</p></td>
+<td><p>MagmaSat</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>Oh48-FTIR1-MI1-IRc</p></td>
+<td><p>78.27</p></td>
+<td><p>0.0298</p></td>
+<td><p>12.02</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.9828</p></td>
+<td><p>0.0336</p></td>
+<td><p>0.0515</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.4772</p></td>
+<td><p>4.05</p></td>
+<td><p>4.09</p></td>
+<td><p>0.0</p></td>
+<td><p>3.885649</p></td>
+<td><p>0.004654</p></td>
+<td><p>5000</p></td>
+<td><p>925</p></td>
+<td><p>2.41248347096408</p></td>
+<td><p>0.0336700892484881</p></td>
+<td><p>900.0</p></td>
+<td><p>1000.0</p></td>
+<td><p>0.5</p></td>
+<td><p>MagmaSat</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>Oh50-4.1</p></td>
+<td><p>77.91</p></td>
+<td><p>0.0984</p></td>
+<td><p>12.07</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>1.0556</p></td>
+<td><p>0.0257</p></td>
+<td><p>0.0999</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.5216</p></td>
+<td><p>4.04</p></td>
+<td><p>4.18</p></td>
+<td><p>0.0</p></td>
+<td><p>4.641843</p></td>
+<td><p>0.004566</p></td>
+<td><p>1000</p></td>
+<td><p>862</p></td>
+<td><p>2.40528235346431</p></td>
+<td><p>0.0336124894475238</p></td>
+<td><p>900.0</p></td>
+<td><p>1000.0</p></td>
+<td><p>0.5</p></td>
+<td><p>MagmaSat</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>Oh50-4.2</p></td>
+<td><p>77.91</p></td>
+<td><p>0.0984</p></td>
+<td><p>12.07</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>1.0556</p></td>
+<td><p>0.0257</p></td>
+<td><p>0.0999</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.5216</p></td>
+<td><p>4.04</p></td>
+<td><p>4.18</p></td>
+<td><p>0.0</p></td>
+<td><p>4.402133</p></td>
+<td><p>0.004448</p></td>
+<td><p>100</p></td>
+<td><p>770</p></td>
+<td><p>2.40511507798533</p></td>
+<td><p>0.0336153340309696</p></td>
+<td><p>900.0</p></td>
+<td><p>1000.0</p></td>
+<td><p>0.5</p></td>
+<td><p>MagmaSat</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>Oh49-4.1</p></td>
+<td><p>77.92</p></td>
+<td><p>0.0099</p></td>
+<td><p>12.11</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>1.002</p></td>
+<td><p>0.0672</p></td>
+<td><p>0.0546</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.5346</p></td>
+<td><p>4.01</p></td>
+<td><p>4.3</p></td>
+<td><p>0.0</p></td>
+<td><p>4.283934</p></td>
+<td><p>0.004566</p></td>
+<td><p>1000</p></td>
+<td><p>855</p></td>
+<td><p>2.41012062635274</p></td>
+<td><p>0.0333975335720628</p></td>
+<td><p>900.0</p></td>
+<td><p>1000.0</p></td>
+<td><p>0.5</p></td>
+<td><p>MagmaSat</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>Oh49-4.2</p></td>
+<td><p>77.92</p></td>
+<td><p>0.0099</p></td>
+<td><p>12.11</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>1.002</p></td>
+<td><p>0.0672</p></td>
+<td><p>0.0546</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.5346</p></td>
+<td><p>4.01</p></td>
+<td><p>4.3</p></td>
+<td><p>0.0</p></td>
+<td><p>4.230533</p></td>
+<td><p>0.004448</p></td>
+<td><p>500</p></td>
+<td><p>1000</p></td>
+<td><p>2.41041007702296</p></td>
+<td><p>0.0333926594920974</p></td>
+<td><p>900.0</p></td>
+<td><p>1000.0</p></td>
+<td><p>0.5</p></td>
+<td><p>MagmaSat</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>Ma55-5a.1</p></td>
+<td><p>77.68</p></td>
+<td><p>0.0096</p></td>
+<td><p>12.27</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>1.0272</p></td>
+<td><p>0.0628</p></td>
+<td><p>0.0342</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.6064</p></td>
+<td><p>3.97</p></td>
+<td><p>4.35</p></td>
+<td><p>0.0</p></td>
+<td><p>4.459767</p></td>
+<td><p>0.004654</p></td>
+<td><p>5000</p></td>
+<td><p>1010</p></td>
+<td><p>2.40532217182395</p></td>
+<td><p>0.0332048486638506</p></td>
+<td><p>900.0</p></td>
+<td><p>1000.0</p></td>
+<td><p>0.5</p></td>
+<td><p>MagmaSat</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>Ma57-3b.2</p></td>
+<td><p>77.9</p></td>
+<td><p>0.0498</p></td>
+<td><p>12.07</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>1.0844</p></td>
+<td><p>0.0748</p></td>
+<td><p>0.0355</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.4759</p></td>
+<td><p>4.1</p></td>
+<td><p>4.21</p></td>
+<td><p>0.0</p></td>
+<td><p>3.712506</p></td>
+<td><p>0.004448</p></td>
+<td><p>1000</p></td>
+<td><p>1012</p></td>
+<td><p>2.41114701125906</p></td>
+<td><p>0.0333588155749618</p></td>
+<td><p>900.0</p></td>
+<td><p>1000.0</p></td>
+<td><p>0.5</p></td>
+<td><p>MagmaSat</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>Ma57-3c.1</p></td>
+<td><p>77.65</p></td>
+<td><p>0.159</p></td>
+<td><p>12.28</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.9769</p></td>
+<td><p>0.0597</p></td>
+<td><p>0.0577</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.5598</p></td>
+<td><p>4.08</p></td>
+<td><p>4.18</p></td>
+<td><p>0.0064</p></td>
+<td><p>4.443973</p></td>
+<td><p>0.004654</p></td>
+<td><p>100</p></td>
+<td><p>885</p></td>
+<td><p>2.40092440230964</p></td>
+<td><p>0.0332507437951284</p></td>
+<td><p>900.0</p></td>
+<td><p>1000.0</p></td>
+<td><p>0.5</p></td>
+<td><p>MagmaSat</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>Ma57-3c.2</p></td>
+<td><p>77.65</p></td>
+<td><p>0.159</p></td>
+<td><p>12.28</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.9769</p></td>
+<td><p>0.0597</p></td>
+<td><p>0.0577</p></td>
+<td><p>0.0</p></td>
+<td><p>0.0</p></td>
+<td><p>0.5598</p></td>
+<td><p>4.08</p></td>
+<td><p>4.18</p></td>
+<td><p>0.0064</p></td>
+<td><p>4.283171</p></td>
+<td><p>0.004645</p></td>
+<td><p>1000</p></td>
+<td><p>885</p></td>
+<td><p>2.40090910847844</p></td>
+<td><p>0.0332510013760127</p></td>
+<td><p>900.0</p></td>
+<td><p>1000.0</p></td>
+<td><p>0.5</p></td>
+<td><p>MagmaSat</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="for-a-single-sample">
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">For a single sample</a><a class="headerlink" href="#for-a-single-sample" title="Link to this heading"></a></h2>
+<section id="extract-a-single-sample-from-your-dataset">
+<h3><a class="toc-backref" href="#id9" role="doc-backlink">Extract a single sample from your dataset</a><a class="headerlink" href="#extract-a-single-sample-from-your-dataset" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">SampleName</span> <span class="o">=</span> <span class="s1">&#39;BT-ex&#39;</span>
+<span class="n">extracted_bulk_comp</span> <span class="o">=</span> <span class="n">myfile</span><span class="o">.</span><span class="n">get_sample_composition</span><span class="p">(</span><span class="n">SampleName</span><span class="p">,</span> <span class="n">asSampleClass</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3><a class="toc-backref" href="#id10" role="doc-backlink">Do the calculation</a><a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">v</span><span class="o">.</span><span class="n">calculate_dissolved_volatiles</span><span class="p">(</span><span class="n">sample</span><span class="o">=</span><span class="n">extracted_bulk_comp</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">900.0</span><span class="p">,</span> <span class="n">pressure</span><span class="o">=</span><span class="mf">2000.0</span><span class="p">,</span> <span class="n">X_fluid</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span><span class="o">.</span><span class="n">result</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;CO2&#39;</span><span class="p">:</span> <span class="mf">0.0704089917125897</span><span class="p">,</span> <span class="s1">&#39;H2O&#39;</span><span class="p">:</span> <span class="mf">3.40549411877139</span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Kayla Iacovino and Simon Matthews.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

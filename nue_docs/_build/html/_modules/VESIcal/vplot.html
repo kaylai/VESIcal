@@ -1,0 +1,1119 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VESIcal.vplot &mdash; VESIcal 1.2.6 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=77553476" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=010db75e"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">ChangeLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About VESIcal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../models.html">Models in VESIcal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../integration.html">Integration with Thermobar</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../workshops.html">Workshops and Presentations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../codedoc.html">VESIcal Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../faq.html">FAQ’s</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../support.html">Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">MIT Licence</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">ChangeLog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">VESIcal</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../VESIcal.html">VESIcal</a></li>
+      <li class="breadcrumb-item active">VESIcal.vplot</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for VESIcal.vplot</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">VESIcal</span> <span class="kn">import</span> <span class="n">core</span>
+<span class="kn">from</span> <span class="nn">VESIcal</span> <span class="kn">import</span> <span class="n">calibrations</span>
+<span class="kn">from</span> <span class="nn">VESIcal.tasplot</span> <span class="kn">import</span> <span class="n">add_LeMaitre_fields</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">warnings</span> <span class="k">as</span> <span class="nn">w</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mpl</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+
+<span class="c1"># ---------- DEFINE CUSTOM PLOTTING FORMATTING ------------ #</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">style</span> <span class="o">=</span> <span class="s2">&quot;seaborn-colorblind&quot;</span>  <span class="c1"># old style name</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="n">style</span><span class="p">)</span>
+
+    <span class="c1"># Define color cycler based on plot style set here</span>
+    <span class="c1"># get style formatting set by plt.style.use():</span>
+    <span class="n">the_rc</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">library</span><span class="p">[</span><span class="n">style</span><span class="p">]</span>
+    <span class="c1"># list of colors by hex code:</span>
+    <span class="n">color_list</span> <span class="o">=</span> <span class="n">the_rc</span><span class="p">[</span><span class="s1">&#39;axes.prop_cycle&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">by_key</span><span class="p">()[</span><span class="s1">&#39;color&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">10</span>
+    <span class="n">color_cyler</span> <span class="o">=</span> <span class="n">the_rc</span><span class="p">[</span><span class="s1">&#39;axes.prop_cycle&#39;</span><span class="p">]</span>  <span class="c1"># get the cycler</span>
+
+<span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+    <span class="n">style</span> <span class="o">=</span> <span class="s2">&quot;seaborn-v0_8-colorblind&quot;</span>  <span class="c1"># new style name as of 3.6.0</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="n">style</span><span class="p">)</span>
+
+    <span class="c1"># Define color cycler based on plot style set here</span>
+    <span class="c1"># get style formatting set by plt.style.use():</span>
+    <span class="n">the_rc</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">library</span><span class="p">[</span><span class="n">style</span><span class="p">]</span>
+    <span class="c1"># list of colors by hex code:</span>
+    <span class="n">color_list</span> <span class="o">=</span> <span class="n">the_rc</span><span class="p">[</span><span class="s1">&#39;axes.prop_cycle&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">by_key</span><span class="p">()[</span><span class="s1">&#39;color&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">10</span>
+    <span class="n">color_cyler</span> <span class="o">=</span> <span class="n">the_rc</span><span class="p">[</span><span class="s1">&#39;axes.prop_cycle&#39;</span><span class="p">]</span>  <span class="c1"># get the cycler</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;mathtext.default&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;regular&quot;</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;mathtext.fontset&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;dejavusans&quot;</span>
+<span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;patch.linewidth&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;axes.linewidth&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;axes.titlesize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;axes.labelsize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">18</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;xtick.labelsize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">14</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;ytick.labelsize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">14</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;legend.fontsize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">14</span>
+<span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;lines.markersize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span>
+
+
+<span class="c1"># ----------- MAGMASAT PLOTTING FUNCTIONS ----------- #</span>
+<div class="viewcode-block" id="smooth_isobars_and_isopleths">
+<a class="viewcode-back" href="../../codedoc.html#VESIcal.vplot.smooth_isobars_and_isopleths">[docs]</a>
+<span class="k">def</span> <span class="nf">smooth_isobars_and_isopleths</span><span class="p">(</span><span class="n">isobars</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">isopleths</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Takes in a dataframe with calculated isobar and isopleth information</span>
+<span class="sd">    (e.g., output from calculate_isobars_and_isopleths) and smooths the data</span>
+<span class="sd">    for plotting.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    isobars: pandas DataFrame</span>
+<span class="sd">        OPTIONAL. DataFrame object containing isobar information as calculated</span>
+<span class="sd">        by calculate_isobars_and_isopleths.</span>
+
+<span class="sd">    isopleths: pandas DataFrame</span>
+<span class="sd">        OPTIONAL. DataFrame object containing isopleth information as</span>
+<span class="sd">        calculated by calculate_isobars_and_isopleths.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pandas DataFrame</span>
+<span class="sd">        DataFrame with x and y values for all isobars and all isopleths.</span>
+<span class="sd">        Useful if a user wishes to do custom plotting with isobar and isopleth</span>
+<span class="sd">        data rather than using the built-in `plot_isobars_and_isopleths()`</span>
+<span class="sd">        function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">seterr</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>  <span class="c1"># turn off numpy warning</span>
+    <span class="n">w</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="s2">&quot;Polyfit may be poorly conditioned&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">isobars</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">P_vals</span> <span class="o">=</span> <span class="n">isobars</span><span class="o">.</span><span class="n">Pressure</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+        <span class="n">isobars_lists</span> <span class="o">=</span> <span class="n">isobars</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="c1"># add zero values to volatiles list</span>
+        <span class="n">isobars_lists</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
+
+        <span class="n">isobars_pressure</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">isobars_H2O_liq</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">isobars_CO2_liq</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># do some data smoothing</span>
+        <span class="k">for</span> <span class="n">pressure</span> <span class="ow">in</span> <span class="n">P_vals</span><span class="p">:</span>
+            <span class="n">Pxs</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">isobars_lists</span> <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">pressure</span><span class="p">]</span>
+            <span class="n">Pys</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">isobars_lists</span> <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">pressure</span><span class="p">]</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># calcualte polynomial</span>
+                <span class="n">Pz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">Pxs</span><span class="p">,</span> <span class="n">Pys</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+                <span class="n">Pf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">poly1d</span><span class="p">(</span><span class="n">Pz</span><span class="p">)</span>
+
+                <span class="c1"># calculate new x&#39;s and y&#39;s</span>
+                <span class="n">Px_new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">Pxs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Pxs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">50</span><span class="p">)</span>
+                <span class="n">Py_new</span> <span class="o">=</span> <span class="n">Pf</span><span class="p">(</span><span class="n">Px_new</span><span class="p">)</span>
+
+                <span class="c1"># Save x&#39;s and y&#39;s</span>
+                <span class="n">Px_new_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">Px_new</span><span class="p">)</span>
+                <span class="n">isobars_H2O_liq</span> <span class="o">+=</span> <span class="n">Px_new_list</span>
+
+                <span class="n">Py_new_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">Py_new</span><span class="p">)</span>
+                <span class="n">isobars_CO2_liq</span> <span class="o">+=</span> <span class="n">Py_new_list</span>
+
+                <span class="n">pressure_vals_for_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">pressure</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">Px_new</span><span class="p">)</span>
+                <span class="n">isobars_pressure</span> <span class="o">+=</span> <span class="n">pressure_vals_for_list</span>
+
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="n">Px_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">Pxs</span><span class="p">)</span>
+                <span class="n">isobars_H2O_liq</span> <span class="o">+=</span> <span class="n">Px_list</span>
+
+                <span class="n">Py_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">Pys</span><span class="p">)</span>
+                <span class="n">isobars_CO2_liq</span> <span class="o">+=</span> <span class="n">Py_list</span>
+
+                <span class="n">pressure_vals_for_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">pressure</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">Pxs</span><span class="p">)</span>
+                <span class="n">isobars_pressure</span> <span class="o">+=</span> <span class="n">pressure_vals_for_list</span>
+
+        <span class="n">isobar_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;Pressure&quot;</span><span class="p">:</span> <span class="n">isobars_pressure</span><span class="p">,</span>
+                                  <span class="s2">&quot;H2O_liq&quot;</span><span class="p">:</span> <span class="n">isobars_H2O_liq</span><span class="p">,</span>
+                                  <span class="s2">&quot;CO2_liq&quot;</span><span class="p">:</span> <span class="n">isobars_CO2_liq</span><span class="p">})</span>
+
+    <span class="k">if</span> <span class="n">isopleths</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">XH2O_vals</span> <span class="o">=</span> <span class="n">isopleths</span><span class="o">.</span><span class="n">XH2O_fl</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+        <span class="n">isopleths_lists</span> <span class="o">=</span> <span class="n">isopleths</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+        <span class="n">isopleths_XH2O_fl</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">isopleths_H2O_liq</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">isopleths_CO2_liq</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">Xfl</span> <span class="ow">in</span> <span class="n">XH2O_vals</span><span class="p">:</span>
+            <span class="n">Xxs</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">isopleths_lists</span> <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">Xfl</span><span class="p">]</span>
+            <span class="n">Xys</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">isopleths_lists</span> <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">Xfl</span><span class="p">]</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># calculate polynomial</span>
+                <span class="n">Xz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">Xxs</span><span class="p">,</span> <span class="n">Xys</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+                <span class="n">Xf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">poly1d</span><span class="p">(</span><span class="n">Xz</span><span class="p">)</span>
+
+                <span class="c1"># calculate new x&#39;s and y&#39;s</span>
+                <span class="n">Xx_new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">Xxs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Xxs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">50</span><span class="p">)</span>
+                <span class="n">Xy_new</span> <span class="o">=</span> <span class="n">Xf</span><span class="p">(</span><span class="n">Xx_new</span><span class="p">)</span>
+
+                <span class="c1"># Save x&#39;s and y&#39;s</span>
+                <span class="n">Xx_new_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">Xx_new</span><span class="p">)</span>
+                <span class="n">isopleths_H2O_liq</span> <span class="o">+=</span> <span class="n">Xx_new_list</span>
+
+                <span class="n">Xy_new_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">Xy_new</span><span class="p">)</span>
+                <span class="n">isopleths_CO2_liq</span> <span class="o">+=</span> <span class="n">Xy_new_list</span>
+
+                <span class="n">XH2Ofl_vals_for_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">Xfl</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">Xx_new</span><span class="p">)</span>
+                <span class="n">isopleths_XH2O_fl</span> <span class="o">+=</span> <span class="n">XH2Ofl_vals_for_list</span>
+
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="n">Xx_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">Xxs</span><span class="p">)</span>
+                <span class="n">isopleths_H2O_liq</span> <span class="o">+=</span> <span class="n">Xx_list</span>
+
+                <span class="n">Xy_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">Xys</span><span class="p">)</span>
+                <span class="n">isopleths_CO2_liq</span> <span class="o">+=</span> <span class="n">Xy_list</span>
+
+                <span class="n">XH2Ofl_vals_for_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">Xfl</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">Xxs</span><span class="p">)</span>
+                <span class="n">isopleths_XH2O_fl</span> <span class="o">+=</span> <span class="n">XH2Ofl_vals_for_list</span>
+
+        <span class="n">isopleth_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;XH2O_fl&quot;</span><span class="p">:</span> <span class="n">isopleths_XH2O_fl</span><span class="p">,</span>
+                                    <span class="s2">&quot;H2O_liq&quot;</span><span class="p">:</span> <span class="n">isopleths_H2O_liq</span><span class="p">,</span>
+                                    <span class="s2">&quot;CO2_liq&quot;</span><span class="p">:</span> <span class="n">isopleths_CO2_liq</span><span class="p">})</span>
+
+    <span class="n">np</span><span class="o">.</span><span class="n">seterr</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s1">&#39;warn&#39;</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s1">&#39;warn&#39;</span><span class="p">)</span>  <span class="c1"># turn numpy warning back on</span>
+    <span class="n">w</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;always&quot;</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="s2">&quot;Polyfit may be poorly conditioned&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">isobars</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">isopleths</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">isobar_df</span><span class="p">,</span> <span class="n">isopleth_df</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">isobar_df</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">isopleths</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">isopleth_df</span></div>
+
+
+
+<div class="viewcode-block" id="plot">
+<a class="viewcode-back" href="../../codedoc.html#VESIcal.vplot.plot">[docs]</a>
+<span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="n">isobars</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">isopleths</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">degassing_paths</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">custom_H2O</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+         <span class="n">custom_CO2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">isobar_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">isopleth_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+         <span class="n">degassing_path_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">custom_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+         <span class="n">custom_colors</span><span class="o">=</span><span class="s2">&quot;VESIcal&quot;</span><span class="p">,</span> <span class="n">custom_symbols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+         <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="n">save_fig</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">extend_isobars_to_zero</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+         <span class="n">smooth_isobars</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">smooth_isopleths</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Custom automatic plotting of model calculations in VESIcal.</span>
+<span class="sd">    Isobars, isopleths, and degassing paths can be plotted. Labels can be</span>
+<span class="sd">    specified for each. Any combination of isobars, isopleths, and degassing</span>
+<span class="sd">    paths can be plotted.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    isobars: pandas DataFrame or list</span>
+<span class="sd">        OPTIONAL. DataFrame object containing isobar information as calculated</span>
+<span class="sd">        by calculate_isobars_and_isopleths. Or a list of DataFrame objects.</span>
+
+<span class="sd">    isopleths: pandas DataFrame or list</span>
+<span class="sd">        OPTIONAL. DataFrame object containing isopleth information as</span>
+<span class="sd">        calculated by calculate_isobars_and_isopleths. Or a list of DataFrame</span>
+<span class="sd">        objects.</span>
+
+<span class="sd">    degassing_paths: list</span>
+<span class="sd">        OPTIONAL. List of DataFrames with degassing information as generated</span>
+<span class="sd">        by calculate_degassing_path().</span>
+
+<span class="sd">    custom_H2O: list</span>
+<span class="sd">        OPTIONAL. List of groups of H2O values to plot as points. For example</span>
+<span class="sd">        myfile.data[&#39;H2O&#39;] is one group of H2O values. Must be passed with</span>
+<span class="sd">        custom_CO2 and must be same length as custom_CO2.</span>
+
+<span class="sd">    custom_CO2: list</span>
+<span class="sd">        OPTIONAL. List of groups of CO2 values to plot as points.For example</span>
+<span class="sd">        myfile.data[&#39;CO2&#39;] is one group of CO2 values. Must be passed with</span>
+<span class="sd">        custom_H2O and must be same length as custom_H2O.</span>
+
+<span class="sd">    isobar_labels: list</span>
+<span class="sd">        OPTIONAL. Labels for the plot legend. Default is None, in which case</span>
+<span class="sd">        each plotted line will be given the generic legend name of</span>
+<span class="sd">        &quot;Isobars n&quot;, with n referring to the nth isobars passed. Isobar</span>
+<span class="sd">        pressure is given in parentheses. The user can pass their own labels</span>
+<span class="sd">        as a list of strings. If more than one set of isobars is passed, the</span>
+<span class="sd">        labels should refer to each set of isobars, not each pressure.</span>
+
+<span class="sd">    isopleth_labels: list</span>
+<span class="sd">        OPTIONAL. Labels for the plot legend. Default is None, in which case</span>
+<span class="sd">        each plotted isopleth will be given the generic legend name of</span>
+<span class="sd">        &quot;Isopleth n&quot;, with n referring to the nth isopleths passed. Isopleth</span>
+<span class="sd">        XH2O values are given in parentheses. The user can pass their own</span>
+<span class="sd">        labels as a list of strings. If more than one set of isopleths is</span>
+<span class="sd">        passed, the labels should refer to each set of isopleths, not each</span>
+<span class="sd">        XH2O value.</span>
+
+<span class="sd">    degassing_path_labels: list</span>
+<span class="sd">        OPTIONAL. Labels for the plot legend. Default is None, in which case</span>
+<span class="sd">        each plotted line will be given the generic legend name of &quot;Pathn&quot;,</span>
+<span class="sd">        with n referring to the nth degassing path passed. The user can pass</span>
+<span class="sd">        their own labels as a list of strings.</span>
+
+<span class="sd">    custom_labels: list</span>
+<span class="sd">        OPTIONAL. Labels for the plot legend. Default is None, in which case</span>
+<span class="sd">        each group of custom points will be given the generic legend name of</span>
+<span class="sd">        &quot;Customn&quot;, with n referring to the nth degassing path passed. The user</span>
+<span class="sd">        can pass their own labels as a list of strings.</span>
+
+<span class="sd">    custom_colors: list</span>
+<span class="sd">        OPTIONAL. Default value is &quot;VESIcal&quot;, which uses VESIcal&#39;s color ramp.</span>
+<span class="sd">        A list of color values readable by matplotlib can be passed here if</span>
+<span class="sd">        custom symbol colors are desired. The length of this list must match</span>
+<span class="sd">        that of custom_H2O and custom_CO2.</span>
+
+<span class="sd">    custom_symbols: list</span>
+<span class="sd">        OPTIONAL. Default value is None, in which case data are plotted as</span>
+<span class="sd">        filled circles.. A list of symbol tyles readable by matplotlib can be</span>
+<span class="sd">        passed here if custom symbol types are desired. The length of this</span>
+<span class="sd">        list must match that of custom_H2O and custom_CO2.</span>
+
+<span class="sd">    markersize: int</span>
+<span class="sd">        OPTIONAL. Default value is 10. Same as markersize kwarg in matplotlib.</span>
+<span class="sd">        Any numeric value passed here will set the marker size for</span>
+<span class="sd">        (custom_H2O, custom_CO2) points.</span>
+
+<span class="sd">    figsize: tuple</span>
+<span class="sd">        OPTIONAL. Default value is (12,8). Sets the matplotlib.pyplot figsize</span>
+<span class="sd">        value as (x_dimension, y_dimension)</span>
+
+<span class="sd">    save_fig: False or str</span>
+<span class="sd">        OPTIONAL. Default value is False, in which case the figure will not be</span>
+<span class="sd">        saved. If a string is passed, the figure will be saved with the string</span>
+<span class="sd">        as the filename. The string must include the file extension.</span>
+
+<span class="sd">    extend_isobars_to_zero: bool</span>
+<span class="sd">        OPTIONAL. If True (default), isobars will be extended to zero, even if</span>
+<span class="sd">        there is a finite solubility at zero partial pressure.</span>
+
+<span class="sd">    smooth_isobars: bool</span>
+<span class="sd">        OPTIONAL. Default is False. If set to True, isobar data will be fit to</span>
+<span class="sd">        a polynomial and plotted. If False, the raw input data will be plotted.</span>
+
+<span class="sd">    smooth_isopleths: bool</span>
+<span class="sd">        OPTIONAL. Default is False. If set to True, isopleth data will be fit</span>
+<span class="sd">        to a polynomial and plotted. If False, the raw input data will be</span>
+<span class="sd">        plotted.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fig, axes Matplotlib objects</span>
+<span class="sd">        fig and axes matploblib objects defining a plot with x-axis as H2O wt%</span>
+<span class="sd">        in the melt and y-axis as CO2 wt%in the melt. Isobars, or lines of</span>
+<span class="sd">        constant pressure at which the sample magma composition is saturated,</span>
+<span class="sd">        and isopleths, or lines of constant fluid composition at which the</span>
+<span class="sd">        sample magma composition is saturated, are plotted if passed.</span>
+<span class="sd">        Degassing paths, or the concentration of dissolved H2O and CO2 in a</span>
+<span class="sd">        melt equilibrated along a path of decreasing pressure, is plotted if</span>
+<span class="sd">        passed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Turn off warnings:</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">seterr</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>  <span class="c1"># turn off numpy warning</span>
+    <span class="n">w</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="s2">&quot;Polyfit may be poorly conditioned&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">check_inputs</span><span class="p">(</span><span class="n">custom_H2O</span><span class="p">,</span> <span class="n">custom_CO2</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">custom_H2O</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">custom_CO2</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;If x data is passed, y data must also &quot;</span>
+                                      <span class="s2">&quot;be passed.&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">custom_H2O</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">custom_CO2</span><span class="p">):</span>
+                    <span class="k">pass</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;x and y data must be same length&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">custom_CO2</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">custom_H2O</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;If y data is passed, x data must also &quot;</span>
+                                      <span class="s2">&quot;be passed.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">check_colors</span><span class="p">(</span><span class="n">custom_colors</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">custom_colors</span> <span class="o">==</span> <span class="s2">&quot;VESIcal&quot;</span><span class="p">:</span>
+            <span class="n">use_colors</span> <span class="o">=</span> <span class="n">color_list</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">custom_colors</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">use_colors</span> <span class="o">=</span> <span class="n">custom_colors</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;Argument custom_colors must be type list. &quot;</span>
+                                  <span class="s2">&quot;Just passing one item? Try putting square &quot;</span>
+                                  <span class="s2">&quot;brackets, [], around it.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">use_colors</span>
+
+    <span class="k">def</span> <span class="nf">calc_extend_isobars_to_zero</span><span class="p">(</span><span class="n">Pxs</span><span class="p">,</span> <span class="n">Pys</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates new end-points for plotting isobars when</span>
+<span class="sd">        extend_isobars_to_zero option is set to True.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        Pxs, Pys: list</span>
+<span class="sd">            List of x and y values corresponding to isobars.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">Pxs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">Pys</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">Pxs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">Pys</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="c1"># create new array of length n+1 if n is the length of the</span>
+                <span class="c1"># original array:</span>
+                <span class="n">Px_new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">Pxs</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+
+                <span class="c1"># set the first x value in the new array equal to 0:</span>
+                <span class="n">Px_new</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+                <span class="c1"># fill the rest of the new array with the original array</span>
+                <span class="c1"># values:</span>
+                <span class="n">Px_new</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="n">Pxs</span>
+
+                <span class="c1"># overwrite the original array with the new one:</span>
+                <span class="n">Pxs</span> <span class="o">=</span> <span class="n">Px_new</span>
+
+                <span class="n">Py_new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">Pys</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">Py_new</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">Pys</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">Py_new</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="n">Pys</span>
+                <span class="n">Pys</span> <span class="o">=</span> <span class="n">Py_new</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">Px_new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">Pxs</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">Px_new</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">Pxs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">Px_new</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="n">Pxs</span>
+                <span class="n">Pxs</span> <span class="o">=</span> <span class="n">Px_new</span>
+
+                <span class="n">Py_new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">Pys</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">Py_new</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">Py_new</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="n">Pys</span>
+                <span class="n">Pys</span> <span class="o">=</span> <span class="n">Py_new</span>
+
+        <span class="k">if</span> <span class="n">Pxs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">Pys</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">Pxs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">Pys</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="n">Px_new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">Pxs</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">Px_new</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">Px_new</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">Pxs</span>
+                <span class="n">Pxs</span> <span class="o">=</span> <span class="n">Px_new</span>
+
+                <span class="n">Py_new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">Pys</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">Py_new</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">Pys</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">Py_new</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">Pys</span>
+                <span class="n">Pys</span> <span class="o">=</span> <span class="n">Py_new</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">Px_new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">Pxs</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">Px_new</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">Pxs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">Px_new</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">Pxs</span>
+                <span class="n">Pxs</span> <span class="o">=</span> <span class="n">Px_new</span>
+
+                <span class="n">Py_new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">Pys</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">Py_new</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">Py_new</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">Pys</span>
+                <span class="n">Pys</span> <span class="o">=</span> <span class="n">Py_new</span>
+
+        <span class="k">return</span> <span class="n">Pxs</span><span class="p">,</span> <span class="n">Pys</span>
+
+    <span class="c1"># -------- HANDLE USER INPUT ERRORS, SET COLORS, SMOOTH LINES -------- ##</span>
+    <span class="n">check_inputs</span><span class="p">(</span><span class="n">custom_H2O</span><span class="o">=</span><span class="n">custom_H2O</span><span class="p">,</span> <span class="n">custom_CO2</span><span class="o">=</span><span class="n">custom_CO2</span><span class="p">)</span>
+    <span class="n">use_colors</span> <span class="o">=</span> <span class="n">check_colors</span><span class="p">(</span><span class="n">custom_colors</span><span class="o">=</span><span class="n">custom_colors</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">smooth_isobars</span><span class="p">:</span>
+        <span class="n">isobars</span> <span class="o">=</span> <span class="n">smooth_isobars_and_isopleths</span><span class="p">(</span><span class="n">isobars</span><span class="o">=</span><span class="n">isobars</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">smooth_isopleths</span><span class="p">:</span>
+        <span class="n">isopleths</span> <span class="o">=</span> <span class="n">smooth_isobars_and_isopleths</span><span class="p">(</span><span class="n">isopleths</span><span class="o">=</span><span class="n">isopleths</span><span class="p">)</span>
+
+    <span class="c1"># -------- CREATE FIGURE -------- ##</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s1">&#39;custom_x&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;xlabel&#39;</span><span class="p">],</span> <span class="n">ylabel</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;ylabel&#39;</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;H$_2$O wt%&#39;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;CO$_2$ wt%&#39;</span><span class="p">)</span>
+
+    <span class="n">labels</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># -------- PLOT ISOBARS -------- ##</span>
+    <span class="k">if</span> <span class="n">isobars</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">isobars</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+            <span class="n">isobars</span> <span class="o">=</span> <span class="p">[</span><span class="n">isobars</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">isobars</span><span class="p">)):</span>
+            <span class="n">P_vals</span> <span class="o">=</span> <span class="n">isobars</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">Pressure</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+            <span class="n">isobars_lists</span> <span class="o">=</span> <span class="n">isobars</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+            <span class="c1"># add zero values to volatiles list</span>
+            <span class="n">isobars_lists</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
+
+            <span class="n">P_iter</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">pressure</span> <span class="ow">in</span> <span class="n">P_vals</span><span class="p">:</span>
+                <span class="n">P_iter</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">Pxs</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">isobars_lists</span>
+                       <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">pressure</span><span class="p">]</span>
+                <span class="n">Pys</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">isobars_lists</span>
+                       <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">pressure</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="n">extend_isobars_to_zero</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">Pxs</span><span class="p">,</span> <span class="n">Pys</span> <span class="o">=</span> <span class="n">calc_extend_isobars_to_zero</span><span class="p">(</span><span class="n">Pxs</span><span class="p">,</span> <span class="n">Pys</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                        <span class="k">pass</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="n">extend_isobars_to_zero</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">isobars</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">P_iter</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">P_list</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">P_vals</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">isobar_labels</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                            <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">isobar_labels</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39; (&#39;</span> <span class="o">+</span>
+                                          <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">P_list</span><span class="p">))</span> <span class="o">+</span>
+                                          <span class="s2">&quot; bars)&quot;</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;Isobars &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; (&#39;</span> <span class="o">+</span>
+                                          <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">P_list</span><span class="p">))</span> <span class="o">+</span>
+                                          <span class="s2">&quot; bars)&quot;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;_nolegend_&#39;</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">isobars</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Pxs</span><span class="p">,</span> <span class="n">Pys</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color_list</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Pxs</span><span class="p">,</span> <span class="n">Pys</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">isobars</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">labels</span> <span class="o">+=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">P_val</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; bars&quot;</span> <span class="k">for</span> <span class="n">P_val</span> <span class="ow">in</span> <span class="n">P_vals</span><span class="p">]</span>
+
+    <span class="c1"># -------- PLOT ISOPLETHS -------- ##</span>
+    <span class="k">if</span> <span class="n">isopleths</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">isopleths</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+            <span class="n">isopleths</span> <span class="o">=</span> <span class="p">[</span><span class="n">isopleths</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">isopleths</span><span class="p">)):</span>
+            <span class="n">XH2O_vals</span> <span class="o">=</span> <span class="n">isopleths</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">XH2O_fl</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+            <span class="n">isopleths_lists</span> <span class="o">=</span> <span class="n">isopleths</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+            <span class="n">H_iter</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">Xfl</span> <span class="ow">in</span> <span class="n">XH2O_vals</span><span class="p">:</span>
+                <span class="n">H_iter</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">Xxs</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">isopleths_lists</span> <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">Xfl</span><span class="p">]</span>
+                <span class="n">Xys</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">isopleths_lists</span> <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">Xfl</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">isopleths</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">H_iter</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">H_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">XH2O_vals</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">isopleth_labels</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                            <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">isopleth_labels</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39; (&#39;</span> <span class="o">+</span>
+                                          <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">H_list</span><span class="p">))</span> <span class="o">+</span>
+                                          <span class="s2">&quot; XH2Ofluid)&quot;</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;Isopleths &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; (&#39;</span> <span class="o">+</span>
+                                          <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">H_list</span><span class="p">))</span> <span class="o">+</span>
+                                          <span class="s2">&quot; XH2Ofluid)&quot;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;_nolegend_&#39;</span><span class="p">)</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Xxs</span><span class="p">,</span> <span class="n">Xys</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s1">&#39;dashed&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color_list</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">isopleths</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">H_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">XH2O_vals</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">H_iter</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;Isopleths (&#39;</span> <span class="o">+</span>
+                                      <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">H_list</span><span class="p">))</span> <span class="o">+</span>
+                                      <span class="s2">&quot; XH2Ofluid)&quot;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;_nolegend_&#39;</span><span class="p">)</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Xxs</span><span class="p">,</span> <span class="n">Xys</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s1">&#39;dashed&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+
+    <span class="c1"># -------- PLOT DEGASSING PATHS -------- ##</span>
+    <span class="k">if</span> <span class="n">degassing_paths</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">degassing_paths</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+            <span class="n">degassing_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">degassing_paths</span><span class="p">]</span>
+
+        <span class="n">degassing_colors</span> <span class="o">=</span> <span class="n">color_list</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">iterno</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">plot_type</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">degassing_paths</span><span class="p">)):</span>
+            <span class="c1"># handle whether labels are passed</span>
+            <span class="k">if</span> <span class="n">degassing_path_labels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">iterno</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;Path</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">iterno</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">degassing_path_labels</span><span class="p">[</span><span class="n">iterno</span><span class="p">])</span>
+                <span class="n">iterno</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="c1"># handle if only one volatile present</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">degassing_paths</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;H2O_liq&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span>
+                    <span class="n">degassing_paths</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;CO2_liq&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">degassing_paths</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;H2O_liq&quot;</span><span class="p">],</span>
+                        <span class="n">degassing_paths</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;CO2_liq&quot;</span><span class="p">],</span>
+                        <span class="n">ls</span><span class="o">=</span><span class="s1">&#39;dotted&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">degassing_colors</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">degassing_paths</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;H2O_liq&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span>
+                        <span class="n">degassing_paths</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;CO2_liq&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span>
+                        <span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">degassing_colors</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="c1"># warn user if trying to plot mixed types on same figure</span>
+                <span class="k">if</span> <span class="n">plot_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;mixed&quot;</span><span class="p">]:</span>
+                    <span class="n">w</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Warning: you are trying to plot two different plot types on the same&quot;</span>
+                           <span class="s2">&quot; figure. Curves may not match axis labels.&quot;</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                <span class="n">plot_type</span> <span class="o">=</span> <span class="s2">&quot;mixed&quot;</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">degassing_paths</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;H2O_liq&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span>
+                  <span class="n">degassing_paths</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;CO2_liq&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">degassing_paths</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;Pressure_bars&quot;</span><span class="p">],</span>
+                        <span class="n">degassing_paths</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;H2O_liq&quot;</span><span class="p">],</span>
+                        <span class="n">ls</span><span class="o">=</span><span class="s1">&#39;dotted&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">degassing_colors</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">degassing_paths</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;Pressure_bars&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span>
+                        <span class="n">degassing_paths</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;H2O_liq&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span>
+                        <span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">degassing_colors</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;Pressure (bars)&#39;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;H$_2$O wt%&#39;</span><span class="p">)</span>
+                <span class="c1"># warn user if trying to plot mixed types on same figure</span>
+                <span class="k">if</span> <span class="n">plot_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;H2O&quot;</span><span class="p">]:</span>
+                    <span class="n">w</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Warning: you are trying to plot two different plot types on the same&quot;</span>
+                           <span class="s2">&quot; figure. Curves may not match axis labels.&quot;</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                <span class="n">plot_type</span> <span class="o">=</span> <span class="s2">&quot;H2O&quot;</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">degassing_paths</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;H2O_liq&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">and</span>
+                  <span class="n">degassing_paths</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;CO2_liq&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">degassing_paths</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;Pressure_bars&quot;</span><span class="p">],</span>
+                        <span class="n">degassing_paths</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;CO2_liq&quot;</span><span class="p">],</span>
+                        <span class="n">ls</span><span class="o">=</span><span class="s1">&#39;dotted&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">degassing_colors</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">degassing_paths</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;Pressure_bars&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span>
+                        <span class="n">degassing_paths</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;CO2_liq&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span>
+                        <span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">degassing_colors</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;Pressure (bars)&#39;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;CO$_2$ wt%&#39;</span><span class="p">)</span>
+                <span class="c1"># warn user if trying to plot mixed types on same figure</span>
+                <span class="k">if</span> <span class="n">plot_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;CO2&quot;</span><span class="p">]:</span>
+                    <span class="n">w</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Warning: you are trying to plot two different plot types on the same&quot;</span>
+                           <span class="s2">&quot; figure. Curves may not match axis labels.&quot;</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                <span class="n">plot_type</span> <span class="o">=</span> <span class="s2">&quot;CO2&quot;</span>
+
+            <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;_nolegend_&#39;</span><span class="p">)</span>
+
+    <span class="c1"># -------- PLOT CUSTOM H2O-CO2 -------- ##</span>
+    <span class="k">if</span> <span class="n">custom_H2O</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">custom_CO2</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">custom_H2O</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+            <span class="n">custom_H2O</span> <span class="o">=</span> <span class="p">[</span><span class="n">custom_H2O</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">custom_CO2</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+            <span class="n">custom_CO2</span> <span class="o">=</span> <span class="p">[</span><span class="n">custom_CO2</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">custom_symbols</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">use_marker</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;o&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">custom_H2O</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">use_marker</span> <span class="o">=</span> <span class="n">custom_symbols</span>
+
+        <span class="n">iterno</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">custom_H2O</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">custom_labels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">iterno</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;Custom</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">iterno</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">custom_H2O</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">custom_CO2</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">use_marker</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                        <span class="n">color</span><span class="o">=</span><span class="n">use_colors</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">markersize</span><span class="o">=</span><span class="n">markersize</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">custom_labels</span><span class="p">[</span><span class="n">iterno</span><span class="p">])</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">custom_H2O</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">custom_CO2</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">use_marker</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                        <span class="n">color</span><span class="o">=</span><span class="n">use_colors</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">markersize</span><span class="o">=</span><span class="n">markersize</span><span class="p">)</span>
+                <span class="n">iterno</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1"># -------- PLOT CUSTOM X-Y -------- ##</span>
+    <span class="k">if</span> <span class="s1">&#39;custom_x&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">custom_x</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;custom_x&#39;</span><span class="p">]</span>
+        <span class="n">custom_y</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;custom_y&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">custom_x</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">series</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+            <span class="n">custom_x</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">custom_x</span><span class="o">.</span><span class="n">values</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">custom_y</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">series</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+            <span class="n">custom_y</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">custom_y</span><span class="o">.</span><span class="n">values</span><span class="p">)]</span>
+
+        <span class="k">if</span> <span class="n">custom_symbols</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">use_marker</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;o&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">custom_x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">use_marker</span> <span class="o">=</span> <span class="n">custom_symbols</span>
+
+        <span class="n">iterno</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">custom_x</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">custom_labels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">iterno</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;Custom</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">iterno</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">custom_x</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">custom_y</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">use_marker</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                        <span class="n">color</span><span class="o">=</span><span class="n">use_colors</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">markersize</span><span class="o">=</span><span class="n">markersize</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">custom_labels</span><span class="p">[</span><span class="n">iterno</span><span class="p">])</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">custom_x</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">custom_y</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">use_marker</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                        <span class="n">color</span><span class="o">=</span><span class="n">use_colors</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">markersize</span><span class="o">=</span><span class="n">markersize</span><span class="p">)</span>
+                <span class="n">iterno</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1"># -------- PLOT LEGEND -------- ##</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">1.01</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper left&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s1">&#39;custom_x&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">bottom</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">np</span><span class="o">.</span><span class="n">seterr</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s1">&#39;warn&#39;</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s1">&#39;warn&#39;</span><span class="p">)</span>  <span class="c1"># turn numpy warning back on</span>
+    <span class="n">w</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;always&quot;</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="s2">&quot;Polyfit may be poorly conditioned&quot;</span><span class="p">)</span>
+
+    <span class="c1"># -------- SAVE FIGURE IF DESIRED -------- ##</span>
+    <span class="k">if</span> <span class="n">save_fig</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span></div>
+
+
+
+<div class="viewcode-block" id="scatterplot">
+<a class="viewcode-back" href="../../codedoc.html#VESIcal.vplot.scatterplot">[docs]</a>
+<span class="k">def</span> <span class="nf">scatterplot</span><span class="p">(</span><span class="n">custom_x</span><span class="p">,</span> <span class="n">custom_y</span><span class="p">,</span> <span class="n">xlabel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Custom x-y plotting using VESIcal&#39;s built-in plot() function, built</span>
+<span class="sd">    Matplotlib&#39;s plot and scatter functions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    custom_x: list</span>
+<span class="sd">        List of groups of x-values to plot as points or lines</span>
+
+<span class="sd">    custom_y: list</span>
+<span class="sd">        List of groups of y-values to plot as points or lines</span>
+
+<span class="sd">    xlabel: str</span>
+<span class="sd">        OPTIONAL. What to display along the x-axis.</span>
+
+<span class="sd">    ylabel: str</span>
+<span class="sd">        OPTIONAL. What to display along the y-axis.</span>
+
+<span class="sd">    kwargs:</span>
+<span class="sd">        Can take in any key word agruments that can be passed to `plot()`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fig, ax matplotlib objects</span>
+<span class="sd">        X-y plot with custom x and y axis values and labels.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">custom_x</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">custom_y</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">custom_x</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">custom_y</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;X and y lists must be same length&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">xlabel</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xlabel</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;xlabel must be string&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">ylabel</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ylabel</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;ylabel must be string&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">plot</span><span class="p">(</span><span class="n">custom_x</span><span class="o">=</span><span class="n">custom_x</span><span class="p">,</span> <span class="n">custom_y</span><span class="o">=</span><span class="n">custom_y</span><span class="p">,</span> <span class="n">xlabel</span><span class="o">=</span><span class="n">xlabel</span><span class="p">,</span>
+                <span class="n">ylabel</span><span class="o">=</span><span class="n">ylabel</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># ------- Define custom plotting tools for checking calibrations ------- #</span>
+
+<div class="viewcode-block" id="calib_plot">
+<a class="viewcode-back" href="../../codedoc.html#VESIcal.vplot.calib_plot">[docs]</a>
+<span class="k">def</span> <span class="nf">calib_plot</span><span class="p">(</span><span class="n">user_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="n">plot_type</span><span class="o">=</span><span class="s1">&#39;TAS&#39;</span><span class="p">,</span> <span class="n">zoom</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">17</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="n">legend</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">save_fig</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plots user data and calibration set of any or all models on any x-y plot</span>
+<span class="sd">    or a total alkalis vs silica (TAS) diagram. TAS diagram boundaries</span>
+<span class="sd">    provided by tasplot python module, copyright John A Stevenson.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    user_data: BatchFile object, Sample object, pandas DataFrame, pandas Series,</span>
+<span class="sd">        or dict.</span>
+<span class="sd">        OPTIONAL. Default value is None, in which case only the model</span>
+<span class="sd">        calibration set is plotted. User provided sample data describing the</span>
+<span class="sd">        oxide composition of one or more samples. Multiple samples can be</span>
+<span class="sd">        passed as an BatchFile object or pandas DataFrame. A single sample can</span>
+<span class="sd">        be passed as a pandas Series.</span>
+
+<span class="sd">    model: str or list</span>
+<span class="sd">        OPTIONAL. Default value is &#39;all&#39;, in which case all model calibration</span>
+<span class="sd">        datasets will be plotted. &#39;Mixed&#39; can be used to plot all mixed fluid</span>
+<span class="sd">        models. String of the name of the model calibration dataset to plot</span>
+<span class="sd">        (e.g., &#39;Shishkina&#39;). Multiple models can be plotted by passing them as</span>
+<span class="sd">        strings within a list (e.g., [&#39;Shishkina&#39;, &#39;Dixon&#39;]).</span>
+
+<span class="sd">    plot_type: str</span>
+<span class="sd">        OPTIONAL. Default value is &#39;TAS&#39;, which returns a total alkali vs</span>
+<span class="sd">        silica (TAS) diagram. Any two oxides can be plotted as an x-y plot by</span>
+<span class="sd">        setting plot_type=&#39;xy&#39; and specifying x- and y-axis oxides, e.g.,</span>
+<span class="sd">        x=&#39;SiO2&#39;, y=&#39;Al2O3&#39;.</span>
+
+<span class="sd">    zoom: str or list</span>
+<span class="sd">        OPTIONAL. Default value is None in which case axes will be set to the</span>
+<span class="sd">        default of 35&lt;x&lt;100 wt% and 0&lt;y&lt;25 wt% for TAS type plots and the best</span>
+<span class="sd">        values to show the data for xy type plots. Can pass &quot;user_data&quot; to</span>
+<span class="sd">        plot the figure where the x and y axes are scaled down to zoom in and</span>
+<span class="sd">        only show the region surrounding the user_data. A list of tuples may</span>
+<span class="sd">        be passed to manually specify x and y limits. Pass in data as</span>
+<span class="sd">        [(x_min, x_max), (y_min, y_max)]. For example, the default limits here</span>
+<span class="sd">        would be passed in as [(35,100), (0,25)].</span>
+
+<span class="sd">    figsize: tuple</span>
+<span class="sd">        OPTIONAL. Default value is (17,8). Sets the matplotlib.pyplot figsize</span>
+<span class="sd">        value as (x_dimension, y_dimension).</span>
+
+<span class="sd">    legend: bool</span>
+<span class="sd">        OPTIONAL. Default value is True. Can be set to False in which case the</span>
+<span class="sd">        legend will not be displayed.</span>
+
+<span class="sd">    save_fig: False or str</span>
+<span class="sd">        OPTIONAL. Default value is False, in which case the figure will not be</span>
+<span class="sd">        saved. If a string is passed, the figure will be saved with the string</span>
+<span class="sd">        as the filename. The string must include the file extension.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    matplotlib object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Get x and y axis limits, if user passed them</span>
+    <span class="k">if</span> <span class="n">zoom</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">user_xmin</span> <span class="o">=</span> <span class="mi">35</span>
+        <span class="n">user_xmax</span> <span class="o">=</span> <span class="mi">100</span>
+        <span class="n">user_ymin</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">user_ymax</span> <span class="o">=</span> <span class="mi">25</span>
+    <span class="k">elif</span> <span class="n">zoom</span> <span class="o">==</span> <span class="s1">&#39;user_data&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">user_data</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&#39;user_data&#39; type zoom for more than one sample is not &quot;</span><span class="p">,</span>
+                  <span class="s2">&quot;implemented yet.&quot;</span><span class="p">)</span>
+            <span class="n">user_xmin</span> <span class="o">=</span> <span class="mi">35</span>
+            <span class="n">user_xmax</span> <span class="o">=</span> <span class="mi">100</span>
+            <span class="n">user_ymin</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">user_ymax</span> <span class="o">=</span> <span class="mi">25</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">user_data</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">series</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="ow">or</span>
+              <span class="nb">isinstance</span><span class="p">(</span><span class="n">user_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)):</span>
+            <span class="n">user_xmin</span> <span class="o">=</span> <span class="n">user_data</span><span class="p">[</span><span class="s1">&#39;SiO2&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="mi">5</span>
+            <span class="n">user_xmax</span> <span class="o">=</span> <span class="n">user_data</span><span class="p">[</span><span class="s1">&#39;SiO2&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">5</span>
+            <span class="n">user_ymin</span> <span class="o">=</span> <span class="n">user_data</span><span class="p">[</span><span class="s1">&#39;Na2O&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">user_data</span><span class="p">[</span><span class="s1">&#39;K2O&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="mi">2</span>
+            <span class="k">if</span> <span class="n">user_ymin</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">user_ymin</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">user_ymax</span> <span class="o">=</span> <span class="n">user_data</span><span class="p">[</span><span class="s1">&#39;Na2O&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">user_data</span><span class="p">[</span><span class="s1">&#39;K2O&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">2</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">zoom</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">user_xmin</span><span class="p">,</span> <span class="n">user_xmax</span> <span class="o">=</span> <span class="n">zoom</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">user_ymin</span><span class="p">,</span> <span class="n">user_ymax</span> <span class="o">=</span> <span class="n">zoom</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s1">&#39;Trying to pass zoom coords? Pass as &#39;</span> <span class="o">+</span>
+                              <span class="s1">&#39;[(x, x), (y, y)]&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Create the figure</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax1</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">)</span>
+    <span class="n">font</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;family&#39;</span><span class="p">:</span> <span class="s1">&#39;sans-serif&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;color&#39;</span><span class="p">:</span>  <span class="s1">&#39;black&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;weight&#39;</span><span class="p">:</span> <span class="s1">&#39;normal&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;size&#39;</span><span class="p">:</span>   <span class="mi">20</span><span class="p">,</span>
+            <span class="p">}</span>
+
+    <span class="c1"># TAS figure</span>
+    <span class="k">if</span> <span class="n">plot_type</span> <span class="o">==</span> <span class="s1">&#39;TAS&#39;</span><span class="p">:</span>
+        <span class="c1"># adjust x limits here if you want to focus on a specific part of</span>
+        <span class="c1"># compostional space:</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="n">user_xmin</span><span class="p">,</span> <span class="n">user_xmax</span><span class="p">])</span>
+
+        <span class="c1"># adjust y limits here</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="n">user_ymin</span><span class="p">,</span> <span class="n">user_ymax</span><span class="p">])</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;SiO$_2$, wt%&#39;</span><span class="p">,</span> <span class="n">fontdict</span><span class="o">=</span><span class="n">font</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Na$_2$O+K$_2$O, wt%&#39;</span><span class="p">,</span> <span class="n">fontdict</span><span class="o">=</span><span class="n">font</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+
+        <span class="c1"># add LeMaitre fields</span>
+        <span class="k">if</span> <span class="n">zoom</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">add_LeMaitre_fields</span><span class="p">(</span><span class="n">ax1</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">plot_type</span> <span class="o">==</span> <span class="s1">&#39;xy&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;x&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">and</span> <span class="s1">&#39;y&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">zoom</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">ax1</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="n">user_xmin</span><span class="p">,</span> <span class="n">user_xmax</span><span class="p">])</span>
+                <span class="n">ax1</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="n">user_ymin</span><span class="p">,</span> <span class="n">user_ymax</span><span class="p">])</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;, wt%&quot;</span><span class="p">,</span> <span class="n">fontdict</span><span class="o">=</span><span class="n">font</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;, wt%&quot;</span><span class="p">,</span> <span class="n">fontdict</span><span class="o">=</span><span class="n">font</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;If plot_type is &#39;xy&#39;, then x and y &quot;</span>
+                                  <span class="s2">&quot;values must be passed as strings. For &quot;</span>
+                                  <span class="s2">&quot;example, x=&#39;SiO2&#39;, y=&#39;Al2O3&#39;.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Plot Calibration Data</span>
+    <span class="k">if</span> <span class="n">model</span> <span class="o">==</span> <span class="s1">&#39;all&#39;</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;MagmaSat&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;Shishkina&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;Dixon&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;IaconoMarziano&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;Liu&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;AllisonCarbon&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;MooreWater&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">model</span> <span class="o">==</span> <span class="s1">&#39;mixed&#39;</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;MagmaSat&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;Shishkina&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;Dixon&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;IaconoMarziano&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;Liu&#39;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="p">[</span><span class="n">model</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="c1"># set legends to false</span>
+        <span class="n">h2o_legend</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">co2_h2oco2_legend</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># check which legends to turn to True</span>
+        <span class="k">for</span> <span class="n">modelname</span> <span class="ow">in</span> <span class="n">model</span><span class="p">:</span>
+            <span class="n">model_type</span> <span class="o">=</span> <span class="n">calibrations</span><span class="o">.</span><span class="n">return_calibration_type</span><span class="p">(</span><span class="n">modelname</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">model_type</span><span class="p">[</span><span class="s1">&#39;H2O&#39;</span><span class="p">]:</span>
+                <span class="n">h2o_legend</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="n">model_type</span><span class="p">[</span><span class="s1">&#39;CO2&#39;</span><span class="p">]</span> <span class="ow">or</span> <span class="n">model_type</span><span class="p">[</span><span class="s1">&#39;Mixed&#39;</span><span class="p">]:</span>
+                <span class="n">co2_h2oco2_legend</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="n">h2o_legend</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;$\bf{Pure \ H_2O:}$&quot;</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">modelname</span> <span class="ow">in</span> <span class="n">model</span><span class="p">:</span>
+                <span class="n">calibdata</span> <span class="o">=</span> <span class="n">calibrations</span><span class="o">.</span><span class="n">return_calibration</span><span class="p">(</span><span class="n">modelname</span><span class="p">)</span>
+                <span class="n">model_type</span> <span class="o">=</span> <span class="n">calibrations</span><span class="o">.</span><span class="n">return_calibration_type</span><span class="p">(</span><span class="n">modelname</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">calibdata</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="n">w</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">calibdata</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">model_type</span><span class="p">[</span><span class="s1">&#39;H2O&#39;</span><span class="p">]:</span>
+                        <span class="k">if</span> <span class="n">plot_type</span> <span class="o">==</span> <span class="s1">&#39;TAS&#39;</span><span class="p">:</span>
+                            <span class="k">try</span><span class="p">:</span>
+                                <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">calibdata</span><span class="p">[</span><span class="s1">&#39;H2O&#39;</span><span class="p">][</span><span class="s1">&#39;SiO2&#39;</span><span class="p">],</span>
+                                            <span class="p">(</span><span class="n">calibdata</span><span class="p">[</span><span class="s1">&#39;H2O&#39;</span><span class="p">][</span><span class="s1">&#39;Na2O&#39;</span><span class="p">]</span> <span class="o">+</span>
+                                                <span class="n">calibdata</span><span class="p">[</span><span class="s1">&#39;H2O&#39;</span><span class="p">][</span><span class="s1">&#39;K2O&#39;</span><span class="p">]),</span>
+                                            <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="n">edgecolors</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span>
+                                            <span class="n">facecolors</span><span class="o">=</span><span class="n">calibdata</span><span class="p">[</span><span class="s1">&#39;facecolor&#39;</span><span class="p">],</span>
+                                            <span class="n">label</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">modelname</span><span class="p">))</span>
+                            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                                <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">calibdata</span><span class="p">[</span><span class="s1">&#39;H2O&#39;</span><span class="p">][</span><span class="s1">&#39;SiO2&#39;</span><span class="p">],</span>
+                                            <span class="n">calibdata</span><span class="p">[</span><span class="s1">&#39;H2O&#39;</span><span class="p">][</span><span class="s1">&#39;Na2O+K2O&#39;</span><span class="p">],</span>
+                                            <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="n">edgecolors</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span>
+                                            <span class="n">facecolors</span><span class="o">=</span><span class="n">calibdata</span><span class="p">[</span><span class="s1">&#39;facecolor&#39;</span><span class="p">],</span>
+                                            <span class="n">label</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">modelname</span><span class="p">))</span>
+                        <span class="k">if</span> <span class="n">plot_type</span> <span class="o">==</span> <span class="s1">&#39;xy&#39;</span><span class="p">:</span>
+                            <span class="k">try</span><span class="p">:</span>
+                                <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">calibdata</span><span class="p">[</span><span class="s1">&#39;H2O&#39;</span><span class="p">][</span><span class="n">x</span><span class="p">],</span>
+                                            <span class="n">calibdata</span><span class="p">[</span><span class="s1">&#39;H2O&#39;</span><span class="p">][</span><span class="n">y</span><span class="p">],</span>
+                                            <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="n">edgecolors</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span>
+                                            <span class="n">facecolors</span><span class="o">=</span><span class="n">calibdata</span><span class="p">[</span><span class="s1">&#39;facecolor&#39;</span><span class="p">],</span>
+                                            <span class="n">label</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">modelname</span><span class="p">))</span>
+                            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                                <span class="n">w</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;The requested oxides were not found&quot;</span><span class="p">,</span>
+                                       <span class="s2">&quot;in the calibration dataset for &quot;</span> <span class="o">+</span>
+                                       <span class="nb">str</span><span class="p">(</span><span class="n">modelname</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">co2_h2oco2_legend</span><span class="p">:</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;${\ }$&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">co2_h2oco2_legend</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                        <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;$\bf{\ CO_2 \ and \ H_2O\!-\!CO_2:}$&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">modelname</span> <span class="ow">in</span> <span class="n">model</span><span class="p">:</span>
+            <span class="n">calibdata</span> <span class="o">=</span> <span class="n">calibrations</span><span class="o">.</span><span class="n">return_calibration</span><span class="p">(</span><span class="n">modelname</span><span class="p">)</span>
+            <span class="n">model_type</span> <span class="o">=</span> <span class="n">calibrations</span><span class="o">.</span><span class="n">return_calibration_type</span><span class="p">(</span><span class="n">modelname</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">calibdata</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">w</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">calibdata</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">model_type</span><span class="p">[</span><span class="s1">&#39;CO2&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">model_type</span><span class="p">[</span><span class="s1">&#39;Mixed&#39;</span><span class="p">]:</span>
+                    <span class="n">frames</span> <span class="o">=</span> <span class="p">[</span><span class="n">calibdata</span><span class="p">[</span><span class="s1">&#39;CO2&#39;</span><span class="p">],</span> <span class="n">calibdata</span><span class="p">[</span><span class="s1">&#39;Mixed&#39;</span><span class="p">]]</span>
+                    <span class="n">co2_and_mixed</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">plot_type</span> <span class="o">==</span> <span class="s1">&#39;TAS&#39;</span><span class="p">:</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">co2_and_mixed</span><span class="p">[</span><span class="s1">&#39;SiO2&#39;</span><span class="p">],</span>
+                                        <span class="p">(</span><span class="n">co2_and_mixed</span><span class="p">[</span><span class="s1">&#39;Na2O&#39;</span><span class="p">]</span> <span class="o">+</span>
+                                        <span class="n">co2_and_mixed</span><span class="p">[</span><span class="s1">&#39;K2O&#39;</span><span class="p">]),</span>
+                                        <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="n">edgecolors</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span>
+                                        <span class="n">facecolors</span><span class="o">=</span><span class="n">calibdata</span><span class="p">[</span><span class="s1">&#39;facecolor&#39;</span><span class="p">],</span>
+                                        <span class="n">label</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">modelname</span><span class="p">))</span>
+                        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                            <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">co2_and_mixed</span><span class="p">[</span><span class="s1">&#39;SiO2&#39;</span><span class="p">],</span>
+                                        <span class="n">co2_and_mixed</span><span class="p">[</span><span class="s1">&#39;Na2O+K2O&#39;</span><span class="p">],</span>
+                                        <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="n">edgecolors</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span>
+                                        <span class="n">facecolors</span><span class="o">=</span><span class="n">calibdata</span><span class="p">[</span><span class="s1">&#39;facecolor&#39;</span><span class="p">],</span>
+                                        <span class="n">label</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">modelname</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="n">plot_type</span> <span class="o">==</span> <span class="s1">&#39;xy&#39;</span><span class="p">:</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">co2_and_mixed</span><span class="p">[</span><span class="n">x</span><span class="p">],</span> <span class="n">co2_and_mixed</span><span class="p">[</span><span class="n">y</span><span class="p">],</span>
+                                        <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="n">edgecolors</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span>
+                                        <span class="n">facecolors</span><span class="o">=</span><span class="n">calibdata</span><span class="p">[</span><span class="s1">&#39;facecolor&#39;</span><span class="p">],</span>
+                                        <span class="n">label</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">modelname</span><span class="p">))</span>
+                        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                            <span class="n">w</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;The requested oxides were not found in &quot;</span><span class="p">,</span>
+                                   <span class="s2">&quot;the calibration dataset for &quot;</span> <span class="o">+</span>
+                                   <span class="nb">str</span><span class="p">(</span><span class="n">modelname</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">model_type</span><span class="p">[</span><span class="s1">&#39;CO2&#39;</span><span class="p">]</span> <span class="ow">or</span> <span class="n">model_type</span><span class="p">[</span><span class="s1">&#39;Mixed&#39;</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="n">model_type</span><span class="p">[</span><span class="s1">&#39;CO2&#39;</span><span class="p">]:</span>
+                        <span class="n">thistype</span> <span class="o">=</span> <span class="s1">&#39;CO2&#39;</span>
+                    <span class="k">if</span> <span class="n">model_type</span><span class="p">[</span><span class="s1">&#39;Mixed&#39;</span><span class="p">]:</span>
+                        <span class="n">thistype</span> <span class="o">=</span> <span class="s1">&#39;Mixed&#39;</span>
+                    <span class="k">if</span> <span class="n">plot_type</span> <span class="o">==</span> <span class="s1">&#39;TAS&#39;</span><span class="p">:</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">calibdata</span><span class="p">[</span><span class="n">thistype</span><span class="p">][</span><span class="s1">&#39;SiO2&#39;</span><span class="p">],</span>
+                                        <span class="p">(</span><span class="n">calibdata</span><span class="p">[</span><span class="n">thistype</span><span class="p">][</span><span class="s1">&#39;Na2O&#39;</span><span class="p">]</span> <span class="o">+</span>
+                                        <span class="n">calibdata</span><span class="p">[</span><span class="n">thistype</span><span class="p">][</span><span class="s1">&#39;K2O&#39;</span><span class="p">]),</span>
+                                        <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="n">edgecolors</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span>
+                                        <span class="n">facecolors</span><span class="o">=</span><span class="n">calibdata</span><span class="p">[</span><span class="s1">&#39;facecolor&#39;</span><span class="p">],</span>
+                                        <span class="n">label</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">modelname</span><span class="p">))</span>
+                        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                            <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">calibdata</span><span class="p">[</span><span class="n">thistype</span><span class="p">][</span><span class="s1">&#39;SiO2&#39;</span><span class="p">],</span>
+                                        <span class="n">calibdata</span><span class="p">[</span><span class="n">thistype</span><span class="p">][</span><span class="s1">&#39;Na2O+K2O&#39;</span><span class="p">],</span>
+                                        <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="n">edgecolors</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span>
+                                        <span class="n">facecolors</span><span class="o">=</span><span class="n">calibdata</span><span class="p">[</span><span class="s1">&#39;facecolor&#39;</span><span class="p">],</span>
+                                        <span class="n">label</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">modelname</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="n">plot_type</span> <span class="o">==</span> <span class="s1">&#39;xy&#39;</span><span class="p">:</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">calibdata</span><span class="p">[</span><span class="n">thistype</span><span class="p">][</span><span class="n">x</span><span class="p">],</span>
+                                        <span class="n">calibdata</span><span class="p">[</span><span class="n">thistype</span><span class="p">][</span><span class="n">y</span><span class="p">],</span>
+                                        <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="n">edgecolors</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span>
+                                        <span class="n">facecolors</span><span class="o">=</span><span class="n">calibdata</span><span class="p">[</span><span class="s1">&#39;facecolor&#39;</span><span class="p">],</span>
+                                        <span class="n">label</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">modelname</span><span class="p">))</span>
+                        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                            <span class="n">w</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;The requested oxides were not found in &quot;</span><span class="p">,</span>
+                                   <span class="s2">&quot;the calibration dataset for &quot;</span>
+                                   <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">modelname</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;model must be of type str or list&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Plot user data</span>
+    <span class="k">if</span> <span class="n">user_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">((</span><span class="n">user_data</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__module__</span><span class="p">,</span> <span class="n">user_data</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span> <span class="o">==</span>
+           <span class="p">(</span><span class="s1">&#39;VESIcal&#39;</span><span class="p">,</span> <span class="s1">&#39;BatchFile&#39;</span><span class="p">)):</span>
+            <span class="n">user_data</span> <span class="o">=</span> <span class="n">user_data</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span>
+            <span class="c1"># batchfile and VESIcal (__init__) are not imported to avoid</span>
+            <span class="c1"># circular imports</span>
+            <span class="c1"># use above notation to interrogate datatype</span>
+        <span class="k">if</span> <span class="p">((</span><span class="n">user_data</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__module__</span><span class="p">,</span> <span class="n">user_data</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span> <span class="o">==</span>
+           <span class="p">(</span><span class="s1">&#39;VESIcal&#39;</span><span class="p">,</span> <span class="s1">&#39;Sample&#39;</span><span class="p">)):</span>
+            <span class="n">user_data</span> <span class="o">=</span> <span class="n">user_data</span><span class="o">.</span><span class="n">get_composition</span><span class="p">()</span>
+            <span class="c1"># batchfile and VESIcal (__init__) are not imported to avoid</span>
+            <span class="c1"># circular imports</span>
+            <span class="c1"># use above notation to interrogate datatype</span>
+        <span class="k">if</span> <span class="n">plot_type</span> <span class="o">==</span> <span class="s1">&#39;TAS&#39;</span><span class="p">:</span>
+            <span class="n">_sample</span> <span class="o">=</span> <span class="n">user_data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">_sample</span><span class="p">[</span><span class="s2">&quot;TotalAlkalis&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_sample</span><span class="p">[</span><span class="s2">&quot;Na2O&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">_sample</span><span class="p">[</span><span class="s2">&quot;K2O&quot;</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;Na2O and K2O data must be in user_data&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">_sample</span><span class="p">[</span><span class="s1">&#39;SiO2&#39;</span><span class="p">],</span> <span class="n">_sample</span><span class="p">[</span><span class="s1">&#39;TotalAlkalis&#39;</span><span class="p">],</span>
+                        <span class="n">s</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">edgecolors</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">facecolors</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;P&#39;</span><span class="p">,</span>
+                        <span class="n">label</span><span class="o">=</span><span class="s1">&#39;User Data&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">plot_type</span> <span class="o">==</span> <span class="s1">&#39;xy&#39;</span><span class="p">:</span>
+            <span class="n">_sample</span> <span class="o">=</span> <span class="n">user_data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">_sample</span><span class="p">[</span><span class="n">x</span><span class="p">],</span> <span class="n">_sample</span><span class="p">[</span><span class="n">y</span><span class="p">],</span>
+                        <span class="n">s</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">edgecolors</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">facecolors</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;P&#39;</span><span class="p">,</span>
+                        <span class="n">label</span><span class="o">=</span><span class="s1">&#39;User Data&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">legend</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">1.04</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">loc</span><span class="o">=</span><span class="s2">&quot;upper left&quot;</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">save_fig</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax1</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">show</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Local implementation of pyplot.show(). For displaying created plots.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Kayla Iacovino and Simon Matthews.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,58 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "VESIcal/__init__.py"
+
+[project]
+name = "VESIcal"
+dynamic = ["version"]
+
+dependencies = [
+    "numpy==1.26.3",
+    "scipy==1.11.4",
+    "sympy==1.9",
+    "pandas==2.1.4",
+    "matplotlib==3.8.2",
+    "openpyxl==3.1.2"
+]
+
+requires-python = ">=3.8"
+authors = [
+  {name = "Kayla Iacovino", email = "kaylaiacovino@gmail.com"},
+  {name = "Simon Matthews", email = "simonm@hi.is"},
+  {name = "Penny Wieser", email = "penny_wieser@berkeley.edu"},
+  {name = "Gordon Moore"},
+  {name = "Florence Begue"},
+]
+maintainers = [
+  {name = "Kayla Iacovino", email = "kaylaiacovino@gmail.com"},
+  {name = "Simon Matthews", email = "simonm@hi.is"}
+]
+
+description = "A generalized python library for calculating and plotting various things related to mixed volatile (H2O-CO2) solubility in silicate melts."
+readme = "README.md"
+
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Intended Audience :: Science/Research/Government",
+  "Topic :: Scientific :: Geology/Volcanology/Petrology/Geochemistry"
+]
+
+[project.optional-dependencies]
+docs = [
+  "furo",
+  "myst_parser >=0.13",
+  "sphinx >=4.0",
+  "sphinx-copybutton",
+  "sphinx-autodoc-typehints",
+]
+
+[project.urls]
+Homepage = "https://linktr.ee/VESIcal"
+Documentation = "https://vesical.readthedocs.io/en/latest/index.html"
+Repository = "https://github.com/kaylai/VESIcal"
+"Bug Tracker" = "https://github.com/kaylai/VESIcal/issues"

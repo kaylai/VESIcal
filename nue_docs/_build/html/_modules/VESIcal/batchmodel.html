@@ -1,0 +1,1058 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VESIcal.batchmodel &mdash; VESIcal 1.2.6 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=77553476" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=010db75e"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quick_tutorials.html">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Verbose Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../advanced_tutorials.html">Advanced Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../youtube.html">YouTube Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../integration.html">Integration with Thermobar</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../codedoc.html">VESIcal Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../faq.html">FAQ’s</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">ChangeLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About VESIcal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../support.html">Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">MIT Licence</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Community Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../workshops.html">Workshops and Presentations</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/kaylai/VESIcal">GitHub Repo</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://linktr.ee/VESIcal">Link Tree</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">VESIcal</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../VESIcal.html">VESIcal</a></li>
+      <li class="breadcrumb-item active">VESIcal.batchmodel</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for VESIcal.batchmodel</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">VESIcal</span> <span class="kn">import</span> <span class="n">core</span>
+<span class="kn">from</span> <span class="nn">VESIcal</span> <span class="kn">import</span> <span class="n">models</span>
+<span class="kn">from</span> <span class="nn">VESIcal</span> <span class="kn">import</span> <span class="n">calculate_classes</span>
+<span class="kn">from</span> <span class="nn">VESIcal</span> <span class="kn">import</span> <span class="n">batchfile</span>
+
+<span class="kn">from</span> <span class="nn">VESIcal.thermo</span> <span class="kn">import</span> <span class="n">thermo_calculate_classes</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">warnings</span> <span class="k">as</span> <span class="nn">w</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="c1"># from thermoengine import equilibrate</span>
+
+<span class="c1"># w.filterwarnings(&quot;ignore&quot;, message=&quot;rubicon.objc.ctypes_patch has only been &quot;</span>
+<span class="c1">#                                    &quot;tested &quot;)</span>
+
+<span class="c1"># # -------------- MELTS preamble --------------- #</span>
+<span class="c1"># # instantiate thermoengine equilibrate MELTS instance</span>
+<span class="c1"># melts = equilibrate.MELTSmodel(&#39;1.2.0&#39;)</span>
+
+<span class="c1"># # Suppress phases not required in the melts simulation</span>
+<span class="c1"># phases = melts.get_phase_names()</span>
+<span class="c1"># for phase in phases:</span>
+<span class="c1">#     melts.set_phase_inclusion_status({phase: False})</span>
+<span class="c1"># melts.set_phase_inclusion_status({&#39;Fluid&#39;: True, &#39;Liquid&#39;: True})</span>
+<span class="c1"># # --------------------------------------------- #</span>
+
+
+<span class="c1"># -------------- BATCH PROCESSING ----------- #</span>
+<span class="k">class</span> <span class="nc">BatchFile</span><span class="p">(</span><span class="n">batchfile</span><span class="o">.</span><span class="n">BatchFile</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Performs model functions on a batchfile.BatchFile object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">calculate_dissolved_volatiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">pressure</span><span class="p">,</span> <span class="n">X_fluid</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                      <span class="n">print_status</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s1">&#39;MagmaSat&#39;</span><span class="p">,</span>
+                                      <span class="n">record_errors</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates the amount of H2O and CO2 dissolved in a magma at the given</span>
+<span class="sd">        P/T conditions and fluid composition. Fluid composition will be</span>
+<span class="sd">        matched to within 0.0001 mole fraction.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        temperature: float, int, or str</span>
+<span class="sd">            Temperature, in degrees C. Can be passed as float, in which case</span>
+<span class="sd">            the passed value is used as the temperature for all samples.</span>
+<span class="sd">            Alternatively, temperature information for each individual</span>
+<span class="sd">            sample may already be present in the BatchFile object. If so, pass</span>
+<span class="sd">            the str value corresponding to the column title in the BatchFile</span>
+<span class="sd">            object.</span>
+
+<span class="sd">        pressure: float, int, or str</span>
+<span class="sd">            Pressure, in bars. Can be passed as float or int, in which case the</span>
+<span class="sd">            passed value is used as the pressure for all samples.</span>
+<span class="sd">            Alternatively, pressure information for each individual sample may</span>
+<span class="sd">            already be present in the BatchFile object. If so, pass the str</span>
+<span class="sd">            value corresponding to the column title in the BatchFile object.</span>
+
+<span class="sd">        X_fluid: float, int, or str</span>
+<span class="sd">            OPTIONAL: Default value is 1. The mole fraction of H2O in the</span>
+<span class="sd">            H2O-CO2 fluid. X_fluid=1 is a pure H2O fluid. X_fluid=0 is a pure</span>
+<span class="sd">            CO2 fluid. Can be passed as a float or int, in which case the</span>
+<span class="sd">            passed value is used as the X_fluid for all samples.</span>
+<span class="sd">            Alternatively, X_fluid information for each individual sample may</span>
+<span class="sd">            already be present in the BatchFile object. If so, pass the str</span>
+<span class="sd">            value corresponding to the column title in the BatchFile object.</span>
+
+<span class="sd">        print_status: bool</span>
+<span class="sd">            OPTIONAL: The default value is True, in which case the progress of</span>
+<span class="sd">            the calculation will be printed to the terminal. If set to False,</span>
+<span class="sd">            nothing will be printed. MagmaSat calculations tend to be slow,</span>
+<span class="sd">            and so a value of True is recommended for most use cases.</span>
+
+<span class="sd">        model: string</span>
+<span class="sd">            OPTIONAL: Default is &#39;MagmaSat&#39;. Any other model name can be</span>
+<span class="sd">            passed here.</span>
+
+<span class="sd">        record_errors: bool</span>
+<span class="sd">            OPTIONAL: If True, any errors arising during the calculation will</span>
+<span class="sd">            be recorded as a column.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas DataFrame</span>
+<span class="sd">            Original data passed plus newly calculated values are returned.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dissolved_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">file_has_temp</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">temp_name</span> <span class="o">=</span> <span class="n">temperature</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">file_has_temp</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;temp must be type str or float or int&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pressure</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">file_has_press</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">press_name</span> <span class="o">=</span> <span class="n">pressure</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pressure</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pressure</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">file_has_press</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;pressure must be type str or float or int&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X_fluid</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">file_has_X</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">X_name</span> <span class="o">=</span> <span class="n">X_fluid</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X_fluid</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X_fluid</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">file_has_X</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="n">X_fluid</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">X_fluid</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">X_fluid</span> <span class="o">&lt;</span> <span class="mf">0.001</span> <span class="ow">or</span> <span class="n">X_fluid</span> <span class="o">&gt;</span> <span class="mf">0.999</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;X_fluid is calculated to a &quot;</span>
+                                          <span class="s2">&quot;precision of 0.0001 mole fraction. &quot;</span>
+                                          <span class="s2">&quot;Value for X_fluid must be between &quot;</span>
+                                          <span class="s2">&quot;0.0001 and 0.9999.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;X_fluid must be type str or float or int&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Check if the model passed as the attribute &quot;model_type&quot;</span>
+        <span class="c1"># Currently only implemented for MagmaSat type models</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s1">&#39;model_type&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">model_type</span>
+
+        <span class="n">H2Ovals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">CO2vals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">warnings</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">models</span><span class="o">.</span><span class="n">get_model_names</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s1">&#39;mixed&#39;</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">dissolved_data</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">file_has_temp</span><span class="p">:</span>
+                        <span class="n">temperature</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">temp_name</span><span class="p">]</span>
+
+                    <span class="k">if</span> <span class="n">file_has_press</span><span class="p">:</span>
+                        <span class="n">pressure</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">press_name</span><span class="p">]</span>
+
+                    <span class="k">if</span> <span class="n">file_has_X</span><span class="p">:</span>
+                        <span class="n">X_fluid</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">X_name</span><span class="p">]</span>
+
+                    <span class="c1"># Get sample comp as Sample class with defaults</span>
+                    <span class="n">bulk_comp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sample_composition</span><span class="p">(</span>
+                                      <span class="n">index</span><span class="p">,</span>
+                                      <span class="n">normalization</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">default_normalization</span><span class="p">,</span>
+                                      <span class="n">units</span><span class="o">=</span><span class="s1">&#39;wtpt_oxides&#39;</span><span class="p">,</span> <span class="n">asSampleClass</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="n">bulk_comp</span><span class="o">.</span><span class="n">set_default_units</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_units</span><span class="p">)</span>
+                    <span class="n">bulk_comp</span><span class="o">.</span><span class="n">set_default_normalization</span><span class="p">(</span>
+                                                    <span class="bp">self</span><span class="o">.</span><span class="n">default_normalization</span><span class="p">)</span>
+                    <span class="n">calc</span> <span class="o">=</span> <span class="n">calculate_classes</span><span class="o">.</span><span class="n">calculate_dissolved_volatiles</span><span class="p">(</span>
+                                           <span class="n">sample</span><span class="o">=</span><span class="n">bulk_comp</span><span class="p">,</span> <span class="n">pressure</span><span class="o">=</span><span class="n">pressure</span><span class="p">,</span>
+                                           <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span>
+                                           <span class="n">X_fluid</span><span class="o">=</span><span class="p">(</span><span class="n">X_fluid</span><span class="p">,</span> <span class="mi">1</span><span class="o">-</span><span class="n">X_fluid</span><span class="p">),</span>
+                                           <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">silence_warnings</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                           <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                    <span class="n">H2Ovals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;H2O_liq&#39;</span><span class="p">])</span>
+                    <span class="n">CO2vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;CO2_liq&#39;</span><span class="p">])</span>
+                    <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">calib_check</span><span class="p">)</span>
+                    <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="n">H2Ovals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">CO2vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;Calculation Failed.&#39;</span><span class="p">)</span>
+                    <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">dissolved_data</span><span class="p">[</span><span class="s2">&quot;H2O_liq_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">H2Ovals</span>
+            <span class="n">dissolved_data</span><span class="p">[</span><span class="s2">&quot;CO2_liq_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">CO2vals</span>
+
+            <span class="k">if</span> <span class="n">file_has_temp</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="n">dissolved_data</span><span class="p">[</span><span class="s2">&quot;Temperature_C_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">temperature</span>
+            <span class="k">if</span> <span class="n">file_has_press</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="n">dissolved_data</span><span class="p">[</span><span class="s2">&quot;Pressure_bars_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pressure</span>
+            <span class="k">if</span> <span class="n">file_has_X</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="n">dissolved_data</span><span class="p">[</span><span class="s2">&quot;X_fluid_input_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">X_fluid</span>
+            <span class="n">dissolved_data</span><span class="p">[</span><span class="s2">&quot;Model&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">model</span>
+            <span class="n">dissolved_data</span><span class="p">[</span><span class="s2">&quot;Warnings&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">warnings</span>
+            <span class="k">if</span> <span class="n">record_errors</span><span class="p">:</span>
+                <span class="n">dissolved_data</span><span class="p">[</span><span class="s2">&quot;Errors&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">errors</span>
+
+            <span class="k">return</span> <span class="n">dissolved_data</span>
+
+        <span class="k">elif</span> <span class="n">model</span> <span class="o">==</span> <span class="s1">&#39;MagmaSat&#39;</span><span class="p">:</span>
+            <span class="n">XH2Ovals</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">XCO2vals</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">FluidProportionvals</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">iterno</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">dissolved_data</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+                <span class="n">iterno</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">print_status</span><span class="p">:</span>
+                    <span class="n">percent</span> <span class="o">=</span> <span class="n">iterno</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">dissolved_data</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+                    <span class="n">batchfile</span><span class="o">.</span><span class="n">status_bar</span><span class="o">.</span><span class="n">status_bar</span><span class="p">(</span><span class="n">percent</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">file_has_temp</span><span class="p">:</span>
+                    <span class="n">temperature</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">temp_name</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">temperature</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">H2Ovals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">CO2vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">XH2Ovals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">XCO2vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">FluidProportionvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Sample skipped. Bad temperature.&quot;</span><span class="p">)</span>
+                    <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="n">w</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Temperature for sample &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="o">+</span>
+                           <span class="s2">&quot; is &lt;=0. Skipping sample.&quot;</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">file_has_press</span><span class="p">:</span>
+                    <span class="n">pressure</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">press_name</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">temperature</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">pressure</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">H2Ovals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">CO2vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">XH2Ovals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">XCO2vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">FluidProportionvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Sample skipped. Bad pressure.&quot;</span><span class="p">)</span>
+                    <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="n">w</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Pressure for sample &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="o">+</span>
+                           <span class="s2">&quot; is &lt;=0. Skipping sample.&quot;</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">file_has_X</span><span class="p">:</span>
+                    <span class="n">X_fluid</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">X_name</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">temperature</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">pressure</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">X_fluid</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">H2Ovals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">CO2vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">XH2Ovals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">XCO2vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">FluidProportionvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Sample skipped. Bad X_fluid.&quot;</span><span class="p">)</span>
+                    <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="n">w</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;X_fluid for sample &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="o">+</span>
+                           <span class="s2">&quot; is &lt;0. Skipping sample.&quot;</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">temperature</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">pressure</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">X_fluid</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">H2Ovals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">CO2vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">XH2Ovals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">XCO2vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">FluidProportionvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Sample skipped. Bad X_fluid.&quot;</span><span class="p">)</span>
+                    <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="n">w</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;X_fluid for sample &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="o">+</span>
+                           <span class="s2">&quot; is &gt;1. Skipping sample.&quot;</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="p">(</span><span class="n">temperature</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">pressure</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span>
+                   <span class="n">X_fluid</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">X_fluid</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="c1"># Get sample comp as Sample class with defaults</span>
+                        <span class="n">bulk_comp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sample_composition</span><span class="p">(</span>
+                                      <span class="n">index</span><span class="p">,</span>
+                                      <span class="n">normalization</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">default_normalization</span><span class="p">,</span>
+                                      <span class="n">units</span><span class="o">=</span><span class="s1">&#39;wtpt_oxides&#39;</span><span class="p">,</span>
+                                      <span class="n">asSampleClass</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                        <span class="n">bulk_comp</span><span class="o">.</span><span class="n">set_default_units</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_units</span><span class="p">)</span>
+                        <span class="n">bulk_comp</span><span class="o">.</span><span class="n">set_default_normalization</span><span class="p">(</span>
+                                                    <span class="bp">self</span><span class="o">.</span><span class="n">default_normalization</span><span class="p">)</span>
+
+                        <span class="n">calc</span> <span class="o">=</span> <span class="n">calculate_classes</span><span class="o">.</span><span class="n">calculate_dissolved_volatiles</span><span class="p">(</span>
+                                        <span class="n">sample</span><span class="o">=</span><span class="n">bulk_comp</span><span class="p">,</span> <span class="n">pressure</span><span class="o">=</span><span class="n">pressure</span><span class="p">,</span>
+                                        <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span>
+                                        <span class="n">X_fluid</span><span class="o">=</span><span class="n">X_fluid</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+                                        <span class="n">silence_warnings</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                        <span class="n">H2Ovals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;H2O_liq&#39;</span><span class="p">])</span>
+                        <span class="n">CO2vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;CO2_liq&#39;</span><span class="p">])</span>
+                        <span class="n">XH2Ovals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;XH2O_fl&#39;</span><span class="p">])</span>
+                        <span class="n">XCO2vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;XCO2_fl&#39;</span><span class="p">])</span>
+                        <span class="n">FluidProportionvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                                             <span class="n">calc</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;FluidProportion_wt&#39;</span><span class="p">])</span>
+                        <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">calib_check</span><span class="p">)</span>
+                        <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                        <span class="n">H2Ovals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                        <span class="n">CO2vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                        <span class="n">XH2Ovals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                        <span class="n">XCO2vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                        <span class="n">FluidProportionvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                        <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;Calculation Failed.&#39;</span><span class="p">)</span>
+                        <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">dissolved_data</span><span class="p">[</span><span class="s2">&quot;H2O_liq_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">H2Ovals</span>
+            <span class="n">dissolved_data</span><span class="p">[</span><span class="s2">&quot;CO2_liq_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">CO2vals</span>
+
+            <span class="k">if</span> <span class="n">file_has_temp</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="n">dissolved_data</span><span class="p">[</span><span class="s2">&quot;Temperature_C_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">temperature</span>
+            <span class="k">if</span> <span class="n">file_has_press</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="n">dissolved_data</span><span class="p">[</span><span class="s2">&quot;Pressure_bars_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pressure</span>
+            <span class="k">if</span> <span class="n">file_has_X</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="n">dissolved_data</span><span class="p">[</span><span class="s2">&quot;X_fluid_input_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">X_fluid</span>
+            <span class="n">dissolved_data</span><span class="p">[</span><span class="s2">&quot;Model&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">model</span>
+            <span class="n">dissolved_data</span><span class="p">[</span><span class="s2">&quot;Warnings&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">warnings</span>
+            <span class="k">if</span> <span class="n">record_errors</span><span class="p">:</span>
+                <span class="n">dissolved_data</span><span class="p">[</span><span class="s2">&quot;Errors&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">errors</span>
+
+            <span class="k">return</span> <span class="n">dissolved_data</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">XH2Ovals</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">XCO2vals</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">FluidProportionvals</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">dissolved_data</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">file_has_temp</span><span class="p">:</span>
+                    <span class="n">temperature</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">temp_name</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">file_has_press</span><span class="p">:</span>
+                    <span class="n">pressure</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">press_name</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">file_has_X</span><span class="p">:</span>
+                    <span class="n">X_fluid</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">X_name</span><span class="p">]</span>
+                <span class="c1"># Get sample comp as Sample class with defaults</span>
+                <span class="n">bulk_comp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sample_composition</span><span class="p">(</span>
+                                      <span class="n">index</span><span class="p">,</span>
+                                      <span class="n">normalization</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">default_normalization</span><span class="p">,</span>
+                                      <span class="n">units</span><span class="o">=</span><span class="s1">&#39;wtpt_oxides&#39;</span><span class="p">,</span>
+                                      <span class="n">asSampleClass</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">bulk_comp</span><span class="o">.</span><span class="n">set_default_units</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_units</span><span class="p">)</span>
+                <span class="n">bulk_comp</span><span class="o">.</span><span class="n">set_default_normalization</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_normalization</span><span class="p">)</span>
+                <span class="k">if</span> <span class="s1">&#39;Water&#39;</span> <span class="ow">in</span> <span class="n">model</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">calc</span> <span class="o">=</span> <span class="n">calculate_classes</span><span class="o">.</span><span class="n">calculate_dissolved_volatiles</span><span class="p">(</span>
+                                           <span class="n">sample</span><span class="o">=</span><span class="n">bulk_comp</span><span class="p">,</span> <span class="n">pressure</span><span class="o">=</span><span class="n">pressure</span><span class="p">,</span>
+                                           <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span>
+                                           <span class="n">X_fluid</span><span class="o">=</span><span class="n">X_fluid</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+                                           <span class="n">silence_warnings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                        <span class="n">H2Ovals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">result</span><span class="p">)</span>
+                        <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">calib_check</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                        <span class="n">H2Ovals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                        <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;Calculation Failed #001&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="s1">&#39;Carbon&#39;</span> <span class="ow">in</span> <span class="n">model</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">calc</span> <span class="o">=</span> <span class="n">calculate_classes</span><span class="o">.</span><span class="n">calculate_dissolved_volatiles</span><span class="p">(</span>
+                                           <span class="n">sample</span><span class="o">=</span><span class="n">bulk_comp</span><span class="p">,</span> <span class="n">pressure</span><span class="o">=</span><span class="n">pressure</span><span class="p">,</span>
+                                           <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span>
+                                           <span class="n">X_fluid</span><span class="o">=</span><span class="n">X_fluid</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+                                           <span class="n">silence_warnings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                        <span class="n">CO2vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">result</span><span class="p">)</span>
+                        <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">calib_check</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                        <span class="n">CO2vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                        <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;Calculation Failed #002&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="s1">&#39;Water&#39;</span> <span class="ow">in</span> <span class="n">model</span><span class="p">:</span>
+                <span class="n">dissolved_data</span><span class="p">[</span><span class="s2">&quot;H2O_liq_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">H2Ovals</span>
+            <span class="k">if</span> <span class="s1">&#39;Carbon&#39;</span> <span class="ow">in</span> <span class="n">model</span><span class="p">:</span>
+                <span class="n">dissolved_data</span><span class="p">[</span><span class="s2">&quot;CO2_liq_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">CO2vals</span>
+            <span class="k">if</span> <span class="n">file_has_temp</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="n">dissolved_data</span><span class="p">[</span><span class="s2">&quot;Temperature_C_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">temperature</span>
+            <span class="k">if</span> <span class="n">file_has_press</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="n">dissolved_data</span><span class="p">[</span><span class="s2">&quot;Pressure_bars_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pressure</span>
+            <span class="k">if</span> <span class="n">file_has_X</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="n">dissolved_data</span><span class="p">[</span><span class="s2">&quot;X_fluid_input_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">X_fluid</span>
+            <span class="n">dissolved_data</span><span class="p">[</span><span class="s2">&quot;Model&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">model</span>
+            <span class="n">dissolved_data</span><span class="p">[</span><span class="s2">&quot;Warnings&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">warnings</span>
+
+            <span class="k">return</span> <span class="n">dissolved_data</span>
+
+    <span class="k">def</span> <span class="nf">calculate_equilibrium_fluid_comp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">pressure</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                         <span class="n">print_status</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s1">&#39;MagmaSat&#39;</span><span class="p">,</span>
+                                         <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns H2O and CO2 concentrations in wt% or mole fraction in a fluid</span>
+<span class="sd">        in equilibrium with the given sample(s) at the given P/T condition.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sample: BatchFile object</span>
+<span class="sd">            Compositional information on samples in oxides.</span>
+
+<span class="sd">        temperature: float, int, or str</span>
+<span class="sd">            Temperature, in degrees C. Can be passed as float, in which case</span>
+<span class="sd">            the passed value is used as the temperature for all samples.</span>
+<span class="sd">            Alternatively, temperature information for each individual</span>
+<span class="sd">            sample may already be present in the BatchFile object. If so, pass</span>
+<span class="sd">            the str value corresponding to the column title in the  BatchFile</span>
+<span class="sd">            object.</span>
+
+<span class="sd">        presure: float, int, or str</span>
+<span class="sd">            Pressure, in bars. Can be passed as float or int, in which case</span>
+<span class="sd">            the passed value is used as the pressure for all samples.</span>
+<span class="sd">            Alternatively, pressure information for each individual sample may</span>
+<span class="sd">            already be present in the BatchFile object. If so, pass the str</span>
+<span class="sd">            value corresponding to the column title in the BatchFile object.</span>
+
+<span class="sd">        model: string</span>
+<span class="sd">            OPTIONAL: Default is &#39;MagmaSat&#39;. Any other model name can be</span>
+<span class="sd">            passed here.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas DataFrame</span>
+<span class="sd">            Original data passed plus newly calculated values are returned.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fluid_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="c1"># check if None is passed for pressure, if so calculate SatP</span>
+        <span class="k">if</span> <span class="n">pressure</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">pressures</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_saturation_pressure</span><span class="p">(</span>
+                                                       <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span>
+                                                       <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+                                                       <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="c1"># add calcd SatPs to fluid_data df</span>
+            <span class="n">fluid_data</span><span class="p">[</span><span class="s2">&quot;SaturationP_bars_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                                        <span class="n">pressures</span><span class="p">[</span><span class="s2">&quot;SaturationP_bars_VESIcal&quot;</span><span class="p">])</span>
+
+            <span class="c1"># push that to pressure argument</span>
+            <span class="n">pressure</span> <span class="o">=</span> <span class="s2">&quot;SaturationP_bars_VESIcal&quot;</span>
+
+        <span class="c1"># Check if the model passed as the attribute &quot;model_type&quot;</span>
+        <span class="c1"># Currently only implemented for MagmaSat type models</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s1">&#39;model_type&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">model_type</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">file_has_temp</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">temp_name</span> <span class="o">=</span> <span class="n">temperature</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">file_has_temp</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;temp must be type str or float or int&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pressure</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">file_has_press</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">press_name</span> <span class="o">=</span> <span class="n">pressure</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">pressure</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pressure</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span>
+              <span class="nb">isinstance</span><span class="p">(</span><span class="n">pressure</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span> <span class="ow">or</span> <span class="n">pressure</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="n">file_has_press</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;pressure must be type str or float or int&quot;</span><span class="p">)</span>
+
+        <span class="n">H2Ovals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">CO2vals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">warnings</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;verbose&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">FluidMass_grams_vals</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">FluidProportion_wt_vals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">model</span> <span class="ow">in</span> <span class="n">models</span><span class="o">.</span><span class="n">get_model_names</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s1">&#39;mixed&#39;</span><span class="p">)</span> <span class="ow">or</span>
+           <span class="n">model</span> <span class="o">==</span> <span class="s2">&quot;MooreWater&quot;</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">fluid_data</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">file_has_temp</span><span class="p">:</span>
+                        <span class="n">temperature</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">temp_name</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">file_has_press</span><span class="p">:</span>
+                        <span class="n">pressure</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">press_name</span><span class="p">]</span>
+                    <span class="c1"># Get sample comp as Sample class with defaults</span>
+                    <span class="n">bulk_comp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sample_composition</span><span class="p">(</span>
+                                      <span class="n">index</span><span class="p">,</span>
+                                      <span class="n">normalization</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">default_normalization</span><span class="p">,</span>
+                                      <span class="n">units</span><span class="o">=</span><span class="s1">&#39;wtpt_oxides&#39;</span><span class="p">,</span> <span class="n">asSampleClass</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="n">bulk_comp</span><span class="o">.</span><span class="n">set_default_units</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_units</span><span class="p">)</span>
+                    <span class="n">bulk_comp</span><span class="o">.</span><span class="n">set_default_normalization</span><span class="p">(</span>
+                                                    <span class="bp">self</span><span class="o">.</span><span class="n">default_normalization</span><span class="p">)</span>
+
+                    <span class="n">calc</span> <span class="o">=</span> <span class="n">calculate_classes</span><span class="o">.</span><span class="n">calculate_equilibrium_fluid_comp</span><span class="p">(</span>
+                                           <span class="n">sample</span><span class="o">=</span><span class="n">bulk_comp</span><span class="p">,</span> <span class="n">pressure</span><span class="o">=</span><span class="n">pressure</span><span class="p">,</span>
+                                           <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span>
+                                           <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">silence_warnings</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                           <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+                    <span class="n">H2Ovals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;H2O&#39;</span><span class="p">])</span>
+                    <span class="n">CO2vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;CO2&#39;</span><span class="p">])</span>
+                    <span class="k">if</span> <span class="n">calc</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;H2O&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">calc</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;CO2&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">calib_check</span> <span class="o">+</span> <span class="s2">&quot;Sample not &quot;</span> <span class="o">+</span>
+                                        <span class="s2">&quot;saturated at these conditions&quot;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">calib_check</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="n">H2Ovals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">CO2vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Calculation Failed.&quot;</span><span class="p">)</span>
+            <span class="n">fluid_data</span><span class="p">[</span><span class="s2">&quot;XH2O_fl_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">H2Ovals</span>
+            <span class="n">fluid_data</span><span class="p">[</span><span class="s2">&quot;XCO2_fl_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">CO2vals</span>
+            <span class="k">if</span> <span class="n">file_has_temp</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="n">fluid_data</span><span class="p">[</span><span class="s2">&quot;Temperature_C_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">temperature</span>
+            <span class="k">if</span> <span class="n">file_has_press</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="n">fluid_data</span><span class="p">[</span><span class="s2">&quot;Pressure_bars_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pressure</span>
+            <span class="n">fluid_data</span><span class="p">[</span><span class="s2">&quot;Model&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">model</span>
+            <span class="n">fluid_data</span><span class="p">[</span><span class="s2">&quot;Warnings&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">warnings</span>
+
+            <span class="k">return</span> <span class="n">fluid_data</span>
+        <span class="k">elif</span> <span class="n">model</span> <span class="o">==</span> <span class="s1">&#39;MagmaSat&#39;</span><span class="p">:</span>
+            <span class="n">iterno</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">fluid_data</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+                <span class="n">iterno</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">print_status</span><span class="p">:</span>
+                    <span class="n">percent</span> <span class="o">=</span> <span class="n">iterno</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">fluid_data</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+                    <span class="n">batchfile</span><span class="o">.</span><span class="n">status_bar</span><span class="o">.</span><span class="n">status_bar</span><span class="p">(</span><span class="n">percent</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">file_has_temp</span><span class="p">:</span>
+                    <span class="n">temperature</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">temp_name</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">temperature</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">H2Ovals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">CO2vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Calculation skipped. Bad temperature.&quot;</span><span class="p">)</span>
+                    <span class="n">w</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Temperature for sample &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="o">+</span>
+                           <span class="s2">&quot; is &lt;=0. Skipping sample.&quot;</span><span class="p">,</span>
+                           <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">file_has_press</span><span class="p">:</span>
+                    <span class="n">pressure</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">press_name</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="n">temperature</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">pressure</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">H2Ovals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">CO2vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Calculation skipped. Bad pressure.&quot;</span><span class="p">)</span>
+                    <span class="n">w</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Pressure for sample &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="o">+</span>
+                           <span class="s2">&quot; is &lt;=0. Skipping sample.&quot;</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">temperature</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">pressure</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="c1"># Get sample comp as Sample class with defaults</span>
+                        <span class="n">bulk_comp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sample_composition</span><span class="p">(</span>
+                                      <span class="n">index</span><span class="p">,</span>
+                                      <span class="n">normalization</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">default_normalization</span><span class="p">,</span>
+                                      <span class="n">units</span><span class="o">=</span><span class="s1">&#39;wtpt_oxides&#39;</span><span class="p">,</span> <span class="n">asSampleClass</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                        <span class="n">bulk_comp</span><span class="o">.</span><span class="n">set_default_units</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_units</span><span class="p">)</span>
+                        <span class="n">bulk_comp</span><span class="o">.</span><span class="n">set_default_normalization</span><span class="p">(</span>
+                                                    <span class="bp">self</span><span class="o">.</span><span class="n">default_normalization</span><span class="p">)</span>
+                        <span class="n">calc</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="n">calculate_classes</span><span class="o">.</span><span class="n">calculate_equilibrium_fluid_comp</span><span class="p">(</span>
+                                        <span class="n">sample</span><span class="o">=</span><span class="n">bulk_comp</span><span class="p">,</span> <span class="n">pressure</span><span class="o">=</span><span class="n">pressure</span><span class="p">,</span>
+                                        <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span>
+                                        <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">silence_warnings</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                        <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+
+                        <span class="n">H2Ovals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;H2O&#39;</span><span class="p">])</span>
+                        <span class="n">CO2vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;CO2&#39;</span><span class="p">])</span>
+                        <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;verbose&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+                            <span class="n">FluidMass_grams_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;FluidMass_grams&#39;</span><span class="p">])</span>
+                            <span class="n">FluidProportion_wt_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;FluidProportion_wt&#39;</span><span class="p">])</span>
+                        <span class="k">if</span> <span class="n">calc</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;H2O&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">calc</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;CO2&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">calib_check</span> <span class="o">+</span> <span class="s2">&quot;Sample not &quot;</span> <span class="o">+</span>
+                                            <span class="s2">&quot;saturated at these conditions&quot;</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">calib_check</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                        <span class="n">H2Ovals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                        <span class="n">CO2vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                        <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Calculation Failed.&quot;</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;verbose&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+                            <span class="n">FluidMass_grams_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                            <span class="n">FluidProportion_wt_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+            <span class="n">fluid_data</span><span class="p">[</span><span class="s2">&quot;XH2O_fl_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">H2Ovals</span>
+            <span class="n">fluid_data</span><span class="p">[</span><span class="s2">&quot;XCO2_fl_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">CO2vals</span>
+            <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;verbose&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">fluid_data</span><span class="p">[</span><span class="s2">&quot;FluidMass_grams&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">FluidMass_grams_vals</span>
+                <span class="n">fluid_data</span><span class="p">[</span><span class="s2">&quot;FluidProportion_wt&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">FluidProportion_wt_vals</span>
+            <span class="k">if</span> <span class="n">file_has_temp</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="n">fluid_data</span><span class="p">[</span><span class="s2">&quot;Temperature_C_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">temperature</span>
+            <span class="k">if</span> <span class="n">file_has_press</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="n">fluid_data</span><span class="p">[</span><span class="s2">&quot;Pressure_bars_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pressure</span>
+            <span class="n">fluid_data</span><span class="p">[</span><span class="s2">&quot;Model&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">model</span>
+            <span class="n">fluid_data</span><span class="p">[</span><span class="s2">&quot;Warnings&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">warnings</span>
+
+            <span class="k">return</span> <span class="n">fluid_data</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">saturated</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">fluid_data</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">file_has_temp</span><span class="p">:</span>
+                        <span class="n">temperature</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">temp_name</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">file_has_press</span><span class="p">:</span>
+                        <span class="n">pressure</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">press_name</span><span class="p">]</span>
+                    <span class="c1"># Get sample comp as Sample class with defaults</span>
+                    <span class="n">bulk_comp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sample_composition</span><span class="p">(</span>
+                                      <span class="n">index</span><span class="p">,</span>
+                                      <span class="n">normalization</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">default_normalization</span><span class="p">,</span>
+                                      <span class="n">units</span><span class="o">=</span><span class="s1">&#39;wtpt_oxides&#39;</span><span class="p">,</span> <span class="n">asSampleClass</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="n">bulk_comp</span><span class="o">.</span><span class="n">set_default_units</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_units</span><span class="p">)</span>
+                    <span class="n">bulk_comp</span><span class="o">.</span><span class="n">set_default_normalization</span><span class="p">(</span>
+                                                    <span class="bp">self</span><span class="o">.</span><span class="n">default_normalization</span><span class="p">)</span>
+
+                    <span class="n">calc</span> <span class="o">=</span> <span class="n">calculate_classes</span><span class="o">.</span><span class="n">calculate_equilibrium_fluid_comp</span><span class="p">(</span>
+                                           <span class="n">sample</span><span class="o">=</span><span class="n">bulk_comp</span><span class="p">,</span> <span class="n">pressure</span><span class="o">=</span><span class="n">pressure</span><span class="p">,</span>
+                                           <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span>
+                                           <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">silence_warnings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="n">saturated</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">result</span><span class="p">)</span>
+                    <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">calib_check</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="n">saturated</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Calculation Failed.&quot;</span><span class="p">)</span>
+            <span class="n">fluid_data</span><span class="p">[</span><span class="s2">&quot;Saturated_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">saturated</span>
+            <span class="k">if</span> <span class="n">file_has_temp</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="n">fluid_data</span><span class="p">[</span><span class="s2">&quot;Temperature_C_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">temperature</span>
+            <span class="k">if</span> <span class="n">file_has_press</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="n">fluid_data</span><span class="p">[</span><span class="s2">&quot;Pressure_bars_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pressure</span>
+            <span class="n">fluid_data</span><span class="p">[</span><span class="s2">&quot;Model&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">model</span>
+            <span class="n">fluid_data</span><span class="p">[</span><span class="s2">&quot;Warnings&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">warnings</span>
+
+            <span class="k">return</span> <span class="n">fluid_data</span>
+
+    <span class="k">def</span> <span class="nf">calculate_saturation_pressure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">print_status</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                      <span class="n">model</span><span class="o">=</span><span class="s1">&#39;MagmaSat&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates the saturation pressure of multiple sample compositions in</span>
+<span class="sd">        the BatchFile.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        temperature: float, int, or str</span>
+<span class="sd">            Temperature at which to calculate saturation pressures, in</span>
+<span class="sd">            degrees C. Can be passed as float or int, in which case the</span>
+<span class="sd">            passed value is used as the temperature for all samples.</span>
+<span class="sd">            Alternatively, temperature information for each individual sample</span>
+<span class="sd">            may already be present in the passed BatchFile object. If so, pass</span>
+<span class="sd">            the str value corresponding to the column title in the passed</span>
+<span class="sd">            BatchFile object.</span>
+
+<span class="sd">        print_status: bool</span>
+<span class="sd">            OPTIONAL: The default value for MagmaSat is True and the default</span>
+<span class="sd">            for all other models is False. If set to True, the progress of the</span>
+<span class="sd">            calculation will be printed to the terminal. If set to False,</span>
+<span class="sd">            nothing will be printed. MagmaSat calculations tend to be slow,</span>
+<span class="sd">            and so a value of True is recommended more most use cases.</span>
+
+<span class="sd">        model: string</span>
+<span class="sd">            OPTIONAL: Default is &#39;MagmaSat&#39;. Any other model name can be</span>
+<span class="sd">            passed here.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas DataFrame object</span>
+<span class="sd">            Values returned are saturation pressure in bars, the mass of</span>
+<span class="sd">            fluid present, and the composition of the fluid present.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">satp_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="c1"># Check if the model passed has the attribute &quot;model_type&quot;</span>
+        <span class="c1"># Currently only implemented for MagmaSat type models</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s1">&#39;model_type&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">model_type</span>
+
+        <span class="c1"># set default print_status to True for MagmaSat, False for other</span>
+        <span class="c1"># models if user doesn&#39;t pass any option</span>
+        <span class="k">if</span> <span class="n">print_status</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">model</span> <span class="o">==</span> <span class="s1">&#39;MagmaSat&#39;</span><span class="p">:</span>
+                <span class="n">print_status</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">print_status</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">file_has_temp</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">temp_name</span> <span class="o">=</span> <span class="n">temperature</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">file_has_temp</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;temperature must be type str or float or &quot;</span>
+                                  <span class="s2">&quot;int&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">model</span> <span class="o">!=</span> <span class="s1">&#39;MagmaSat&#39;</span><span class="p">:</span>
+            <span class="n">satP</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">warnings</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">piStar</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">iterno</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">satp_data</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+                <span class="n">iterno</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">print_status</span><span class="p">:</span>
+                    <span class="n">percent</span> <span class="o">=</span> <span class="n">iterno</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">satp_data</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+                    <span class="n">batchfile</span><span class="o">.</span><span class="n">status_bar</span><span class="o">.</span><span class="n">status_bar</span><span class="p">(</span><span class="n">percent</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">file_has_temp</span><span class="p">:</span>
+                    <span class="n">temperature</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">temp_name</span><span class="p">]</span>
+                <span class="c1"># Get sample comp as Sample class with defaults</span>
+                <span class="n">bulk_comp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sample_composition</span><span class="p">(</span>
+                                      <span class="n">index</span><span class="p">,</span>
+                                      <span class="n">normalization</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">default_normalization</span><span class="p">,</span>
+                                      <span class="n">units</span><span class="o">=</span><span class="s1">&#39;wtpt_oxides&#39;</span><span class="p">,</span> <span class="n">asSampleClass</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">bulk_comp</span><span class="o">.</span><span class="n">set_default_units</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_units</span><span class="p">)</span>
+                <span class="n">bulk_comp</span><span class="o">.</span><span class="n">set_default_normalization</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_normalization</span><span class="p">)</span>
+
+                <span class="n">calc</span> <span class="o">=</span> <span class="n">calculate_classes</span><span class="o">.</span><span class="n">calculate_saturation_pressure</span><span class="p">(</span>
+                                     <span class="n">sample</span><span class="o">=</span><span class="n">bulk_comp</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span>
+                                     <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">silence_warnings</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                     <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="n">satP</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">result</span><span class="p">)</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">calib_check</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">model</span> <span class="o">==</span> <span class="s1">&#39;ShishkinaIdealMixing&#39;</span><span class="p">:</span>
+                    <span class="n">piStar</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                           <span class="n">models</span><span class="o">.</span><span class="n">default_models</span><span class="p">[</span><span class="s1">&#39;ShishkinaIdealMixing&#39;</span>
+                                                 <span class="p">]</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">PiStar</span><span class="p">(</span><span class="n">bulk_comp</span><span class="p">))</span>
+
+            <span class="n">satp_data</span><span class="p">[</span><span class="s2">&quot;SaturationP_bars_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">satP</span>
+            <span class="k">if</span> <span class="n">file_has_temp</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="n">satp_data</span><span class="p">[</span><span class="s2">&quot;Temperature_C_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">temperature</span>
+            <span class="n">satp_data</span><span class="p">[</span><span class="s2">&quot;Model&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">model</span>
+            <span class="n">satp_data</span><span class="p">[</span><span class="s2">&quot;Warnings&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">warnings</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">piStar</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">satp_data</span><span class="p">[</span><span class="s1">&#39;PiStar_VESIcal&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">piStar</span>
+
+            <span class="k">return</span> <span class="n">satp_data</span>
+
+        <span class="k">elif</span> <span class="n">model</span> <span class="o">==</span> <span class="s1">&#39;MagmaSat&#39;</span><span class="p">:</span>
+            <span class="n">satP</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">flmass</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">flH2O</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">flCO2</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">flsystem_wtper</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">warnings</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">iterno</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">satp_data</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+                <span class="n">iterno</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">print_status</span><span class="p">:</span>
+                    <span class="n">percent</span> <span class="o">=</span> <span class="n">iterno</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">satp_data</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+                    <span class="n">batchfile</span><span class="o">.</span><span class="n">status_bar</span><span class="o">.</span><span class="n">status_bar</span><span class="p">(</span><span class="n">percent</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">file_has_temp</span><span class="p">:</span>
+                    <span class="n">temperature</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">temp_name</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">temperature</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">satP</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">flmass</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">flsystem_wtper</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">flH2O</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">flCO2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Calculation skipped. Bad temperature.&quot;</span><span class="p">)</span>
+                    <span class="n">w</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Temperature for sample &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="o">+</span>
+                           <span class="s2">&quot; is &lt;=0. Skipping sample.&quot;</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">temperature</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="c1"># Get sample comp as Sample class with defaults</span>
+                        <span class="n">bulk_comp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sample_composition</span><span class="p">(</span>
+                                      <span class="n">index</span><span class="p">,</span>
+                                      <span class="n">normalization</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">default_normalization</span><span class="p">,</span>
+                                      <span class="n">units</span><span class="o">=</span><span class="s1">&#39;wtpt_oxides&#39;</span><span class="p">,</span> <span class="n">asSampleClass</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                        <span class="n">bulk_comp</span><span class="o">.</span><span class="n">set_default_units</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_units</span><span class="p">)</span>
+                        <span class="n">bulk_comp</span><span class="o">.</span><span class="n">set_default_normalization</span><span class="p">(</span>
+                                                    <span class="bp">self</span><span class="o">.</span><span class="n">default_normalization</span><span class="p">)</span>
+
+                        <span class="n">calc</span> <span class="o">=</span> <span class="n">calculate_classes</span><span class="o">.</span><span class="n">calculate_saturation_pressure</span><span class="p">(</span>
+                                    <span class="n">sample</span><span class="o">=</span><span class="n">bulk_comp</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span>
+                                    <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                    <span class="n">silence_warnings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                        <span class="n">satP</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;SaturationP_bars&quot;</span><span class="p">])</span>
+                        <span class="n">flmass</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;FluidMass_grams&quot;</span><span class="p">])</span>
+                        <span class="n">flsystem_wtper</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                                             <span class="n">calc</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;FluidProportion_wt&quot;</span><span class="p">])</span>
+                        <span class="n">flH2O</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;XH2O_fl&quot;</span><span class="p">])</span>
+                        <span class="n">flCO2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;XCO2_fl&quot;</span><span class="p">])</span>
+                        <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">calib_check</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                        <span class="n">satP</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                        <span class="n">flmass</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                        <span class="n">flsystem_wtper</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                        <span class="n">flH2O</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                        <span class="n">flCO2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                        <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Calculation Failed&quot;</span><span class="p">)</span>
+
+            <span class="n">satp_data</span><span class="p">[</span><span class="s2">&quot;SaturationP_bars_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">satP</span>
+            <span class="k">if</span> <span class="n">file_has_temp</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="n">satp_data</span><span class="p">[</span><span class="s2">&quot;Temperature_C_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">temperature</span>
+            <span class="n">satp_data</span><span class="p">[</span><span class="s2">&quot;XH2O_fl_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">flH2O</span>
+            <span class="n">satp_data</span><span class="p">[</span><span class="s2">&quot;XCO2_fl_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">flCO2</span>
+            <span class="n">satp_data</span><span class="p">[</span><span class="s2">&quot;FluidMass_grams_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">flmass</span>
+            <span class="n">satp_data</span><span class="p">[</span><span class="s2">&quot;FluidSystem_wt_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">flsystem_wtper</span>
+            <span class="n">satp_data</span><span class="p">[</span><span class="s2">&quot;Model&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">model</span>
+            <span class="n">satp_data</span><span class="p">[</span><span class="s2">&quot;Warnings&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">warnings</span>
+
+            <span class="k">return</span> <span class="n">satp_data</span>
+
+    <span class="k">def</span> <span class="nf">calculate_liquid_density</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">pressure</span><span class="p">,</span>
+                                 <span class="n">record_errors</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calculates the density of the liquid using the DensityX model. Using</span>
+<span class="sd">        this interface will preprocess the sample, run the calculation, and then</span>
+<span class="sd">        check the calibration ranges. All parameters required by the chosen</span>
+<span class="sd">        model must be passed.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pressure:   float, int, or str</span>
+<span class="sd">            Pressure, in bars. Can be passed as float or int, in which case the</span>
+<span class="sd">            passed value is used as the pressure for all samples.</span>
+<span class="sd">            Alternatively, pressure information for each individual sample may</span>
+<span class="sd">            already be present in the BatchFile object. If so, pass the str</span>
+<span class="sd">            value corresponding to the column title in the BatchFile object.</span>
+
+<span class="sd">        temperature:  float, int, or str</span>
+<span class="sd">            Temperature, in degrees C. Can be passed as float, in which case</span>
+<span class="sd">            the passed value is used as the temperature for all samples.</span>
+<span class="sd">            Alternatively, temperature information for each individual</span>
+<span class="sd">            sample may already be present in the BatchFile object. If so, pass</span>
+<span class="sd">            the str value corresponding to the column title in the BatchFile</span>
+<span class="sd">            object.</span>
+
+<span class="sd">        record_errors: bool</span>
+<span class="sd">            OPTIONAL: If True, any errors arising during the calculation will</span>
+<span class="sd">            be recorded as a column.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas DataFrame</span>
+<span class="sd">            Original data passed plus newly calculated values are returned.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">density_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">file_has_temp</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">temp_name</span> <span class="o">=</span> <span class="n">temperature</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">file_has_temp</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;temp must be type str or float or int&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pressure</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">file_has_press</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">press_name</span> <span class="o">=</span> <span class="n">pressure</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pressure</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pressure</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">file_has_press</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;pressure must be type str or float or int&quot;</span><span class="p">)</span>
+
+        <span class="n">density_vals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">warnings</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">density_data</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">file_has_temp</span><span class="p">:</span>
+                    <span class="n">temperature</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">temp_name</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="n">file_has_press</span><span class="p">:</span>
+                    <span class="n">pressure</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">press_name</span><span class="p">]</span>
+
+                <span class="c1"># Get sample comp as Sample class with defaults</span>
+                <span class="n">bulk_comp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sample_composition</span><span class="p">(</span><span class="n">index</span><span class="p">,</span>
+                                                        <span class="n">normalization</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">default_normalization</span><span class="p">,</span>
+                                                        <span class="n">units</span><span class="o">=</span><span class="s1">&#39;wtpt_oxides&#39;</span><span class="p">,</span> <span class="n">asSampleClass</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">bulk_comp</span><span class="o">.</span><span class="n">set_default_units</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_units</span><span class="p">)</span>
+                <span class="n">bulk_comp</span><span class="o">.</span><span class="n">set_default_normalization</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_normalization</span><span class="p">)</span>
+                <span class="n">calc</span> <span class="o">=</span> <span class="n">thermo_calculate_classes</span><span class="o">.</span><span class="n">calculate_liquid_density</span><span class="p">(</span>
+                                           <span class="n">sample</span><span class="o">=</span><span class="n">bulk_comp</span><span class="p">,</span> <span class="n">pressure</span><span class="o">=</span><span class="n">pressure</span><span class="p">,</span>
+                                           <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="n">density_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">result</span><span class="p">)</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">calib_check</span><span class="p">)</span>
+                <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="n">density_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;Calculation Failed&#39;</span><span class="p">)</span>
+                <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">density_data</span><span class="p">[</span><span class="s2">&quot;Density_liq_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">density_vals</span>
+
+        <span class="k">if</span> <span class="n">file_has_temp</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="n">density_data</span><span class="p">[</span><span class="s2">&quot;Temperature_C_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">temperature</span>
+        <span class="k">if</span> <span class="n">file_has_press</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="n">density_data</span><span class="p">[</span><span class="s2">&quot;Pressure_bars_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pressure</span>
+        <span class="n">density_data</span><span class="p">[</span><span class="s2">&quot;Model&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;DensityX&quot;</span>
+        <span class="n">density_data</span><span class="p">[</span><span class="s2">&quot;Warnings&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">warnings</span>
+
+        <span class="k">if</span> <span class="n">record_errors</span><span class="p">:</span>
+            <span class="n">density_data</span><span class="p">[</span><span class="s2">&quot;Errors&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">errors</span>
+
+        <span class="k">return</span> <span class="n">density_data</span>
+
+    <span class="k">def</span> <span class="nf">calculate_liquid_viscosity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">record_errors</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                   <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates the viscosity of the liquid using the Giordano et al.</span>
+<span class="sd">        (2008) model. Using this interface will preprocess the sample, run the</span>
+<span class="sd">        calculation, and then check the calibration ranges. All parameters</span>
+<span class="sd">        required by the chosen model must be passed.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        temperature:  float, int, or str</span>
+<span class="sd">            Temperature, in degrees C. Can be passed as float, in which case</span>
+<span class="sd">            the passed value is used as the temperature for all samples.</span>
+<span class="sd">            Alternatively, temperature information for each individual</span>
+<span class="sd">            sample may already be present in the BatchFile object. If so, pass</span>
+<span class="sd">            the str value corresponding to the column title in the BatchFile</span>
+<span class="sd">            object.</span>
+
+<span class="sd">        record_errors: bool</span>
+<span class="sd">            OPTIONAL: If True, any errors arising during the calculation will</span>
+<span class="sd">            be recorded as a column.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas DataFrame</span>
+<span class="sd">            Original data passed plus newly calculated values are returned.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">viscosity_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">file_has_temp</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">temp_name</span> <span class="o">=</span> <span class="n">temperature</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">file_has_temp</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;temp must be type str or float or int&quot;</span><span class="p">)</span>
+
+        <span class="n">viscosity_vals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">warnings</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">viscosity_data</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">file_has_temp</span><span class="p">:</span>
+                    <span class="n">temperature</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">temp_name</span><span class="p">]</span>
+
+                <span class="c1"># Get sample comp as Sample class with defaults</span>
+                <span class="n">bulk_comp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sample_composition</span><span class="p">(</span><span class="n">index</span><span class="p">,</span>
+                                                        <span class="n">normalization</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">default_normalization</span><span class="p">,</span>
+                                                        <span class="n">units</span><span class="o">=</span><span class="s1">&#39;wtpt_oxides&#39;</span><span class="p">,</span> <span class="n">asSampleClass</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">bulk_comp</span><span class="o">.</span><span class="n">set_default_units</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_units</span><span class="p">)</span>
+                <span class="n">bulk_comp</span><span class="o">.</span><span class="n">set_default_normalization</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_normalization</span><span class="p">)</span>
+                <span class="n">calc</span> <span class="o">=</span> <span class="n">thermo_calculate_classes</span><span class="o">.</span><span class="n">calculate_liquid_viscosity</span><span class="p">(</span>
+                                           <span class="n">sample</span><span class="o">=</span><span class="n">bulk_comp</span><span class="p">,</span>
+                                           <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="n">viscosity_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">result</span><span class="p">)</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">calib_check</span><span class="p">)</span>
+                <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="n">viscosity_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;Calculation Failed&#39;</span><span class="p">)</span>
+                <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">viscosity_data</span><span class="p">[</span><span class="s2">&quot;Viscosity_liq_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">viscosity_vals</span>
+
+        <span class="k">if</span> <span class="n">file_has_temp</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="n">viscosity_data</span><span class="p">[</span><span class="s2">&quot;Temperature_C_VESIcal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">temperature</span>
+        <span class="n">viscosity_data</span><span class="p">[</span><span class="s2">&quot;Model&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Giordano et al. (2008)&quot;</span>
+        <span class="n">viscosity_data</span><span class="p">[</span><span class="s2">&quot;Warnings&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">warnings</span>
+
+        <span class="k">if</span> <span class="n">record_errors</span><span class="p">:</span>
+            <span class="n">viscosity_data</span><span class="p">[</span><span class="s2">&quot;Errors&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">errors</span>
+
+        <span class="k">return</span> <span class="n">viscosity_data</span>
+
+
+<div class="viewcode-block" id="BatchFile_from_DataFrame">
+<a class="viewcode-back" href="../../codedoc.html#VESIcal.batchmodel.BatchFile_from_DataFrame">[docs]</a>
+<span class="k">def</span> <span class="nf">BatchFile_from_DataFrame</span><span class="p">(</span><span class="n">dataframe</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;wtpt_oxides&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Transforms any pandas DataFrame object into a VESIcal BatchFile object.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Same as batchfile.BatchFile_from_DataFrame()</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    VESIcal.BatchFile object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">BatchFile</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>
+                     <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Kayla Iacovino and Simon Matthews.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VESIcal.core &mdash; VESIcal 1.2.6 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html">
+            <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">ChangeLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About VESIcal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../models.html">Models in VESIcal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quick_tutorials.html">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Verbose Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../advanced_tutorials.html">Advanced Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../youtube.html">YouTube Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../integration.html">Integration with Thermobar</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../workshops.html">Workshops and Presentations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../codedoc.html">VESIcal Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../faq.html">FAQ’s</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../support.html">Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">MIT Licence</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">VESIcal</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+          <li><a href="../VESIcal.html">VESIcal</a> &raquo;</li>
+      <li>VESIcal.core</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for VESIcal.core</h1><div class="highlight"><pre>
+<span></span><span class="c1"># ---------- DEFINE SOME CONSTANTS ------------- #</span>
+<span class="n">oxides</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;SiO2&#39;</span><span class="p">,</span> <span class="s1">&#39;TiO2&#39;</span><span class="p">,</span> <span class="s1">&#39;Al2O3&#39;</span><span class="p">,</span> <span class="s1">&#39;Fe2O3&#39;</span><span class="p">,</span> <span class="s1">&#39;Cr2O3&#39;</span><span class="p">,</span> <span class="s1">&#39;FeO&#39;</span><span class="p">,</span> <span class="s1">&#39;MnO&#39;</span><span class="p">,</span> <span class="s1">&#39;MgO&#39;</span><span class="p">,</span> <span class="s1">&#39;NiO&#39;</span><span class="p">,</span> <span class="s1">&#39;CoO&#39;</span><span class="p">,</span> <span class="s1">&#39;CaO&#39;</span><span class="p">,</span>
+          <span class="s1">&#39;Na2O&#39;</span><span class="p">,</span> <span class="s1">&#39;K2O&#39;</span><span class="p">,</span> <span class="s1">&#39;P2O5&#39;</span><span class="p">,</span> <span class="s1">&#39;H2O&#39;</span><span class="p">,</span> <span class="s1">&#39;CO2&#39;</span><span class="p">,</span> <span class="s1">&#39;F2O&#39;</span><span class="p">]</span>
+<span class="n">cations</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Si&#39;</span><span class="p">,</span> <span class="s1">&#39;Ti&#39;</span><span class="p">,</span> <span class="s1">&#39;Al&#39;</span><span class="p">,</span> <span class="s1">&#39;Fe&#39;</span><span class="p">,</span> <span class="s1">&#39;Ca&#39;</span><span class="p">,</span> <span class="s1">&#39;Al&#39;</span><span class="p">,</span> <span class="s1">&#39;Na&#39;</span><span class="p">,</span> <span class="s1">&#39;K&#39;</span><span class="p">,</span> <span class="s1">&#39;Mn&#39;</span><span class="p">,</span> <span class="s1">&#39;Ti&#39;</span><span class="p">,</span> <span class="s1">&#39;P&#39;</span><span class="p">,</span> <span class="s1">&#39;Cr&#39;</span><span class="p">,</span> <span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Co&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;Fe3&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;F&#39;</span><span class="p">]</span>
+<span class="n">magmasat_oxides</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;SiO2&#39;</span><span class="p">,</span> <span class="s1">&#39;TiO2&#39;</span><span class="p">,</span> <span class="s1">&#39;Al2O3&#39;</span><span class="p">,</span> <span class="s1">&#39;Fe2O3&#39;</span><span class="p">,</span> <span class="s1">&#39;Cr2O3&#39;</span><span class="p">,</span> <span class="s1">&#39;FeO&#39;</span><span class="p">,</span> <span class="s1">&#39;MnO&#39;</span><span class="p">,</span> <span class="s1">&#39;MgO&#39;</span><span class="p">,</span> <span class="s1">&#39;NiO&#39;</span><span class="p">,</span> <span class="s1">&#39;CoO&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;CaO&#39;</span><span class="p">,</span> <span class="s1">&#39;Na2O&#39;</span><span class="p">,</span> <span class="s1">&#39;K2O&#39;</span><span class="p">,</span> <span class="s1">&#39;P2O5&#39;</span><span class="p">,</span> <span class="s1">&#39;H2O&#39;</span><span class="p">,</span> <span class="s1">&#39;CO2&#39;</span><span class="p">]</span>
+<span class="n">anhydrous_oxides</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;SiO2&#39;</span><span class="p">,</span> <span class="s1">&#39;TiO2&#39;</span><span class="p">,</span> <span class="s1">&#39;Al2O3&#39;</span><span class="p">,</span> <span class="s1">&#39;Fe2O3&#39;</span><span class="p">,</span> <span class="s1">&#39;Cr2O3&#39;</span><span class="p">,</span> <span class="s1">&#39;FeO&#39;</span><span class="p">,</span> <span class="s1">&#39;MnO&#39;</span><span class="p">,</span> <span class="s1">&#39;MgO&#39;</span><span class="p">,</span> <span class="s1">&#39;NiO&#39;</span><span class="p">,</span> <span class="s1">&#39;CoO&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;CaO&#39;</span><span class="p">,</span> <span class="s1">&#39;Na2O&#39;</span><span class="p">,</span> <span class="s1">&#39;K2O&#39;</span><span class="p">,</span> <span class="s1">&#39;P2O5&#39;</span><span class="p">,</span> <span class="s1">&#39;F2O&#39;</span><span class="p">]</span>
+<span class="n">volatiles</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;H2O&#39;</span><span class="p">,</span> <span class="s1">&#39;CO2&#39;</span><span class="p">]</span>
+<span class="n">oxideMass</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;SiO2&#39;</span><span class="p">:</span>  <span class="mf">60.083</span><span class="p">,</span>
+             <span class="s1">&#39;MgO&#39;</span><span class="p">:</span>   <span class="mf">40.304</span><span class="p">,</span>
+             <span class="s1">&#39;FeO&#39;</span><span class="p">:</span>   <span class="mf">71.844</span><span class="p">,</span>
+             <span class="s1">&#39;CaO&#39;</span><span class="p">:</span>   <span class="mf">56.077</span><span class="p">,</span>
+             <span class="s1">&#39;Al2O3&#39;</span><span class="p">:</span> <span class="mf">101.961</span><span class="p">,</span>
+             <span class="s1">&#39;Na2O&#39;</span><span class="p">:</span>  <span class="mf">61.979</span><span class="p">,</span>
+             <span class="s1">&#39;K2O&#39;</span><span class="p">:</span>   <span class="mf">94.195</span><span class="p">,</span>
+             <span class="s1">&#39;MnO&#39;</span><span class="p">:</span>   <span class="mf">70.937</span><span class="p">,</span>
+             <span class="s1">&#39;TiO2&#39;</span><span class="p">:</span>  <span class="mf">79.867</span><span class="p">,</span>
+             <span class="s1">&#39;P2O5&#39;</span><span class="p">:</span>  <span class="mf">141.943</span><span class="p">,</span>
+             <span class="s1">&#39;Cr2O3&#39;</span><span class="p">:</span> <span class="mf">151.992</span><span class="p">,</span>
+             <span class="s1">&#39;NiO&#39;</span><span class="p">:</span>   <span class="mf">74.692</span><span class="p">,</span>
+             <span class="s1">&#39;CoO&#39;</span><span class="p">:</span>   <span class="mf">44.01</span><span class="p">,</span>
+             <span class="s1">&#39;Fe2O3&#39;</span><span class="p">:</span> <span class="mf">159.687</span><span class="p">,</span>
+             <span class="s1">&#39;H2O&#39;</span><span class="p">:</span>   <span class="mf">18.02</span><span class="p">,</span>
+             <span class="s1">&#39;CO2&#39;</span><span class="p">:</span>   <span class="mf">44.01</span><span class="p">,</span>
+             <span class="s1">&#39;F2O&#39;</span><span class="p">:</span>   <span class="mf">37.997</span><span class="p">}</span>
+
+<span class="n">CationNum</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;SiO2&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;MgO&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;FeO&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;CaO&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;Al2O3&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;Na2O&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+             <span class="s1">&#39;K2O&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;MnO&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;TiO2&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;P2O5&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;Cr2O3&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+             <span class="s1">&#39;NiO&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;CoO&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;Fe2O3&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;H2O&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;CO2&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;F2O&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
+
+<span class="n">OxygenNum</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;SiO2&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;MgO&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;FeO&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;CaO&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;Al2O3&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;Na2O&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+             <span class="s1">&#39;K2O&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;MnO&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;TiO2&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;P2O5&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s1">&#39;Cr2O3&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+             <span class="s1">&#39;NiO&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;CoO&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;Fe2O3&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;H2O&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;CO2&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;F2O&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+
+<span class="n">CationCharge</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;SiO2&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;MgO&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;FeO&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;CaO&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;Al2O3&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;Na2O&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="s1">&#39;K2O&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;MnO&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;TiO2&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;P2O5&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s1">&#39;Cr2O3&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+                <span class="s1">&#39;NiO&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;CoO&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;Fe2O3&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;H2O&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;CO2&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;F2O&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+
+<span class="n">CationMass</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;SiO2&#39;</span><span class="p">:</span> <span class="mf">28.085</span><span class="p">,</span> <span class="s1">&#39;MgO&#39;</span><span class="p">:</span> <span class="mf">24.305</span><span class="p">,</span> <span class="s1">&#39;FeO&#39;</span><span class="p">:</span> <span class="mf">55.845</span><span class="p">,</span> <span class="s1">&#39;CaO&#39;</span><span class="p">:</span> <span class="mf">40.078</span><span class="p">,</span> <span class="s1">&#39;Al2O3&#39;</span><span class="p">:</span> <span class="mf">26.982</span><span class="p">,</span>
+              <span class="s1">&#39;Na2O&#39;</span><span class="p">:</span> <span class="mf">22.990</span><span class="p">,</span> <span class="s1">&#39;K2O&#39;</span><span class="p">:</span> <span class="mf">39.098</span><span class="p">,</span> <span class="s1">&#39;MnO&#39;</span><span class="p">:</span> <span class="mf">54.938</span><span class="p">,</span> <span class="s1">&#39;TiO2&#39;</span><span class="p">:</span> <span class="mf">47.867</span><span class="p">,</span> <span class="s1">&#39;P2O5&#39;</span><span class="p">:</span> <span class="mf">30.974</span><span class="p">,</span>
+              <span class="s1">&#39;Cr2O3&#39;</span><span class="p">:</span> <span class="mf">51.996</span><span class="p">,</span> <span class="s1">&#39;NiO&#39;</span><span class="p">:</span> <span class="mf">58.693</span><span class="p">,</span> <span class="s1">&#39;CoO&#39;</span><span class="p">:</span> <span class="mf">28.01</span><span class="p">,</span> <span class="s1">&#39;Fe2O3&#39;</span><span class="p">:</span> <span class="mf">55.845</span><span class="p">,</span> <span class="s1">&#39;H2O&#39;</span><span class="p">:</span> <span class="mf">1.01</span><span class="p">,</span>
+              <span class="s1">&#39;CO2&#39;</span><span class="p">:</span> <span class="mf">12.011</span><span class="p">,</span> <span class="s1">&#39;F2O&#39;</span><span class="p">:</span> <span class="mf">18.998</span><span class="p">}</span>
+
+<span class="n">oxides_to_cations</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;SiO2&#39;</span><span class="p">:</span> <span class="s1">&#39;Si&#39;</span><span class="p">,</span> <span class="s1">&#39;MgO&#39;</span><span class="p">:</span> <span class="s1">&#39;Mg&#39;</span><span class="p">,</span> <span class="s1">&#39;FeO&#39;</span><span class="p">:</span> <span class="s1">&#39;Fe&#39;</span><span class="p">,</span> <span class="s1">&#39;CaO&#39;</span><span class="p">:</span> <span class="s1">&#39;Ca&#39;</span><span class="p">,</span> <span class="s1">&#39;Al2O3&#39;</span><span class="p">:</span> <span class="s1">&#39;Al&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;Na2O&#39;</span><span class="p">:</span> <span class="s1">&#39;Na&#39;</span><span class="p">,</span> <span class="s1">&#39;K2O&#39;</span><span class="p">:</span> <span class="s1">&#39;K&#39;</span><span class="p">,</span> <span class="s1">&#39;MnO&#39;</span><span class="p">:</span> <span class="s1">&#39;Mn&#39;</span><span class="p">,</span> <span class="s1">&#39;TiO2&#39;</span><span class="p">:</span> <span class="s1">&#39;Ti&#39;</span><span class="p">,</span> <span class="s1">&#39;P2O5&#39;</span><span class="p">:</span> <span class="s1">&#39;P&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;Cr2O3&#39;</span><span class="p">:</span> <span class="s1">&#39;Cr&#39;</span><span class="p">,</span> <span class="s1">&#39;NiO&#39;</span><span class="p">:</span> <span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;CoO&#39;</span><span class="p">:</span> <span class="s1">&#39;Co&#39;</span><span class="p">,</span> <span class="s1">&#39;Fe2O3&#39;</span><span class="p">:</span> <span class="s1">&#39;Fe3&#39;</span><span class="p">,</span> <span class="s1">&#39;H2O&#39;</span><span class="p">:</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;CO2&#39;</span><span class="p">:</span> <span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;F2O&#39;</span><span class="p">:</span> <span class="s1">&#39;F&#39;</span><span class="p">}</span>
+<span class="n">cations_to_oxides</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Si&#39;</span><span class="p">:</span> <span class="s1">&#39;SiO2&#39;</span><span class="p">,</span> <span class="s1">&#39;Mg&#39;</span><span class="p">:</span> <span class="s1">&#39;MgO&#39;</span><span class="p">,</span> <span class="s1">&#39;Fe&#39;</span><span class="p">:</span> <span class="s1">&#39;FeO&#39;</span><span class="p">,</span> <span class="s1">&#39;Ca&#39;</span><span class="p">:</span> <span class="s1">&#39;CaO&#39;</span><span class="p">,</span> <span class="s1">&#39;Al&#39;</span><span class="p">:</span> <span class="s1">&#39;Al2O3&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;Na&#39;</span><span class="p">:</span> <span class="s1">&#39;Na2O&#39;</span><span class="p">,</span> <span class="s1">&#39;K&#39;</span><span class="p">:</span> <span class="s1">&#39;K2O&#39;</span><span class="p">,</span> <span class="s1">&#39;Mn&#39;</span><span class="p">:</span> <span class="s1">&#39;MnO&#39;</span><span class="p">,</span> <span class="s1">&#39;Ti&#39;</span><span class="p">:</span> <span class="s1">&#39;TiO2&#39;</span><span class="p">,</span> <span class="s1">&#39;P&#39;</span><span class="p">:</span> <span class="s1">&#39;P2O5&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;Cr&#39;</span><span class="p">:</span> <span class="s1">&#39;Cr2O3&#39;</span><span class="p">,</span> <span class="s1">&#39;Ni&#39;</span><span class="p">:</span> <span class="s1">&#39;NiO&#39;</span><span class="p">,</span> <span class="s1">&#39;Co&#39;</span><span class="p">:</span> <span class="s1">&#39;CoO&#39;</span><span class="p">,</span> <span class="s1">&#39;Fe3&#39;</span><span class="p">:</span> <span class="s1">&#39;Fe2O3&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">:</span> <span class="s1">&#39;H2O&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;C&#39;</span><span class="p">:</span> <span class="s1">&#39;CO2&#39;</span><span class="p">,</span> <span class="s1">&#39;F&#39;</span><span class="p">:</span> <span class="s1">&#39;F2O&#39;</span><span class="p">}</span>
+
+
+<span class="c1"># ---------- DATA TRANSFORMATION FOR PANDAS DATAFRAMES --------- #</span>
+<div class="viewcode-block" id="fluid_molfrac_to_wt"><a class="viewcode-back" href="../../codedoc.html#VESIcal.fluid_molfrac_to_wt">[docs]</a><span class="k">def</span> <span class="nf">fluid_molfrac_to_wt</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">H2O_colname</span><span class="o">=</span><span class="s1">&#39;XH2O_fl_VESIcal&#39;</span><span class="p">,</span> <span class="n">CO2_colname</span><span class="o">=</span><span class="s1">&#39;XCO2_fl_VESIcal&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Takes in a pandas dataframe object and converts only the fluid composition from mole fraction</span>
+<span class="sd">    to wt%, leaving the melt composition in tact. The user must specify the names of the</span>
+<span class="sd">    XH2O_fl and XCO2_fl columns.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data: pandas DataFrame</span>
+<span class="sd">        Sample composition(s) containing columns for H2O and CO2 concentrations in the fluid.</span>
+
+<span class="sd">    H2O_colname: str</span>
+<span class="sd">        OPTIONAL. The default value is &#39;XH2O_fl&#39;, which is what is returned by BatchFile() core</span>
+<span class="sd">        calculations. String containing the name of the column corresponding to the H2O</span>
+<span class="sd">        concentration in the fluid, in mol fraction.</span>
+
+<span class="sd">    CO2_colname: str</span>
+<span class="sd">        OPTIONAL. The default value is &#39;XCO2_fl&#39;, which is what is returned by BatchFile() core</span>
+<span class="sd">        calculations. String containing the name of the column corresponding to the CO2</span>
+<span class="sd">        concentration in the fluid, in mol fraction.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pandas DataFrame</span>
+<span class="sd">        Original data passed plus newly calculated values are returned.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">convData</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="n">MPO_H2O_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">MPO_CO2_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">convData</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+        <span class="n">MPO_H2O_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">H2O_colname</span><span class="p">]</span> <span class="o">*</span> <span class="n">oxideMass</span><span class="p">[</span><span class="s2">&quot;H2O&quot;</span><span class="p">])</span>
+        <span class="n">MPO_CO2_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">CO2_colname</span><span class="p">]</span> <span class="o">*</span> <span class="n">oxideMass</span><span class="p">[</span><span class="s2">&quot;CO2&quot;</span><span class="p">])</span>
+
+    <span class="n">convData</span><span class="p">[</span><span class="s2">&quot;MPO_H2O&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">MPO_H2O_list</span>
+    <span class="n">convData</span><span class="p">[</span><span class="s2">&quot;MPO_CO2&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">MPO_CO2_list</span>
+    <span class="n">convData</span><span class="p">[</span><span class="s2">&quot;H2O_fl_wt&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">*</span> <span class="n">convData</span><span class="p">[</span><span class="s2">&quot;MPO_H2O&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="n">convData</span><span class="p">[</span><span class="s2">&quot;MPO_H2O&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">convData</span><span class="p">[</span><span class="s2">&quot;MPO_CO2&quot;</span><span class="p">])</span>
+    <span class="n">convData</span><span class="p">[</span><span class="s2">&quot;CO2_fl_wt&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">*</span> <span class="n">convData</span><span class="p">[</span><span class="s2">&quot;MPO_CO2&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="n">convData</span><span class="p">[</span><span class="s2">&quot;MPO_H2O&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">convData</span><span class="p">[</span><span class="s2">&quot;MPO_CO2&quot;</span><span class="p">])</span>
+
+    <span class="k">del</span> <span class="n">convData</span><span class="p">[</span><span class="s2">&quot;MPO_H2O&quot;</span><span class="p">]</span>
+    <span class="k">del</span> <span class="n">convData</span><span class="p">[</span><span class="s2">&quot;MPO_CO2&quot;</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">convData</span></div>
+
+
+<div class="viewcode-block" id="fluid_wt_to_molfrac"><a class="viewcode-back" href="../../codedoc.html#VESIcal.fluid_wt_to_molfrac">[docs]</a><span class="k">def</span> <span class="nf">fluid_wt_to_molfrac</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">H2O_colname</span><span class="o">=</span><span class="s1">&#39;H2O_fl_wt&#39;</span><span class="p">,</span> <span class="n">CO2_colname</span><span class="o">=</span><span class="s1">&#39;CO2_fl_wt&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Takes in a pandas dataframe object and converts only the fluid composition from wt% to mole</span>
+<span class="sd">    fraction, leaving the melt composition in tact. The user must specify the names of the</span>
+<span class="sd">    H2O_fl_wt and CO2_fl_wt columns.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data: pandas DataFrame</span>
+<span class="sd">        DataFrame containing columns for H2O and CO2 concentrations in the fluid.</span>
+
+<span class="sd">    H2O_colname: str</span>
+<span class="sd">        OPTIONAL. The default value is &#39;H2O_fl_wt&#39;, which is what is returned by BatchFile() core</span>
+<span class="sd">        calculations. String containing the name of the column corresponding to the H2O</span>
+<span class="sd">        concentration in the fluid, in wt%.</span>
+
+<span class="sd">    CO2_colname: str</span>
+<span class="sd">        OPTIONAL. The default value is &#39;CO2_fl_wt&#39;, which is what is returned by BatchFile() core</span>
+<span class="sd">        calculations. String containing the name of the column corresponding to the CO2</span>
+<span class="sd">        concentration in the fluid, in wt%.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pandas DataFrame</span>
+<span class="sd">        Original data passed plus newly calculated values are returned.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">convData</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="n">MPO_H2O_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">MPO_CO2_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">convData</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+        <span class="n">MPO_H2O_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">H2O_colname</span><span class="p">]</span> <span class="o">/</span> <span class="n">oxideMass</span><span class="p">[</span><span class="s2">&quot;H2O&quot;</span><span class="p">])</span>
+        <span class="n">MPO_CO2_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">CO2_colname</span><span class="p">]</span> <span class="o">/</span> <span class="n">oxideMass</span><span class="p">[</span><span class="s2">&quot;CO2&quot;</span><span class="p">])</span>
+
+    <span class="n">convData</span><span class="p">[</span><span class="s2">&quot;MPO_H2O&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">MPO_H2O_list</span>
+    <span class="n">convData</span><span class="p">[</span><span class="s2">&quot;MPO_CO2&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">MPO_CO2_list</span>
+    <span class="n">convData</span><span class="p">[</span><span class="s2">&quot;XH2O_fl&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">convData</span><span class="p">[</span><span class="s2">&quot;MPO_H2O&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="n">convData</span><span class="p">[</span><span class="s2">&quot;MPO_H2O&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">convData</span><span class="p">[</span><span class="s2">&quot;MPO_CO2&quot;</span><span class="p">])</span>
+    <span class="n">convData</span><span class="p">[</span><span class="s2">&quot;XCO2_fl&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">convData</span><span class="p">[</span><span class="s2">&quot;MPO_CO2&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="n">convData</span><span class="p">[</span><span class="s2">&quot;MPO_H2O&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">convData</span><span class="p">[</span><span class="s2">&quot;MPO_CO2&quot;</span><span class="p">])</span>
+
+    <span class="k">del</span> <span class="n">convData</span><span class="p">[</span><span class="s2">&quot;MPO_H2O&quot;</span><span class="p">]</span>
+    <span class="k">del</span> <span class="n">convData</span><span class="p">[</span><span class="s2">&quot;MPO_CO2&quot;</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">convData</span></div>
+
+
+<span class="k">class</span> <span class="nc">Error</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for exceptions in this module.&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">InputError</span><span class="p">(</span><span class="n">Error</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Exception raised for errors in the input.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        expression -- input expression in which the error occurred</span>
+<span class="sd">        message -- explanation of the error</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span>
+
+
+<span class="k">class</span> <span class="nc">SaturationError</span><span class="p">(</span><span class="n">Error</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Exception raised for errors thrown when a sample does not reach saturation.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        expression -- input expression in which the error occurred</span>
+<span class="sd">        message -- explanation of the error</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Kayla Iacovino and Simon Matthews.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
