@@ -658,7 +658,7 @@ class BatchFile(object):
                 pass
         return print("Saved " + str(filename))
 
-    def save_csv(self, filenames, calculations, **kwargs):
+    def save_csv(self, *, filename=None, calculations=None, **kwargs):
         """
         Saves data calculated by the user in batch processing mode to a
         comma-separated values (csv) file. Mirros the pandas.to_csv() method.
@@ -667,7 +667,7 @@ class BatchFile(object):
 
         Parameters
         ----------
-        filenames: string or list of strings
+        filename: string or list of strings
             Name of the file. Extension (.csv) should be passed along with
             the name itself, all in quotes (e.g., 'myfile.csv'). The number
             of calculations passed must match the number of filenames passed.
@@ -684,17 +684,39 @@ class BatchFile(object):
             Creates and saves a CSV file or files with data from each
             calculation saved to its own file.
         """
-        if isinstance(filenames, list) is False:
-            filenames = [filenames]
+        # Handle deprecated 'filenames' argument
+        if 'filenames' in kwargs:
+            if filename is not None:
+                raise TypeError(
+                    "Cannot specify both 'filename' and deprecated 'filenames'."
+                    " Use only 'filename'."
+                )
+                
+            w.warn(
+                "'filenames' is deprecated and will be removed in a future "
+                "version. Use 'filename' instead.",
+                FutureWarning
+            )
+            
+            filename = kwargs.pop('filenames')
+
+        if filename is None or calculations is None:
+            raise TypeError(
+                "Missing required arguments: 'filename' and 'calculations'"
+                "are required."
+            )
+        
+        if isinstance(filename, list) is False:
+            filename = [filename]
         if isinstance(calculations, list) is False:
             calculations = [calculations]
-        if len(filenames) != len(calculations):
+        if len(filename) != len(calculations):
             raise core.InputError("calculations and filenames must have the "
                                   "same length")
 
-        for i in range(len(filenames)):
-            calculations[i].to_csv(filenames[i], **kwargs)
-            print("Saved " + str(filenames[i]))
+        for i in range(len(filename)):
+            calculations[i].to_csv(filename[i], **kwargs)
+            print("Saved " + str(filename[i]))
 
 
 def from_DataFrame(dataframe, units='wtpt_oxides', label='Label'):
