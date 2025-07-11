@@ -33,7 +33,8 @@ release = '1.2.6'
 # ones.
 master_doc = 'index'
 
-extensions = ['sphinx.ext.autodoc',
+extensions = ['myst_parser',
+              'sphinx.ext.autodoc',
                 'sphinx.ext.napoleon', 
                 'sphinx.ext.imgmath',
                 'sphinx.ext.intersphinx',
@@ -43,7 +44,12 @@ extensions = ['sphinx.ext.autodoc',
                 'sphinx.ext.ifconfig',
                 'sphinx.ext.viewcode',
                 'sphinx.ext.githubpages',
-                'nbsphinx']
+                'nbsphinx',
+                "jupyter_sphinx",
+                "nbsphinx",
+                "sphinx_togglebutton",
+                "jupyterlite_sphinx",
+                "sphinx_favicon",]
 
 autodoc_mock_imports = ["thermoengine"]
 
@@ -67,7 +73,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'jupyter_notebooks', 'vi
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'pydata_sphinx_theme'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

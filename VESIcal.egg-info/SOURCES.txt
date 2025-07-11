@@ -1,5 +1,6 @@
 LICENSE
 README.md
+pyproject.toml
 setup.py
 VESIcal/__init__.py
 VESIcal/activity_models.py
