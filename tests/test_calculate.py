@@ -75,11 +75,6 @@ class TestDissolvedVolatiles(unittest.TestCase):
         self.liuMixed_molox =           {'H2O_liq': 0.075793677,
                                         'CO2_liq': 0.000398905}
 
-        self.magmasat_wtpt =            {'H2O_liq': 1.982045999,
-                                        'CO2_liq': 0.044939669}
-        self.magmasat_molox =           {'H2O_liq': 0.06615768,
-                                        'CO2_liq': 0.000614167}
-
         self.allisonCarbon_wtpt             = 0.06101661
         self.allisonCarbon_molox            = 0.00089276
         self.allisonCarbon_sunset_wtpt      = 0.03249080
@@ -101,7 +96,6 @@ class TestDissolvedVolatiles(unittest.TestCase):
                              "Dixon"               : {'wtpt_oxides': self.dixonMixed_wtpt, 'mol_oxides': self.dixonMixed_molox},
                              "IaconoMarziano"      : {'wtpt_oxides': self.iaconomarzianoMixed_wtpt, 'mol_oxides': self.iaconomarzianoMixed_molox},
                              "Liu"                 : {'wtpt_oxides': self.liuMixed_wtpt, 'mol_oxides': self.liuMixed_molox},
-                             "MagmaSat"            : {'wtpt_oxides': self.magmasat_wtpt, 'mol_oxides': self.magmasat_molox}
                              }
 
         self.nonmixed_dict = {"AllisonCarbon"           : {'wtpt_oxides': self.allisonCarbon_wtpt, 'mol_oxides': self.allisonCarbon_molox},
@@ -198,7 +192,6 @@ class TestSaturationPressure(unittest.TestCase):
         self.dixonMixed =          1847.1637265676327
         self.iaconomarzianoMixed = 1441.0510518841243
         self.liuMixed =            2157.191497153953
-        self.magmasat =            1630  # Generated with MagmaSat app
 
         self.shishkinaCarbon           = 1507.647195272281
         self.dixonCarbon               = 1375.61109469857
@@ -222,7 +215,6 @@ class TestSaturationPressure(unittest.TestCase):
                              "Dixon"               : self.dixonMixed,
                              "IaconoMarziano"      : self.iaconomarzianoMixed,
                              "Liu"                 : self.liuMixed,
-                             "MagmaSat"            : self.magmasat
                              }
 
         self.carbon_dict = {"ShishkinaCarbon"        : self.shishkinaCarbon,
@@ -367,7 +359,6 @@ class TestDegassingPath(unittest.TestCase):
 
         # Grab mixed models
         self.mixed_model_names = v.get_model_names("mixed")
-        self.mixed_model_names.append("MagmaSat") # include MagmaSat
     
     def test_calculate_degassing_path_simple(self):
         """ Only starting pressure supplied
@@ -435,7 +426,6 @@ class TestEquilibriumFluidComp(unittest.TestCase):
         self.dixonMixed =          {'H2O': 0.7750859842655139, 'CO2': 0.2249140157344861}
         self.iaconomarzianoMixed = {'H2O': 0.811666221694067, 'CO2': 0.188333778305933}
         self.liuMixed =            {'H2O': 0.7066707740811572, 'CO2': 0.2933292259188428}
-        self.magmasat =            {'CO2': 0.20391426033745, 'H2O': 0.79608573966255}
 
         self.shishkinaCarbon           = 1.0
         self.dixonCarbon               = 1.0
@@ -459,7 +449,6 @@ class TestEquilibriumFluidComp(unittest.TestCase):
                              "Dixon"               : self.dixonMixed,
                              "IaconoMarziano"      : self.iaconomarzianoMixed,
                              "Liu"                 : self.liuMixed,
-                             "MagmaSat"            : self.magmasat
                              }
 
         self.carbon_dict = {"ShishkinaCarbon"        : self.shishkinaCarbon,

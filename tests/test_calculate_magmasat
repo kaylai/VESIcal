@@ -1,0 +1,340 @@
+import unittest
+import VESIcal as v
+import numpy as np
+
+"""
+This unittest script keeps magmasat tests separate since they will always fail
+if thermoengine is not installed. In future, when thermoengine can easily be
+pip installed, we can consider swtiching this back and not breaking out
+magmasat tests separately.
+"""
+
+def print_msg_box(msg, indent=1, width=None, title=None):
+    """Print message-box with optional title."""
+    lines = msg.split('\n')
+    space = " " * indent
+    if not width:
+        width = max(map(len, lines))
+    box = f'╔{"═" * (width + indent * 2)}╗\n'  # upper_border
+    if title:
+        box += f'║{space}{title:<{width}}{space}║\n'  # title
+        box += f'║{space}{"-" * len(title):<{width}}{space}║\n'  # underscore
+    box += ''.join([f'║{space}{line:<{width}}{space}║\n' for line in lines])
+    box += f'╚{"═" * (width + indent * 2)}╝'  # lower_border
+    print("\n")
+    print(box)
+
+class TestDissolvedVolatiles(unittest.TestCase):
+    def setUp(self):
+        # Sample with units as wtpt_oxides
+        self.majors_wtpt = {'SiO2':    47.95,
+                         'TiO2':    1.67,
+                         'Al2O3':   17.32,
+                         'FeO':     10.24,
+                         'Fe2O3':   0.1,
+                         'MgO':     5.76,
+                         'CaO':     10.93,
+                         'Na2O':    3.45,
+                         'K2O':     1.99,
+                         'P2O5':    0.51,
+                         'MnO':     0.1}
+
+        # create Sample object and set default units to wtpt_oxides
+        self.sample_wtpt = v.Sample(self.majors_wtpt)
+        self.sample_wtpt.set_default_units("wtpt_oxides")
+
+        # create sample and set default units to mol_oxides
+        self.sample_molox = v.Sample(self.majors_wtpt)
+        self.sample_molox.set_default_units("mol_oxides")
+
+        # BatchFile with test sample as defined above in wtpt_oxides
+        try:
+            self.batch_wtpt = v.BatchFile('BatchTest.xlsx', units='wtpt_oxides')
+        except:
+            self.batch_wtpt = v.BatchFile('tests/BatchTest.xlsx', units='wtpt_oxides')
+        self.batch_wtpt.set_default_units("wtpt_oxides")
+
+        # BatchFile with test sample as defined above in mol_oxides
+        try:
+            self.batch_molox = v.BatchFile('BatchTest.xlsx')
+        except:
+            self.batch_molox = v.BatchFile('tests/BatchTest.xlsx')
+        self.batch_molox.set_default_units("mol_oxides")
+
+        # solubilities calculated with VESIcal in wt% and translated externally to mol fraction
+        self.magmasat_wtpt =            {'H2O_liq': 1.982045999,
+                                        'CO2_liq': 0.044939669}
+        self.magmasat_molox =           {'H2O_liq': 0.06615768,
+                                        'CO2_liq': 0.000614167}
+
+        self.mixed_dict =   {'wtpt_oxides': self.magmasat_wtpt, 'mol_oxides': self.magmasat_molox}
+        
+        # set model to be magmasat
+        self.model = "MagmaSat"
+
+    def test_calculate_single_wtpt_MagmaSat(self):
+        print_msg_box("TestDissolvedVolatiles (MagmaSat) \nsingle_wtpt")
+
+        calcd_result = v.calculate_dissolved_volatiles(
+            self.sample_wtpt,
+            pressure=1000,
+            temperature=1000,
+            X_fluid=0.5,
+            model=self.model,
+            verbose=False,
+        ).result
+
+        known_result = self.magmasat_wtpt
+
+        for k in calcd_result:
+            self.assertAlmostEqual(calcd_result[k], known_result[k], places=4)
+
+    def test_calculate_single_molox_MagmaSat(self):
+        print_msg_box("TestDissolvedVolatiles (MagmaSat) \nsingle_molox")
+        calcd_result = v.calculate_dissolved_volatiles(
+            self.sample_molox,
+            pressure=1000,
+            temperature=1000,
+            X_fluid=0.5,
+            model=self.model,
+            verbose=False,
+        ).result
+        
+        known_result = self.magmasat_molox
+        
+        for k in calcd_result.keys():
+            self.assertAlmostEqual(calcd_result[k], known_result[k], places=4)
+
+class TestSaturationPressure(unittest.TestCase):
+    def setUp(self):
+        # Sample with units as wtpt_oxides
+        self.majors_wtpt = {'SiO2':    47.95,
+                         'TiO2':    1.67,
+                         'Al2O3':   17.32,
+                         'FeO':     10.24,
+                         'Fe2O3':   0.1,
+                         'MgO':     5.76,
+                         'CaO':     10.93,
+                         'Na2O':    3.45,
+                         'K2O':     1.99,
+                         'P2O5':    0.51,
+                         'MnO':     0.1,
+                         'H2O':     2.0,
+                         'CO2':     0.1}
+
+        # Set conditions of calculation
+        self.temperature = 1000
+
+        # create Sample object and set default units to wtpt_oxides
+        self.sample_wtpt = v.Sample(self.majors_wtpt)
+        self.sample_wtpt.set_default_units("wtpt_oxides")
+
+        # create sample and set default units to mol_oxides
+        self.sample_molox = v.Sample(self.majors_wtpt)
+        self.sample_molox.set_default_units("mol_oxides")
+
+        # BatchFile with test sample as defined above in wtpt_oxides
+        try:
+            self.batch_wtpt = v.BatchFile('BatchTest.xlsx', units='wtpt_oxides')
+        except:
+            self.batch_wtpt = v.BatchFile('tests/BatchTest.xlsx', units='wtpt_oxides')
+        self.batch_wtpt.set_default_units("wtpt_oxides")
+
+        # BatchFile with test sample as defined above in mol_oxides
+        try:
+            self.batch_molox = v.BatchFile('BatchTest.xlsx')
+        except:
+            self.batch_molox = v.BatchFile('tests/BatchTest.xlsx')
+        self.batch_molox.set_default_units("mol_oxides")
+
+        # saturation pressures calculated with VESIcal
+        self.magmasat = 1630  # Generated with MagmaSat app
+        
+        # set model to be magmasat
+        self.model = "MagmaSat"
+
+    def test_calculate_single_wtpt_magmasat(self):
+        print_msg_box("TestSaturationPressure (MagmaSat) \nsingle_wtpt")
+        calcd_result = v.calculate_saturation_pressure(
+            self.sample_wtpt,
+            temperature=self.temperature,
+            model=self.model,
+            verbose=False,
+        ).result
+        
+        known_result = self.magmasat
+        
+        self.assertAlmostEqual(calcd_result, known_result, places=4)
+
+    def test_calculate_batch_wtpt_mixed(self):
+        print_msg_box("TestSaturationPressure (MagmaSat) \nbatch_wtpt")
+        batch_result = self.batch_wtpt.calculate_saturation_pressure(
+            temperature=self.temperature,
+            model=self.model,
+            verbose=True,
+        )
+        
+        calcd_result = batch_result['SaturationP_bars_VESIcal'].loc['test_samp']
+        
+        known_result = self.magmasat
+        
+        self.assertAlmostEqual(calcd_result, known_result, places=4)
+
+    def test_calculation_single_molox_mixed(self):
+        print_msg_box("TestSaturationPressure (MagmaSat) \nsingle_molox")
+        calcd_result = v.calculate_saturation_pressure(
+            self.sample_molox,
+            temperature=self.temperature,
+            model=self.model,
+            verbose=False,
+        ).result
+        
+        known_result = self.magmasat
+        
+        self.assertAlmostEqual(calcd_result, known_result, places=4)
+
+    def test_calculation_batch_molox_mixed(self):
+        print_msg_box("TestSaturationPressure (MagmaSat) \nbatch_molox_mixed")
+        batch_result = self.batch_molox.calculate_saturation_pressure(
+            temperature=self.temperature,
+            model=self.model,
+            verbose=True,
+        )
+        
+        calcd_result = batch_result['SaturationP_bars_VESIcal'].loc['test_samp']
+        
+        known_result = self.magmasat
+        
+        self.assertAlmostEqual(calcd_result, known_result, places=4)
+
+class TestDegassingPath(unittest.TestCase):
+    """ Only checks for exceptions thrown, not that result is correct!!
+    """
+    def setUp(self):
+        self.majors_wtpt = {'SiO2':    47.95,
+                         'TiO2':    1.67,
+                         'Al2O3':   17.32,
+                         'FeO':     10.24,
+                         'Fe2O3':   0.1,
+                         'MgO':     5.76,
+                         'CaO':     10.93,
+                         'Na2O':    3.45,
+                         'K2O':     1.99,
+                         'P2O5':    0.51,
+                         'MnO':     0.1,
+                         'H2O':     2.0,
+                         'CO2':     0.1}
+        
+        self.sample = v.Sample(self.majors_wtpt)
+
+        # Set conditions of calculation
+        self.temperature = 1000
+        self.pressure_init = 500
+        self.pressure_final = 300
+        self.step_size = -1
+        self.pressure_array = np.arange(self.pressure_init, self.pressure_final, self.step_size)
+
+        # Set model to MagmaSat
+        self.model = "MagmaSat"
+    
+    def test_calculate_degassing_path_simple(self):
+        """ Only starting pressure supplied
+        """
+        print_msg_box("TestDegassingPath (MagmaSat) \nsimple")
+                                       
+        result = v.calculate_degassing_path(
+            sample=self.sample,
+            temperature=self.temperature,
+            pressure=self.pressure_init,
+            model=self.model
+        )
+    
+    def test_calculate_degassing_path_init_to_final(self):
+        """ Uses initial and final pressures, as floats
+        """
+        print_msg_box("TestDegassingPath (MagmaSat) \ninit_to_final")
+        result = v.calculate_degassing_path(
+            sample=self.sample,
+            temperature=self.temperature,
+            pressure=self.pressure_init, 
+            final_pressure = self.pressure_final,
+            model=self.model
+        )
+    
+    def test_calculate_degassing_path_array(self):
+        """ Uses np.ndarray() object for pressures
+        """
+        print_msg_box("TestDegassingPath (MagmaSat) \narray")
+                  
+        result = v.calculate_degassing_path(
+            sample=self.sample,
+            temperature=self.temperature,
+            pressure=self.pressure_array,
+            model=self.model
+        )
+
+
+class TestEquilibriumFluidComp(unittest.TestCase):
+    def setUp(self):
+        # Sample with units as wtpt_oxides
+        self.majors_wtpt = {'SiO2':    47.95,
+                         'TiO2':    1.67,
+                         'Al2O3':   17.32,
+                         'FeO':     10.24,
+                         'Fe2O3':   0.1,
+                         'MgO':     5.76,
+                         'CaO':     10.93,
+                         'Na2O':    3.45,
+                         'K2O':     1.99,
+                         'P2O5':    0.51,
+                         'MnO':     0.1,
+                         'H2O':     2.0,
+                         'CO2':     0.1}
+
+        # Set conditions of calculation
+        self.temperature = 1000
+        self.pressure = 500
+
+        # create Sample object and set default units to wtpt_oxides
+        self.sample_wtpt = v.Sample(self.majors_wtpt)
+        self.sample_wtpt.set_default_units("wtpt_oxides")
+
+        # create sample and set default units to mol_oxides
+        self.sample_molox = v.Sample(self.majors_wtpt)
+        self.sample_molox.set_default_units("mol_oxides")
+
+        # equilibrium fluid comps calculated with VESIcal
+        self.magmasat_eqfluid = {'CO2': 0.20391426033745, 'H2O': 0.79608573966255}
+
+        self.model = "MagmaSat"
+
+    def test_calculate_wtpt(self):
+        print_msg_box("TestEquilibriumFluidComp (MagmaSat) \nwtpt")
+        calcd_result = v.calculate_equilibrium_fluid_comp(
+            self.sample_wtpt,
+            temperature=self.temperature,
+            pressure=self.pressure,
+            model=self.model,
+            verbose=False,
+        ).result
+        
+        known_result = self.magmasat_eqfluid
+        
+        for key in known_result.keys():
+            self.assertAlmostEqual(calcd_result[key], known_result[key], places=4)
+
+    def test_calculation_molox(self):
+        print_msg_box("TestEquilibriumFluidComp (MagmaSat) \nmolox")
+        calcd_result = v.calculate_equilibrium_fluid_comp(
+            self.sample_molox,
+            temperature=self.temperature,
+            pressure=self.pressure,
+            model=self.model,
+            verbose=False,
+        ).result
+        known_result = self.magmasat_eqfluid
+        for key in known_result.keys():
+            self.assertAlmostEqual(calcd_result[key], known_result[key], places=4)
+
+if __name__ == '__main__':
+    unittest.main()
