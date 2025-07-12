@@ -26,6 +26,7 @@ import VESIcal.models
 import VESIcal.sample_class
 import VESIcal.vplot
 import VESIcal.thermo
+from VESIcal.utils.save_util import save_results
 
 # -------------- TURN OFF WARNINGS ------------- #
 w.filterwarnings("ignore", message="rubicon.objc.ctypes_patch has only been tested ")
