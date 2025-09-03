@@ -23,7 +23,7 @@ copyright = '2021, Kayla Iacovino and Simon Matthews'
 author = 'Kayla Iacovino and Simon Matthews'
 
 # The full version, including alpha/beta/rc tags
-release = '1.2.6'
+release = '1.2.9'
 
 
 # -- General configuration ---------------------------------------------------
@@ -79,4 +79,5 @@ html_logo = "img/logo.png"
 html_theme_options = {
     'logo_only': True,
     'display_version': False,
+    'style_nav_header_background': '#4f3166',
 }

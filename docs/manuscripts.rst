@@ -1,17 +1,23 @@
 #############
-About VESIcal
+VESIcal Manuscripts
 #############
 
-VESIcal is an open-source thermodynamic model engine for mixed volatile (H2O-CO2) solubility in silicate melts. It was designed by Kayla Iacovino, Simon Matthews, Penny Wieser, Gordon Moore, and Florence Begue in 2021.
-
-The VESIcal Manuscripts
-^^^^^^^^^^^^^^^^^^^^^^^
 Two VESIcal manuscripts serve, along with this documentation, as a user's guide and introduction to VESIcal. The Part I manuscript is available as an executable jupyter notebook or as a static PDF published in the journal Earth and Space Science. Part II is available as a PDF with jupyter notebooks as supplementary files.
 
 The manuscript version of VESIcal Part I (v 1.0.1) is archived on zenodo with a citable doi at `https://zenodo.org/record/5095382 <https://zenodo.org/record/5095382>`_
 
-Interactive versions of manuscripts
+
+
+Interactive Manuscript on Curvenote
 -----------------------------------
+Through AGU's Notebooks Now! initiative in partnership with Curvenote, VESIcal Part I was among the first manuscripts to be transformed into a Curvenote style interactive manuscript along with a binderized version of the manuscript as a jupyter notebook also hosted on the Curvenote servers. This allows for a more robust binderized environment that users can go to to get coding right away without any installations on their local machine. Since VESIcal and the ENKI ThermoEngine (required to run MagmaSat) are installed on Curvenote's servers, you can not only execute the code in the manuscript, but you can get to writing your own.
+
+- Check out the `Curvenote implementation of VESIcal Part I <https://agu.curve.space/articles/NN0001>`_
+- Go directly to the binderized `jupyter notebook of VESIcal Part I <https://agu-binder.curvenote.dev/user/2be900e9-fb5d-4-9778d16a48c.zip-4wrcztow/lab/tree/Manuscript.ipynb?token=EzBUfh6US4qFq4UW0MSkYA>`_
+
+
+Older Interactive versions of manuscripts
+-----------------------------------------
 
    - Direct link to interactive VESIcal Part I manuscript: `Manuscript on Binder <https://mybinder.org/v2/gh/kaylai/vesical-binder/HEAD?filepath=Manuscript.ipynb>`_
    - Jupyter Notebook hub with VESIcal: `Jupyter hub on Binder <https://mybinder.org/v2/gh/kaylai/vesical-binder/HEAD>`_
