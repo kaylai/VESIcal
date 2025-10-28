@@ -8,6 +8,7 @@ VESIcal/batchmodel.py
 VESIcal/calculate_classes.py
 VESIcal/calibration_checks.py
 VESIcal/calibrations.py
+VESIcal/clean-init.py
 VESIcal/core.py
 VESIcal/fugacity_models.py
 VESIcal/model_classes.py
@@ -34,8 +35,10 @@ VESIcal/thermo/giordano.py
 VESIcal/thermo/thermo_calculate_classes.py
 VESIcal/thermo/thermo_core.py
 tests/__init__.py
+tests/manuscript_tst.py
 tests/print_version.py
+tests/test_batchfile.py
 tests/test_calculate.py
+tests/test_core.py
 tests/test_importfile.py
-tests/test_manuscript.py
 tests/test_sample.py

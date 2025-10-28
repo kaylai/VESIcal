@@ -3,21 +3,6 @@ import VESIcal as v
 import numpy as np
 import pandas as pd
 
-def print_msg_box(msg, indent=1, width=None, title=None):
-    """Print message-box with optional title."""
-    lines = msg.split('\n')
-    space = " " * indent
-    if not width:
-        width = max(map(len, lines))
-    box = f'╔{"═" * (width + indent * 2)}╗\n'  # upper_border
-    if title:
-        box += f'║{space}{title:<{width}}{space}║\n'  # title
-        box += f'║{space}{"-" * len(title):<{width}}{space}║\n'  # underscore
-    box += ''.join([f'║{space}{line:<{width}}{space}║\n' for line in lines])
-    box += f'╚{"═" * (width + indent * 2)}╝'  # lower_border
-    print("\n")
-    print(box)
-
 class TestCreateSample(unittest.TestCase):
     def setUp(self):
         self.majors = pd.Series({'SiO2':    47.95,
@@ -154,7 +139,6 @@ class TestCreateSample(unittest.TestCase):
         self.sample_all = v.Sample(self.majors_all_species)
 
     def test_createSample(self):
-        print_msg_box("TestCreateSample")
         for ox in self.majors.index:
             self.assertEqual(self.sample._composition[ox],self.majors[ox])
         for ox in self.majors_all_species.index:
@@ -359,7 +343,6 @@ class TestGetComposition(unittest.TestCase):
         self.sample = v.Sample(self.majorsv)
 
     def test_default(self):
-        print_msg_box("TestGetComposition")
         composition = self.sample.get_composition()
         for ox in composition.index:
             self.assertEqual(composition[ox],self.majorsv[ox])
@@ -487,3 +470,41 @@ class TestGetComposition(unittest.TestCase):
         # get oxide for oxide not given a value by user
         self.assertEqual(self.sample.get_composition(species="Cr2O3"), 0.0)
         self.assertWarns(expected_warning=RuntimeWarning)
+
+class TestGetAnyOxideOrCation(unittest.TestCase):
+    def test_function_processes_all_oxides(self):
+        """Verify conversion functions can process every oxide."""
+        for oxide in v.core.oxides:
+            with self.subTest(oxide=oxide):
+                simple_sample = v.Sample({oxide: 1.0})
+                
+                for unitname in ['wtpt_oxides', 'mol_oxides']:
+                    try:
+                        result = simple_sample.get_composition(units=unitname)
+                        
+                        # Verify we got a result
+                        self.assertIsNotNone(result)
+                        self.assertGreater(len(result), 0)
+                        
+                    except KeyError as e:
+                        self.fail(f"Failed to process {oxide}: Missing key {e}")
+                    except Exception as e:
+                        self.fail(f"Failed to process {oxide}: {e}")
+        
+        """Verify conversion functions can process every cation."""
+        for cation in v.core.cations:
+            with self.subTest(cation=cation):
+                simple_sample = v.Sample({cation: 1.0}, units='mol_cations')
+                
+                for unitname in ['mol_cations', 'mol_singleO']:
+                    try:
+                        result = simple_sample.get_composition(units=unitname)
+                        
+                        # Verify we got a result
+                        self.assertIsNotNone(result)
+                        self.assertGreater(len(result), 0)
+                        
+                    except KeyError as e:
+                        self.fail(f"Failed to process {cation}: Missing key {e}")
+                    except Exception as e:
+                        self.fail(f"Failed to process {cation}: {e}")

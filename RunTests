@@ -40,6 +40,29 @@ while true; do
 done
 
 echo ' '
+echo 'TEST MANUSCRIPT?'
+echo '================'
+
+while true; do
+	read -t 10 -p 'Would you like to also run mansucript tests? [Y/N] Will default to N after 10 seconds. ' yn
+	if [[ $yn ]]
+	then
+		case $yn in
+			[Yy]* )
+			echo ' '
+			echo "TESTING test_manuscript.py"
+			echo '======================================================'
+			python -m unittest tests/manuscript_tst.py
+	 		break;;
+			[Nn]* ) break;;
+			* ) echo "Please answer Y or N.";;
+		esac
+	else
+		break
+	fi
+done
+
+echo ' '
 echo 'RUNNING FLAKE8'
 echo '=============='
 python -m flake8
@@ -48,5 +71,9 @@ echo "flake8 completed"
 echo ' '
 echo "RUNNING UNIT TESTS"
 echo '=================='
-python tests/print_version.py
-python -m unittest
+for file in $(ls tests/test_*); do
+	echo "Now running: $file"
+	python -m unittest $file
+	echo '-----------------'
+	echo
+done

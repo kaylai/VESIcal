@@ -227,7 +227,7 @@ class BatchFile(object):
 
         for column in data:
             if column in core.oxides:
-                data[column][data[column] < 0] = 0
+                data.loc[data[column] < 0, column] = 0
 
         self.data = data
 
@@ -343,7 +343,7 @@ class BatchFile(object):
         new_compositions = []
         sample_names = []
         for index, row in data.iterrows():
-            sample_comp = self.get_sample_composition(index, units=units,
+            sample_comp = self.get_sample_composition(index,
                                                       asSampleClass=True)
             new_compositions.append(sample_comp.get_composition(
                      species=species, normalization=normalization, units=units,

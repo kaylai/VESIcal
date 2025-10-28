@@ -1,11 +1,24 @@
 """
 VESIcal
 
-A generalized python library for calculating and plotting various things
-related to mixed volatile (H2O-CO2) solubility in silicate melts.
+A Python library for calculating and visualizing mixed volatile (H2O-CO2) solubility
+in silicate melts, including saturation pressures, degassing paths, and related
+thermodynamic and petrologic processes.
+
+Documentation:
+https://vesical.readthedocs.io
+
+Peer-reviewed manuscripts:
+Iacovino K., Matthews S., Wieser P.E., Moore G.M., and Begue F. (2021) VESIcal Part I: An
+open-source thermodynamic model engine for mixed volatile (H2O-CO2) solubility in silicate melts,
+Earth and Space Science, 8, e2020EA001584. https://doi.org/10.1029/2020EA001584.
+
+Wieser P.E., Iacovino K., Matthews S., Moore G.M., Allison C.M. (2022) VESIcal Part II: A critical
+approach to volatile solubility modelling using an open-source Python3 engine, Earth and Space
+Science. https://doi.org/10.1029/2021EA001932
 """
 
-__version__ = "1.2.10"
+__version__ = "1.2.11"
 __author__ = "Kayla Iacovino, Simon Matthews, and Penny Wieser"
 
 # ----------------- IMPORTS ----------------- #

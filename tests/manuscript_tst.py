@@ -38,6 +38,8 @@ def print_msg_box(msg, indent=1, width=None, title=None):
     print("\n")
     print(box)
 
+print_msg_box("test_mansucript.py")
+
 # Allow unittest to find the file
 TEST_FILE = pathlib.Path(__file__).parent.joinpath("ManuscriptBatchFile.xlsx")
 PICKLE_DISSOLVED = pathlib.Path(__file__).parent.joinpath("manuscript_dissolved.p")

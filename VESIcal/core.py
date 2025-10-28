@@ -1,56 +1,183 @@
-# ---------- DEFINE SOME CONSTANTS ------------- #
-oxides = ['SiO2', 'TiO2', 'Al2O3', 'Fe2O3', 'Cr2O3', 'FeO', 'MnO', 'MgO', 'NiO', 'CoO', 'CaO',
-          'Na2O', 'K2O', 'P2O5', 'H2O', 'CO2', 'F2O']
-cations = ['Si', 'Ti', 'Al', 'Fe', 'Ca', 'Al', 'Na', 'K', 'Mn', 'Ti', 'P', 'Cr', 'Ni', 'Co',
-           'Fe3', 'H', 'C', 'F']
-magmasat_oxides = ['SiO2', 'TiO2', 'Al2O3', 'Fe2O3', 'Cr2O3', 'FeO', 'MnO', 'MgO', 'NiO', 'CoO',
-                   'CaO', 'Na2O', 'K2O', 'P2O5', 'H2O', 'CO2']
-anhydrous_oxides = ['SiO2', 'TiO2', 'Al2O3', 'Fe2O3', 'Cr2O3', 'FeO', 'MnO', 'MgO', 'NiO', 'CoO',
-                    'CaO', 'Na2O', 'K2O', 'P2O5', 'F2O']
-volatiles = ['H2O', 'CO2']
-oxideMass = {'SiO2':  60.083,
-             'MgO':   40.304,
-             'FeO':   71.844,
-             'CaO':   56.077,
-             'Al2O3': 101.961,
-             'Na2O':  61.979,
-             'K2O':   94.195,
-             'MnO':   70.937,
-             'TiO2':  79.867,
-             'P2O5':  141.943,
-             'Cr2O3': 151.992,
-             'NiO':   74.692,
-             'CoO':   44.01,
-             'Fe2O3': 159.687,
-             'H2O':   18.02,
-             'CO2':   44.01,
-             'F2O':   37.997}
+"""
+Single Source of Truth pattern for oxide-cation compositional factors.
+All derived data structures are computed from a single master dictionary.
+"""
 
-CationNum = {'SiO2': 1, 'MgO': 1, 'FeO': 1, 'CaO': 1, 'Al2O3': 2, 'Na2O': 2,
-             'K2O': 2, 'MnO': 1, 'TiO2': 1, 'P2O5': 2, 'Cr2O3': 2,
-             'NiO': 1, 'CoO': 1, 'Fe2O3': 2, 'H2O': 2, 'CO2': 1, 'F2O': 2}
+# Master data structure - single source of truth
+oxide_data = {
+    'SiO2': {
+        'mass': 60.083,
+        'cation': 'Si',
+        'cation_num': 1,
+        'oxygen_num': 2,
+        'cation_charge': 4,
+        'cation_mass': 28.085,
+        'groups': ['magmasat', 'anhydrous']
+    },
+    'TiO2': {
+        'mass': 79.867,
+        'cation': 'Ti',
+        'cation_num': 1,
+        'oxygen_num': 2,
+        'cation_charge': 4,
+        'cation_mass': 47.867,
+        'groups': ['magmasat', 'anhydrous']
+    },
+    'Al2O3': {
+        'mass': 101.961,
+        'cation': 'Al',
+        'cation_num': 2,
+        'oxygen_num': 3,
+        'cation_charge': 3,
+        'cation_mass': 26.982,
+        'groups': ['magmasat', 'anhydrous']
+    },
+    'Cr2O3': {
+        'mass': 151.992,
+        'cation': 'Cr',
+        'cation_num': 2,
+        'oxygen_num': 3,
+        'cation_charge': 3,
+        'cation_mass': 51.996,
+        'groups': ['magmasat', 'anhydrous']
+    },
+    'FeO': {
+        'mass': 71.844,
+        'cation': 'Fe',
+        'cation_num': 1,
+        'oxygen_num': 1,
+        'cation_charge': 2,
+        'cation_mass': 55.845,
+        'groups': ['magmasat', 'anhydrous']
+    },
+    'Fe2O3': {
+        'mass': 159.687,
+        'cation': 'Fe3',
+        'cation_num': 2,
+        'oxygen_num': 3,
+        'cation_charge': 3,
+        'cation_mass': 55.845,
+        'groups': ['magmasat', 'anhydrous']
+    },
+    'MnO': {
+        'mass': 70.937,
+        'cation': 'Mn',
+        'cation_num': 1,
+        'oxygen_num': 1,
+        'cation_charge': 2,
+        'cation_mass': 54.938,
+        'groups': ['magmasat', 'anhydrous']
+    },
+    'MgO': {
+        'mass': 40.304,
+        'cation': 'Mg',
+        'cation_num': 1,
+        'oxygen_num': 1,
+        'cation_charge': 2,
+        'cation_mass': 24.305,
+        'groups': ['magmasat', 'anhydrous']
+    },
+    'CaO': {
+        'mass': 56.077,
+        'cation': 'Ca',
+        'cation_num': 1,
+        'oxygen_num': 1,
+        'cation_charge': 2,
+        'cation_mass': 40.078,
+        'groups': ['magmasat', 'anhydrous']
+    },
+    'Na2O': {
+        'mass': 61.979,
+        'cation': 'Na',
+        'cation_num': 2,
+        'oxygen_num': 1,
+        'cation_charge': 1,
+        'cation_mass': 22.990,
+        'groups': ['magmasat', 'anhydrous']
+    },
+    'K2O': {
+        'mass': 94.195,
+        'cation': 'K',
+        'cation_num': 2,
+        'oxygen_num': 1,
+        'cation_charge': 1,
+        'cation_mass': 39.098,
+        'groups': ['magmasat', 'anhydrous']
+    },
+    'P2O5': {
+        'mass': 141.943,
+        'cation': 'P',
+        'cation_num': 2,
+        'oxygen_num': 5,
+        'cation_charge': 5,
+        'cation_mass': 30.974,
+        'groups': ['magmasat', 'anhydrous']
+    },
+    'NiO': {
+        'mass': 74.692,
+        'cation': 'Ni',
+        'cation_num': 1,
+        'oxygen_num': 1,
+        'cation_charge': 2,
+        'cation_mass': 58.693,
+        'groups': ['magmasat', 'anhydrous']
+    },
+    'CoO': {
+        'mass': 44.01,
+        'cation': 'Co',
+        'cation_num': 1,
+        'oxygen_num': 1,
+        'cation_charge': 2,
+        'cation_mass': 28.01,
+        'groups': ['magmasat', 'anhydrous']
+    },
+    'H2O': {
+        'mass': 18.02,
+        'cation': 'H',
+        'cation_num': 2,
+        'oxygen_num': 1,
+        'cation_charge': 1,
+        'cation_mass': 1.01,
+        'groups': ['magmasat', 'volatile']
+    },
+    'CO2': {
+        'mass': 44.01,
+        'cation': 'C',
+        'cation_num': 1,
+        'oxygen_num': 2,
+        'cation_charge': 4,
+        'cation_mass': 12.011,
+        'groups': ['magmasat', 'volatile']
+    },
+    'F2O': {
+        'mass': 37.997,
+        'cation': 'F',
+        'cation_num': 2,
+        'oxygen_num': 1,
+        'cation_charge': 1,
+        'cation_mass': 18.998,
+        'groups': ['anhydrous']
+    }
+}
 
-OxygenNum = {'SiO2': 2, 'MgO': 1, 'FeO': 1, 'CaO': 1, 'Al2O3': 3, 'Na2O': 1,
-             'K2O': 1, 'MnO': 1, 'TiO2': 2, 'P2O5': 5, 'Cr2O3': 3,
-             'NiO': 1, 'CoO': 1, 'Fe2O3': 3, 'H2O': 1, 'CO2': 2, 'F2O': 1}
+# Derived data structures - all computed from oxide_data
+# Lists
+oxides = list(oxide_data.keys())
+cations = list(set(data['cation'] for data in oxide_data.values()))
+magmasat_oxides = [oxide for oxide, data in oxide_data.items() if 'magmasat' in data['groups']]
+anhydrous_oxides = [oxide for oxide, data in oxide_data.items() if 'anhydrous' in data['groups']]
+volatiles = [oxide for oxide, data in oxide_data.items() if 'volatile' in data['groups']]
 
-CationCharge = {'SiO2': 4, 'MgO': 2, 'FeO': 2, 'CaO': 2, 'Al2O3': 3, 'Na2O': 1,
-                'K2O': 1, 'MnO': 2, 'TiO2': 4, 'P2O5': 5, 'Cr2O3': 3,
-                'NiO': 2, 'CoO': 2, 'Fe2O3': 3, 'H2O': 1, 'CO2': 4, 'F2O': 1}
+# Property dictionaries
+oxideMass = {oxide: data['mass'] for oxide, data in oxide_data.items()}
+CationNum = {oxide: data['cation_num'] for oxide, data in oxide_data.items()}
+OxygenNum = {oxide: data['oxygen_num'] for oxide, data in oxide_data.items()}
+CationCharge = {oxide: data['cation_charge'] for oxide, data in oxide_data.items()}
+CationMass = {oxide: data['cation_mass'] for oxide, data in oxide_data.items()}
 
-CationMass = {'SiO2': 28.085, 'MgO': 24.305, 'FeO': 55.845, 'CaO': 40.078, 'Al2O3': 26.982,
-              'Na2O': 22.990, 'K2O': 39.098, 'MnO': 54.938, 'TiO2': 47.867, 'P2O5': 30.974,
-              'Cr2O3': 51.996, 'NiO': 58.693, 'CoO': 28.01, 'Fe2O3': 55.845, 'H2O': 1.01,
-              'CO2': 12.011, 'F2O': 18.998}
-
-oxides_to_cations = {'SiO2': 'Si', 'MgO': 'Mg', 'FeO': 'Fe', 'CaO': 'Ca', 'Al2O3': 'Al',
-                     'Na2O': 'Na', 'K2O': 'K', 'MnO': 'Mn', 'TiO2': 'Ti', 'P2O5': 'P',
-                     'Cr2O3': 'Cr', 'NiO': 'Ni', 'CoO': 'Co', 'Fe2O3': 'Fe3', 'H2O': 'H',
-                     'CO2': 'C', 'F2O': 'F'}
-cations_to_oxides = {'Si': 'SiO2', 'Mg': 'MgO', 'Fe': 'FeO', 'Ca': 'CaO', 'Al': 'Al2O3',
-                     'Na': 'Na2O', 'K': 'K2O', 'Mn': 'MnO', 'Ti': 'TiO2', 'P': 'P2O5',
-                     'Cr': 'Cr2O3', 'Ni': 'NiO', 'Co': 'CoO', 'Fe3': 'Fe2O3', 'H': 'H2O',
-                     'C': 'CO2', 'F': 'F2O'}
+# Conversion mappings
+oxides_to_cations = {oxide: data['cation'] for oxide, data in oxide_data.items()}
+cations_to_oxides = {data['cation']: oxide for oxide, data in oxide_data.items()}
 
 
 # ---------- DATA TRANSFORMATION FOR PANDAS DATAFRAMES --------- #
