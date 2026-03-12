@@ -18,7 +18,7 @@ approach to volatile solubility modelling using an open-source Python3 engine, E
 Science. https://doi.org/10.1029/2021EA001932
 """
 
-__version__ = "1.2.11"
+__version__ = "1.2.12"
 __author__ = "Kayla Iacovino, Simon Matthews, and Penny Wieser"
 
 # ----------------- IMPORTS ----------------- #
