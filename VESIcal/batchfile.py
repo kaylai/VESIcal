@@ -227,11 +227,7 @@ class BatchFile(object):
 
         for column in data:
             if column in core.oxides:
-<<<<<<< HEAD
                 data.loc[data[column] < 0, column] = 0
-=======
-                data.loc[data[column] < 0] = 0
->>>>>>> documentation
 
         self.data = data
 
