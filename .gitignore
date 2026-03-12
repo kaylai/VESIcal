@@ -25,8 +25,11 @@ share/python-wheels/
 *.egg
 *.egg-info
 MANIFEST
-.DS_Store
 .claude
+
+# mac an ms office garbage files
+.DS_Store
+~$*
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -131,19 +134,10 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-manuscript/tables/~$List_of_Datasets.xlsx
-testDataSets/~$Moore_et_al_1998.xlsx
-testDataSets/~$cerro_negro.xlsx
-batch_test.xlsx
-manuscript/Supplement/JupyterNotebooks/Moore/~$output_moore.xlsx
-tests/~$ImportTest.xlsx
+misc_untracked/
 Debugging.ipynb
-H2O_CO2_SensitivityTesting.xlsx
-~$BatchTest.xlsx
 manuscript/dissolved.p
 manuscript/testsave.xlsx
-PT-path-thermoengine-bug.ipynb
-Test_array_degassing_path.ipynb
 Kaylas_test_scripts/
 SulfurX_Testing/
 VESIcal.egg-info/PKG-INFO
