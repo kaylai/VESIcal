@@ -200,10 +200,14 @@ Saving
 
    * - Method
      - Description
-   * - :ref:`save_excel() <save-excel>`
+   * - :ref:`save_results() <save-results>`
+     - Save any VESIcal objects, DataFrames, dicts, or scalars to CSV or Excel with flexible output modes.
+   * - :ref:`save_excel()* <save-excel>`
      - Save to a ``.xlsx`` file with one sheet per calculation.
-   * - :ref:`save_csv() <save-csv>`
+   * - :ref:`save_csv()* <save-csv>`
      - Save to one CSV file per calculation.
+
+\*these will be deprecated in the next major release.
 
 ----------
 
@@ -498,7 +502,57 @@ Liquid Viscosity
 
 ----------
 
+.. _save-results:
+
+Save Results (General Purpose)
+-------------------------------
+``v.save_results(filename, obj, filetype="csv", mode="single_sheet", descriptions=None)``
+
+Save any combination of VESIcal objects, DataFrames, dicts, or scalars to CSV or Excel.
+Supports Sample, Calculate, and BatchFile objects, as well as pandas DataFrames/Series,
+dictionaries, lists, and scalar values.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 25 75
+
+   * - Argument
+     - Description
+   * - ``filename``
+     - Base filename. Extension is added or replaced automatically. For ``multi_file`` mode,
+       index suffixes are appended (e.g., ``output_1.csv``, ``output_2.csv``).
+   * - ``obj``
+     - Data to save: a single object or a list of objects.
+   * - ``filetype``
+     - ``"csv"`` (default) or ``"excel"``
+   * - ``mode``
+     - ``"single_sheet"`` (default): all data in one file/sheet.
+       ``"multi_sheet"``: each object on its own Excel sheet (Excel only).
+       ``"multi_file"``: each object in a separate file.
+   * - ``descriptions``
+     - Optional list of string labels added as a ``Description`` column.
+
+.. code-block:: python
+
+   # Save a single calculation result
+   v.save_results("satP.csv", satP)
+
+   # Save a list of mixed types to Excel, one sheet per item
+   v.save_results("results.xlsx", [mysample, satP, dissolved],
+       filetype="excel", mode="multi_sheet",
+       descriptions=["Sample", "Saturation Pressure", "Dissolved Volatiles"])
+
+   # Save each item to its own CSV file
+   v.save_results("output", [satP, dissolved],
+       filetype="csv", mode="multi_file")
+
+----------
+
 .. _save-excel:
+
+Old save methods
+================
+These will be deprecated in next major release.
 
 Save to Excel
 --------------
