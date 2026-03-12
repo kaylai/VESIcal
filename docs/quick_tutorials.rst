@@ -230,13 +230,7 @@ Create a Sample
 
 .. code-block:: python
 
-   my_sample = v.Sample({
-       'SiO2': 77.3, 'TiO2': 0.08, 'Al2O3': 12.6,
-       'Fe2O3': 0.207, 'Cr2O3': 0.0, 'FeO': 0.473,
-       'MnO': 0.0, 'MgO': 0.03, 'NiO': 0.0, 'CoO': 0.0,
-       'CaO': 0.43, 'Na2O': 3.98, 'K2O': 4.88,
-       'P2O5': 0.0, 'H2O': 6.5, 'CO2': 0.05
-   })
+   my_sample = v.Sample({'SiO2': 77.3, 'TiO2': 0.08, ... })
 
 .. autoclass:: VESIcal.sample_class.Sample
 
