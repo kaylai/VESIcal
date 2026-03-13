@@ -10,6 +10,16 @@ The usage of VESIcal remains unchanged in the new version. Simply install using 
 
 Version history
 ###############
+Version 1.2.12
+^^^^^^^^^^^^^^
+- Implement new save_results() function. You can now more intuitively export results to a csv or excel file (even multi-sheet!) from anywhere rather than having to pass it on an existing BatchFile object. You can also save pretty much any VESIcal object plus, dicts, lists, and scalars -- all at the same time with one command. Yes, you can now save results from a single sample calculation!
+- Fixed ChainedAssignment future warning
+- Fixed typo in arg name 'filenames' in save_csv(), added logic to handle both 'filename' and 'filenames', added FutureWarning for deprecation of 'filenames' arg. This will largely be obsolete as we will be deprecating the old save_csv() and save_excel() BatchFile methods most likely.
+
+Version 1.2.11
+^^^^^^^^^^^^^^
+This update fixes Issues #216 and #217 where translating between units would fail, particularly when performing conversions on BatchFiles. Unit tests were upgraded to be more robust to these problems, and core.py was refactored to map oxides to cations and other elemental parameters through a single point of truth mapping.
+
 Version 1.2.10
 ^^^^^^^^^^^^^^
 Our attempts to remove DuanDriver error messages thrown by MagmaSat ended up causing other things to break. This update removes DuanDriver "fixes". Expect to see more DuanDriver print messages when running MagmaSat if you got used to them not being there!
