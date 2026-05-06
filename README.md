@@ -26,10 +26,50 @@ Check here first for all your VESIcal questions! And be sure to read the manuscr
 
 In general, VESIcal can be accessed and used in a variety of ways. From most flexible (advanced) to least flexible (novice), these are:
 
-   - local installation of the VESIcal library
-   - through the ENKI server (recommended for most users)
+   - local installation of the VESIcal library (we have made the thermoengine install much simpler for macOS, see below!)
+   - through the ENKI server (recommended for non-macOS users)
    - through a [jupyter notebook version of the VESIcal manuscript](https://agu-binder.curvenote.dev/user/2be900e9-fb5d-4-9778d16a48c.zip-4wrcztow/lab/tree/Manuscript.ipynb?token=EzBUfh6US4qFq4UW0MSkYA).
    - via the web-app [https://vesical.anvil.app/](https://vesical.anvil.app/)
+
+### Installing locally
+
+**Important! Thermoengine must be installed for the default MagmaSat model to function.**
+ Please see below for details on how to install thermoengine, the python implementation of MELTS/MagmaSat.
+
+#### VESIcal without thermoengine
+Thermoengine is the ENKI implementation of MELTS (MagmaSat), which is the default solubility model implemented in VESIcal. You can install VESIcal with a simple `pip install VESIcal` on your local machine and run everything in VESIcal *except for the MagmaSat model*. 
+
+```
+pip install VESIcal
+```
+
+Check that the installation worked by entering the following lines into a terminal:
+
+```
+python
+import VESIcal as v
+```
+
+If no output is returned, VESIcal has installed properly! Optionally, type `v.__version__`, and the VESIcal version number will print to the terminal. You will very likely, however, see a warning telling you that no module named 'thermoengine' could be found. The installation you performed via pip attempts to install all dependencies (other libraries that VESIcal requires), but thermoengine is not available via pip and so must be manually installed. Dependencies that should automatically be installed for you are listed in the requirements.txt file in the repo root. If any warnings related to those libraries appear, try installing them as you did VESIcal: with `pip install [package]`.
+
+If thermoengine is not installed, you will see a warning after running `import VESIcal as v` notifying you as such. The only other noteable caveat is that you must pass the name of the model you want to use for every calculation, since MagmaSat is the default. Do so like this (with VESIcal imported as `v`):
+```python
+v.calculate_saturation_pressure(sample=mysample, temperature=mytemperature, model="IaconoMarziano")
+```
+
+### Installing thermoengine
+After installing both themoengine and VESIcal, you can use all VESIcal sub-models including MagmaSat to your heart's content.
+
+#### Simplified instructions for installing thermoengine on macOS
+We have forked the original thermoengine v1 GitLab repository and made the few necessary edits for a working install on macOS. Find those instructions in the forked repo's README here: https://gitlab.com/kaylai/thermo-engine-for-mac
+
+#### For Windows
+To install thermoengine, please refer to the ENKI documentation here: https://gitlab.com/ENKI-portal/ThermoEngine.
+
+In almost all cases you will need to install thermoengine using docker. The thermoengine devs have kindly put together a docker image for you. We suggest you follow those instructions here: https://gitlab.com/ENKI-portal/ThermoEngine/-/tree/master/#running-a-container-image-locally.
+
+#### For Linux
+The Windows installation instructions are tested to work for Ubuntu, but you might also try the simplified macOS instructions as well. That's untested, but there's a good chance it just works. If you try it and it does, let us know!
 
 ### VESIcal on the ENKI server
 
@@ -45,45 +85,8 @@ VESIcal requires installation of not only the VESIcal library but also some othe
 
 See video tutorials on our ReadTheDocs page for more.
 
-### Installing locally
-
-**Important! Thermoengine must be installed!**
- Please see below for details on how to install thermoengine, the python implementation of MELTS/MagmaSat  
-
-First, obtain Python3.x if you do not already have it installed. If you are new to python, we recommend installing it via [anaconda3](https://www.anaconda.com/products/individual). VESIcal can be installed with one line. Open a terminal and type the following:
-
-```
-pip install VESIcal
-```
-
-Check that the installation worked by entering the following lines into a terminal:
-
-```
-python
-import VESIcal as v
-```
-
-If no output is returned, VESIcal has installed properly! You will very likely, however, see a warning telling you that no module named 'thermoengine' could be found. The installation you performed via pip attempts to install all dependencies (other libraries that VESIcal requires), but thermoengine is not available via pip and so must be manually installed.
-
-Dependencies that should automatically be installed for you are:
-
-   - pandas
-   - numpy
-   - matplotlib
-   - cycler
-   - abc
-   - scipy
-   - sys
-   - sympy
-   - copy
-
-If any warnings related to these libraries appear, try installing them as you did VESIcal: with 'pip install [package]'.
-
-### Installing thermoengine
-
-Thermoengine is the ENKI implementation of MELTS (MagmaSat), which is the default solubility model implemented in VESIcal. VESIcal cannot be run without thermoengine at this time, however a VESIcal-lite that does not include MagmaSat is planned. To install thermoengine, please refer to the ENKI documentation here: https://gitlab.com/ENKI-portal/ThermoEngine.
-
-In almost all cases you will need to install thermoengine using docker. The thermoengine devs have kindly put together a docker image for you. We suggest you follow those instructions here: https://gitlab.com/ENKI-portal/ThermoEngine/-/tree/master/#running-a-container-image-locally.
+#### How to install Python for newcomers
+First, obtain Python 3.10 or newer if you do not already have it installed. If you are new to Python, we recommend installing it via [Miniforge](https://github.com/conda-forge/miniforge), a free, community-maintained Python distribution that includes the `conda` package manager and uses the [conda-forge](https://conda-forge.org/) channel by default.
 
 ## Updating
 
