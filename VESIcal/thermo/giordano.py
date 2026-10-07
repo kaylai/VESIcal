@@ -34,6 +34,8 @@ def _normalize_Giordano(sample):
         Normalized major element composition in mol% oxides.
     """
 
+    w.filterwarnings("ignore", message="Species F2O not found in composition, " +
+                                           "assigning value of 0.0")
     _sample = sample.get_composition(units='wtpt_oxides',
                                      oxide_masses=giordano_oxide_mass,
                                      asSampleClass=True)

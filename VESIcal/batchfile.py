@@ -658,7 +658,7 @@ class BatchFile(object):
                 pass
         return print("Saved " + str(filename))
 
-    def save_csv(self, *, filename=None, calculations=None, **kwargs):
+    def save_csv(self, filename=None, calculations=None, **kwargs):
         """
         Saves data calculated by the user in batch processing mode to a
         comma-separated values (csv) file. Mirros the pandas.to_csv() method.
