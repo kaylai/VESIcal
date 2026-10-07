@@ -1,6 +1,6 @@
 numpy>=1.23
 scipy==1.11.4
-sympy==1.9
+sympy==1.12.1
 pandas==2.1.4
-matplotlib==3.8.2
+matplotlib==3.10.7
 openpyxl==3.1.2

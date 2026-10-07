@@ -15,16 +15,16 @@ setuptools.setup(
     url="https://github.com/kaylai/VESIcal",
     packages=setuptools.find_packages(),
     install_requires=[
-            'pandas',
-            'numpy>=1.23',
-            'matplotlib',
-            'scipy',
-            'sympy',
-            'openpyxl'],
+            'pandas>=2.1.4',
+            'numpy>=1.26.3',
+            'matplotlib>=3.10.7',
+            'scipy>=1.11.4,!=1.15.*', # 1.15 breaks on macOS 27
+            'sympy>=1.12.1',
+            'openpyxl>=3.1.2'],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires='>=3.6',
+    python_requires='>=3.10',
 )
