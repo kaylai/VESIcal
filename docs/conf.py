@@ -23,7 +23,8 @@ copyright = '2021, Kayla Iacovino and Simon Matthews'
 author = 'Kayla Iacovino and Simon Matthews'
 
 # The full version, including alpha/beta/rc tags
-release = '1.2.9'
+from importlib import metadata
+release = metadata.version("VESIcal")
 
 
 # -- General configuration ---------------------------------------------------
