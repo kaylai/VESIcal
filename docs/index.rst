@@ -42,6 +42,7 @@ More Important Stuff
 
    install
    models
+   equations_of_state
 
 .. toctree::
    :hidden:
