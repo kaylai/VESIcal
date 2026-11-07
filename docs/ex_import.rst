@@ -41,6 +41,67 @@ Once the BatchFile object is created and assigned to a variable, the user can th
 	| Ma57-3c.1          | 77.65 | 0.1590 | 12.28 | 0.000 | 0     | 0.9769 | 0.0597 | 0.0577 | 0   | 0   | 0.5598 | 4.08 | 4.18 | 0.0064 | 4.443973 | 0.004654 | 100   | 885  |
 	| Ma57-3c.2          | 77.65 | 0.1590 | 12.28 | 0.000 | 0     | 0.9769 | 0.0597 | 0.0577 | 0   | 0   | 0.5598 | 4.08 | 4.18 | 0.0064 | 4.283171 | 0.004645 | 1000  | 885  |
 
+Check oxide headers and the imported composition
+================================================
+
+``get_data()`` includes metadata and other columns that are not used as oxide
+concentrations. A value visible there can still be absent from
+``get_composition()``. Check the expected chemical components in the composition,
+as well as checking the raw data.
+
+On the ``units='wtpt_oxides'`` import path, ``BatchFile`` emits one
+``RuntimeWarning`` beginning with
+``Possible unrecognized oxide column headers:`` for a bounded set of names:
+whitespace or case variants of exact oxide names, and names with ``_melt``,
+``_olivine`` or ``, wt%`` suffixes (also allowing case variants and outer
+whitespace). Uncertainty/notes columns such as ``SiO2_sd``, ``SiO2_2sigma`` and
+``SiO2_notes`` are not included. The existing total-iron aliases keep their
+existing treatment. Other unit modes do not gain this diagnostic.
+
+The diagnostic runs before sample-index selection and does not rename, merge or
+choose a phase. A canonical oxide column can coexist with a flagged phase
+column; this does not mean that the canonical concentration is missing. If a
+label is not found, existing index selection may consume a suspect column.
+Provide the sample label explicitly. The public ``BatchFile_from_DataFrame``
+preserves the DataFrame index by default (``label=None``), while
+``batchfile.from_DataFrame`` defaults to ``label='Label'``.
+
+After checking the intended phase and units, rename only the intended
+concentration columns explicitly. Check for a canonical-name collision first:
+``DataFrame.rename(errors='raise')`` alone does not prevent duplicate targets.
+For example, for a file whose sample names are in ``Label``:
+
+.. code-block:: python
+
+    import pandas as pd
+
+    data = pd.read_excel('example_data.xlsx')
+    source, target = 'SiO2_melt', 'SiO2'
+    if 'Label' not in data.columns:
+        raise ValueError('Choose the sample-label column explicitly.')
+    if target in data.columns:
+        raise ValueError('SiO2 already exists; check the intended phase first.')
+    data = data.rename(columns={source: target}, errors='raise')
+    myfile = v.BatchFile_from_DataFrame(data, label='Label')
+    composition = myfile.get_composition()
+
+Warnings-as-errors configurations may turn the new warning into an exception.
+After reviewing the excluded columns, callers that accept that behavior can
+filter this diagnostic specifically, without hiding other warnings:
+
+.. code-block:: python
+
+    import warnings
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            'ignore', message=r'^Possible unrecognized oxide column headers:',
+            category=RuntimeWarning)
+        myfile = v.BatchFile('example_data.xlsx', label='Label')
+
+This detects selected forms of unrecognized names, not every possible spelling
+or unit convention. It does not normalize scientific input or validate a model.
+
 Extract and view a single sample
 ================================
 Defined within the BatchFile() class, the method get_sample_composition() allows for the extraction of a melt composition from a loaded file.
