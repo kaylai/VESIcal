@@ -10,7 +10,8 @@ A calculation hangs or crashes
 - Possible Causes:
 	- **Your column headers weren't recognized as oxide names**
 		- Try:
-			- Run `.data()` on a Sample object or `.get_data()` on a BatchFile object and visually inspect your data, ensuring values are present for all species as you expect them to be.
+			- Inspect both the raw data (``.data()`` on a Sample or ``.get_data()`` on a BatchFile) and ``.get_composition()``. A value visible in raw data may not be recognized as a chemical component. Check that the expected oxide values are present in the composition.
+			- For ``wtpt_oxides`` BatchFile input, the warning beginning ``Possible unrecognized oxide column headers:`` identifies selected whitespace, case, phase and unit variants before sample-index selection. It does not rename columns or select a phase. Check the sample label, phase, units and possible canonical-name collisions before explicitly renaming intended concentration columns; see :doc:`ex_import`.
 	- **MagmaSat fails to converge on an answer or crashes entirely**
 		- In this case, your batch calculation will either hang on this sample, never spitting out a result, or a segmentation fault will occur within the ENKI thermoengine module (which MagmaSat runs on top of). We cannot catch these errors in VESIcal, since they are occuring within thermoengine. 
 		- Try:

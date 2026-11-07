@@ -9,6 +9,38 @@ from VESIcal import sample_class
 # Turn off chained assignment pandas warning
 pd.options.mode.chained_assignment = None  # default='warn'
 
+_TOTAL_IRON_COLUMNS = ('FeOt', 'FeOT', 'FeOtot', 'FeOtotal', 'FeOstar', 'FeO*')
+
+
+def _find_unrecognized_oxide_headers(columns, label=None):
+    """Group a bounded set of noncanonical oxide headers without changing them."""
+    canonical_names = {oxide.casefold(): oxide for oxide in core.oxides}
+    exact_names = {column for column in columns if isinstance(column, str)}
+    groups = {}
+    for column in columns:
+        if not isinstance(column, str) or column == label:
+            continue
+        if column in core.oxides or column in _TOTAL_IRON_COLUMNS:
+            continue
+
+        normalized = column.strip().casefold()
+        target = canonical_names.get(normalized)
+        reason = 'expected exact name'
+        if target is None:
+            for suffix, suffix_reason in [('_melt', 'phase suffix'),
+                                          ('_olivine', 'phase suffix'),
+                                          (', wt%', 'unit suffix')]:
+                if normalized.endswith(suffix):
+                    target = canonical_names.get(normalized[:-len(suffix)])
+                    if target is not None:
+                        reason = suffix_reason
+                        break
+        if target is not None:
+            group = groups.setdefault(target, {'oxide': target, 'candidates': [],
+                                               'canonical_present': target in exact_names})
+            group['candidates'].append({'header': column, 'reason': reason})
+    return list(groups.values())
+
 
 def rename_duplicates(df, suffix='-duplicate-'):
     appendents = (suffix +
@@ -157,18 +189,37 @@ class BatchFile(object):
         # handle data if passed in as existing dataframe or as file
         if dataframe is not None:
             data = dataframe
-            if label is not None:
-                data = self.try_set_index(data, label)
         else:
             if file_type == 'excel':
                 data = pd.read_excel(filename, sheet_name=sheet_name)
-                data = self.try_set_index(data, label)
             elif file_type == 'csv':
                 data = pd.read_csv(filename)
-                data = self.try_set_index(data, label)
             else:
                 raise core.InputError("file_type must be one of \'excel\' or "
                                       "\'csv\'.")
+
+        # Inspect raw columns before index selection can consume a suspect header.
+        if units == 'wtpt_oxides':
+            diagnostics = _find_unrecognized_oxide_headers(data.columns, label=label)
+            if diagnostics:
+                details = []
+                for group in diagnostics:
+                    target = group['oxide']
+                    for candidate in group['candidates']:
+                        details.append(f"{candidate['header']!r} "
+                                       f"({candidate['reason']} {target!r})")
+                    if len(group['candidates']) > 1:
+                        details.append(f"multiple candidates for {target!r}")
+                    if group['canonical_present']:
+                        details.append(f"canonical column {target!r} is also present")
+                w.warn("Possible unrecognized oxide column headers: " + '; '.join(details) +
+                       ". These names are not read as oxide concentrations. No columns have "
+                       "been renamed. Check the sample label, phase and units before "
+                       "explicitly renaming the intended concentration columns.",
+                       RuntimeWarning, stacklevel=2)
+
+        if dataframe is None or label is not None:
+            data = self.try_set_index(data, label)
 
         # Sanitize data inputs
         data = rename_duplicates(data)  # handle any duplicated sample names
@@ -193,9 +244,7 @@ class BatchFile(object):
                    "more info.",
                    RuntimeWarning, stacklevel=2)
 
-        total_iron_columns = ["FeOt", "FeOT", "FeOtot", "FeOtotal", "FeOstar",
-                              "FeO*"]
-        for name in total_iron_columns:
+        for name in _TOTAL_IRON_COLUMNS:
             if name in data.columns:
                 if 'FeO' in data.columns:
                     for row in data.itertuples():
