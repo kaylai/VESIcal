@@ -12,7 +12,7 @@ CHEMISTRY = {
     'MgO': (40.304, 'Mg', 1, 1),
     'Na2O': (61.979, 'Na', 2, 1),
     'Al2O3': (101.961, 'Al', 2, 3),
-    'H2O': (18.015, 'H', 2, 1),
+    'H2O': (18.02, 'H', 2, 1),
     'CO2': (44.01, 'C', 1, 2),
 }
 UNITS = ('wtpt_oxides', 'mol_oxides', 'mol_cations')
