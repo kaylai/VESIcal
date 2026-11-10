@@ -344,6 +344,8 @@ class BatchFile(object):
         sample_names = []
         for index, row in data.iterrows():
             sample_comp = self.get_sample_composition(index,
+                                                      units='wtpt_oxides',
+                                                      normalization='none',
                                                       asSampleClass=True)
             new_compositions.append(sample_comp.get_composition(
                      species=species, normalization=normalization, units=units,
@@ -691,13 +693,13 @@ class BatchFile(object):
                     "Cannot specify both 'filename' and deprecated 'filenames'."
                     " Use only 'filename'."
                 )
-                
+
             w.warn(
                 "'filenames' is deprecated and will be removed in a future "
                 "version. Use 'filename' instead.",
                 FutureWarning
             )
-            
+
             filename = kwargs.pop('filenames')
 
         if filename is None or calculations is None:
@@ -705,7 +707,7 @@ class BatchFile(object):
                 "Missing required arguments: 'filename' and 'calculations'"
                 "are required."
             )
-        
+
         if isinstance(filename, list) is False:
             filename = [filename]
         if isinstance(calculations, list) is False:
