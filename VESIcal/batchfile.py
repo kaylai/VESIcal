@@ -525,31 +525,29 @@ class BatchFile(object):
                 return return_sample
 
     def _molOxides_to_wtpercentOxides(self, data):
-        for i, row in data.iterrows():
-            sample_comp = {}
-            for oxide in core.oxides:
-                if oxide in data.columns:
-                    sample_comp[oxide] = row[oxide]
-                else:
-                    sample_comp[oxide] = 0.0
+        converted = []
+        for _, row in data.iterrows():
+            sample_comp = {oxide: row.get(oxide, 0.0)
+                           for oxide in core.oxides}
             _sample = sample_class.Sample(sample_comp, units='mol_oxides')
-            _sample_conv = _sample.get_composition()
-            for ox in core.oxides:
-                data.loc[i, oxide] = _sample_conv[oxide]
+            converted.append(_sample.get_composition())
+        # Convert every row before adding columns to the input table.
+        data[core.oxides] = pd.DataFrame(
+            converted, index=data.index, columns=core.oxides)
         return data
 
     def _molCations_to_wtpercentOxides(self, data):
-        for i, row in data.iterrows():
-            sample_comp = {}
-            for cation in core.oxides_to_cations[core.oxides]:
-                if cation in data.columns:
-                    sample_comp[cation] = row[cation]
-                else:
-                    sample_comp[cation] = 0.0
+        cations = [core.oxides_to_cations[oxide] for oxide in core.oxides]
+        converted = []
+        for _, row in data.iterrows():
+            sample_comp = {cation: row.get(cation, 0.0) for cation in cations}
             _sample = sample_class.Sample(sample_comp, units='mol_cations')
-            _sample_conv = _sample.get_composition()
-            for oxide in core.oxides:
-                data.loc[i, oxide] = _sample_conv[oxide]
+            converted.append(_sample.get_composition())
+        # Consumed cation inputs must not reappear as metadata in get_data().
+        data = data.drop(columns=[name for name in cations
+                                  if name in data.columns])
+        data[core.oxides] = pd.DataFrame(
+            converted, index=data.index, columns=core.oxides)
         return data
 
     def try_set_index(self, dataframe, label):
@@ -691,13 +689,13 @@ class BatchFile(object):
                     "Cannot specify both 'filename' and deprecated 'filenames'."
                     " Use only 'filename'."
                 )
-                
+
             w.warn(
                 "'filenames' is deprecated and will be removed in a future "
                 "version. Use 'filename' instead.",
                 FutureWarning
             )
-            
+
             filename = kwargs.pop('filenames')
 
         if filename is None or calculations is None:
@@ -705,7 +703,7 @@ class BatchFile(object):
                 "Missing required arguments: 'filename' and 'calculations'"
                 "are required."
             )
-        
+
         if isinstance(filename, list) is False:
             filename = [filename]
         if isinstance(calculations, list) is False:
