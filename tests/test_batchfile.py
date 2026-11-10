@@ -158,6 +158,6 @@ class TestMolarInputControls(unittest.TestCase):
                 self.assertEqual(batch.default_normalization,
                                  'additionalvolatiles')
                 expected = expected_wtpercent(frame, units)
-                # V1 checks storage; custom output routing is a separate task.
+                # Check stored weight percent independently of output settings.
                 np.testing.assert_allclose(batch.data[expected.columns],
                                            expected, rtol=0, atol=1e-9)
