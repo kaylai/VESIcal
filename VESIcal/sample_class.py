@@ -24,7 +24,8 @@ class Sample(object):
         ----------
         composition     dict or pandas.Series
             The composition of the sample in the format specified by the composition_type
-            parameter. Default is oxides in wtpt.
+            parameter. Default is oxides in wtpt. NaN concentrations are treated as zero
+            before conversion to the internal units.
 
         units     str
             Specifies the units and type of compositional information passed in the composition
@@ -57,6 +58,8 @@ class Sample(object):
         elif isinstance(composition, pd.Series) is False:
             raise core.InputError("The composition must be given as either a dictionary or a "
                                   "pandas Series.")
+
+        composition = self._replace_missing_concentrations(composition)
 
         if units == 'wtpt_oxides':
             self._composition = composition
@@ -92,6 +95,19 @@ class Sample(object):
                         del composition[name]
                     if isinstance(composition, pd.Series):
                         composition.drop(labels=[name], inplace=True)
+
+    @staticmethod
+    def _replace_missing_concentrations(composition):
+        missing = composition.isna()
+        if not missing.any():
+            return composition
+        if (isinstance(composition.dtype, pd.CategoricalDtype)
+                and 0.0 not in composition.cat.categories):
+            composition = composition.cat.add_categories([0.0])
+        if isinstance(composition.dtype, pd.SparseDtype):
+            return composition.mask(missing, 0.0)
+        composition.loc[missing] = 0.0
+        return composition
 
     def set_default_normalization(self, default_normalization):
         """ Set the default type of normalization to use with the get_composition() method.
@@ -299,7 +315,8 @@ class Sample(object):
         Parameters
         ----------
         new_composition:    dict or pandas.Series
-            The components to be updated.
+            The components to be updated. NaN concentrations are treated as zero in the
+            supplied units before conversion.
         units:      str
             The units of new_composition. Should be one of:
             - wtpt_oxides (default)
@@ -323,7 +340,18 @@ class Sample(object):
             newsample = deepcopy(self)
             return newsample.change_composition(new_composition, units=units)
 
+        missing_components = [component for component in new_composition
+                              if pd.isna(new_composition[component])]
+        if missing_components:
+            new_composition = dict(new_composition)
+            for component in missing_components:
+                new_composition[component] = 0.0
+
         if units == 'wtpt_oxides':
+            if (missing_components
+                    and isinstance(self._composition.dtype, pd.CategoricalDtype)
+                    and 0.0 not in self._composition.cat.categories):
+                self._composition = self._composition.cat.add_categories([0.0])
             for ox in new_composition:
                 self._composition[ox] = new_composition[ox]
 
