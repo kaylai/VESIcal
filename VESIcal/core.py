@@ -123,12 +123,12 @@ oxide_data = {
         'groups': ['magmasat', 'anhydrous']
     },
     'CoO': {
-        'mass': 44.01,
+        'mass': 74.932,
         'cation': 'Co',
         'cation_num': 1,
         'oxygen_num': 1,
         'cation_charge': 2,
-        'cation_mass': 28.01,
+        'cation_mass': 58.933,
         'groups': ['magmasat', 'anhydrous']
     },
     'H2O': {
