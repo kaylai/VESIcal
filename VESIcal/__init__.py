@@ -337,7 +337,7 @@ def get_oxides(sample):
     Sample composition with extranneous information removed.
     """
 
-    clean = {oxide: sample[oxide] for oxide in VESIcal.core.oxides}
+    clean = {oxide: sample[oxide] for oxide in VESIcal.core.oxides if oxide in sample}
 
     if isinstance(sample, dict):
         return clean
